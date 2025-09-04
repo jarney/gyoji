@@ -33,8 +33,8 @@ public:
   int type;
   std::string type_name;
   std::string value;
-  int lineno;
-  int colno;
+  size_t lineno;
+  size_t colno;
   std::vector<ASTDataNonSyntax::ptr> non_syntax;
   std::vector<ASTNode::ptr> all_nodes;
   std::vector<ASTNode::ptr> children;

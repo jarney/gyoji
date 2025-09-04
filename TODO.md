@@ -3,23 +3,25 @@
 ## Compilation
 * Figure out how to handle header files and declarations/imports.
   Should we require a pre-processor, or can we do without?
-* Add 'unsafe' keyword to distinguish dangerous operations.
-* Fixed-length buffer declarations.
-* Figure out a good function pointer syntax since we don't really have one at this point.
-  This is difficult because we need to distinguish between types and values with some keyword construct.
-* FOR loops (semicolon style since we don't have iterators yet and perhaps that would imply something too tightly coupled with standard library?)
-  Should we make the iterator style for loop a macro like #foreach ?
+* Some syntax for constructors/destructors/methods.
+* Do we need keywords for 'super' and 'this'.
+* What's our feeling about inheritance?
+* What about traits and interfaces?
+* What about generics and type parameters?
+* Is this just going to end up being a messy bloat like C++?
+* Where's the cutoff point between simple syntax and complete functionality?
 
 ## Code generation
-* Build a more appropriate intermediate representation of the parsed
-  file that is better suited to code generation.
 * Start building basic LLVM code generation capabilities.
 
 ## Syntax verifications
 * Build some unit-tests to verify that the syntax is what we expect and
   the operator precedence rules work correctly.
 
-## Semantic verifications
+## Semantic processing
+* Build a more appropriate intermediate semantic representation of the parsed
+  file that is better suited to code generation.
+
 * Build some tests that verify compatibility with
   most of the expectations of the C-style
   expressions we know and love by using the preprocessor

@@ -26,7 +26,9 @@ LIBRARIES=
 all: target/cparse
 	target/cparse format-identity tests/valid-syntax-expression-primary.j >target/valid-syntax-expression-primary.j
 	diff tests/valid-syntax-expression-primary.j target/valid-syntax-expression-primary.j
-	target/cparse format-tree tests/valid-syntax-expression-primary.j
+	target/cparse format-identity tests/valid-syntax-variable-declaration.j >target/valid-syntax-variable-declaration.j
+	diff tests/valid-syntax-variable-declaration.j target/valid-syntax-variable-declaration.j
+	target/cparse format-tree tests/valid-syntax-variable-declaration.j
 
 test: target/test_xml
 	target/test_xml

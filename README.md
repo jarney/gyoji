@@ -8,6 +8,13 @@ Changes from C syntax:
 * Assignment expressions may not be used inline.  Assignment is always a "statement-level" expression, so "a=(b=c+2)" isn't valid.  This is ok because it is often difficult to read in this style and doesn't really add anything to the function of the language.
 * Function-calls must be inline (?) Is this even possible with C grammar?  Can we not do sin(a)+sin(b)?  Must we always put these in intermediates?  What about get(a)++;
 * Comma expressions are not a thing.  This is rarely used and little known.  It adds nothing to the language.
+* Variable declaration is different mostly because this is required in order to get a non-ambiguous syntax.  The reason for this is that
+  user-defined types cannot, in general, be distinguished from user-defined variable names without an additional syntax cue.
+  For example char *a; might be a variable named "char" multiplied by a variable named "a".  We could try to rule this out by
+  altering the statement expression syntax to permit only "assignment" and "function call" at the top-level, but that
+  would preclude expressions like *a++ = *b++ becuase you could still do 'x*y = d' which could be construed as
+  a pointer to x.  The "var" keyword tells us that we are definitely looking for a type name next, similar to
+  the 'typedef' keyword.
 
 Additional features:
 * Namespace declarations

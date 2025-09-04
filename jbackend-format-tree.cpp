@@ -75,6 +75,9 @@ void JBackendFormatTree::process(ASTNode::ptr node)
 {
   print_indent();
   printf("<node type='%s'", xml_escape_attribute(node->type_name).c_str());
+  if (node->lineno > 0) {
+    printf(" lineno='%ld'", node->lineno);
+  }
   if (node->value.length() != 0) {
     printf(" value='%s'", xml_escape_attribute(node->value).c_str());
   }

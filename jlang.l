@@ -7,7 +7,7 @@
 
 using namespace calc;
 std::string override_file;
-int lineno = 1;
+size_t lineno = 1;
 std::vector<ASTDataNonSyntax::ptr> non_syntax_data;
 
 #define DEBUG_TERMINALS 0
@@ -47,14 +47,20 @@ float           (({frac}{exp_opt})|({dseq}{exp}))
 namespace {PROCESS_NODE(NAMESPACE);}
 using {PROCESS_NODE(USING);}
 typedef {PROCESS_NODE(TYPEDEF);}
+public {PROCESS_NODE(PUBLIC);}
+private {PROCESS_NODE(PRIVATE);}
+protected {PROCESS_NODE(PROTECTED);}
+
 struct {PROCESS_NODE(STRUCT);}
 union {PROCESS_NODE(UNION);}
 
 if {PROCESS_NODE(IF);}
 else {PROCESS_NODE(ELSE);}
 while {PROCESS_NODE(WHILE);}
+for {PROCESS_NODE(FOR);}
 switch {PROCESS_NODE(SWITCH);}
-
+var {PROCESS_NODE(VAR);}
+function {PROCESS_NODE(FUNCTION);}
 return {PROCESS_NODE(RETURN);}
 break {PROCESS_NODE(BREAK);}
 continue {PROCESS_NODE(CONTINUE);}
@@ -69,10 +75,7 @@ typeof {PROCESS_NODE(TYPEOF);}
 
 const {PROCESS_NODE(CONST);}
 volatile {PROCESS_NODE(VOLATILE);}
-
-public {PROCESS_NODE(PUBLIC);}
-private {PROCESS_NODE(PRIVATE);}
-protected {PROCESS_NODE(PROTECTED);}
+unsafe {PROCESS_NODE(UNSAFE);} 
 
 ; {PROCESS_NODE(SEMICOLON);}
 \:\: {PROCESS_NODE(DOUBLE_COLON);}

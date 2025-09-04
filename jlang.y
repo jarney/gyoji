@@ -44,7 +44,9 @@
 %token <ASTNode::ptr> SIZEOF
 %token <ASTNode::ptr> TYPEOF
 %token <ASTNode::ptr> CAST
-
+%token <ASTNode::ptr> UNSAFE
+%token <ASTNode::ptr> VAR
+%token <ASTNode::ptr> FUNCTION
 %token <ASTNode::ptr> CONST
 %token <ASTNode::ptr> VOLATILE
 
@@ -62,6 +64,7 @@
 %token <ASTNode::ptr> IF
 %token <ASTNode::ptr> ELSE
 %token <ASTNode::ptr> WHILE
+%token <ASTNode::ptr> FOR
 %token <ASTNode::ptr> CONTINUE
 %token <ASTNode::ptr> GOTO
 %token <ASTNode::ptr> LABEL
@@ -141,7 +144,9 @@
 %nterm <ASTNode::ptr> file_statement_list;
 %nterm <ASTNode::ptr> file_statement;
 %nterm <ASTNode::ptr> file_statement_function_definition;
+%nterm <ASTNode::ptr> file_statement_function_declaration;
 %nterm <ASTNode::ptr> type_definition;
+%nterm <ASTNode::ptr> opt_unsafe
 %nterm <ASTNode::ptr> file_statement_namespace;
 %nterm <ASTNode::ptr> file_statement_using;
 %nterm <ASTNode::ptr> file_global_declaration;
@@ -155,7 +160,9 @@
 %nterm <ASTNode::ptr> scope_body;
 %nterm <ASTNode::ptr> statement_list;
 %nterm <ASTNode::ptr> statement;
+%nterm <ASTNode::ptr> statement_variable_declaration;
 %nterm <ASTNode::ptr> statement_expression;
+%nterm <ASTNode::ptr> statement_block;
 %nterm <ASTNode::ptr> statement_return;
 %nterm <ASTNode::ptr> statement_break;
 %nterm <ASTNode::ptr> statement_continue;
@@ -163,12 +170,15 @@
 %nterm <ASTNode::ptr> statement_label;
 %nterm <ASTNode::ptr> statement_ifelse;
 %nterm <ASTNode::ptr> statement_while;
+%nterm <ASTNode::ptr> statement_for;
 %nterm <ASTNode::ptr> statement_switch;
 %nterm <ASTNode::ptr> statement_switch_block;
 %nterm <ASTNode::ptr> statement_switch_content;
 %nterm <ASTNode::ptr> opt_statement_switch_content;
 
 %nterm <ASTNode::ptr> opt_function_definition_arg_list;
+%nterm <ASTNode::ptr> function_definition_arg_list;
+%nterm <ASTNode::ptr> function_definition_arg
 
 %nterm <ASTNode::ptr> expression_primary;
 %nterm <ASTNode::ptr> expression_primary_identifier;
@@ -234,6 +244,7 @@
 %nterm <ASTNode::ptr> type_name;
 %nterm <ASTNode::ptr> type_name_qualified;
 %nterm <ASTNode::ptr> type_access_qualifier;
+%nterm <ASTNode::ptr> opt_array_length;
 
 %nterm <ASTNode::ptr> struct_declaration_list;
 %nterm <ASTNode::ptr> struct_declaration;
@@ -301,6 +312,10 @@ file_statement
                 $$ = $1;
                 PRINT_NONTERMINALS($$);
         }
+        | file_statement_function_declaration {
+                $$ = $1;
+                PRINT_NONTERMINALS($$);
+        }
         | file_global_declaration {
                 $$ = $1;
                 PRINT_NONTERMINALS($$);
@@ -320,7 +335,7 @@ file_statement
         ;
 
 file_global_declaration
-        : access_modifier type_specifier IDENTIFIER opt_global_initializer SEMICOLON {
+        : access_modifier type_specifier IDENTIFIER opt_array_length opt_global_initializer SEMICOLON {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_file_global_declaration;
                 $$->type_name = std::string("file_global_declaration");
@@ -329,6 +344,7 @@ file_global_declaration
                 $$->children.push_back($3);
                 $$->children.push_back($4);
                 $$->children.push_back($5);
+                $$->children.push_back($6);
                 PRINT_NONTERMINALS($$);
         }
         ;
@@ -459,8 +475,19 @@ type_definition
         }
         ;
 
-file_statement_function_definition
-        : IDENTIFIER IDENTIFIER PAREN_L opt_function_definition_arg_list PAREN_R scope_body {
+opt_unsafe
+        : /**/ {
+                $$ = std::make_shared<ASTNode>();
+                $$->type = Parser::symbol_kind_type::S_opt_unsafe;
+                $$->type_name = std::string("opt_unsafe");
+        }
+        | UNSAFE {
+                $$ = $1;
+        }
+        ;
+
+file_statement_function_declaration
+: opt_unsafe type_specifier IDENTIFIER PAREN_L opt_function_definition_arg_list PAREN_R SEMICOLON {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_file_statement_function_definition;
                 $$->type_name = std::string("file_statement_function_definition");
@@ -470,15 +497,56 @@ file_statement_function_definition
                 $$->children.push_back($4);
                 $$->children.push_back($5);
                 $$->children.push_back($6);
+                $$->children.push_back($7);
+                PRINT_NONTERMINALS($$);
+}
+;
+
+file_statement_function_definition
+        : opt_unsafe type_specifier IDENTIFIER PAREN_L opt_function_definition_arg_list PAREN_R scope_body {
+                $$ = std::make_shared<ASTNode>();
+                $$->type = Parser::symbol_kind_type::S_file_statement_function_definition;
+                $$->type_name = std::string("file_statement_function_definition");
+                $$->children.push_back($1);
+                $$->children.push_back($2);
+                $$->children.push_back($3);
+                $$->children.push_back($4);
+                $$->children.push_back($5);
+                $$->children.push_back($6);
+                $$->children.push_back($7);
                 PRINT_NONTERMINALS($$);
         }
         ;
 
 opt_function_definition_arg_list
-        : IDENTIFIER IDENTIFIER {
+        : /**/ {
                 $$ = std::make_shared<ASTNode>();
-                $$->type = Parser::symbol_kind_type::S_opt_function_definition_arg_list;
-                $$->type_name = std::string("opt_function_definition_arg_list");
+                $$->type = Parser::symbol_kind_type::S_function_definition_arg_list;
+                $$->type_name = std::string("function_definition_arg_list");
+        }
+        | function_definition_arg_list {
+                $$ = $1;
+        }
+        ;
+
+function_definition_arg_list
+        : function_definition_arg {
+                $$ = std::make_shared<ASTNode>();
+                $$->type = Parser::symbol_kind_type::S_function_definition_arg_list;
+                $$->type_name = std::string("function_definition_arg_list");
+                $$->children.push_back($1);
+        }
+        | function_definition_arg_list COMMA function_definition_arg {
+                $$ = $1;
+                $$->children.push_back($2);
+                $$->children.push_back($3);
+        }
+        ;
+function_definition_arg
+        : type_specifier IDENTIFIER {
+                $$ = std::make_shared<ASTNode>();
+                $$->type = Parser::symbol_kind_type::S_function_definition_arg;
+                $$->type_name = std::string("function_definition_arg");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
         }
@@ -509,13 +577,16 @@ statement_list
         ;
 
 statement
-        : statement_expression {
+        : statement_block {
                 $$ = $1;
         }
         | statement_ifelse {
                 $$ = $1;
         }
         | statement_while {
+                $$ = $1;
+        }
+        | statement_for {
                 $$ = $1;
         }
         | statement_switch {
@@ -538,6 +609,52 @@ statement
         }
         | statement_label {
                 $$ = $1;
+        }
+        | statement_expression {
+                $$ = $1;
+        }
+        | statement_variable_declaration {
+                $$ = $1;
+        }
+        ;
+
+opt_array_length
+: /**/ {
+        $$ = std::make_shared<ASTNode>();
+        $$->type = Parser::symbol_kind_type::S_opt_array_length;
+        $$->type_name = std::string("opt_array_length");
+}
+| BRACKET_L LITERAL_INT BRACKET_R {
+        $$ = std::make_shared<ASTNode>();
+        $$->type = Parser::symbol_kind_type::S_opt_array_length;
+        $$->type_name = std::string("opt_array_length");
+        $$->children.push_back($1);
+        $$->children.push_back($2);
+        $$->children.push_back($3);
+}
+;
+
+statement_variable_declaration
+        : VAR type_specifier IDENTIFIER opt_array_length opt_global_initializer SEMICOLON {
+                $$ = std::make_shared<ASTNode>();
+                $$->type = Parser::symbol_kind_type::S_statement_variable_declaration;
+                $$->type_name = std::string("statement_variable_declaration");
+                $$->children.push_back($1);
+                $$->children.push_back($2);
+                $$->children.push_back($3);
+                $$->children.push_back($4);
+                $$->children.push_back($5);
+                $$->children.push_back($6);
+        }
+        ;
+
+statement_block
+        : opt_unsafe scope_body {
+                $$ = std::make_shared<ASTNode>();
+                $$->type = Parser::symbol_kind_type::S_statement_block;
+                $$->type_name = std::string("statement_block");
+                $$->children.push_back($1);
+                $$->children.push_back($2);
         }
         ;
 
@@ -592,8 +709,8 @@ statement_label
 statement_return
         : RETURN expression SEMICOLON {
                 $$ = std::make_shared<ASTNode>();
-                $$->type = Parser::symbol_kind_type::S_statement_expression;
-                $$->type_name = std::string("statement_expression");
+                $$->type = Parser::symbol_kind_type::S_statement_return;
+                $$->type_name = std::string("statement_return");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
@@ -647,6 +764,23 @@ statement_while
                 $$->children.push_back($3);
                 $$->children.push_back($4);
                 $$->children.push_back($5);
+        }
+        ;
+
+statement_for
+        : FOR PAREN_L expression SEMICOLON expression SEMICOLON expression PAREN_R scope_body {
+                $$ = std::make_shared<ASTNode>();
+                $$->type = Parser::symbol_kind_type::S_statement_for;
+                $$->type_name = std::string("statement_for");
+                $$->children.push_back($1);
+                $$->children.push_back($2);
+                $$->children.push_back($3);
+                $$->children.push_back($4);
+                $$->children.push_back($5);
+                $$->children.push_back($6);
+                $$->children.push_back($7);
+                $$->children.push_back($8);
+                $$->children.push_back($9);
         }
         ;
 
@@ -1428,13 +1562,52 @@ struct_declaration_list
         ;
 
 struct_declaration
-        : type_specifier IDENTIFIER SEMICOLON {
+        : access_modifier type_specifier IDENTIFIER opt_array_length SEMICOLON {
+                // Member
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_struct_declaration;
-                $$->type_name = std::string("struct_declaration");
+                $$->type_name = std::string("struct_declaration_member");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
+                $$->children.push_back($4);
+                $$->children.push_back($5);
+        }
+        | access_modifier type_specifier IDENTIFIER PAREN_L opt_function_definition_arg_list PAREN_R SEMICOLON {
+                // Method
+                $$ = std::make_shared<ASTNode>();
+                $$->type = Parser::symbol_kind_type::S_struct_declaration;
+                $$->type_name = std::string("struct_declaration_method");
+                $$->children.push_back($1);
+                $$->children.push_back($2);
+                $$->children.push_back($3);
+                $$->children.push_back($4);
+                $$->children.push_back($5);
+                $$->children.push_back($6);
+                $$->children.push_back($7);
+        }
+        | access_modifier PAREN_L opt_function_definition_arg_list PAREN_R SEMICOLON {
+          // Constructor
+                $$ = std::make_shared<ASTNode>();
+                $$->type = Parser::symbol_kind_type::S_struct_declaration;
+                $$->type_name = std::string("struct_declaration_constructor");
+                $$->children.push_back($1);
+                $$->children.push_back($2);
+                $$->children.push_back($3);
+                $$->children.push_back($4);
+                $$->children.push_back($5);
+        }
+        | access_modifier TILDE PAREN_L opt_function_definition_arg_list PAREN_R SEMICOLON {
+          // Destructor
+                $$ = std::make_shared<ASTNode>();
+                $$->type = Parser::symbol_kind_type::S_struct_declaration;
+                $$->type_name = std::string("struct_declaration_destructor");
+                $$->children.push_back($1);
+                $$->children.push_back($2);
+                $$->children.push_back($3);
+                $$->children.push_back($4);
+                $$->children.push_back($5);
+                $$->children.push_back($6);
         }
         ;
 
@@ -1466,6 +1639,17 @@ type_specifier
                 $$->type_name = std::string("type_specifier");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
+                PRINT_NONTERMINALS($$);
+        }
+        | FUNCTION type_specifier PAREN_L opt_function_definition_arg_list PAREN_R {
+                $$ = std::make_shared<ASTNode>();
+                $$->type = Parser::symbol_kind_type::S_type_specifier;
+                $$->type_name = std::string("type_specifier");
+                $$->children.push_back($1);
+                $$->children.push_back($2);
+                $$->children.push_back($3);
+                $$->children.push_back($4);
+                $$->children.push_back($5);
                 PRINT_NONTERMINALS($$);
         }
         | type_specifier STAR type_access_qualifier {

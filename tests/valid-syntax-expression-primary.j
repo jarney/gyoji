@@ -1,6 +1,6 @@
 typedef struct {
-    int a;
-    char *b;
+    public int a;
+    protected char *b;
 } foo_t;
 
 namespace std {
@@ -241,12 +241,12 @@ int do_something(char a)
         }
 
         sizeof(struct {
-            int a;
-            foo b;
-// TODO     char buf[32];
-            struct {
-                bar a;
-                baz d;
+            private int a;
+            protected foo b;
+            public char buf[32];
+            public struct {
+                private bar a;
+                private baz d;
             } d;
         });
 
@@ -256,8 +256,12 @@ int do_something(char a)
 
         // Typedef in function scope.
         typedef struct {
-            int a;
-            char *b;
+            private int a;
+            private char *b;
         } foo_t;
+
+        unsafe {
+            char *a;
+        }
 
 }
