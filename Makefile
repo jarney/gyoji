@@ -24,9 +24,9 @@ TEST_XML_OBJS = \
 LIBRARIES=
 
 all: target/cparse
-	target/cparse format-identity <tests/valid-syntax-expression-primary.j >target/valid-syntax-expression-primary.j
+	target/cparse format-identity tests/valid-syntax-expression-primary.j >target/valid-syntax-expression-primary.j
 	diff tests/valid-syntax-expression-primary.j target/valid-syntax-expression-primary.j
-	target/cparse format-tree <tests/valid-syntax-expression-primary.j
+	target/cparse format-tree tests/valid-syntax-expression-primary.j
 
 test: target/test_xml
 	target/test_xml

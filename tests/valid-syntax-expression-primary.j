@@ -22,6 +22,8 @@ public foo_t k = {
 
 int do_something(char a)
 {
+//TODO        function (void)(int,int) fptr;
+
         // expression_primary:
 
         // expression_primary_identifier
@@ -241,6 +243,7 @@ int do_something(char a)
         sizeof(struct {
             int a;
             foo b;
+// TODO     char buf[32];
             struct {
                 bar a;
                 baz d;

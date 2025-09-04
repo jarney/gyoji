@@ -11,14 +11,22 @@
 
 int main(int argc, char **argv)
 {
-    yyscan_t scanner;
-    yylex_init(&scanner);
 
-    if (argc != 2) {
+    if (argc != 3) {
       fprintf(stderr, "Invalid number of arguments %d\n", argc);
-      fprintf(stderr, "Usage: parser backend < file\n");
+      fprintf(stderr, "Usage: parser backend file\n");
       exit(1);
     }
+    
+    FILE *input = fopen(argv[2], "rb");
+    if (input == NULL) {
+      fprintf(stderr, "Cannot open file %s\n", argv[2]);
+      exit(1);
+    }
+    yyscan_t scanner;
+    yylex_init(&scanner);
+    yyset_in(input, scanner);
+    
     std::shared_ptr<JBackend> backend;
     if (std::string("format-identity") == std::string(argv[1])) {
         backend = std::make_shared<JBackendFormatIdentity>();
@@ -26,11 +34,6 @@ int main(int argc, char **argv)
     else if (std::string("format-tree") == std::string(argv[1])) {
         backend = std::make_shared<JBackendFormatTree>();
     }
-    /*
-      else if (std::string("toc") == std::string(argv[1])) {
-        backend = std::make_shared<JBackendToC>();
-    }
-    */
     else {
       fprintf(stderr, "Invalid backend %s\n", argv[1]);
       return 1;
@@ -46,4 +49,5 @@ int main(int argc, char **argv)
       backend->process(data.parsed);
     }
     yylex_destroy(scanner);
+    fclose(input);
 }
