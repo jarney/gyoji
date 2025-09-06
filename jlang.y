@@ -50,7 +50,6 @@
 %token <ASTNode::ptr> CAST
 %token <ASTNode::ptr> UNSAFE
  //%token <ASTNode::ptr> VAR
-%token <ASTNode::ptr> FUNCTION
 %token <ASTNode::ptr> CONST
 %token <ASTNode::ptr> VOLATILE
 
@@ -1665,7 +1664,7 @@ type_specifier
                 $$->children.push_back($2);
                 PRINT_NONTERMINALS($$);
         } 
-        | FUNCTION type_specifier PAREN_L opt_function_definition_arg_list PAREN_R {
+        | type_specifier PAREN_L STAR IDENTIFIER PAREN_R PAREN_L opt_function_definition_arg_list PAREN_R {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_type_specifier;
                 $$->typestr = std::string("type_specifier");
@@ -1674,6 +1673,9 @@ type_specifier
                 $$->children.push_back($3);
                 $$->children.push_back($4);
                 $$->children.push_back($5);
+                $$->children.push_back($6);
+                $$->children.push_back($7);
+                $$->children.push_back($8);
                 PRINT_NONTERMINALS($$);
         }
         | type_specifier STAR type_access_qualifier {

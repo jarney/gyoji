@@ -1,16 +1,23 @@
 # TODO list
 
 ## Compilation
-* Fix function pointer types
 * Allow typedefs to be public/private(?)
+
 * Figure out how to handle header files and declarations/imports.
   Should we require a pre-processor, or can we do without?
+  
 * Some syntax for constructors/destructors/methods.
+
 * Do we need keywords for 'super' and 'this'.
+
 * What's our feeling about inheritance?
+
 * What about traits and interfaces?
+
 * What about generics and type parameters?
+
 * Is this just going to end up being a messy bloat like C++?
+
 * Where's the cutoff point between simple syntax and complete functionality?
 
 ## Code generation
@@ -33,3 +40,9 @@
 ## Start writing the standard library in JLang
 * Basic string manipulation functions
 * Containers: map, list, string, vector, set
+
+
+# Error handling
+* For common syntax errors, figure out how to suggest a good
+  solution to them and actually have useful error messages.
+  

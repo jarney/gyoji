@@ -13,7 +13,7 @@ typedef struct {
 
 int do_something(q first, int second, char **third);
 
-typedef function int (int a,int b) foo;
+typedef int (*fptr)(int a,int b) foo;
 
 int do_something(char a)
 {
