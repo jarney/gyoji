@@ -31,7 +31,7 @@ public:
   void add_node(ASTNode::ptr node);
   
   int type;
-  std::string type_name;
+  std::string typestr;
   std::string value;
   size_t lineno;
   size_t colno;

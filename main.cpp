@@ -1,5 +1,6 @@
 #include "jsyntax.hpp"
 #include "ast.hpp"
+#include "namespace.hpp"
 #include "target/jlang.l.hpp"
 #include "target/jlang.y.hpp"
 
@@ -39,8 +40,18 @@ int main(int argc, char **argv)
       return 1;
     }
     return_data_t data;
+    
+    namespace_init();
+    namespace_type_define("char");
+    namespace_type_define("int");
+    namespace_type_define("float");
+    namespace_type_define("double");
+    namespace_type_define("long");
+    namespace_type_define("short");
+    namespace_type_define("unsigned");
+    namespace_type_define("void");
+    
     calc::Parser parser{ scanner, &data };
-
     int rc = parser.parse();
     if (rc != 0) {
       printf("Syntax error\n");

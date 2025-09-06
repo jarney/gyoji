@@ -1,19 +1,5 @@
-#include <string>
-#include <stdio.h>
-#include <vector>
 #include "xml.hpp"
-
-#define ASSERT(actual, expect, message) \
-  {                                                                   \
-    std::string actual_str = actual;                                  \
-    std::string expect_str = expect;                                  \
-      if (expect_str != actual_str) {                                 \
-        fprintf(stderr, "Assertion failed: %s\n", message);           \
-        fprintf(stderr, "Expected : %s\n", actual_str.c_str());       \
-        fprintf(stderr, "Actual   : %s\n", expect_str.c_str());       \
-        exit(1);                                                      \
-      }                                                               \
-  }
+#include "test.hpp"
 
 int main(int argc, char **argv)
 {

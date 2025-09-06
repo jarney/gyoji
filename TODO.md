@@ -1,6 +1,8 @@
 # TODO list
 
 ## Compilation
+* Fix function pointer types
+* Allow typedefs to be public/private(?)
 * Figure out how to handle header files and declarations/imports.
   Should we require a pre-processor, or can we do without?
 * Some syntax for constructors/destructors/methods.

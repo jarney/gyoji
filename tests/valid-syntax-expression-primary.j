@@ -5,12 +5,23 @@ typedef struct {
 
 namespace std {
     typedef char u8_t;
-    namespace string {
-        private const foo_t string;
-    };
+    typedef char * string;
+    private const foo_t string2;
 };
 
-using namespace std::string;
+namespace MyNamespace {
+        namespace some {
+                typedef std::string type;
+        };
+};
+namespace My {
+        namespace thing {
+                using namespace std;
+                typedef string Type;
+        };
+};
+
+using namespace std;
 
 private volatile int a/* = 4*/;
 public const int *b/* = &a*/;
@@ -120,7 +131,7 @@ int do_something(char a)
         cast(volatile My::thing::Type *const *volatile, --'a');
 
         // Sizeof applied to types
-        sizeof(MyCustomNamespace::type);
+        sizeof(MyNamespace::some::type);
         sizeof(const char*);
 
         a++();
@@ -242,23 +253,17 @@ int do_something(char a)
 
         sizeof(struct {
             private int a;
-            protected foo b;
+            protected std::string b;
             public char buf[32];
             public struct {
-                private bar a;
-                private baz d;
+                private std::string a;
+                private std::string d;
             } d;
         });
 
         label foo:
         foo_fn();
         goto foo;
-
-        // Typedef in function scope.
-        typedef struct {
-            private int a;
-            private char *b;
-        } foo_t;
 
         unsafe {
             char *a;

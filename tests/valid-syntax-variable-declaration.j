@@ -2,7 +2,9 @@ public volatile int *p[32];
 
 private const double q[19];
 
-private struct {
+typedef char my_type_t;
+
+typedef struct {
     private my_type_t x[32];
     public void foo(int a, int b);
     public (int a, int b);
@@ -15,5 +17,5 @@ typedef function int (int a,int b) foo;
 
 int do_something(char a)
 {
-        var char d[32];
+        char d[32];
 }

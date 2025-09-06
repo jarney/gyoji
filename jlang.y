@@ -6,6 +6,7 @@
 #include "target/jlang.l.hpp"
 #include "jsyntax.hpp"
 #include "ast.hpp"
+#include "namespace.hpp"
 %}
  
 %require "3.7.4"
@@ -22,7 +23,7 @@
 {
 #define DEBUG_NONTERMINALS 0
 #if DEBUG_NONTERMINALS
-#define PRINT_NONTERMINALS(s) printf("%s\n", s->type_name.c_str())
+#define PRINT_NONTERMINALS(s) printf("%s\n", s->typestr.c_str())
 #else
 #define PRINT_NONTERMINALS(s) (0)
 #endif
@@ -35,8 +36,11 @@
 %token INVALID_INPUT
 %token <ASTNode::ptr> YYEOF
 %token <ASTNode::ptr> IDENTIFIER
+%token <ASTNode::ptr> NAMESPACE_NAME
+%token <ASTNode::ptr> TYPE_NAME
 
 %token <ASTNode::ptr> NAMESPACE
+%token <ASTNode::ptr> AS
 %token <ASTNode::ptr> USING
 %token <ASTNode::ptr> TYPEDEF
 %token <ASTNode::ptr> STRUCT
@@ -45,7 +49,7 @@
 %token <ASTNode::ptr> TYPEOF
 %token <ASTNode::ptr> CAST
 %token <ASTNode::ptr> UNSAFE
-%token <ASTNode::ptr> VAR
+ //%token <ASTNode::ptr> VAR
 %token <ASTNode::ptr> FUNCTION
 %token <ASTNode::ptr> CONST
 %token <ASTNode::ptr> VOLATILE
@@ -74,7 +78,6 @@
 %token <ASTNode::ptr> DEFAULT
 
  /* Binary operations */
-%token <ASTNode::ptr> DOUBLE_COLON
 %token <ASTNode::ptr> PLUS
 %token <ASTNode::ptr> MINUS
 %token <ASTNode::ptr> SLASH
@@ -147,7 +150,9 @@
 %nterm <ASTNode::ptr> file_statement_function_declaration;
 %nterm <ASTNode::ptr> type_definition;
 %nterm <ASTNode::ptr> opt_unsafe
+%nterm <ASTNode::ptr> namespace_declaration;
 %nterm <ASTNode::ptr> file_statement_namespace;
+%nterm <ASTNode::ptr> opt_as;
 %nterm <ASTNode::ptr> file_statement_using;
 %nterm <ASTNode::ptr> file_global_declaration;
 %nterm <ASTNode::ptr> opt_global_initializer;
@@ -271,7 +276,7 @@ syntax_file
         : opt_file_statement_list YYEOF {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_syntax_file;
-                $$->type_name = std::string("syntax_file");
+                $$->typestr = std::string("syntax_file");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 return_data->parsed = $$;
@@ -283,7 +288,7 @@ opt_file_statement_list
         : /**/ {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_file_statement_list;
-                $$->type_name = std::string("file_statement_list");
+                $$->typestr = std::string("file_statement_list");
                 PRINT_NONTERMINALS($$);
         }
         | file_statement_list {
@@ -296,7 +301,7 @@ file_statement_list
         : file_statement {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_file_statement_list;
-                $$->type_name = std::string("file_statement_list");
+                $$->typestr = std::string("file_statement_list");
                 $$->children.push_back($1);
                 PRINT_NONTERMINALS($$);
         }
@@ -338,7 +343,7 @@ file_global_declaration
         : access_modifier type_specifier IDENTIFIER opt_array_length opt_global_initializer SEMICOLON {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_file_global_declaration;
-                $$->type_name = std::string("file_global_declaration");
+                $$->typestr = std::string("file_global_declaration");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
@@ -353,7 +358,7 @@ opt_global_initializer
         : /**/ {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_file_global_declaration;
-                $$->type_name = std::string("global_initializer");
+                $$->typestr = std::string("global_initializer");
         }
         | global_initializer {
                 $$ = $1;
@@ -364,14 +369,14 @@ global_initializer
         : EQUALS expression_primary {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_global_initializer;
-                $$->type_name = std::string("global_initializer");
+                $$->typestr = std::string("global_initializer");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
         }
         | EQUALS ANDPERSAND expression_primary {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_global_initializer;
-                $$->type_name = std::string("global_initializer");
+                $$->typestr = std::string("global_initializer");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
@@ -379,7 +384,7 @@ global_initializer
         | EQUALS BRACE_L opt_struct_initializer_list BRACE_R {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_global_initializer;
-                $$->type_name = std::string("global_initializer");
+                $$->typestr = std::string("global_initializer");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
@@ -392,7 +397,7 @@ opt_struct_initializer_list
         : /**/ {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_struct_initializer_list;
-                $$->type_name = std::string("struct_initializer_list");
+                $$->typestr = std::string("struct_initializer_list");
         }
         | struct_initializer_list {
                 $$ = $1;
@@ -403,7 +408,7 @@ struct_initializer_list
         : struct_initializer {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_struct_initializer_list;
-                $$->type_name = std::string("struct_initializer_list");
+                $$->typestr = std::string("struct_initializer_list");
                 $$->children.push_back($1);
         }
         | struct_initializer_list struct_initializer {
@@ -416,7 +421,7 @@ struct_initializer
         : DOT IDENTIFIER global_initializer SEMICOLON {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_global_initializer;
-                $$->type_name = std::string("struct_initializer");
+                $$->typestr = std::string("struct_initializer");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
@@ -436,29 +441,57 @@ access_modifier
         }
         ;
 
+namespace_declaration
+        : NAMESPACE IDENTIFIER {
+                $$ = std::make_shared<ASTNode>();
+                $$->type = Parser::symbol_kind_type::S_namespace_declaration;
+                $$->typestr = std::string("namespace_declaration");
+                $$->children.push_back($1);
+                $$->children.push_back($2);
+                namespace_begin($2->value);
+        }
+        ;
+
 file_statement_namespace
-        : NAMESPACE IDENTIFIER BRACE_L opt_file_statement_list BRACE_R SEMICOLON {
+        : namespace_declaration BRACE_L opt_file_statement_list BRACE_R SEMICOLON {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_file_statement_namespace;
-                $$->type_name = std::string("file_statement_namespace");
+                $$->typestr = std::string("file_statement_namespace");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
                 $$->children.push_back($4);
                 $$->children.push_back($5);
-                $$->children.push_back($6);
+                namespace_end();
+        }
+        ;
+
+opt_as
+        : /**/ {
+                $$ = std::make_shared<ASTNode>();
+                $$->type = Parser::symbol_kind_type::S_opt_as;
+                $$->typestr = std::string("opt_as");
+        }
+        | AS IDENTIFIER {
+                $$ = std::make_shared<ASTNode>();
+                $$->type = Parser::symbol_kind_type::S_opt_as;
+                $$->typestr = std::string("opt_as");
+                $$->children.push_back($1);
+                $$->children.push_back($2);
         }
         ;
 
 file_statement_using
-        : USING NAMESPACE type_name_qualified SEMICOLON {
+        : USING NAMESPACE NAMESPACE_NAME opt_as SEMICOLON {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_file_statement_using;
-                $$->type_name = std::string("file_statement_using");
+                $$->typestr = std::string("file_statement_using");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
                 $$->children.push_back($4);
+                $$->children.push_back($5);
+                namespace_using($3->value, "");
         }
         ;
 
@@ -466,12 +499,13 @@ type_definition
         : TYPEDEF type_specifier IDENTIFIER SEMICOLON {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_type_definition;
-                $$->type_name = std::string("type_definition");
+                $$->typestr = std::string("type_definition");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
                 $$->children.push_back($4);
                 PRINT_NONTERMINALS($$);
+                namespace_type_define($3->value);
         }
         ;
 
@@ -479,7 +513,7 @@ opt_unsafe
         : /**/ {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_opt_unsafe;
-                $$->type_name = std::string("opt_unsafe");
+                $$->typestr = std::string("opt_unsafe");
         }
         | UNSAFE {
                 $$ = $1;
@@ -490,7 +524,7 @@ file_statement_function_declaration
 : opt_unsafe type_specifier IDENTIFIER PAREN_L opt_function_definition_arg_list PAREN_R SEMICOLON {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_file_statement_function_definition;
-                $$->type_name = std::string("file_statement_function_definition");
+                $$->typestr = std::string("file_statement_function_definition");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
@@ -506,7 +540,7 @@ file_statement_function_definition
         : opt_unsafe type_specifier IDENTIFIER PAREN_L opt_function_definition_arg_list PAREN_R scope_body {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_file_statement_function_definition;
-                $$->type_name = std::string("file_statement_function_definition");
+                $$->typestr = std::string("file_statement_function_definition");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
@@ -522,7 +556,7 @@ opt_function_definition_arg_list
         : /**/ {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_function_definition_arg_list;
-                $$->type_name = std::string("function_definition_arg_list");
+                $$->typestr = std::string("function_definition_arg_list");
         }
         | function_definition_arg_list {
                 $$ = $1;
@@ -533,7 +567,7 @@ function_definition_arg_list
         : function_definition_arg {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_function_definition_arg_list;
-                $$->type_name = std::string("function_definition_arg_list");
+                $$->typestr = std::string("function_definition_arg_list");
                 $$->children.push_back($1);
         }
         | function_definition_arg_list COMMA function_definition_arg {
@@ -546,7 +580,7 @@ function_definition_arg
         : type_specifier IDENTIFIER {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_function_definition_arg;
-                $$->type_name = std::string("function_definition_arg");
+                $$->typestr = std::string("function_definition_arg");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
         }
@@ -556,7 +590,7 @@ scope_body
         : BRACE_L statement_list BRACE_R {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_scope_body;
-                $$->type_name = std::string("scope_body");
+                $$->typestr = std::string("scope_body");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
@@ -568,7 +602,7 @@ statement_list
         : /**/ {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_scope_body;
-                $$->type_name = std::string("statement_list");
+                $$->typestr = std::string("statement_list");
         }
         | statement_list statement {
                 $$ = $1;
@@ -595,9 +629,6 @@ statement
         | statement_return {
                 $$ = $1;
         }
-        | type_definition {
-                $$ = $1;
-        }
         | statement_continue {
                 $$ = $1;
         }
@@ -622,12 +653,12 @@ opt_array_length
 : /**/ {
         $$ = std::make_shared<ASTNode>();
         $$->type = Parser::symbol_kind_type::S_opt_array_length;
-        $$->type_name = std::string("opt_array_length");
+        $$->typestr = std::string("opt_array_length");
 }
 | BRACKET_L LITERAL_INT BRACKET_R {
         $$ = std::make_shared<ASTNode>();
         $$->type = Parser::symbol_kind_type::S_opt_array_length;
-        $$->type_name = std::string("opt_array_length");
+        $$->typestr = std::string("opt_array_length");
         $$->children.push_back($1);
         $$->children.push_back($2);
         $$->children.push_back($3);
@@ -635,16 +666,15 @@ opt_array_length
 ;
 
 statement_variable_declaration
-        : VAR type_specifier IDENTIFIER opt_array_length opt_global_initializer SEMICOLON {
+        : type_specifier IDENTIFIER opt_array_length opt_global_initializer SEMICOLON {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_statement_variable_declaration;
-                $$->type_name = std::string("statement_variable_declaration");
+                $$->typestr = std::string("statement_variable_declaration");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
                 $$->children.push_back($4);
                 $$->children.push_back($5);
-                $$->children.push_back($6);
         }
         ;
 
@@ -652,7 +682,7 @@ statement_block
         : opt_unsafe scope_body {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_statement_block;
-                $$->type_name = std::string("statement_block");
+                $$->typestr = std::string("statement_block");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
         }
@@ -662,7 +692,7 @@ statement_expression
         : expression SEMICOLON {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_statement_expression;
-                $$->type_name = std::string("statement_expression");
+                $$->typestr = std::string("statement_expression");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
         }
@@ -671,7 +701,7 @@ statement_goto
         : GOTO IDENTIFIER SEMICOLON {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_statement_goto;
-                $$->type_name = std::string("statement_goto");
+                $$->typestr = std::string("statement_goto");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
@@ -681,7 +711,7 @@ statement_break
         : BREAK SEMICOLON {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_statement_break;
-                 $$->type_name = std::string("statement_break");
+                 $$->typestr = std::string("statement_break");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
         }
@@ -690,7 +720,7 @@ statement_continue
         : CONTINUE SEMICOLON {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_statement_continue;
-                $$->type_name = std::string("statement_continue");
+                $$->typestr = std::string("statement_continue");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
         }
@@ -699,7 +729,7 @@ statement_label
         : LABEL IDENTIFIER COLON {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_statement_label;
-                $$->type_name = std::string("statement_label");
+                $$->typestr = std::string("statement_label");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
@@ -710,7 +740,7 @@ statement_return
         : RETURN expression SEMICOLON {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_statement_return;
-                $$->type_name = std::string("statement_return");
+                $$->typestr = std::string("statement_return");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
@@ -721,7 +751,7 @@ statement_ifelse
         : IF PAREN_L expression PAREN_R scope_body {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_statement_ifelse;
-                $$->type_name = std::string("statement_ifelse");
+                $$->typestr = std::string("statement_ifelse");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
@@ -731,7 +761,7 @@ statement_ifelse
         | IF PAREN_L expression PAREN_R scope_body ELSE statement_ifelse {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_statement_ifelse;
-                $$->type_name = std::string("statement_ifelse");
+                $$->typestr = std::string("statement_ifelse");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
@@ -743,7 +773,7 @@ statement_ifelse
         | IF PAREN_L expression PAREN_R scope_body ELSE scope_body {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_statement_ifelse;
-                $$->type_name = std::string("statement_ifelse");
+                $$->typestr = std::string("statement_ifelse");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
@@ -758,7 +788,7 @@ statement_while
         : WHILE PAREN_L expression PAREN_R scope_body {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_statement_while;
-                $$->type_name = std::string("statement_while");
+                $$->typestr = std::string("statement_while");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
@@ -771,7 +801,7 @@ statement_for
         : FOR PAREN_L expression SEMICOLON expression SEMICOLON expression PAREN_R scope_body {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_statement_for;
-                $$->type_name = std::string("statement_for");
+                $$->typestr = std::string("statement_for");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
@@ -788,7 +818,7 @@ statement_switch
         : SWITCH PAREN_L expression PAREN_R BRACE_L opt_statement_switch_content BRACE_R {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_statement_switch;
-                $$->type_name = std::string("statement_switch");
+                $$->typestr = std::string("statement_switch");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
@@ -802,7 +832,7 @@ opt_statement_switch_content
         : /**/ {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_statement_switch_content;
-                $$->type_name = std::string("statement_switch_content");
+                $$->typestr = std::string("statement_switch_content");
         }
         | statement_switch_content {
                 $$ = $1;
@@ -813,7 +843,7 @@ statement_switch_content
         : statement_switch_block {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_statement_switch_content;
-                $$->type_name = std::string("statement_switch_content");
+                $$->typestr = std::string("statement_switch_content");
                 $$->children.push_back($1);
         }
         | statement_switch_content statement_switch_block {
@@ -826,7 +856,7 @@ statement_switch_block
         : DEFAULT COLON scope_body {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_statement_switch_content;
-                $$->type_name = std::string("statement_switch_block");
+                $$->typestr = std::string("statement_switch_block");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
@@ -834,7 +864,7 @@ statement_switch_block
         | CASE expression COLON scope_body {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_statement_switch_content;
-                $$->type_name = std::string("statement_switch_block");
+                $$->typestr = std::string("statement_switch_block");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
@@ -867,7 +897,7 @@ expression_primary_identifier
         : IDENTIFIER {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_expression_primary_identifier;
-                $$->type_name = std::string("expression_primary_identifier");
+                $$->typestr = std::string("expression_primary_identifier");
                 $$->children.push_back($1);
                 PRINT_NONTERMINALS($$);
         }
@@ -877,7 +907,7 @@ expression_primary_literal_int
         : LITERAL_INT {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_expression_primary_literal_int;
-                $$->type_name = std::string("expression_primary_literal_int");
+                $$->typestr = std::string("expression_primary_literal_int");
                 $$->children.push_back($1);
                 PRINT_NONTERMINALS($$);
         }
@@ -886,7 +916,7 @@ expression_primary_literal_float
         : LITERAL_FLOAT {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_expression_primary_literal_float;
-                $$->type_name = std::string("expression_primary_literal_float");
+                $$->typestr = std::string("expression_primary_literal_float");
                 $$->children.push_back($1);
                 PRINT_NONTERMINALS($$);
         }
@@ -895,7 +925,7 @@ expression_primary_literal_char
         : LITERAL_CHAR {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_expression_primary_literal_char;
-                $$->type_name = std::string("expression_primary_literal_char");
+                $$->typestr = std::string("expression_primary_literal_char");
                 $$->children.push_back($1);
                 PRINT_NONTERMINALS($$);
         }
@@ -904,7 +934,7 @@ expression_primary_literal_string
         : LITERAL_STRING {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_expression_primary_literal_string;
-                $$->type_name = std::string("expression_primary_literal_string");
+                $$->typestr = std::string("expression_primary_literal_string");
                 $$->children.push_back($1);
                 PRINT_NONTERMINALS($$);
         }
@@ -914,7 +944,7 @@ expression_primary_nested
         : PAREN_L expression PAREN_R {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_expression_primary_nested;
-                $$->type_name = std::string("expression_primary_literal_nested");
+                $$->typestr = std::string("expression_primary_literal_nested");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
@@ -956,7 +986,7 @@ expression_postfix_arrayindex
         : expression_postfix BRACKET_L expression BRACKET_R {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_expression_postfix_arrayindex;
-                $$->type_name = std::string("expression_postfix_arrayindex");
+                $$->typestr = std::string("expression_postfix_arrayindex");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
@@ -969,7 +999,7 @@ expression_postfix_function_call
         : expression_postfix PAREN_L opt_argument_expression_list PAREN_R {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_expression_postfix_function_call;
-                $$->type_name = std::string("expression_postfix_function_call");
+                $$->typestr = std::string("expression_postfix_function_call");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
@@ -982,7 +1012,7 @@ expression_postfix_dot
         : expression_postfix DOT IDENTIFIER {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_expression_postfix_dot;
-                $$->type_name = std::string("expression_postfix_dot");
+                $$->typestr = std::string("expression_postfix_dot");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
@@ -994,7 +1024,7 @@ expression_postfix_arrow
         : expression_postfix PTR_OP IDENTIFIER {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_expression_postfix_arrow;
-                $$->type_name = std::string("expression_postfix_arrow");
+                $$->typestr = std::string("expression_postfix_arrow");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
@@ -1006,7 +1036,7 @@ expression_postfix_increment
         : expression_postfix INC_OP {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_expression_postfix_increment;
-                $$->type_name = std::string("expression_postfix_increment");
+                $$->typestr = std::string("expression_postfix_increment");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 PRINT_NONTERMINALS($$);
@@ -1017,7 +1047,7 @@ expression_postfix_decrement
         : expression_postfix DEC_OP {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_expression_postfix_decrement;
-                $$->type_name = std::string("expression_postfix_decrement");
+                $$->typestr = std::string("expression_postfix_decrement");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 PRINT_NONTERMINALS($$);
@@ -1045,7 +1075,7 @@ expression_unary_increment
         : INC_OP expression_unary {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind::S_expression_unary_increment;
-                $$->type_name = std::string("expression_unary_increment");
+                $$->typestr = std::string("expression_unary_increment");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
         }
@@ -1054,7 +1084,7 @@ expression_unary_decrement
         : DEC_OP expression_unary {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind::S_expression_unary_decrement;
-                $$->type_name = std::string("expression_unary_decrement");
+                $$->typestr = std::string("expression_unary_decrement");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
         }
@@ -1063,7 +1093,7 @@ expression_unary_cast
         : operator_unary expression_cast {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind::S_expression_unary_cast;
-                $$->type_name = std::string("expression_unary_cast");
+                $$->typestr = std::string("expression_unary_cast");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
         }
@@ -1072,7 +1102,7 @@ expression_unary_sizeof_type
         : SIZEOF PAREN_L type_specifier PAREN_R {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind::S_expression_unary_sizeof_type;
-                $$->type_name = std::string("expression_unary_sizeof_type");
+                $$->typestr = std::string("expression_unary_sizeof_type");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
@@ -1086,37 +1116,37 @@ operator_unary
         : ANDPERSAND {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind::S_operator_unary;
-                $$->type_name = std::string("operator_unary");
+                $$->typestr = std::string("operator_unary");
                 $$->children.push_back($1);
         }
         | STAR {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind::S_operator_unary;
-                $$->type_name = std::string("operator_unary");
+                $$->typestr = std::string("operator_unary");
                 $$->children.push_back($1);
         }
         | PLUS {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind::S_operator_unary;
-                $$->type_name = std::string("operator_unary");
+                $$->typestr = std::string("operator_unary");
                 $$->children.push_back($1);
         }
         | MINUS {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind::S_operator_unary;
-                $$->type_name = std::string("operator_unary");
+                $$->typestr = std::string("operator_unary");
                 $$->children.push_back($1);
         }
         | TILDE {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind::S_operator_unary;
-                $$->type_name = std::string("operator_unary");
+                $$->typestr = std::string("operator_unary");
                 $$->children.push_back($1);
         }
         | BANG {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind::S_operator_unary;
-                $$->type_name = std::string("operator_unary");
+                $$->typestr = std::string("operator_unary");
                 $$->children.push_back($1);
         }
 	;
@@ -1140,7 +1170,7 @@ expression_cast_cast
         : CAST PAREN_L type_specifier COMMA expression PAREN_R {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind::S_expression_cast_cast;
-                $$->type_name = std::string("expression_cast_cast");
+                $$->typestr = std::string("expression_cast_cast");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
@@ -1175,7 +1205,7 @@ expression_multiplicative_multiply
         : expression_multiplicative STAR expression_cast {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind::S_expression_multiplicative_multiply;
-                $$->type_name = std::string("expression_multiplicative_multiply");
+                $$->typestr = std::string("expression_multiplicative_multiply");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
@@ -1185,7 +1215,7 @@ expression_multiplicative_divide
         : expression_multiplicative SLASH expression_cast {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind::S_expression_multiplicative_divide;
-                $$->type_name = std::string("expression_multiplicative_divide");
+                $$->typestr = std::string("expression_multiplicative_divide");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 $$->children.push_back($1);
@@ -1195,7 +1225,7 @@ expression_multiplicative_modulo
         : expression_multiplicative PERCENT expression_cast {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind::S_expression_multiplicative_modulo;
-                $$->type_name = std::string("expression_multiplicative_modulo");
+                $$->typestr = std::string("expression_multiplicative_modulo");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
@@ -1222,7 +1252,7 @@ expression_additive_plus
         : expression_additive PLUS expression_multiplicative {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind::S_expression_additive_plus;
-                $$->type_name = std::string("expression_additive_plus");
+                $$->typestr = std::string("expression_additive_plus");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
@@ -1232,7 +1262,7 @@ expression_additive_minus
         : expression_additive MINUS expression_multiplicative {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind::S_expression_additive_minus;
-                $$->type_name = std::string("expression_additive_minus");
+                $$->typestr = std::string("expression_additive_minus");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
@@ -1260,7 +1290,7 @@ expression_shift_left
         : expression_shift LEFT_OP expression_additive {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind::S_expression_shift_left;
-                $$->type_name = std::string("expression_shift_left");
+                $$->typestr = std::string("expression_shift_left");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
@@ -1270,7 +1300,7 @@ expression_shift_right
         : expression_shift RIGHT_OP expression_additive {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind::S_expression_shift_right;
-                $$->type_name = std::string("expression_shift_right");
+                $$->typestr = std::string("expression_shift_right");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
@@ -1305,7 +1335,7 @@ expression_relational_lt
         : expression_relational LT_OP expression_shift {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind::S_expression_relational_lt;
-                $$->type_name = std::string("expression_relational_lt");
+                $$->typestr = std::string("expression_relational_lt");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
@@ -1315,7 +1345,7 @@ expression_relational_gt
         : expression_relational GT_OP expression_shift {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind::S_expression_relational_gt;
-                $$->type_name = std::string("expression_relational_gt");
+                $$->typestr = std::string("expression_relational_gt");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
@@ -1325,7 +1355,7 @@ expression_relational_le
         : expression_relational LE_OP expression_shift {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind::S_expression_relational_le;
-                $$->type_name = std::string("expression_relational_le");
+                $$->typestr = std::string("expression_relational_le");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
@@ -1335,7 +1365,7 @@ expression_relational_ge
         : expression_relational GE_OP expression_shift {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind::S_expression_relational_ge;
-                $$->type_name = std::string("expression_relational_ge");
+                $$->typestr = std::string("expression_relational_ge");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
@@ -1349,7 +1379,7 @@ expression_equality
         | expression_equality EQ_OP expression_relational {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind::S_expression_equality;
-                $$->type_name = std::string("expression_equality");
+                $$->typestr = std::string("expression_equality");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
@@ -1357,7 +1387,7 @@ expression_equality
         | expression_equality NE_OP expression_relational {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind::S_expression_equality;
-                $$->type_name = std::string("expression_equality");
+                $$->typestr = std::string("expression_equality");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
@@ -1371,7 +1401,7 @@ expression_and
         | expression_and ANDPERSAND expression_equality {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind::S_expression_and;
-                $$->type_name = std::string("expression_and");
+                $$->typestr = std::string("expression_and");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
@@ -1385,7 +1415,7 @@ expression_exclusive_or
         | expression_exclusive_or XOR_OP expression_and {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind::S_expression_exclusive_or;
-                $$->type_name = std::string("expression_exclusive_or");
+                $$->typestr = std::string("expression_exclusive_or");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
@@ -1399,7 +1429,7 @@ expression_inclusive_or
         | expression_inclusive_or PIPE expression_exclusive_or {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind::S_expression_inclusive_or;
-                $$->type_name = std::string("expression_exclusive_or");
+                $$->typestr = std::string("expression_exclusive_or");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
@@ -1413,7 +1443,7 @@ expression_logical_and
         | expression_logical_and AND_OP expression_inclusive_or {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind::S_expression_logical_and;
-                $$->type_name = std::string("expression_logical_and");
+                $$->typestr = std::string("expression_logical_and");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
@@ -1427,7 +1457,7 @@ expression_logical_or
         | expression_logical_or OR_OP expression_logical_and {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind::S_expression_logical_or;
-                $$->type_name = std::string("expression_logical_or");
+                $$->typestr = std::string("expression_logical_or");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
@@ -1441,7 +1471,7 @@ expression_conditional
         | expression_logical_or QUESTIONMARK expression COLON expression_conditional {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind::S_expression_conditional;
-                $$->type_name = std::string("expression_conditional");
+                $$->typestr = std::string("expression_conditional");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
@@ -1457,7 +1487,7 @@ expression_assignment
         | expression_unary operator_assignment expression_assignment {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind::S_expression_assignment;
-                $$->type_name = std::string("expression_assignment");
+                $$->typestr = std::string("expression_assignment");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
@@ -1511,7 +1541,7 @@ type_name
         : STRUCT BRACE_L struct_declaration_list BRACE_R {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_type_name;
-                $$->type_name = std::string("type_name");
+                $$->typestr = std::string("type_name");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
@@ -1520,7 +1550,7 @@ type_name
         | TYPEOF PAREN_L expression PAREN_R {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_type_name;
-                $$->type_name = std::string("type_name");
+                $$->typestr = std::string("type_name");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
@@ -1533,17 +1563,11 @@ type_name
         ;
 
 type_name_qualified
-        : IDENTIFIER {
+        : TYPE_NAME {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_type_name_qualified;
-                $$->type_name = std::string("type_name_qualified");
+                $$->typestr = std::string("type_name_qualified");
                 $$->children.push_back($1);
-                PRINT_NONTERMINALS($$);
-        }
-        | type_name_qualified DOUBLE_COLON IDENTIFIER {
-                $$ = $1;
-                $$->children.push_back($2);
-                $$->children.push_back($3);
                 PRINT_NONTERMINALS($$);
         }
         ;
@@ -1552,7 +1576,7 @@ struct_declaration_list
         : struct_declaration {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_struct_declaration;
-                $$->type_name = std::string("struct_declaration_list");
+                $$->typestr = std::string("struct_declaration_list");
                 $$->children.push_back($1);
         }
         | struct_declaration_list struct_declaration {
@@ -1566,7 +1590,7 @@ struct_declaration
                 // Member
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_struct_declaration;
-                $$->type_name = std::string("struct_declaration_member");
+                $$->typestr = std::string("struct_declaration_member");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
@@ -1577,7 +1601,7 @@ struct_declaration
                 // Method
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_struct_declaration;
-                $$->type_name = std::string("struct_declaration_method");
+                $$->typestr = std::string("struct_declaration_method");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
@@ -1590,7 +1614,7 @@ struct_declaration
           // Constructor
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_struct_declaration;
-                $$->type_name = std::string("struct_declaration_constructor");
+                $$->typestr = std::string("struct_declaration_constructor");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
@@ -1601,7 +1625,7 @@ struct_declaration
           // Destructor
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_struct_declaration;
-                $$->type_name = std::string("struct_declaration_destructor");
+                $$->typestr = std::string("struct_declaration_destructor");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
@@ -1616,18 +1640,18 @@ type_access_qualifier
         : /**/ {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_type_access_qualifier;
-                $$->type_name = std::string("type_access_qualifier");
+                $$->typestr = std::string("type_access_qualifier");
         }
         | CONST {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_type_access_qualifier;
-                $$->type_name = std::string("type_access_qualifier");
+                $$->typestr = std::string("type_access_qualifier");
                 $$->children.push_back($1);
         }
         | VOLATILE {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_type_access_qualifier;
-                $$->type_name = std::string("type_access_qualifier");
+                $$->typestr = std::string("type_access_qualifier");
                 $$->children.push_back($1);
         }
         ;
@@ -1636,15 +1660,15 @@ type_specifier
         : type_access_qualifier type_name {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_type_specifier;
-                $$->type_name = std::string("type_specifier");
+                $$->typestr = std::string("type_specifier");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 PRINT_NONTERMINALS($$);
-        }
+        } 
         | FUNCTION type_specifier PAREN_L opt_function_definition_arg_list PAREN_R {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_type_specifier;
-                $$->type_name = std::string("type_specifier");
+                $$->typestr = std::string("type_specifier");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
@@ -1655,7 +1679,7 @@ type_specifier
         | type_specifier STAR type_access_qualifier {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_type_specifier;
-                $$->type_name = std::string("type_specifier-pointer-to");
+                $$->typestr = std::string("type_specifier-pointer-to");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
@@ -1664,7 +1688,7 @@ type_specifier
         | type_specifier ANDPERSAND type_access_qualifier {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_type_specifier;
-                $$->type_name = std::string("type_specifier-reference-to");
+                $$->typestr = std::string("type_specifier-reference-to");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
@@ -1676,7 +1700,7 @@ opt_argument_expression_list
         : /**/ {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_argument_expression_list;
-                $$->type_name = std::string("argument_expression_list");
+                $$->typestr = std::string("argument_expression_list");
         }
         | argument_expression_list {
                 $$ = $1;
@@ -1687,7 +1711,7 @@ argument_expression_list
         : expression {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_argument_expression_list;
-                $$->type_name = std::string("argument_expression_list");
+                $$->typestr = std::string("argument_expression_list");
                 $$->children.push_back($1);
         }
         | argument_expression_list COMMA expression {

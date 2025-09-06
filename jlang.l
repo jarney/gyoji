@@ -3,6 +3,7 @@
 #include <memory>
 #include "jsyntax.hpp"
 #include "ast.hpp"
+#include "namespace.hpp"
 #include "target/jlang.y.hpp"
 
 using namespace calc;
@@ -12,21 +13,21 @@ std::vector<ASTDataNonSyntax::ptr> non_syntax_data;
 
 #define DEBUG_TERMINALS 0
 #if DEBUG_TERMINALS
-#define PRINT_TERMINALS(s) printf("%s\n", s);
+#define PRINT_TERMINALS(s,t) printf("%s : %s\n", s, t);
 #else
-#define PRINT_TERMINALS(s) /**/
+#define PRINT_TERMINALS(s,t) /**/
 #endif
 
 #define PROCESS_NODE(nodetype) \
     ASTNode::ptr node = std::make_shared<ASTNode>(); \
     node->type = Parser::symbol_kind_type::S_ ## nodetype; \
-    node->type_name = std::string(#nodetype); \
+    node->typestr = std::string(#nodetype); \
     node->value = std::string(yytext); \
     node->lineno = lineno; \
     node->non_syntax = non_syntax_data; \
     non_syntax_data.clear(); \
     yylval->emplace<ASTNode::ptr>(node); \
-    PRINT_TERMINALS(#nodetype) \
+    PRINT_TERMINALS(#nodetype, yytext) \
     return Parser::token::nodetype;
 %}
  
@@ -41,11 +42,13 @@ exp             ([eE][+-]?{dseq})
 exp_opt         ({exp}?)
 integer         ({dseq})
 float           (({frac}{exp_opt})|({dseq}{exp}))
-
+identifier      ([a-zA-Z_][a-zA-Z_0-9]*)
+whitespace      ([[:space:]])
 %%
 
 namespace {PROCESS_NODE(NAMESPACE);}
 using {PROCESS_NODE(USING);}
+as {PROCESS_NODE(AS);}
 typedef {PROCESS_NODE(TYPEDEF);}
 public {PROCESS_NODE(PUBLIC);}
 private {PROCESS_NODE(PRIVATE);}
@@ -59,7 +62,6 @@ else {PROCESS_NODE(ELSE);}
 while {PROCESS_NODE(WHILE);}
 for {PROCESS_NODE(FOR);}
 switch {PROCESS_NODE(SWITCH);}
-var {PROCESS_NODE(VAR);}
 function {PROCESS_NODE(FUNCTION);}
 return {PROCESS_NODE(RETURN);}
 break {PROCESS_NODE(BREAK);}
@@ -78,7 +80,6 @@ volatile {PROCESS_NODE(VOLATILE);}
 unsafe {PROCESS_NODE(UNSAFE);} 
 
 ; {PROCESS_NODE(SEMICOLON);}
-\:\: {PROCESS_NODE(DOUBLE_COLON);}
 -> {PROCESS_NODE(PTR_OP);}
 >> {PROCESS_NODE(RIGHT_OP);}
 \+\+ {PROCESS_NODE(INC_OP);}
@@ -129,7 +130,17 @@ unsafe {PROCESS_NODE(UNSAFE);}
 \'.\' { PROCESS_NODE(LITERAL_CHAR);}
 {float} {PROCESS_NODE(LITERAL_FLOAT);}
 {integer} { PROCESS_NODE(LITERAL_INT);}
-[a-zA-Z_][a-zA-Z0-9_]* {PROCESS_NODE(IDENTIFIER);}
+(::)*{identifier}({whitespace}*:{whitespace}*:{whitespace}*{identifier})* {
+        if (namespace_exists(std::string(yytext))) {
+            PROCESS_NODE(NAMESPACE_NAME);
+        }
+        else if (namespace_type_exists(std::string(yytext))) {
+            PROCESS_NODE(TYPE_NAME);
+        }
+        else {
+            PROCESS_NODE(IDENTIFIER);
+        }
+}
 
 "/*"        {
   BEGIN(COMMENT);

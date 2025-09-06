@@ -74,7 +74,7 @@ void JBackendFormatTree::print_non_syntax(ASTDataNonSyntax::ptr node)
 void JBackendFormatTree::process(ASTNode::ptr node)
 {
   print_indent();
-  printf("<node type='%s'", xml_escape_attribute(node->type_name).c_str());
+  printf("<node type='%s'", xml_escape_attribute(node->typestr).c_str());
   if (node->lineno > 0) {
     printf(" lineno='%ld'", node->lineno);
   }
