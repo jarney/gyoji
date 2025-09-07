@@ -4,12 +4,19 @@
 #include <list>
 #include <map>
 
+#define PROTECTION_PUBLIC 0
+#define PROTECTION_PROTECTED 1
+#define PROTECTION_PRIVATE 2
+
 class NamespaceType {
 public:
   typedef std::shared_ptr<NamespaceType> ptr;
   NamespaceType(std::string _name);
   ~NamespaceType();
 
+  typedef int Protection;
+
+  Protection protection;
   std::string name;
 };
 
@@ -28,7 +35,7 @@ public:
 void namespace_init();
 void namespace_begin(std::string name);
 
-void namespace_type_define(std::string name);
+void namespace_type_define(std::string name, NamespaceType::Protection protection);
 bool namespace_type_exists(std::string name);
 bool namespace_exists(std::string name);
 

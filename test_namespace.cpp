@@ -15,7 +15,7 @@ int main(int argc, char **argv)
   // current namespace is std
   // 
   namespace_begin("std");
-  namespace_type_define("string");
+  namespace_type_define("string", PROTECTION_PUBLIC);
   
   ASSERT_BOOL(true, namespace_type_exists("string"), "Type should exist in current namespace");
   ASSERT_BOOL(false, namespace_type_exists("bar"), "This type was never defined");

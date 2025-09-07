@@ -1,81 +1,6 @@
 #include "namespace.hpp"
 #include "jstring.hpp"
 
-/*
-<namespace value="std">
-    <type-name value="q">
-        <type-name value="a"/>
-    </type-name>
-    <type-name value="algorithms">
-        <type-name value="b"/>
-    </type-name>
-    <namespace value="string">
-        <type-name value="c"/>
-    </namespace>
-</namespace>
-
-The above structure defines the following:
-std::q -- This is a composite type defined inside std.  This is a type AND a namespace.
-std::q::a -- This is a nested type defined inside std::q
-std::string -- This is a namespace, but not a type
-
-From this, we require a couple of things:
-The set of "current" namespaces (i.e. using statements)
-A map of all of the namespaces nested as above.
-When you're inside a namespace, it acts like a "using" for that namespace
-that ends at the scope block.
-
-How basic namespace work:
-* When the parser recognizes a NAMESPACE IDENTIFIER block, add it to
-  the list of namespaces under the 'current' namespace.
-* When the parser recognizes a TYPEDEF, add the type to the 'current' namespace.
-* When the parser recognizes a NAMESPACE block, pop the 'current' namespace.
-* When the 'using' is recognized, add the namespace to the
-  list of 'in-scope' namespaces.
-
-Data structures:
-
-Namespace::ptr root;                         // This is the 'root' namespace.
-std::list<Namespace::ptr> current_namespace; // This is a stack we push and pop from
-std::list<std::string> in_scope_namespaces;
-
-struct Namespace {
-    std::string name;                                // Name of the namespace.
-    std::map<std::string, Namespace::ptr> children;  // This is the list of child namespaces.
-    std::map<std::string, NamespaceType::ptr> types;          // This is the set of types inside this namespace.
-};
-
-There is a "special" namespace at the root (the empty name).
-
-// Add a new type to whatever current namespace
-// we happen to be inside.
-void type_new(std::string name)
-{
-    NamespaceType::ptr type = std::make_shared<Type>(name);
-    current_namespace.top()->types.push_back(type);
-}
-
-void namespace_using(std::vector<std::string> namespace_path)
-{
-    // TODO: Walk the namespace path from the top and try to find
-    // a matching namespace.  If the path starts with "", then
-    // we start walking from the root.  Otherwise, we try walking
-    // from the 'current'.
-
-namespace std {
-    namespace string {
-        namespace append {
-        };
-    };
-    using string;  // This assumes we're using from 'std' becuase we're inside it.
-    using string::append;  // This also assumes we're using from 'std' because we're in it.
-    using append;          // We first try from root
-};
-    
-}
-
-*/
-
 Namespace::Namespace(std::string _name)
   : name(_name)
 {}
@@ -166,17 +91,18 @@ static void print_indent(void)
   }
 }
 
-void namespace_type_define(std::string name)
+void namespace_type_define(std::string name, NamespaceType::Protection protection)
 {
   NamespaceType::ptr type = std::make_shared<NamespaceType>(name);
+  type->protection = protection;
   NamespaceParseContext::ptr context = current_namespace.back();
   context->ns->types[name] = type;
 }
 
-static bool namespace_exists_in_ns(Namespace::ptr ns, TypeNameQualified name, bool search_type)
+static bool namespace_exists_in_ns(Namespace::ptr ns, TypeNameQualified name, bool is_type)
 {
   if (name.path.size() == 1) {
-    if (search_type) {
+    if (is_type) {
       if (ns->types.find(name.path.back()) != ns->types.end()) {
         return true;
       }
@@ -190,16 +116,16 @@ static bool namespace_exists_in_ns(Namespace::ptr ns, TypeNameQualified name, bo
   }
   std::string find_child = name.path.front();
   if (ns->children.find(find_child) != ns->children.end()) {
-    return namespace_exists_in_ns(ns->children[find_child], name.pop_first(), search_type);
+    return namespace_exists_in_ns(ns->children[find_child], name.pop_first(), is_type);
   }
 
   return false;
 }
 
-static bool namespace_exists_qual(TypeNameQualified type, bool search_type);
-static bool namespace_exists_str(std::string name, bool search_type);
+static bool namespace_exists_qual(TypeNameQualified type, bool is_type);
+static bool namespace_exists_str(std::string name, bool is_type);
 
-bool namespace_exists_str(std::string name, bool search_type)
+bool namespace_exists_str(std::string name, bool is_type)
 {
   // Remove any superfluous whitespaces.
   name = string_remove_nonidentifier(name);
@@ -209,12 +135,12 @@ bool namespace_exists_str(std::string name, bool search_type)
   for (auto s : split) {
     ns = ns.add(s);
   }
-  bool rc = namespace_exists_qual(ns, search_type);
+  bool rc = namespace_exists_qual(ns, is_type);
   return rc;
 
 }
 
-static bool namespace_exists_search(std::string name, bool search_type);
+static bool namespace_exists_search(std::string name, bool is_type);
 
 bool namespace_exists(std::string name)
 {
@@ -227,9 +153,9 @@ bool namespace_type_exists(std::string name)
   return namespace_exists_search(name, true);
 }
 
-static bool namespace_exists_search(std::string name, bool search_type)
+static bool namespace_exists_search(std::string name, bool is_type)
 {
-  bool rc = namespace_exists_str(name, search_type);
+  bool rc = namespace_exists_str(name, is_type);
   if (rc) {
     return rc;
   }
@@ -242,7 +168,7 @@ static bool namespace_exists_search(std::string name, bool search_type)
     else {
       aliased_name = string_replace_start(name, alias.first + std::string("::"), alias.second + std::string("::"));
     }
-    rc = namespace_exists_str(aliased_name, search_type);
+    rc = namespace_exists_str(aliased_name, is_type);
     if (rc) {
       return rc;
     }
@@ -258,12 +184,12 @@ void namespace_using(std::string name, std::string alias)
 
 // Given a simple identifier,
 // find the type in the 'current' namespace.
-static bool namespace_exists_qual(TypeNameQualified name, bool search_type)
+static bool namespace_exists_qual(TypeNameQualified name, bool is_type)
 {
   // First, determine if this type
   // exists in the current namespace.
   NamespaceParseContext::ptr current = current_namespace.back();
-  if (namespace_exists_in_ns(current->ns, name, search_type)) {
+  if (namespace_exists_in_ns(current->ns, name, is_type)) {
     return true;
   }
   
@@ -275,19 +201,19 @@ static bool namespace_exists_qual(TypeNameQualified name, bool search_type)
   // If the first component is empty,
   // force resolution from root.
   if (find_child.size() == 0) {
-    return namespace_exists_in_ns(root, name.pop_first(), search_type);
+    return namespace_exists_in_ns(root, name.pop_first(), is_type);
   }
 
   // Try the children of the current namespace
   // next.
   if (current->ns->children.find(find_child) != current->ns->children.end()) {
-    if (namespace_exists_in_ns(current->ns->children[find_child], name.pop_first(), search_type)) {
+    if (namespace_exists_in_ns(current->ns->children[find_child], name.pop_first(), is_type)) {
       return true;
     }
   }
 
   // Finally, try finding it in the root
-  return namespace_exists_in_ns(root, name, search_type);
+  return namespace_exists_in_ns(root, name, is_type);
 }
 
 static void namespace_dump_type(NamespaceType::ptr type)

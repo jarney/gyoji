@@ -504,7 +504,7 @@ type_definition
                 $$->children.push_back($3);
                 $$->children.push_back($4);
                 PRINT_NONTERMINALS($$);
-                namespace_type_define($3->value);
+                namespace_type_define($3->value, PROTECTION_PUBLIC);
         }
         ;
 

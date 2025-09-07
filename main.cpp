@@ -42,14 +42,14 @@ int main(int argc, char **argv)
     return_data_t data;
     
     namespace_init();
-    namespace_type_define("char");
-    namespace_type_define("int");
-    namespace_type_define("float");
-    namespace_type_define("double");
-    namespace_type_define("long");
-    namespace_type_define("short");
-    namespace_type_define("unsigned");
-    namespace_type_define("void");
+    namespace_type_define("char", PROTECTION_PUBLIC);
+    namespace_type_define("int", PROTECTION_PUBLIC);
+    namespace_type_define("float", PROTECTION_PUBLIC);
+    namespace_type_define("double", PROTECTION_PUBLIC);
+    namespace_type_define("long", PROTECTION_PUBLIC);
+    namespace_type_define("short", PROTECTION_PUBLIC);
+    namespace_type_define("unsigned", PROTECTION_PUBLIC);
+    namespace_type_define("void", PROTECTION_PUBLIC);
     
     calc::Parser parser{ scanner, &data };
     int rc = parser.parse();
