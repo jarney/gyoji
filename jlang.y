@@ -39,6 +39,7 @@
 %token <ASTNode::ptr> NAMESPACE_NAME
 %token <ASTNode::ptr> TYPE_NAME
 %token <ASTNode::ptr> CLASS
+%token <ASTNode::ptr> ENUM
 
 %token <ASTNode::ptr> NAMESPACE
 %token <ASTNode::ptr> AS
@@ -151,6 +152,12 @@
 %nterm <ASTNode::ptr> type_definition;
 %nterm <ASTNode::ptr> class_definition;
 %nterm <ASTNode::ptr> class_decl_start;
+
+%nterm <ASTNode::ptr> enum_definition;
+%nterm <ASTNode::ptr> opt_enum_value_list;
+%nterm <ASTNode::ptr> enum_value_list;
+%nterm <ASTNode::ptr> enum_value;
+
 %nterm <ASTNode::ptr> opt_unsafe
 %nterm <ASTNode::ptr> namespace_declaration;
 %nterm <ASTNode::ptr> file_statement_namespace;
@@ -328,6 +335,10 @@ file_statement
                 PRINT_NONTERMINALS($$);
         }
         | class_definition {
+                $$ = $1;
+                PRINT_NONTERMINALS($$);
+        }
+        | enum_definition {
                 $$ = $1;
                 PRINT_NONTERMINALS($$);
         }
@@ -510,6 +521,27 @@ file_statement_using
                   return_data->namespace_context.namespace_using("", found_std->location);
                 }
         }
+        | USING NAMESPACE TYPE_NAME opt_as SEMICOLON {
+                $$ = std::make_shared<ASTNode>();
+                $$->type = Parser::symbol_kind_type::S_file_statement_using;
+                $$->typestr = std::string("file_statement_using");
+                $$->children.push_back($1);
+                $$->children.push_back($2);
+                $$->children.push_back($3);
+                $$->children.push_back($4);
+                $$->children.push_back($5);
+                NamespaceFoundReason::ptr found_std = return_data->namespace_context.namespace_lookup($3->value);
+                if (!found_std) {
+                  fprintf(stderr, "Error: no such namespace %s in using statement\n", $3->value.c_str());
+                  exit(1);
+                }
+                if ($4->children.size() == 2) {
+                  return_data->namespace_context.namespace_using($4->children.back()->value, found_std->location);
+                }
+                else {
+                  return_data->namespace_context.namespace_using("", found_std->location);
+                }
+        }
         ;
 
 class_decl_start
@@ -553,6 +585,58 @@ type_definition
         }
         ;
 
+enum_definition
+        : ENUM type_name IDENTIFIER BRACE_L opt_enum_value_list BRACE_R SEMICOLON {
+                $$ = std::make_shared<ASTNode>();
+                $$->type = Parser::symbol_kind_type::S_enum_definition;
+                $$->typestr = std::string("enum_definition");
+                $$->children.push_back($1);
+                $$->children.push_back($2);
+                $$->children.push_back($3);
+                $$->children.push_back($4);
+                $$->children.push_back($5);
+                $$->children.push_back($6);
+                $$->children.push_back($7);
+                return_data->namespace_context.namespace_new($3->value, Namespace::TYPE_TYPEDEF, Namespace::VISIBILITY_PUBLIC);
+        }
+        ;
+
+opt_enum_value_list
+        : /**/ {
+                $$ = std::make_shared<ASTNode>();
+                $$->type = Parser::symbol_kind_type::S_enum_value_list;
+                $$->typestr = std::string("enum_value_list");
+        }
+        | enum_value_list {
+                $$ = $1;
+        }
+        ;
+
+enum_value_list
+        : enum_value {
+                $$ = std::make_shared<ASTNode>();
+                $$->type = Parser::symbol_kind_type::S_enum_value_list;
+                $$->typestr = std::string("enum_value_list");
+                $$->children.push_back($1);
+        }
+        | enum_value_list enum_value {
+                $$ = $1;
+                $$->children.push_back($2);
+        }
+        ;
+
+enum_value
+        : IDENTIFIER EQUALS expression_primary SEMICOLON {
+                $$ = std::make_shared<ASTNode>();
+                $$->type = Parser::symbol_kind_type::S_enum_value;
+                $$->typestr = std::string("enum_value");
+                $$->children.push_back($1);
+                $$->children.push_back($2);
+                $$->children.push_back($3);
+                $$->children.push_back($4);
+        }
+        ;
+  
 opt_unsafe
         : /**/ {
                 $$ = std::make_shared<ASTNode>();
@@ -1582,16 +1666,6 @@ expression
 
 
 type_name
-/*        : STRUCT BRACE_L struct_declaration_list BRACE_R {
-                $$ = std::make_shared<ASTNode>();
-                $$->type = Parser::symbol_kind_type::S_type_name;
-                $$->typestr = std::string("type_name");
-                $$->children.push_back($1);
-                $$->children.push_back($2);
-                $$->children.push_back($3);
-                $$->children.push_back($4);
-        }
-*/
         : TYPEOF PAREN_L expression PAREN_R {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_type_name;
@@ -1677,6 +1751,18 @@ struct_declaration
                 $$->children.push_back($4);
                 $$->children.push_back($5);
                 $$->children.push_back($6);
+        }
+        | class_definition {
+                $$ = $1;
+                PRINT_NONTERMINALS($$);
+        }
+        | enum_definition {
+                $$ = $1;
+                PRINT_NONTERMINALS($$);
+        }
+        | type_definition {
+                $$ = $1;
+                PRINT_NONTERMINALS($$);
         }
         ;
 

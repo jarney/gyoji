@@ -2,9 +2,7 @@
 
 ## Compilation
 * Allow typedefs to be public/private(?)
-  * Yes, typedefs should be allowed public/protected/private.
-    public means resolvable anywhere.
-    private means resolvable only within the current namespace with no 'helper' resolutions.
+  * Hook up visibility.
 
 * Figure out how to handle header files and declarations/imports.
   Should we require a pre-processor, or can we do without?

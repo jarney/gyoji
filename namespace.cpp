@@ -34,6 +34,9 @@ std::string Namespace::fully_qualified(void)
 {
   std::string ret;
 
+  if (parent == nullptr) {
+    return std::string("");
+  }
   Namespace::ptr current = parent;
   while (current) {
     if (current->name.size() > 0) {
@@ -114,9 +117,9 @@ NamespaceContext::namespace_lookup_visibility(std::string search_context, Namesp
     return std::make_shared<NamespaceFoundReason>(NamespaceFoundReason::REASON_FOUND, found);
   }
 
-  std::string found_context = found->fully_qualified();
-  
   if (found->visibility == Namespace::VISIBILITY_PROTECTED) {
+    Namespace::ptr found_parent = found->parent;
+    std::string found_context = found_parent->fully_qualified();
     // If it's protected, we need to make sure that the full path
     // of what's found is a parent of our current location.
     // If it's protected, then found must be contained in search.
@@ -130,6 +133,7 @@ NamespaceContext::namespace_lookup_visibility(std::string search_context, Namesp
   }
     
   if (found->visibility == Namespace::VISIBILITY_PRIVATE) {
+    std::string found_context = found->fully_qualified();
     // If it's private, we need to make sure that
     // the full path of what we found matches the full
     // path of our current location.
