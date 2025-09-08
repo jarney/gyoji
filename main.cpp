@@ -24,8 +24,11 @@ int main(int argc, char **argv)
       fprintf(stderr, "Cannot open file %s\n", argv[2]);
       exit(1);
     }
+    return_data_t data;
+
     yyscan_t scanner;
     yylex_init(&scanner);
+    yyset_extra (&data.namespace_context, scanner);
     yyset_in(input, scanner);
     
     std::shared_ptr<JBackend> backend;
@@ -39,17 +42,15 @@ int main(int argc, char **argv)
       fprintf(stderr, "Invalid backend %s\n", argv[1]);
       return 1;
     }
-    return_data_t data;
-    
-    namespace_init();
-    namespace_type_define("char", PROTECTION_PUBLIC);
-    namespace_type_define("int", PROTECTION_PUBLIC);
-    namespace_type_define("float", PROTECTION_PUBLIC);
-    namespace_type_define("double", PROTECTION_PUBLIC);
-    namespace_type_define("long", PROTECTION_PUBLIC);
-    namespace_type_define("short", PROTECTION_PUBLIC);
-    namespace_type_define("unsigned", PROTECTION_PUBLIC);
-    namespace_type_define("void", PROTECTION_PUBLIC);
+
+    data.namespace_context.namespace_new("char", Namespace::TYPE_TYPEDEF, Namespace::VISIBILITY_PUBLIC);
+    data.namespace_context.namespace_new("int", Namespace::TYPE_TYPEDEF, Namespace::VISIBILITY_PUBLIC);
+    data.namespace_context.namespace_new("float", Namespace::TYPE_TYPEDEF, Namespace::VISIBILITY_PUBLIC);
+    data.namespace_context.namespace_new("double", Namespace::TYPE_TYPEDEF, Namespace::VISIBILITY_PUBLIC);
+    data.namespace_context.namespace_new("long", Namespace::TYPE_TYPEDEF, Namespace::VISIBILITY_PUBLIC);
+    data.namespace_context.namespace_new("short", Namespace::TYPE_TYPEDEF, Namespace::VISIBILITY_PUBLIC);
+    data.namespace_context.namespace_new("unsigned", Namespace::TYPE_TYPEDEF, Namespace::VISIBILITY_PUBLIC);
+    data.namespace_context.namespace_new("void", Namespace::TYPE_TYPEDEF, Namespace::VISIBILITY_PUBLIC);
     
     calc::Parser parser{ scanner, &data };
     int rc = parser.parse();

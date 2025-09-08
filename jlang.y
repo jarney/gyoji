@@ -38,6 +38,7 @@
 %token <ASTNode::ptr> IDENTIFIER
 %token <ASTNode::ptr> NAMESPACE_NAME
 %token <ASTNode::ptr> TYPE_NAME
+%token <ASTNode::ptr> CLASS
 
 %token <ASTNode::ptr> NAMESPACE
 %token <ASTNode::ptr> AS
@@ -148,6 +149,8 @@
 %nterm <ASTNode::ptr> file_statement_function_definition;
 %nterm <ASTNode::ptr> file_statement_function_declaration;
 %nterm <ASTNode::ptr> type_definition;
+%nterm <ASTNode::ptr> class_definition;
+%nterm <ASTNode::ptr> class_decl_start;
 %nterm <ASTNode::ptr> opt_unsafe
 %nterm <ASTNode::ptr> namespace_declaration;
 %nterm <ASTNode::ptr> file_statement_namespace;
@@ -324,6 +327,10 @@ file_statement
                 $$ = $1;
                 PRINT_NONTERMINALS($$);
         }
+        | class_definition {
+                $$ = $1;
+                PRINT_NONTERMINALS($$);
+        }
         | type_definition {
                 $$ = $1;
                 PRINT_NONTERMINALS($$);
@@ -447,7 +454,8 @@ namespace_declaration
                 $$->typestr = std::string("namespace_declaration");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
-                namespace_begin($2->value);
+                return_data->namespace_context.namespace_new($2->value, Namespace::TYPE_NAMESPACE, Namespace::VISIBILITY_PUBLIC);
+                return_data->namespace_context.namespace_push($2->value);
         }
         ;
 
@@ -461,7 +469,7 @@ file_statement_namespace
                 $$->children.push_back($3);
                 $$->children.push_back($4);
                 $$->children.push_back($5);
-                namespace_end();
+                return_data->namespace_context.namespace_pop();
         }
         ;
 
@@ -490,7 +498,44 @@ file_statement_using
                 $$->children.push_back($3);
                 $$->children.push_back($4);
                 $$->children.push_back($5);
-                namespace_using($3->value, "");
+                NamespaceFoundReason::ptr found_std = return_data->namespace_context.namespace_lookup($3->value);
+                if (!found_std) {
+                  fprintf(stderr, "Error: no such namespace %s in using statement\n", $3->value.c_str());
+                  exit(1);
+                }
+                if ($4->children.size() == 2) {
+                  return_data->namespace_context.namespace_using($4->children.back()->value, found_std->location);
+                }
+                else {
+                  return_data->namespace_context.namespace_using("", found_std->location);
+                }
+        }
+        ;
+
+class_decl_start
+        : CLASS IDENTIFIER {
+                $$ = std::make_shared<ASTNode>();
+                $$->type = Parser::symbol_kind_type::S_class_definition;
+                $$->typestr = std::string("class_definition");
+                $$->children.push_back($1);
+                $$->children.push_back($2);
+                return_data->namespace_context.namespace_new($2->value, Namespace::TYPE_CLASS, Namespace::VISIBILITY_PUBLIC);
+                return_data->namespace_context.namespace_push($2->value);
+        }
+        ;
+
+class_definition
+        : class_decl_start BRACE_L struct_declaration_list BRACE_R SEMICOLON {
+                $$ = std::make_shared<ASTNode>();
+                $$->type = Parser::symbol_kind_type::S_class_definition;
+                $$->typestr = std::string("class_definition");
+                $$->children.push_back($1);
+                $$->children.push_back($2);
+                $$->children.push_back($3);
+                $$->children.push_back($4);
+                $$->children.push_back($5);
+                PRINT_NONTERMINALS($$);
+                return_data->namespace_context.namespace_pop();
         }
         ;
 
@@ -504,7 +549,7 @@ type_definition
                 $$->children.push_back($3);
                 $$->children.push_back($4);
                 PRINT_NONTERMINALS($$);
-                namespace_type_define($3->value, PROTECTION_PUBLIC);
+                return_data->namespace_context.namespace_new($3->value, Namespace::TYPE_TYPEDEF, Namespace::VISIBILITY_PUBLIC);
         }
         ;
 
@@ -1537,7 +1582,7 @@ expression
 
 
 type_name
-        : STRUCT BRACE_L struct_declaration_list BRACE_R {
+/*        : STRUCT BRACE_L struct_declaration_list BRACE_R {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_type_name;
                 $$->typestr = std::string("type_name");
@@ -1546,7 +1591,8 @@ type_name
                 $$->children.push_back($3);
                 $$->children.push_back($4);
         }
-        | TYPEOF PAREN_L expression PAREN_R {
+*/
+        : TYPEOF PAREN_L expression PAREN_R {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_type_name;
                 $$->typestr = std::string("type_name");

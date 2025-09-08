@@ -4,12 +4,12 @@ private const double q[19];
 
 typedef char my_type_t;
 
-typedef struct {
+class q {
     private my_type_t x[32];
     public void foo(int a, int b);
     public (int a, int b);
     public ~(int a, int b);
-} q;
+};
 
 int do_something(q first, int second, char **third);
 

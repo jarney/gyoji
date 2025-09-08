@@ -57,6 +57,9 @@ target/test_xml: $(TEST_XML_OBJS)
 target/test_namespace: $(TEST_NAMESPACE_OBJS)
 	gcc -g -o $@ $(TEST_NAMESPACE_OBJS) -lstdc++
 
+target/test_namespace2: $(TEST_NAMESPACE2_OBJS)
+	gcc -g -o $@ $(TEST_NAMESPACE2_OBJS) -lstdc++
+
 
 clean:
 	rm -rf target/*

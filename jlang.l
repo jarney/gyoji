@@ -50,6 +50,7 @@ namespace {PROCESS_NODE(NAMESPACE);}
 using {PROCESS_NODE(USING);}
 as {PROCESS_NODE(AS);}
 typedef {PROCESS_NODE(TYPEDEF);}
+class {PROCESS_NODE(CLASS);}
 public {PROCESS_NODE(PUBLIC);}
 private {PROCESS_NODE(PRIVATE);}
 protected {PROCESS_NODE(PROTECTED);}
@@ -130,15 +131,22 @@ unsafe {PROCESS_NODE(UNSAFE);}
 {float} {PROCESS_NODE(LITERAL_FLOAT);}
 {integer} { PROCESS_NODE(LITERAL_INT);}
 (::)*{identifier}({whitespace}*:{whitespace}*:{whitespace}*{identifier})* {
-        if (namespace_exists(std::string(yytext))) {
+    NamespaceContext *context = (NamespaceContext*)yyget_extra(yyscanner);
+    NamespaceFoundReason::ptr found = context->namespace_lookup(std::string(yytext));
+    if (found->reason == NamespaceFoundReason::REASON_FOUND) {
+        if (found->location->type == Namespace::TYPE_NAMESPACE) {
             PROCESS_NODE(NAMESPACE_NAME);
         }
-        else if (namespace_type_exists(std::string(yytext))) {
+        else {
             PROCESS_NODE(TYPE_NAME);
         }
-        else {
-            PROCESS_NODE(IDENTIFIER);
-        }
+    }
+    else if (found->reason == NamespaceFoundReason::REASON_NOT_FOUND) {
+        PROCESS_NODE(IDENTIFIER);
+    }
+    else {
+        PROCESS_NODE(YYEOF);
+    }
 }
 
 "/*"        {

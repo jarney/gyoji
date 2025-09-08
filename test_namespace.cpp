@@ -3,50 +3,150 @@
 
 int main(int argc, char **argv)
 {
-  
   printf("Testing namespace search functionality\n");
-  
-  namespace_init();
+  NamespaceContext ctx;
 
-  ASSERT_BOOL(false, namespace_type_exists("string"), "string should not exist before creation");
-  ASSERT_BOOL(false, namespace_type_exists("std::string"), "std::string should not exist before creation");
-  ASSERT_BOOL(false, namespace_type_exists("::std::string"), "std::string should not exist before creation");
-  
-  // current namespace is std
-  // 
-  namespace_begin("std");
-  namespace_type_define("string", PROTECTION_PUBLIC);
-  
-  ASSERT_BOOL(true, namespace_type_exists("string"), "Type should exist in current namespace");
-  ASSERT_BOOL(false, namespace_type_exists("bar"), "This type was never defined");
-  ASSERT_BOOL(true, namespace_type_exists("std::string"), "String can be accessed directly from root(1)");
-  ASSERT_BOOL(true, namespace_type_exists("::std::string"), "String can be accessed directly from root(2)");
-  ASSERT_BOOL(true, namespace_type_exists(": : std :: string"), "Should also work when we throw in random whitespace");
-  
-  namespace_end(); // Namespace is now "" after popping ::std from it.
-  
-  // Now that we're outside of this namespace,
-  // string should no longer be defined
-  ASSERT_BOOL(false, namespace_type_exists("string"), "String is no longer in this namespace");
-  // but std::string is.
-  
-  // We can still access this from the root
-  ASSERT_BOOL(true, namespace_type_exists("std::string"), "String can be accessed directly from root");
-  ASSERT_BOOL(true, namespace_type_exists("::std::string"), "String is in the root namespace");
+  ctx.namespace_new("std", Namespace::TYPE_NAMESPACE, Namespace::VISIBILITY_PUBLIC);
+  ctx.namespace_push("std");
 
-  namespace_begin("nonstd");
+  ctx.namespace_new("string", Namespace::TYPE_TYPEDEF, Namespace::VISIBILITY_PUBLIC);
+  ctx.namespace_new("string_protected", Namespace::TYPE_TYPEDEF, Namespace::VISIBILITY_PROTECTED);
+  ctx.namespace_new("string_private", Namespace::TYPE_TYPEDEF, Namespace::VISIBILITY_PRIVATE);
   
-  namespace_using("std", "foo");
-  namespace_using("std", "");
-  ASSERT_BOOL(true, namespace_type_exists("foo::string"), "String can be accessed by namespace alias");
-  ASSERT_BOOL(true, namespace_type_exists("string"), "String can be accessed by namespace alias");
+  // Check that in the context of this namespace,
+  // we can resolve public, private, and protected
+  // without fully qualifying the name.
+  {
+    NamespaceFoundReason::ptr string_public = ctx.namespace_lookup("string");
+    ASSERT_BOOL(true, string_public->reason == NamespaceFoundReason::REASON_FOUND, "Resolved string as public");
+        
+    NamespaceFoundReason::ptr string_protected = ctx.namespace_lookup("string_protected");
+    ASSERT_BOOL(true, string_protected->reason == NamespaceFoundReason::REASON_FOUND, "Resolved string as protected");
+    
+    NamespaceFoundReason::ptr string_private = ctx.namespace_lookup("string_private");
+    ASSERT_BOOL(true, string_private->reason == NamespaceFoundReason::REASON_FOUND, "Resolved string as private");
+  }
+
+  // Look things up using a fully-qualified path to
+  // force resolution through the root.
+
+  {
+    NamespaceFoundReason::ptr string_public = ctx.namespace_lookup("::std::string");
+    ASSERT_BOOL(true, string_public->reason == NamespaceFoundReason::REASON_FOUND, "Resolved string as public");
+    
+    NamespaceFoundReason::ptr string_protected = ctx.namespace_lookup("::std::string_protected");
+    ASSERT_BOOL(true, string_protected->reason == NamespaceFoundReason::REASON_FOUND, "Resolved string as protected");
+    
+    NamespaceFoundReason::ptr string_private = ctx.namespace_lookup("::std::string_private");
+    ASSERT_BOOL(true, string_private->reason == NamespaceFoundReason::REASON_FOUND, "Resolved string as private");
+  }
+
+  // Introduce a new set of datatypes in a nested namespace.
+  ctx.namespace_new("datatypes", Namespace::TYPE_NAMESPACE, Namespace::VISIBILITY_PUBLIC);
+  ctx.namespace_push("datatypes");
   
-  namespace_end();
+  ctx.namespace_new("int", Namespace::TYPE_TYPEDEF, Namespace::VISIBILITY_PUBLIC);
+  ctx.namespace_new("int_protected", Namespace::TYPE_TYPEDEF, Namespace::VISIBILITY_PROTECTED);
+  ctx.namespace_new("int_private", Namespace::TYPE_TYPEDEF, Namespace::VISIBILITY_PRIVATE);
+
+  // In this context, we should be able
+  // to resolve everything in our parent namespaces directly.
+
+  {
+    NamespaceFoundReason::ptr string_public = ctx.namespace_lookup("string");
+    ASSERT_BOOL(true, string_public->reason == NamespaceFoundReason::REASON_FOUND, "Resolved string as public because we're in a nested namespace.");
+    
+    NamespaceFoundReason::ptr string_protected = ctx.namespace_lookup("string_protected");
+    ASSERT_BOOL(true, string_protected->reason == NamespaceFoundReason::REASON_FOUND, "We can see protected because we're in a nested namespace.");
+    
+    NamespaceFoundReason::ptr string_private = ctx.namespace_lookup("string_private");
+    ASSERT_BOOL(true, string_private->reason == NamespaceFoundReason::REASON_FOUND, "We can see private because we're in a nested namespace.");
+  }
+
+  // In this context, we should be able
+  // to resolve everything in our parent namespaces directly.
+
+  {
+    NamespaceFoundReason::ptr int_public = ctx.namespace_lookup("int");
+    ASSERT_BOOL(true, int_public->reason == NamespaceFoundReason::REASON_FOUND, "Resolved string as public");
+    
+    NamespaceFoundReason::ptr int_protected = ctx.namespace_lookup("int_protected");
+    ASSERT_BOOL(true, int_protected->reason == NamespaceFoundReason::REASON_FOUND, "Protected should be visible");
+    
+    NamespaceFoundReason::ptr int_private = ctx.namespace_lookup("int_private");
+    ASSERT_BOOL(true, int_private->reason == NamespaceFoundReason::REASON_FOUND, "Private should not be visible outside that scope");
+  }
+
+  ctx.namespace_pop();
+
+  {
+    NamespaceFoundReason::ptr int_public = ctx.namespace_lookup("int");
+    ASSERT_BOOL(true, int_public->reason == NamespaceFoundReason::REASON_NOT_FOUND, "It's not in our current namespace because it's nested");
+    
+    NamespaceFoundReason::ptr int_dt_public = ctx.namespace_lookup("datatypes::int");
+    ASSERT_BOOL(true, int_dt_public->reason == NamespaceFoundReason::REASON_FOUND, "Resolved string as public");
+    
+    NamespaceFoundReason::ptr int_dt_protected = ctx.namespace_lookup("datatypes::int_protected");
+    ASSERT_BOOL(true, int_dt_protected->reason == NamespaceFoundReason::REASON_NOT_FOUND_PROTECTED, "Protected should be visible");
+    
+    NamespaceFoundReason::ptr int_dt_private = ctx.namespace_lookup("datatypes::int_private");
+    ASSERT_BOOL(true, int_dt_private->reason == NamespaceFoundReason::REASON_NOT_FOUND_PRIVATE, "Private should not be visible outside that scope");
+  }
+
+  ctx.namespace_pop();
   
-  ASSERT_BOOL(true, namespace_type_exists("std::string"), "String can be accessed by namespace alias");
-  ASSERT_BOOL(false, namespace_type_exists("foo::string"), "String can be accessed by namespace alias");
-  ASSERT_BOOL(false, namespace_type_exists("string"), "String can be accessed by namespace alias");
+  // Now that we're outside of that namespace, we should no longer be able to
+  // resolve protected or private types.
+
+  {
+    NamespaceFoundReason::ptr string_public = ctx.namespace_lookup("::std::string");
+    ASSERT_BOOL(true, string_public->reason == NamespaceFoundReason::REASON_FOUND, "Resolved string as public");
+    
+    NamespaceFoundReason::ptr string_protected = ctx.namespace_lookup("::std::string_protected");
+    ASSERT_BOOL(true, string_protected->reason == NamespaceFoundReason::REASON_NOT_FOUND_PROTECTED, "Resolved string as protected");
+    
+    NamespaceFoundReason::ptr string_private = ctx.namespace_lookup("::std::string_private");
+    ASSERT_BOOL(true, string_private->reason == NamespaceFoundReason::REASON_NOT_FOUND_PRIVATE, "Resolved string as private");
+
+  }
+
+  // Now that we're outside of that namespace, we should no longer be able to
+  // resolve protected or private types.
+
+  {
+    NamespaceFoundReason::ptr string_public = ctx.namespace_lookup("std::string");
+    ASSERT_BOOL(true, string_public->reason == NamespaceFoundReason::REASON_FOUND, "Resolved string as public");
+    
+    NamespaceFoundReason::ptr string_protected = ctx.namespace_lookup("std::string_protected");
+    ASSERT_BOOL(true, string_protected->reason == NamespaceFoundReason::REASON_NOT_FOUND_PROTECTED, "Resolved string as protected");
+    
+    NamespaceFoundReason::ptr string_private = ctx.namespace_lookup("std::string_private");
+    ASSERT_BOOL(true, string_private->reason == NamespaceFoundReason::REASON_NOT_FOUND_PRIVATE, "Resolved string as private");
+
+  }
+  // Now let's add a 'using'
+  // so that 'int' becomes a part of our
+  // scope implicitly.
+  {
+    NamespaceFoundReason::ptr string_public = ctx.namespace_lookup("string");
+    ASSERT_BOOL(true, string_public->reason == NamespaceFoundReason::REASON_NOT_FOUND, "String not visible because we're outside the std namespace");
+  }
+
+  NamespaceFoundReason::ptr found_std = ctx.namespace_lookup("::std");
+  ASSERT_BOOL(true, found_std->reason == NamespaceFoundReason::REASON_FOUND, "Found the std namespace");
+  printf("Found alias %s\n", found_std->location->name.c_str());
   
-  printf("    PASSED\n");
-  return 0;
+  ctx.namespace_using("foo", found_std->location);
+  ctx.namespace_using("", ctx.namespace_lookup("::std::datatypes")->location);
+  {
+    NamespaceFoundReason::ptr string_public = ctx.namespace_lookup("foo::string");
+    ASSERT_BOOL(true, string_public->reason == NamespaceFoundReason::REASON_FOUND, "String is visible because we're 'using' the std namespace");
+    
+    NamespaceFoundReason::ptr int_public = ctx.namespace_lookup("int");
+    ASSERT_BOOL(true, int_public->reason == NamespaceFoundReason::REASON_FOUND, "Int is visible because we're 'using' the std::datatypes namespace");
+  }
 }
+// When can we find something
+// that is protected but not private?
+// Only when we're in the same namespace?  But the same namespace also means protected, so
+// is there really any difference?

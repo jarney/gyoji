@@ -1,7 +1,7 @@
-typedef struct {
+class foo_t {
     public int a;
     protected char *b;
-} foo_t;
+};
 
 namespace std {
     typedef char u8_t;
@@ -250,16 +250,6 @@ int do_something(char a)
                 return 2;
             }
         }
-
-        sizeof(struct {
-            private int a;
-            protected std::string b;
-            public char buf[32];
-            public struct {
-                private std::string a;
-                private std::string d;
-            } d;
-        });
 
         label foo:
         foo_fn();

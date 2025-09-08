@@ -1,5 +1,4 @@
 #include <string>
-#include <vector>
 #include "xml.hpp"
 #include "jstring.hpp"
 

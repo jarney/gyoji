@@ -1,86 +1,216 @@
 #include "namespace.hpp"
 #include "jstring.hpp"
 
-Namespace::Namespace(std::string _name)
-  : name(_name)
+NamespaceFoundReason::NamespaceFoundReason(int _reason)
+  : reason(_reason)
+  , location(nullptr)
 {}
+
+NamespaceFoundReason::NamespaceFoundReason(int _reason, Namespace::ptr _location)
+  : reason(_reason)
+  , location(_location)
+{}
+
+NamespaceFoundReason::~NamespaceFoundReason()
+{}
+
+Namespace::Namespace(std::string _name, int _type, int _visibility)
+  : name(_name)
+  , type(_type)
+  , visibility(_visibility)
+  , parent(nullptr)
+{}
+Namespace::Namespace(std::string _name, int _type, int _visibility, Namespace::ptr _parent)
+  : name(_name)
+  , type(_type)
+  , visibility(_visibility)
+  , parent(_parent)
+{}
+
 Namespace::~Namespace()
 {}
 
-NamespaceType::NamespaceType(std::string _name)
-  : name(_name)
-{}
-NamespaceType::~NamespaceType()
-{}
-
-class TypeNameQualified {
-public:
-  std::list<std::string> path;
-  TypeNameQualified();
-  ~TypeNameQualified();
-  TypeNameQualified & add(std::string _type);
-  TypeNameQualified pop_first();
-};
-
-TypeNameQualified::TypeNameQualified()
-{}
-
-TypeNameQualified::~TypeNameQualified()
-{}
-
-TypeNameQualified & TypeNameQualified::add(std::string _type)
+std::string Namespace::fully_qualified(void)
 {
-  path.push_back(_type);
-  return *this;
-}
-TypeNameQualified TypeNameQualified::pop_first()
-{
-  TypeNameQualified ret;
-  bool first = true;
-  for (auto p : path) {
-    if (!first) {
-      ret.path.push_back(p);
+  std::string ret;
+
+  Namespace::ptr current = parent;
+  while (current) {
+    if (current->name.size() > 0) {
+      ret = "::" + current->name + ret;
     }
-    first = false;
+    current = current->parent;
   }
+  
   return ret;
 }
 
-class NamespaceParseContext {
-public:
-  typedef std::shared_ptr<NamespaceParseContext> ptr;
-  Namespace::ptr ns;
-  std::map<std::string, std::string> aliases;
-};
-
-static Namespace::ptr root;                         // This is the 'root' namespace.
-static std::list<NamespaceParseContext::ptr> current_namespace; // This is the namespace we're currently defining.
-
-void namespace_init()
+NamespaceContext::NamespaceContext()
 {
-  root = std::make_shared<Namespace>("");
-  NamespaceParseContext::ptr current = std::make_shared<NamespaceParseContext>();
-  current->ns = root;
-  current_namespace.push_back(current);
+  // This is the root namespace.
+  root = std::make_shared<Namespace>("", Namespace::TYPE_NAMESPACE, Namespace::VISIBILITY_PUBLIC);
+  stack.push_back(root);
 }
 
-// Create a new namespace and push it onto the stack,
-// also adding it to the current namespace.
-void namespace_begin(std::string name)
+NamespaceContext::~NamespaceContext()
+{}
+
+Namespace::ptr NamespaceContext::namespace_new(std::string name, int type, int visibility)
 {
-    Namespace::ptr new_ns = std::make_shared<Namespace>(name);
-    NamespaceParseContext::ptr new_current = std::make_shared<NamespaceParseContext>();
-    NamespaceParseContext::ptr current = current_namespace.back();
-    current->ns->children[name] = new_ns;
-
-    new_current->ns = new_ns;
-    current_namespace.push_back(new_current);
-
+  Namespace::ptr current = stack.back();
+  Namespace::ptr new_namespace = std::make_shared<Namespace>(name, type, visibility, current);
+  current->children[name] = new_namespace;
+  return current;
 }
 
-void namespace_end()
+void NamespaceContext::namespace_push(std::string ns)
 {
-    current_namespace.pop_back();
+  Namespace::ptr current = stack.back();
+  auto it = current->children.find(ns);
+  if (it == current->children.end()) {
+    fprintf(stderr, "Error, trying to push non-existent namespace\n");
+    return;
+  }
+  stack.push_back(it->second);
+}
+
+void NamespaceContext::namespace_pop()
+{
+  stack.pop_back();
+}
+
+void NamespaceContext::namespace_using(std::string name, Namespace::ptr alias)
+{
+  Namespace::ptr current = stack.back();
+  current->aliases[name] = alias;
+}
+
+Namespace::ptr NamespaceContext::namespace_lookup_qualified(std::vector<std::string> name_qualified, Namespace::ptr root)
+{
+  Namespace::ptr current = root;
+  auto it = name_qualified.begin();
+  while (it != name_qualified.end()) {
+    // Try to find it in the
+    // children of current.
+    auto found_child = current->children.find(*it);
+    if (found_child == current->children.end()) {
+      return nullptr;
+    }
+    current = found_child->second;
+    ++it;
+  }
+  return current;
+}
+
+NamespaceFoundReason::ptr
+NamespaceContext::namespace_lookup_visibility(std::string search_context, Namespace::ptr found)
+{
+  if (!found) {
+    return std::make_shared<NamespaceFoundReason>(NamespaceFoundReason::REASON_NOT_FOUND);
+  }
+  // If it's public, we can find it no matter
+  // our context.
+  if (found->visibility == Namespace::VISIBILITY_PUBLIC) {
+    return std::make_shared<NamespaceFoundReason>(NamespaceFoundReason::REASON_FOUND, found);
+  }
+
+  std::string found_context = found->fully_qualified();
+  
+  if (found->visibility == Namespace::VISIBILITY_PROTECTED) {
+    // If it's protected, we need to make sure that the full path
+    // of what's found is a parent of our current location.
+    // If it's protected, then found must be contained in search.
+    size_t pos = search_context.find(found_context);
+    if (pos == 0) {
+      return std::make_shared<NamespaceFoundReason>(NamespaceFoundReason::REASON_FOUND, found);
+    }
+    else {
+      return std::make_shared<NamespaceFoundReason>(NamespaceFoundReason::REASON_NOT_FOUND_PROTECTED);
+    }
+  }
+    
+  if (found->visibility == Namespace::VISIBILITY_PRIVATE) {
+    // If it's private, we need to make sure that
+    // the full path of what we found matches the full
+    // path of our current location.
+    size_t pos = search_context.find(found_context);
+    if (pos == 0) {
+      return std::make_shared<NamespaceFoundReason>(NamespaceFoundReason::REASON_FOUND, found);
+    }
+    else {
+      return std::make_shared<NamespaceFoundReason>(NamespaceFoundReason::REASON_NOT_FOUND_PRIVATE);
+    }
+  }
+
+  // Not found because visibility type is unknown
+  return std::make_shared<NamespaceFoundReason>(NamespaceFoundReason::REASON_NOT_FOUND);
+}
+
+NamespaceFoundReason::ptr NamespaceContext::namespace_lookup(std::string name)
+{
+  std::vector<std::string> name_qualified = string_split(name, std::string("::"));
+  // If we don't have any name, it doesn't exist.
+  if (name_qualified.size() == 0) {
+    return std::make_shared<NamespaceFoundReason>(NamespaceFoundReason::REASON_NOT_FOUND);
+  }
+
+  std::string namespace_lookup_context = namespace_fully_qualified();
+  // If it starts with '::' then it is an
+  // absolute path and should be resolved
+  // from the root without any 'using' qualifiers.
+  if (name_qualified.begin()->size() == 0) {
+    name_qualified.erase(name_qualified.begin());
+    Namespace::ptr found = namespace_lookup_qualified(name_qualified, root);
+    if (!found) {
+      return std::make_shared<NamespaceFoundReason>(NamespaceFoundReason::REASON_NOT_FOUND);
+    }
+    return namespace_lookup_visibility(namespace_lookup_context, found);
+  }
+
+  // Otherwise, we start with the current namespace
+  // and look for it there.  If we find it,
+  // it's allowed to be resolved no matter the visibility.
+  Namespace::ptr current = nullptr;
+  
+  // Finally, try looking for it in the children of each
+  // of the aliases, starting with the current and walking
+  // back up the stack all the way to the root looking
+  // at the aliases of each parent.
+  for (auto it = stack.rbegin(); it != stack.rend(); ++it) {
+    current = *it;
+    Namespace::ptr found = namespace_lookup_qualified(name_qualified, current);
+    if (found) {
+      return namespace_lookup_visibility(namespace_lookup_context, found);
+    }
+  
+    for (auto alias_ns_it : current->aliases) {
+      Namespace::ptr alias_ns = alias_ns_it.second;
+      
+      std::string new_name = string_replace_start(name, alias_ns_it.first + std::string("::"), std::string());
+      std::vector<std::string> new_name_qualified = string_split(new_name, std::string("::"));
+
+      found = namespace_lookup_qualified(new_name_qualified, alias_ns);
+      if (found != nullptr) {
+        return namespace_lookup_visibility(namespace_lookup_context, found);
+      }
+    }
+  }
+
+  // It's not found anywhere, so we
+  // return null;
+  return std::make_shared<NamespaceFoundReason>(NamespaceFoundReason::REASON_NOT_FOUND);
+  
+}
+
+std::string NamespaceContext::namespace_fully_qualified()
+{
+  std::string ret;
+  for (auto current : stack) {
+    if (current->name.size() > 0) {
+      ret = ret + "::" + current->name;
+    }
+  }
+  return ret;
 }
 
 static int indent = 0;
@@ -90,163 +220,29 @@ static void print_indent(void)
     printf(" ");
   }
 }
-
-void namespace_type_define(std::string name, NamespaceType::Protection protection)
-{
-  NamespaceType::ptr type = std::make_shared<NamespaceType>(name);
-  type->protection = protection;
-  NamespaceParseContext::ptr context = current_namespace.back();
-  context->ns->types[name] = type;
-}
-
-static bool namespace_exists_in_ns(Namespace::ptr ns, TypeNameQualified name, bool is_type)
-{
-  if (name.path.size() == 1) {
-    if (is_type) {
-      if (ns->types.find(name.path.back()) != ns->types.end()) {
-        return true;
-      }
-    }
-    else {
-      if (ns->children.find(name.path.back()) != ns->children.end()) {
-        return true;
-      }
-    }
-    return false;
-  }
-  std::string find_child = name.path.front();
-  if (ns->children.find(find_child) != ns->children.end()) {
-    return namespace_exists_in_ns(ns->children[find_child], name.pop_first(), is_type);
-  }
-
-  return false;
-}
-
-static bool namespace_exists_qual(TypeNameQualified type, bool is_type);
-static bool namespace_exists_str(std::string name, bool is_type);
-
-bool namespace_exists_str(std::string name, bool is_type)
-{
-  // Remove any superfluous whitespaces.
-  name = string_remove_nonidentifier(name);
-
-  std::vector<std::string> split = string_split(name, std::string("::"));
-  TypeNameQualified ns;
-  for (auto s : split) {
-    ns = ns.add(s);
-  }
-  bool rc = namespace_exists_qual(ns, is_type);
-  return rc;
-
-}
-
-static bool namespace_exists_search(std::string name, bool is_type);
-
-bool namespace_exists(std::string name)
-{
-  return namespace_exists_search(name, false);
-}
-
-
-bool namespace_type_exists(std::string name)
-{
-  return namespace_exists_search(name, true);
-}
-
-static bool namespace_exists_search(std::string name, bool is_type)
-{
-  bool rc = namespace_exists_str(name, is_type);
-  if (rc) {
-    return rc;
-  }
-  // Next, search each of the namespace aliases.
-  for (auto alias : current_namespace.back()->aliases) {
-    std::string aliased_name;
-    if (alias.first.size() == 0) {
-      aliased_name = alias.second + "::" + name;
-    }
-    else {
-      aliased_name = string_replace_start(name, alias.first + std::string("::"), alias.second + std::string("::"));
-    }
-    rc = namespace_exists_str(aliased_name, is_type);
-    if (rc) {
-      return rc;
-    }
-  }
-  return false;
-}
-
-void namespace_using(std::string name, std::string alias)
-{
-  NamespaceParseContext::ptr current = current_namespace.back();
-  current->aliases[alias] = name;
-}
-
-// Given a simple identifier,
-// find the type in the 'current' namespace.
-static bool namespace_exists_qual(TypeNameQualified name, bool is_type)
-{
-  // First, determine if this type
-  // exists in the current namespace.
-  NamespaceParseContext::ptr current = current_namespace.back();
-  if (namespace_exists_in_ns(current->ns, name, is_type)) {
-    return true;
-  }
-  
-  // If we can't find it in the
-  // current namespace, try finding it
-  // from children (or the root)
-  std::string find_child = name.path.front();
-
-  // If the first component is empty,
-  // force resolution from root.
-  if (find_child.size() == 0) {
-    return namespace_exists_in_ns(root, name.pop_first(), is_type);
-  }
-
-  // Try the children of the current namespace
-  // next.
-  if (current->ns->children.find(find_child) != current->ns->children.end()) {
-    if (namespace_exists_in_ns(current->ns->children[find_child], name.pop_first(), is_type)) {
-      return true;
-    }
-  }
-
-  // Finally, try finding it in the root
-  return namespace_exists_in_ns(root, name, is_type);
-}
-
-static void namespace_dump_type(NamespaceType::ptr type)
-{
-  print_indent();
-  printf("<type name='%s'/>\n", type->name.c_str());
-}
-
-static void namespace_dump_node(Namespace::ptr parent)
+void NamespaceContext::namespace_dump_node(Namespace::ptr parent)
 {
   print_indent();
   printf("<namespace name='%s'>\n", parent->name.c_str());
   indent++;
-  for (auto t : parent->types) {
-    namespace_dump_type(t.second);
-  }
   for (auto ns : parent->children) {
     namespace_dump_node(ns.second);
+  }
+  for (auto alias : parent->aliases) {
+    print_indent();
+    printf("Context: %s name : %s\n", alias.first.c_str(), alias.second->name.c_str());
   }
   indent--;
   print_indent();
   printf("</namespace>\n");
 }
 
-void namespace_dump()
+void NamespaceContext::namespace_dump()
 {
-  namespace_dump_node(root);
-  // This is the namespace we're currently defining.
-  NamespaceParseContext::ptr context = current_namespace.back();
-  printf("Context is %s\n", context->ns->name.c_str());
-  
-  for (auto alias : current_namespace.back()->aliases) {
-    printf("Context: %s %s\n", alias.first.c_str(), alias.second.c_str());
+  if (root == nullptr) {
+    printf("!!! root was null\n");
+    return;
   }
+  namespace_dump_node(root);
 }
 
