@@ -10,9 +10,15 @@ enum char Choice {
     INVALID = 3;
 };
 
-public class q {
+public class q(somename, othername) {
     typedef char my_inner_type_t;
-    private my_type_t x[32];
+
+    private somename* field_from_generic;
+    somename* another_member_pointer;
+
+    const othername *p;
+
+    my_type_t x[32];
     private my_inner_type_t zzz;
     public void foo(int a, int b);
     public q(int a, int b);
@@ -30,9 +36,16 @@ public class q {
 
 };
 
+public int othername;
+public q(int, char) name;
+
 int do_something(q first, int second, char **third);
 
-typedef int (*fptr)(int a,int b) foo;
+// The type from hell.
+// It is a function pointer which has type arguments
+// as its return-value and arguments.
+
+typedef int(long) (*fptr)(int(char) a,int b) foo;
 
 using namespace q;
 

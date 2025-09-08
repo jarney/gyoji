@@ -1,16 +1,9 @@
 # TODO list
 
 ## Compilation
-* Type parameters (i.e. generics)
-  * How to write a 'type safe' linked list or other structure
-    where the type of the members are checked at compile-time.
-  * Do we need a 'minimalist' version of templates without all the metaprogramming bloat?
-
 * Figure out how to handle header files and declarations/imports.
   Should we require a pre-processor, or can we do without?
   
-* Some syntax for constructors/destructors/methods.
-
 * Do we need keywords for 'super' and 'this'.
 
 * What's our feeling about inheritance?

@@ -154,6 +154,9 @@
 %nterm <ASTNode::ptr> type_definition;
 %nterm <ASTNode::ptr> class_definition;
 %nterm <ASTNode::ptr> class_decl_start;
+%nterm <ASTNode::ptr> opt_class_argument_list;
+%nterm <ASTNode::ptr> class_argument_list;
+
 
 %nterm <ASTNode::ptr> enum_definition;
 %nterm <ASTNode::ptr> opt_enum_value_list;
@@ -258,6 +261,7 @@
 %nterm <ASTNode::ptr> expression_assignment;
 
 %nterm <ASTNode::ptr> type_specifier;
+%nterm <ASTNode::ptr> type_specifier_call_args;
 %nterm <ASTNode::ptr> type_name;
 %nterm <ASTNode::ptr> type_name_qualified;
 %nterm <ASTNode::ptr> type_access_qualifier;
@@ -361,7 +365,7 @@ file_statement
         ;
 
 file_global_declaration
-        : access_modifier type_specifier IDENTIFIER opt_array_length opt_global_initializer SEMICOLON {
+        : opt_access_modifier opt_unsafe type_specifier IDENTIFIER opt_array_length opt_global_initializer SEMICOLON {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_file_global_declaration;
                 $$->typestr = std::string("file_global_declaration");
@@ -371,6 +375,7 @@ file_global_declaration
                 $$->children.push_back($4);
                 $$->children.push_back($5);
                 $$->children.push_back($6);
+                $$->children.push_back($7);
                 PRINT_NONTERMINALS($$);
         }
         ;
@@ -519,7 +524,7 @@ opt_as
         ;
 
 file_statement_using
-        : USING NAMESPACE NAMESPACE_NAME opt_as SEMICOLON {
+        : opt_access_modifier USING NAMESPACE NAMESPACE_NAME opt_as SEMICOLON {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_file_statement_using;
                 $$->typestr = std::string("file_statement_using");
@@ -528,19 +533,20 @@ file_statement_using
                 $$->children.push_back($3);
                 $$->children.push_back($4);
                 $$->children.push_back($5);
-                NamespaceFoundReason::ptr found_std = return_data->namespace_context.namespace_lookup($3->value);
+                $$->children.push_back($6);
+                NamespaceFoundReason::ptr found_std = return_data->namespace_context.namespace_lookup($4->value);
                 if (!found_std) {
-                  fprintf(stderr, "Error: no such namespace %s in using statement\n", $3->value.c_str());
+                  fprintf(stderr, "Error: no such namespace %s in using statement\n", $4->value.c_str());
                   exit(1);
                 }
-                if ($4->children.size() == 2) {
-                  return_data->namespace_context.namespace_using($4->children.back()->value, found_std->location);
+                if ($5->children.size() == 2) {
+                  return_data->namespace_context.namespace_using($5->children.back()->value, found_std->location);
                 }
                 else {
                   return_data->namespace_context.namespace_using("", found_std->location);
                 }
         }
-        | USING NAMESPACE TYPE_NAME opt_as SEMICOLON {
+        | opt_access_modifier USING NAMESPACE TYPE_NAME opt_as SEMICOLON {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_file_statement_using;
                 $$->typestr = std::string("file_statement_using");
@@ -549,13 +555,14 @@ file_statement_using
                 $$->children.push_back($3);
                 $$->children.push_back($4);
                 $$->children.push_back($5);
-                NamespaceFoundReason::ptr found_std = return_data->namespace_context.namespace_lookup($3->value);
+                $$->children.push_back($6);
+                NamespaceFoundReason::ptr found_std = return_data->namespace_context.namespace_lookup($4->value);
                 if (!found_std) {
-                  fprintf(stderr, "Error: no such namespace %s in using statement\n", $3->value.c_str());
+                  fprintf(stderr, "Error: no such namespace %s in using statement\n", $4->value.c_str());
                   exit(1);
                 }
-                if ($4->children.size() == 2) {
-                  return_data->namespace_context.namespace_using($4->children.back()->value, found_std->location);
+                if ($5->children.size() == 2) {
+                  return_data->namespace_context.namespace_using($5->children.back()->value, found_std->location);
                 }
                 else {
                   return_data->namespace_context.namespace_using("", found_std->location);
@@ -564,15 +571,61 @@ file_statement_using
         ;
 
 class_decl_start
-        : opt_access_modifier CLASS IDENTIFIER {
+        : opt_access_modifier CLASS IDENTIFIER opt_class_argument_list {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_class_definition;
                 $$->typestr = std::string("class_definition");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
+                $$->children.push_back($4);
                 return_data->namespace_context.namespace_new($3->value, Namespace::TYPE_CLASS, visibility_from_modifier($1));
                 return_data->namespace_context.namespace_push($3->value);
+                if ($4->children.size() > 0) {
+                  for (auto child : $4->children) {
+                    if (child->type == Parser::symbol_kind_type::S_class_argument_list) {
+                      for (auto grandchild : child->children) {
+                        if (grandchild->type == Parser::symbol_kind_type::S_IDENTIFIER) {
+                          return_data->namespace_context.namespace_new(grandchild->value, Namespace::TYPE_CLASS, Namespace::VISIBILITY_PRIVATE);
+                        }
+                      }
+                    }
+                  }
+                }
+        }
+        ;
+
+opt_class_argument_list
+        : /**/ {
+                $$ = std::make_shared<ASTNode>();
+                $$->type = Parser::symbol_kind_type::S_opt_class_argument_list;
+                $$->typestr = std::string("opt_class_argument_list");
+        }
+        | PAREN_L class_argument_list PAREN_R {
+                $$ = std::make_shared<ASTNode>();
+                $$->type = Parser::symbol_kind_type::S_opt_class_argument_list;
+                $$->typestr = std::string("opt_class_argument_list");
+                $$->children.push_back($1);
+                $$->children.push_back($2);
+                $$->children.push_back($3);
+        }
+        ;
+
+// At this stage, the arguments
+// are identifiers.  Once they are
+// recognized, they are turned into
+// types scoped private in the class.
+class_argument_list
+        : IDENTIFIER {
+                $$ = std::make_shared<ASTNode>();
+                $$->type = Parser::symbol_kind_type::S_class_argument_list;
+                $$->typestr = std::string("class_argument_list");
+                $$->children.push_back($1);
+        }
+        | class_argument_list COMMA IDENTIFIER {
+                $$ = $1;
+                $$->children.push_back($2);
+                $$->children.push_back($3);
         }
         ;
 
@@ -671,7 +724,7 @@ opt_unsafe
         ;
 
 file_statement_function_declaration
-: opt_unsafe type_specifier IDENTIFIER PAREN_L opt_function_definition_arg_list PAREN_R SEMICOLON {
+        : opt_access_modifier opt_unsafe type_specifier IDENTIFIER PAREN_L opt_function_definition_arg_list PAREN_R SEMICOLON {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_file_statement_function_definition;
                 $$->typestr = std::string("file_statement_function_definition");
@@ -682,12 +735,13 @@ file_statement_function_declaration
                 $$->children.push_back($5);
                 $$->children.push_back($6);
                 $$->children.push_back($7);
+                $$->children.push_back($8);
                 PRINT_NONTERMINALS($$);
-}
-;
+        }
+        ;
 
 file_statement_function_definition
-        : opt_unsafe type_specifier IDENTIFIER PAREN_L opt_function_definition_arg_list PAREN_R scope_body {
+        : opt_access_modifier opt_unsafe type_specifier IDENTIFIER PAREN_L opt_function_definition_arg_list PAREN_R scope_body {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_file_statement_function_definition;
                 $$->typestr = std::string("file_statement_function_definition");
@@ -698,6 +752,7 @@ file_statement_function_definition
                 $$->children.push_back($5);
                 $$->children.push_back($6);
                 $$->children.push_back($7);
+                $$->children.push_back($8);
                 PRINT_NONTERMINALS($$);
         }
         ;
@@ -1823,6 +1878,20 @@ type_access_qualifier
         }
         ;
 
+type_specifier_call_args
+        : type_specifier {
+                $$ = std::make_shared<ASTNode>();
+                $$->type = Parser::symbol_kind_type::S_type_specifier_call_args;
+                $$->typestr = std::string("type_specifier_call_args");
+                $$->children.push_back($1);
+        }
+        | type_specifier_call_args COMMA type_specifier {
+                $$ = $1;
+                $$->children.push_back($2);
+                $$->children.push_back($3);
+        }
+        ;
+
 type_specifier
         : type_access_qualifier type_name {
                 $$ = std::make_shared<ASTNode>();
@@ -1831,7 +1900,16 @@ type_specifier
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 PRINT_NONTERMINALS($$);
-        } 
+        }
+        | type_specifier PAREN_L type_specifier_call_args PAREN_R {
+                $$ = std::make_shared<ASTNode>();
+                $$->type = Parser::symbol_kind_type::S_type_specifier;
+                $$->typestr = std::string("type_specifier");
+                $$->children.push_back($1);
+                $$->children.push_back($2);
+                $$->children.push_back($3);
+                $$->children.push_back($4);
+        }
         | type_specifier PAREN_L STAR IDENTIFIER PAREN_R PAREN_L opt_function_definition_arg_list PAREN_R {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_type_specifier;
