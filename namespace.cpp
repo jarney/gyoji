@@ -30,6 +30,20 @@ Namespace::Namespace(std::string _name, int _type, int _visibility, Namespace::p
 Namespace::~Namespace()
 {}
 
+// Walk up to the root and look for the 'minimum' visibility among all parents.
+int Namespace::effective_visibility(void)
+{
+  int current_visibility = visibility;
+  Namespace::ptr current = parent;
+  while (current) {
+    if (current->visibility > current_visibility) {
+      current_visibility = current->visibility;
+    }
+    current = current->parent;
+  }
+  return current_visibility;
+}
+
 std::string Namespace::fully_qualified(void)
 {
   std::string ret;
@@ -113,11 +127,12 @@ NamespaceContext::namespace_lookup_visibility(std::string search_context, Namesp
   }
   // If it's public, we can find it no matter
   // our context.
-  if (found->visibility == Namespace::VISIBILITY_PUBLIC) {
+  int effective_visibility = found->effective_visibility();
+  if (effective_visibility == Namespace::VISIBILITY_PUBLIC) {
     return std::make_shared<NamespaceFoundReason>(NamespaceFoundReason::REASON_FOUND, found);
   }
 
-  if (found->visibility == Namespace::VISIBILITY_PROTECTED) {
+  if (effective_visibility == Namespace::VISIBILITY_PROTECTED) {
     Namespace::ptr found_parent = found->parent;
     std::string found_context = found_parent->fully_qualified();
     // If it's protected, we need to make sure that the full path
@@ -131,8 +146,10 @@ NamespaceContext::namespace_lookup_visibility(std::string search_context, Namesp
       return std::make_shared<NamespaceFoundReason>(NamespaceFoundReason::REASON_NOT_FOUND_PROTECTED);
     }
   }
-    
-  if (found->visibility == Namespace::VISIBILITY_PRIVATE) {
+
+  // What we should be checking is the 'minimum'
+  // value of visibility as we walk up the tree.
+  if (effective_visibility == Namespace::VISIBILITY_PRIVATE) {
     std::string found_context = found->fully_qualified();
     // If it's private, we need to make sure that
     // the full path of what we found matches the full

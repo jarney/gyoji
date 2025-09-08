@@ -1,8 +1,10 @@
 # TODO list
 
 ## Compilation
-* Allow typedefs to be public/private(?)
-  * Hook up visibility.
+* Type parameters (i.e. generics)
+  * How to write a 'type safe' linked list or other structure
+    where the type of the members are checked at compile-time.
+  * Do we need a 'minimalist' version of templates without all the metaprogramming bloat?
 
 * Figure out how to handle header files and declarations/imports.
   Should we require a pre-processor, or can we do without?
@@ -41,7 +43,6 @@
 ## Start writing the standard library in JLang
 * Basic string manipulation functions
 * Containers: map, list, string, vector, set
-
 
 # Error handling
 * For common syntax errors, figure out how to suggest a good

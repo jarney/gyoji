@@ -10,21 +10,21 @@ enum char Choice {
     INVALID = 3;
 };
 
-class q {
+public class q {
     typedef char my_inner_type_t;
     private my_type_t x[32];
     private my_inner_type_t zzz;
     public void foo(int a, int b);
-    public (int a, int b);
-    public ~(int a, int b);
+    public q(int a, int b);
+    public ~q(int a, int b);
 
-    enum int ErrorState {
+    private enum int ErrorState {
         VALID = 0;
         PROBABLY_FINE = 1;
         ON_FIRE = 3;
     };
 
-    class ErrorValue {
+    private class ErrorValue {
         public ErrorState state;
     };
 

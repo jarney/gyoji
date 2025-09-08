@@ -27,6 +27,8 @@
 #else
 #define PRINT_NONTERMINALS(s) (0)
 #endif
+
+  int visibility_from_modifier(ASTNode::ptr node);
   
 #define YY_DECL                                                         \
         int yylex(calc::Parser::semantic_type *yylval, yyscan_t yyscanner)
@@ -169,6 +171,7 @@
 %nterm <ASTNode::ptr> opt_struct_initializer_list;
 %nterm <ASTNode::ptr> struct_initializer_list;
 %nterm <ASTNode::ptr> struct_initializer;
+%nterm <ASTNode::ptr> opt_access_modifier;
 %nterm <ASTNode::ptr> access_modifier;
 
 %nterm <ASTNode::ptr> scope_body;
@@ -260,8 +263,9 @@
 %nterm <ASTNode::ptr> type_access_qualifier;
 %nterm <ASTNode::ptr> opt_array_length;
 
-%nterm <ASTNode::ptr> struct_declaration_list;
-%nterm <ASTNode::ptr> struct_declaration;
+%nterm <ASTNode::ptr> opt_class_member_declaration_list;
+%nterm <ASTNode::ptr> class_member_declaration_list;
+%nterm <ASTNode::ptr> class_member_declaration;
 
 %nterm <ASTNode::ptr> operator_unary;
 %nterm <ASTNode::ptr> operator_assignment;
@@ -446,6 +450,20 @@ struct_initializer
         }
         ;
 
+opt_access_modifier
+        :  {
+            $$ = std::make_shared<ASTNode>();
+            $$->type = Parser::symbol_kind_type::S_access_modifier;
+            $$->typestr = std::string("access_modifier");
+        }
+        | access_modifier {
+            $$ = std::make_shared<ASTNode>();
+            $$->type = Parser::symbol_kind_type::S_access_modifier;
+            $$->typestr = std::string("access_modifier");
+            $$->children.push_back($1);
+        }
+        ;
+
 access_modifier
         : PUBLIC {
                 $$ = $1;
@@ -459,14 +477,15 @@ access_modifier
         ;
 
 namespace_declaration
-        : NAMESPACE IDENTIFIER {
+        : opt_access_modifier NAMESPACE IDENTIFIER {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_namespace_declaration;
                 $$->typestr = std::string("namespace_declaration");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
-                return_data->namespace_context.namespace_new($2->value, Namespace::TYPE_NAMESPACE, Namespace::VISIBILITY_PUBLIC);
-                return_data->namespace_context.namespace_push($2->value);
+                $$->children.push_back($3);
+                return_data->namespace_context.namespace_new($3->value, Namespace::TYPE_NAMESPACE, visibility_from_modifier($1));
+                return_data->namespace_context.namespace_push($3->value);
         }
         ;
 
@@ -545,19 +564,20 @@ file_statement_using
         ;
 
 class_decl_start
-        : CLASS IDENTIFIER {
+        : opt_access_modifier CLASS IDENTIFIER {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_class_definition;
                 $$->typestr = std::string("class_definition");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
-                return_data->namespace_context.namespace_new($2->value, Namespace::TYPE_CLASS, Namespace::VISIBILITY_PUBLIC);
-                return_data->namespace_context.namespace_push($2->value);
+                $$->children.push_back($3);
+                return_data->namespace_context.namespace_new($3->value, Namespace::TYPE_CLASS, visibility_from_modifier($1));
+                return_data->namespace_context.namespace_push($3->value);
         }
         ;
 
 class_definition
-        : class_decl_start BRACE_L struct_declaration_list BRACE_R SEMICOLON {
+        : class_decl_start BRACE_L opt_class_member_declaration_list BRACE_R SEMICOLON {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_class_definition;
                 $$->typestr = std::string("class_definition");
@@ -572,7 +592,7 @@ class_definition
         ;
 
 type_definition
-        : TYPEDEF type_specifier IDENTIFIER SEMICOLON {
+        : opt_access_modifier TYPEDEF type_specifier IDENTIFIER SEMICOLON {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_type_definition;
                 $$->typestr = std::string("type_definition");
@@ -580,13 +600,14 @@ type_definition
                 $$->children.push_back($2);
                 $$->children.push_back($3);
                 $$->children.push_back($4);
+                $$->children.push_back($5);
                 PRINT_NONTERMINALS($$);
-                return_data->namespace_context.namespace_new($3->value, Namespace::TYPE_TYPEDEF, Namespace::VISIBILITY_PUBLIC);
+                return_data->namespace_context.namespace_new($4->value, Namespace::TYPE_TYPEDEF, visibility_from_modifier($1));
         }
         ;
 
 enum_definition
-        : ENUM type_name IDENTIFIER BRACE_L opt_enum_value_list BRACE_R SEMICOLON {
+        : opt_access_modifier ENUM type_name IDENTIFIER BRACE_L opt_enum_value_list BRACE_R SEMICOLON {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_enum_definition;
                 $$->typestr = std::string("enum_definition");
@@ -597,7 +618,8 @@ enum_definition
                 $$->children.push_back($5);
                 $$->children.push_back($6);
                 $$->children.push_back($7);
-                return_data->namespace_context.namespace_new($3->value, Namespace::TYPE_TYPEDEF, Namespace::VISIBILITY_PUBLIC);
+                $$->children.push_back($8);
+                return_data->namespace_context.namespace_new($4->value, Namespace::TYPE_TYPEDEF, visibility_from_modifier($1));
         }
         ;
 
@@ -1691,36 +1713,47 @@ type_name_qualified
         }
         ;
 
-struct_declaration_list
-        : struct_declaration {
+opt_class_member_declaration_list
+        : /**/ {
                 $$ = std::make_shared<ASTNode>();
-                $$->type = Parser::symbol_kind_type::S_struct_declaration;
-                $$->typestr = std::string("struct_declaration_list");
+                $$->type = Parser::symbol_kind_type::S_class_member_declaration_list;
+                $$->typestr = std::string("class_member_declaration_list");
+        }
+        | class_member_declaration_list {
+                $$ = $1;
+        }
+        ;
+
+class_member_declaration_list
+        : class_member_declaration {
+                $$ = std::make_shared<ASTNode>();
+                $$->type = Parser::symbol_kind_type::S_class_member_declaration_list;
+                $$->typestr = std::string("class_member_declaration_list");
                 $$->children.push_back($1);
         }
-        | struct_declaration_list struct_declaration {
+        | class_member_declaration_list class_member_declaration {
                 $$ = $1;
                 $$->children.push_back($2);
         }
         ;
 
-struct_declaration
-        : access_modifier type_specifier IDENTIFIER opt_array_length SEMICOLON {
+class_member_declaration
+        : opt_access_modifier type_specifier IDENTIFIER opt_array_length SEMICOLON {
                 // Member
                 $$ = std::make_shared<ASTNode>();
-                $$->type = Parser::symbol_kind_type::S_struct_declaration;
-                $$->typestr = std::string("struct_declaration_member");
+                $$->type = Parser::symbol_kind_type::S_class_member_declaration;
+                $$->typestr = std::string("class_member_declaration");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
                 $$->children.push_back($4);
                 $$->children.push_back($5);
         }
-        | access_modifier type_specifier IDENTIFIER PAREN_L opt_function_definition_arg_list PAREN_R SEMICOLON {
+        | opt_access_modifier type_specifier IDENTIFIER PAREN_L opt_function_definition_arg_list PAREN_R SEMICOLON {
                 // Method
                 $$ = std::make_shared<ASTNode>();
-                $$->type = Parser::symbol_kind_type::S_struct_declaration;
-                $$->typestr = std::string("struct_declaration_method");
+                $$->type = Parser::symbol_kind_type::S_class_member_declaration;
+                $$->typestr = std::string("class_member_declaration");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
@@ -1729,22 +1762,11 @@ struct_declaration
                 $$->children.push_back($6);
                 $$->children.push_back($7);
         }
-        | access_modifier PAREN_L opt_function_definition_arg_list PAREN_R SEMICOLON {
+        | opt_access_modifier type_specifier PAREN_L opt_function_definition_arg_list PAREN_R SEMICOLON {
           // Constructor
                 $$ = std::make_shared<ASTNode>();
-                $$->type = Parser::symbol_kind_type::S_struct_declaration;
-                $$->typestr = std::string("struct_declaration_constructor");
-                $$->children.push_back($1);
-                $$->children.push_back($2);
-                $$->children.push_back($3);
-                $$->children.push_back($4);
-                $$->children.push_back($5);
-        }
-        | access_modifier TILDE PAREN_L opt_function_definition_arg_list PAREN_R SEMICOLON {
-          // Destructor
-                $$ = std::make_shared<ASTNode>();
-                $$->type = Parser::symbol_kind_type::S_struct_declaration;
-                $$->typestr = std::string("struct_declaration_destructor");
+                $$->type = Parser::symbol_kind_type::S_class_member_declaration;
+                $$->typestr = std::string("class_member_declaration");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
@@ -1752,6 +1774,20 @@ struct_declaration
                 $$->children.push_back($5);
                 $$->children.push_back($6);
         }
+        | opt_access_modifier TILDE type_specifier PAREN_L opt_function_definition_arg_list PAREN_R SEMICOLON {
+          // Destructor
+                $$ = std::make_shared<ASTNode>();
+                $$->type = Parser::symbol_kind_type::S_class_member_declaration;
+                $$->typestr = std::string("class_member_declaration");
+                $$->children.push_back($1);
+                $$->children.push_back($2);
+                $$->children.push_back($3);
+                $$->children.push_back($4);
+                $$->children.push_back($5);
+                $$->children.push_back($6);
+                $$->children.push_back($7);
+        }
+
         | class_definition {
                 $$ = $1;
                 PRINT_NONTERMINALS($$);
@@ -1856,7 +1892,27 @@ argument_expression_list
         ;
 
 %%
- 
+
+int visibility_from_modifier(ASTNode::ptr node)
+{
+    int visibility = Namespace::VISIBILITY_PUBLIC;
+    if (node) {
+      if (node->children.size() == 0) {
+        visibility = Namespace::VISIBILITY_PUBLIC;
+      }
+      else if (node->children.back()->value == "public") {
+        visibility = Namespace::VISIBILITY_PUBLIC;
+      }
+      else if (node->children.back()->value == "protected") {
+        visibility = Namespace::VISIBILITY_PROTECTED;
+      }
+      else if (node->children.back()->value == "private") {
+        visibility = Namespace::VISIBILITY_PRIVATE;
+      }
+    }
+    return visibility;
+}
+
 void calc::Parser::error(const std::string& msg) {
     printf("Syntax error at line %d : %s\n", lineno, msg.c_str());
 }

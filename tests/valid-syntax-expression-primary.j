@@ -1,4 +1,4 @@
-class foo_t {
+public class foo_t {
     public int a;
     protected char *b;
 };

@@ -68,6 +68,7 @@ public:
   std::map<std::string, Namespace::ptr> aliases;   // This is a list of other namespaces to
                                                    // include when resolving from within the context of this namespace.
   std::string fully_qualified(void);
+  int effective_visibility(void);                  // Walk up to the root and look for the 'minimum' visibility among all parents.
 };
 
 /**
