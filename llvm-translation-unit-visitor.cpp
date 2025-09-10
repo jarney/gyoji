@@ -4,6 +4,40 @@ using namespace llvm::sys;
 using namespace JSemantics;
 using namespace JLang::Backend::LLVM;
 
+LLVMType::LLVMType(llvm::LLVMContext & _context)
+  : context(_context)
+{}
+LLVMType::~LLVMType()
+{}
+
+LLVMTypeVoid::LLVMTypeVoid(llvm::LLVMContext & _context)
+  : LLVMType(_context)
+{}
+LLVMTypeVoid::~LLVMTypeVoid()
+{}
+llvm::Type *LLVMTypeVoid::get_type()
+{
+  return llvm::Type::getVoidTy(context);
+}
+llvm::Value *LLVMTypeVoid::get_initializer_default()
+{
+  return llvm::UndefValue::get(llvm::Type::getVoidTy(context));
+}
+
+LLVMTypeDouble::LLVMTypeDouble(llvm::LLVMContext & _context)
+  : LLVMType(_context)
+{}
+LLVMTypeDouble::~LLVMTypeDouble()
+{}
+llvm::Type *LLVMTypeDouble::get_type()
+{
+  return llvm::Type::getDoubleTy(context);
+}
+llvm::Value *LLVMTypeDouble::get_initializer_default()
+{
+  return llvm::ConstantFP::get(context, llvm::APFloat(0.0));
+}
+
 LLVMTranslationUnitVisitor::LLVMTranslationUnitVisitor()
 {}
 LLVMTranslationUnitVisitor::~LLVMTranslationUnitVisitor()
@@ -44,9 +78,14 @@ void
 LLVMTranslationUnitVisitor::visit(FunctionDeclaration &functiondecl)
 {
   // Make the function type:  double(double,double) etc.
-  std::vector<llvm::Type *> Doubles(functiondecl.args.size(), llvm::Type::getDoubleTy(*TheContext));
+  std::vector<llvm::Type *> Doubles(functiondecl.arg_type.size(), llvm::Type::getDoubleTy(*TheContext));
+  //  llvm::FunctionType *FT =
+  //    llvm::FunctionType::get(llvm::Type::getDoubleTy(*TheContext), Doubles, false);
+
+  LLVMType::ptr return_value_type = types[functiondecl.return_type];
+  
   llvm::FunctionType *FT =
-    llvm::FunctionType::get(llvm::Type::getDoubleTy(*TheContext), Doubles, false);
+    llvm::FunctionType::get(return_value_type->get_type(), Doubles, false);
 
   llvm::Function *F =
     llvm::Function::Create(FT, llvm::Function::ExternalLinkage, functiondecl.name, TheModule.get());
@@ -54,7 +93,7 @@ LLVMTranslationUnitVisitor::visit(FunctionDeclaration &functiondecl)
   // Set names for all arguments.
   unsigned Idx = 0;
   for (auto &Arg : F->args())
-    Arg.setName(functiondecl.args[Idx++]);
+    Arg.setName(functiondecl.arg_type[Idx++]);
 }
 
 /// CreateEntryBlockAlloca - Create an alloca instruction in the entry block of
@@ -111,20 +150,29 @@ LLVMTranslationUnitVisitor::visit(FunctionDefinition &functiondef)
     verifyFunction(*TheFunction);
   }
 #else
+
+  //LLVMScopeBodyVisitor scope_body_visitor;
+  //scope_body.visit(scope_body_visitor);
+  
+#if 0
   if (Value *RetVal = llvm::ConstantFP::get(*TheContext, llvm::APFloat(0.0))) {
     printf("Generated body...\n");
     // Finish off the function.
     Builder->CreateRet(RetVal);
-
-    // Validate the generated code, checking for consistency.
-    verifyFunction(*TheFunction);
   }
+#endif
+  
+  LLVMType::ptr return_value_type = types[functionDeclaration->return_type];
+  Builder->CreateRet(return_value_type->get_initializer_default());
+  
+  // Validate the generated code, checking for consistency.
+  verifyFunction(*TheFunction);
+
 #endif
   
   for (auto &Arg : TheFunction->args()) {
     NamedValues.erase(std::string(Arg.getName()));
   }
-  //  return TheFunction;
 }
 
 void
@@ -159,6 +207,8 @@ LLVMTranslationUnitVisitor::initialize()
   // Create a new builder for the module.
   Builder = std::make_unique<llvm::IRBuilder<>>(*TheContext);
 
+  types["void"] = std::make_shared<LLVMTypeVoid>(*TheContext);
+  types["double"] = std::make_shared<LLVMTypeDouble>(*TheContext);
 }
 
 int

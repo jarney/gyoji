@@ -2,7 +2,12 @@
 public const double q;
 
 
-int doit(int v)
+double doit(double v)
 {
         q = 10;
+}
+
+void voidfunction(double v)
+{
+
 }

@@ -35,6 +35,33 @@ public:
 };
 
 
+class LLVMType {
+public:
+  typedef std::shared_ptr<LLVMType> ptr;
+  LLVMType(llvm::LLVMContext &_context);
+  ~LLVMType();
+  virtual llvm::Type *get_type() = 0;
+  virtual llvm::Value *get_initializer_default() = 0;
+  llvm::LLVMContext & context;
+};
+
+class LLVMTypeVoid : public LLVMType {
+public:
+  LLVMTypeVoid(llvm::LLVMContext &_context);;
+  ~LLVMTypeVoid();
+  llvm::Type *get_type();
+  llvm::Value *get_initializer_default();
+};
+
+class LLVMTypeDouble : public LLVMType {
+public:
+  LLVMTypeDouble(llvm::LLVMContext &_context);
+  ~LLVMTypeDouble();
+  llvm::Type *get_type();
+  llvm::Value *get_initializer_default();
+};
+
+      
 class LLVMTranslationUnitVisitor
   : public JSemantics::Visitor<JSemantics::TranslationUnit> {
 public:
@@ -56,6 +83,7 @@ private:
   
   std::map<std::string, llvm::Value *> NamedValues;
   std::map<std::string, JSemantics::FunctionDeclaration::ptr> FunctionProtos;
+  std::map<std::string, LLVMType::ptr> types;
 
   llvm::Function *getFunction(std::string name);
   llvm::AllocaInst *CreateEntryBlockAlloca(llvm::Function *TheFunction,
@@ -63,8 +91,6 @@ private:
 
 };
 
-      
-      
     };
   };
 };

@@ -19,6 +19,31 @@ FunctionDeclaration::FunctionDeclaration()
 FunctionDeclaration::~FunctionDeclaration()
 {}
 
+/*
+      <node type='type_specifier'>
+        <node type='type_access_qualifier'/>
+        <node type='type_name'>
+          <node type='TYPE_NAME' lineno='10' value='void'>
+            <whitespace>&#xA;</whitespace>
+            <whitespace>&#xA;</whitespace>
+          </node>
+        </node>
+      </node>
+*/
+Type::Type()
+{}
+Type::~Type()
+{}
+
+Type::ptr ast_to_type(ASTNode::ptr node)
+{
+  Type::ptr ret = std::make_shared<Type>();
+
+  ret->name = node->children.at(1)->children.at(0)->value;
+  
+  return ret;
+}
+            
 void
 FunctionDeclaration::visit(Visitor<FunctionDeclaration> &visitor)
 {
@@ -45,6 +70,7 @@ FunctionDefinition::ptr ast_to_file_statement_function_definition(ASTNode::ptr n
   FunctionDefinition::ptr ret = std::make_shared<FunctionDefinition>();
   ret->functionDeclaration = std::make_shared<FunctionDeclaration>();
   ret->functionDeclaration->name = node->children.at(3)->value;
+  ret->functionDeclaration->return_type = ast_to_type(node->children.at(2))->name;
   return ret;
 }
 

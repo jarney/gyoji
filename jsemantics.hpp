@@ -60,6 +60,8 @@ namespace JSemantics {
     typedef std::shared_ptr<Type> ptr;
     Type();
     ~Type();
+    std::string name; // Fully-qualified name of the type.
+    // TODO: access modifier (volatile,const)
   };
 
   class FunctionDeclaration {
@@ -69,7 +71,8 @@ namespace JSemantics {
     ~FunctionDeclaration();
     void visit(Visitor<FunctionDeclaration> &visitor);
     std::string name;
-    std::vector<std::string> args;
+    std::string return_type;
+    std::vector<std::string> arg_type;
   };
   
   // This is the main unit of work for the LLVM because

@@ -44,11 +44,14 @@ int JBackendLLVM::process(ASTNode::ptr ast_translation_unit)
 {
   int rc = 0;
   TranslationUnit::ptr translation_unit = from_ast(ast_translation_unit);
-
+  
   // TODO: Resolve the types into fully-qualified namespaces.
 
-  // TODO: Run the borrow checker to make sure that the requested
-  // semantics are adhered to.
+  // TODO: Check semantic rules that cannot be evaluated during parse
+  //         * Type consistency (function return values and expression types)
+  //         * Functions have return statements that match function return values.
+  //         * Run the borrow checker to make sure that the requested
+  //           semantics are adhered to.
 
   // Finally, perform the LLVM code generation
   // the code generation should be factored out into a separate step.
