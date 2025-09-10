@@ -13,22 +13,39 @@ std::vector<ASTDataNonSyntax::ptr> non_syntax_data;
 
 #define DEBUG_TERMINALS 0
 #if DEBUG_TERMINALS
-#define PRINT_TERMINALS(s,t) printf("%s : %s\n", s, t);
+#define PRINT_TERMINALS(s,t)                                                  \
+    printf("%s : %s%s\n", s, t,                                               \
+                          (node->fully_qualified_name.size() > 0) ?           \
+                          (std::string(" : ") + node->fully_qualified_name) : \
+                          std::string());
 #else
 #define PRINT_TERMINALS(s,t) /**/
 #endif
 
-#define PROCESS_NODE(nodetype) \
+#define START_NODE(nodetype)                 \
     ASTNode::ptr node = std::make_shared<ASTNode>(); \
     node->type = Parser::symbol_kind_type::S_ ## nodetype; \
-    node->typestr = std::string(#nodetype); \
-    node->value = std::string(yytext); \
-    node->lineno = lineno; \
-    node->non_syntax = non_syntax_data; \
-    non_syntax_data.clear(); \
-    yylval->emplace<ASTNode::ptr>(node); \
-    PRINT_TERMINALS(#nodetype, yytext) \
+    node->typestr = std::string(#nodetype);  \
+    node->value = std::string(yytext);       \
+    node->lineno = lineno;                   \
+    node->non_syntax = non_syntax_data;      \
+    non_syntax_data.clear();                 \
+    yylval->emplace<ASTNode::ptr>(node);
+
+#define RETURN_NODE(nodetype)                \
     return Parser::token::nodetype;
+
+#define PROCESS_NODE(nodetype)               \
+    START_NODE(nodetype)                     \
+    PRINT_TERMINALS(#nodetype, yytext)       \
+    RETURN_NODE(nodetype);
+
+#define PROCESS_IDENTIFIER(nodetype, ns_ptr) \
+    START_NODE(nodetype)                     \
+    node->fully_qualified_name = ns_ptr->fully_qualified(); \
+    PRINT_TERMINALS(#nodetype, yytext)       \
+    RETURN_NODE(nodetype);
+
 %}
  
 %option reentrant interactive noyywrap noyylineno nodefault outfile="target/jlang.l.cpp" header="target/jlang.l.hpp"
@@ -137,14 +154,21 @@ unsafe {PROCESS_NODE(UNSAFE);}
     NamespaceFoundReason::ptr found = context->namespace_lookup(std::string(yytext));
     if (found->reason == NamespaceFoundReason::REASON_FOUND) {
         if (found->location->type == Namespace::TYPE_NAMESPACE) {
-            PROCESS_NODE(NAMESPACE_NAME);
+            // When processing a namespace, the NAMESPACE_NAME
+            // gives the fully-qualified name of the namespace.
+            PROCESS_IDENTIFIER(NAMESPACE_NAME, found->location);
         }
         else {
-            PROCESS_NODE(TYPE_NAME);
+            // When processing a TYPE_NAME, the second argument
+            // tells us the actual fully-qualified name of the type.
+            PROCESS_IDENTIFIER(TYPE_NAME, found->location);
         }
     }
     else if (found->reason == NamespaceFoundReason::REASON_NOT_FOUND) {
-        PROCESS_NODE(IDENTIFIER);
+        // When declaring an identifier, the second
+        // argument tells us what namespace the identifier
+        // should go into.
+        PROCESS_IDENTIFIER(IDENTIFIER, context->current());
     }
     else {
         PROCESS_NODE(YYEOF);

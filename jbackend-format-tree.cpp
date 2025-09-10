@@ -79,7 +79,18 @@ int JBackendFormatTree::process(ASTNode::ptr node)
     printf(" lineno='%ld'", node->lineno);
   }
   if (node->value.length() != 0) {
-    printf(" value='%s'", xml_escape_attribute(node->value).c_str());
+    if (node->typestr == std::string("IDENTIFIER") ||
+        node->typestr == std::string("TYPE_NAME") ||
+        node->typestr == std::string("NAMESPACE_NAME")
+        ) {
+      printf(" value='%s' fq='%s'",
+             xml_escape_attribute(node->value).c_str(),
+             xml_escape_attribute(node->fully_qualified_name).c_str()
+             );
+    }
+    else {
+        printf(" value='%s'", xml_escape_attribute(node->value).c_str());
+    }
   }
   std::vector<ASTDataNonSyntax::ptr> non_syntax;
   if (node->children.size() == 0 && node->non_syntax.size() == 0) {

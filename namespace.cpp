@@ -44,7 +44,7 @@ int Namespace::effective_visibility(void)
   return current_visibility;
 }
 
-std::string Namespace::fully_qualified(void)
+std::string Namespace::fully_qualified_ns(void)
 {
   std::string ret;
 
@@ -60,6 +60,11 @@ std::string Namespace::fully_qualified(void)
   }
   
   return ret;
+}
+
+std::string Namespace::fully_qualified(void)
+{
+  return fully_qualified_ns() + std::string("::") + name;
 }
 
 NamespaceContext::NamespaceContext()
@@ -134,7 +139,7 @@ NamespaceContext::namespace_lookup_visibility(std::string search_context, Namesp
 
   if (effective_visibility == Namespace::VISIBILITY_PROTECTED) {
     Namespace::ptr found_parent = found->parent;
-    std::string found_context = found_parent->fully_qualified();
+    std::string found_context = found_parent->fully_qualified_ns();
     // If it's protected, we need to make sure that the full path
     // of what's found is a parent of our current location.
     // If it's protected, then found must be contained in search.
@@ -150,7 +155,7 @@ NamespaceContext::namespace_lookup_visibility(std::string search_context, Namesp
   // What we should be checking is the 'minimum'
   // value of visibility as we walk up the tree.
   if (effective_visibility == Namespace::VISIBILITY_PRIVATE) {
-    std::string found_context = found->fully_qualified();
+    std::string found_context = found->fully_qualified_ns();
     // If it's private, we need to make sure that
     // the full path of what we found matches the full
     // path of our current location.
@@ -221,6 +226,11 @@ NamespaceFoundReason::ptr NamespaceContext::namespace_lookup(std::string name)
   // return null;
   return std::make_shared<NamespaceFoundReason>(NamespaceFoundReason::REASON_NOT_FOUND);
   
+}
+
+Namespace::ptr NamespaceContext::current()
+{
+  return stack.back();
 }
 
 std::string NamespaceContext::namespace_fully_qualified()

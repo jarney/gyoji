@@ -27,7 +27,6 @@ class Namespace {
 public:
   typedef std::shared_ptr<Namespace> ptr;
   
-
   Namespace(std::string _name, int _type, int _visibility);
   Namespace(std::string _name, int _type, int _visibility, Namespace::ptr _parent);
   ~Namespace();
@@ -67,7 +66,9 @@ public:
   
   std::map<std::string, Namespace::ptr> aliases;   // This is a list of other namespaces to
                                                    // include when resolving from within the context of this namespace.
-  std::string fully_qualified(void);
+  std::string fully_qualified_ns(void);            // Fully qualified namespace of our parent.
+  std::string fully_qualified(void);               // Fully qualified namespace of ourself.
+
   int effective_visibility(void);                  // Walk up to the root and look for the 'minimum' visibility among all parents.
 };
 
@@ -141,6 +142,7 @@ public:
 
   // Returns the 'fully qualified' name of a type.
   std::string namespace_fully_qualified();
+  Namespace::ptr current();
 
   void namespace_dump_node(Namespace::ptr parent);
   void namespace_dump();

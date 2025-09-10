@@ -161,6 +161,7 @@ JSemantics::from_ast(ASTNode::ptr ast_translation_unit)
 
   translation_unit->register_builtin_types();
 
+  // Process types:
   JSyntaxListener listener;
   
   // We need to extract the type information first.

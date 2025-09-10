@@ -21,6 +21,8 @@ public:
   std::string data;
 };
 
+class Namespace;
+
 class ASTNode {
 public:
   typedef std::shared_ptr<ASTNode> ptr;
@@ -39,4 +41,5 @@ public:
   std::vector<ASTNode::ptr> all_nodes;
   std::vector<ASTNode::ptr> children;
 
+  std::string fully_qualified_name;
 };
