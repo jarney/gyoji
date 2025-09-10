@@ -71,7 +71,7 @@ void JBackendFormatTree::print_non_syntax(ASTDataNonSyntax::ptr node)
   }
 }
 
-void JBackendFormatTree::process(ASTNode::ptr node)
+int JBackendFormatTree::process(ASTNode::ptr node)
 {
   print_indent();
   printf("<node type='%s'", xml_escape_attribute(node->typestr).c_str());
@@ -98,4 +98,5 @@ void JBackendFormatTree::process(ASTNode::ptr node)
       print_indent();
       printf("</node>\n");
   }
+  return 0;
 }

@@ -55,7 +55,8 @@ static void print_node(ASTNode::ptr node)
   }
 }
 
-void JBackendFormatIdentity::process(ASTNode::ptr file)
+int JBackendFormatIdentity::process(ASTNode::ptr file)
 {
   print_node(file);
+  return 0;
 }

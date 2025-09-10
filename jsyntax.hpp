@@ -10,7 +10,7 @@
 #include "namespace.hpp"
 
 typedef struct return_data_st {
-  ASTNode::ptr parsed;
+  ASTNode::ptr translation_unit;
   NamespaceContext namespace_context;
 } return_data_t;
 

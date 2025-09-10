@@ -164,7 +164,8 @@ void JBackendFormatPretty::print_node(ASTNode::ptr node)
   }
 }
 
-void JBackendFormatPretty::process(ASTNode::ptr file)
+int JBackendFormatPretty::process(ASTNode::ptr file)
 {
   print_node_generic(file);
+  return 0;
 }

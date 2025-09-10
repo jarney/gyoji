@@ -8,6 +8,7 @@
 #include "jbackend-format-identity.hpp"
 #include "jbackend-format-tree.hpp"
 #include "jbackend-format-pretty.hpp"
+#include "jbackend-llvm.hpp"
 #include "jbackend-toc.hpp"
 
 int main(int argc, char **argv)
@@ -38,6 +39,9 @@ int main(int argc, char **argv)
     else if (std::string("format-tree") == std::string(argv[1])) {
         backend = std::make_shared<JBackendFormatTree>();
     }
+    else if (std::string("llvm") == std::string(argv[1])) {
+      backend = std::make_shared<JBackendLLVM>();
+    }
     else {
       fprintf(stderr, "Invalid backend %s\n", argv[1]);
       return 1;
@@ -52,14 +56,15 @@ int main(int argc, char **argv)
     data.namespace_context.namespace_new("unsigned", Namespace::TYPE_TYPEDEF, Namespace::VISIBILITY_PUBLIC);
     data.namespace_context.namespace_new("void", Namespace::TYPE_TYPEDEF, Namespace::VISIBILITY_PUBLIC);
     
-    calc::Parser parser{ scanner, &data };
+    jlang::Parser parser{ scanner, &data };
     int rc = parser.parse();
     if (rc != 0) {
       printf("Syntax error\n");
     }
     else {
-      backend->process(data.parsed);
+      rc = backend->process(data.translation_unit);
     }
     yylex_destroy(scanner);
     fclose(input);
+    return rc;
 }

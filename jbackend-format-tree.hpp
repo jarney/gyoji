@@ -20,5 +20,5 @@ private:
 public:
   JBackendFormatTree();
   ~JBackendFormatTree();
-  virtual void process(ASTNode::ptr file);
+  virtual int process(ASTNode::ptr file);
 };

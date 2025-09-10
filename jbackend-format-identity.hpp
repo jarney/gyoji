@@ -11,5 +11,5 @@ class JBackendFormatIdentity : public JBackend {
 public:
   JBackendFormatIdentity();
   ~JBackendFormatIdentity();
-  virtual void process(ASTNode::ptr file);
+  virtual int process(ASTNode::ptr file);
 };

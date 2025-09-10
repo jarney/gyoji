@@ -11,7 +11,7 @@ class JBackendFormatPretty : public JBackend {
 public:
   JBackendFormatPretty();
   ~JBackendFormatPretty();
-  virtual void process(ASTNode::ptr file);
+  virtual int process(ASTNode::ptr file);
 
   std::string collect_comments(ASTNode::ptr node);
   std::string break_multiline_comment(std::string str);

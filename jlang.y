@@ -15,7 +15,7 @@
 %output "target/jlang.y.cpp"
  
 %define api.parser.class {Parser}
-%define api.namespace {calc}
+%define api.namespace {jlang}
 %define api.value.type variant
 %param {yyscan_t scanner}
  
@@ -31,7 +31,7 @@
   int visibility_from_modifier(ASTNode::ptr node);
   
 #define YY_DECL                                                         \
-        int yylex(calc::Parser::semantic_type *yylval, yyscan_t yyscanner)
+        int yylex(jlang::Parser::semantic_type *yylval, yyscan_t yyscanner)
     YY_DECL;
 }
 
@@ -144,7 +144,7 @@
 %token <ASTNode::ptr> PREC_FIRST
 %token <ASTNode::ptr> PREC_SECOND
 
-%nterm <ASTNode::ptr> syntax_file;
+%nterm <ASTNode::ptr> translation_unit;
 
 %nterm <ASTNode::ptr> opt_file_statement_list;
 %nterm <ASTNode::ptr> file_statement_list;
@@ -168,7 +168,7 @@
 %nterm <ASTNode::ptr> file_statement_namespace;
 %nterm <ASTNode::ptr> opt_as;
 %nterm <ASTNode::ptr> file_statement_using;
-%nterm <ASTNode::ptr> file_global_declaration;
+%nterm <ASTNode::ptr> file_global_definition;
 %nterm <ASTNode::ptr> opt_global_initializer;
 %nterm <ASTNode::ptr> global_initializer;
 %nterm <ASTNode::ptr> opt_struct_initializer_list;
@@ -288,14 +288,14 @@
 %%
 
 /*** Rules Section ***/
-syntax_file
+translation_unit
         : opt_file_statement_list YYEOF {
                 $$ = std::make_shared<ASTNode>();
-                $$->type = Parser::symbol_kind_type::S_syntax_file;
-                $$->typestr = std::string("syntax_file");
+                $$->type = Parser::symbol_kind_type::S_translation_unit;
+                $$->typestr = std::string("translation_unit");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
-                return_data->parsed = $$;
+                return_data->translation_unit = $$;
                 PRINT_NONTERMINALS($$);
         }
         ;
@@ -337,7 +337,7 @@ file_statement
                 $$ = $1;
                 PRINT_NONTERMINALS($$);
         }
-        | file_global_declaration {
+        | file_global_definition {
                 $$ = $1;
                 PRINT_NONTERMINALS($$);
         }
@@ -363,11 +363,11 @@ file_statement
         }
         ;
 
-file_global_declaration
+file_global_definition
         : opt_access_modifier opt_unsafe type_specifier IDENTIFIER opt_array_length opt_global_initializer SEMICOLON {
                 $$ = std::make_shared<ASTNode>();
-                $$->type = Parser::symbol_kind_type::S_file_global_declaration;
-                $$->typestr = std::string("file_global_declaration");
+                $$->type = Parser::symbol_kind_type::S_file_global_definition;
+                $$->typestr = std::string("file_global_definition");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
@@ -2170,6 +2170,6 @@ int visibility_from_modifier(ASTNode::ptr node)
     return visibility;
 }
 
-void calc::Parser::error(const std::string& msg) {
+void jlang::Parser::error(const std::string& msg) {
     printf("Syntax error at line %d : %s\n", lineno, msg.c_str());
 }

@@ -4,11 +4,13 @@ OBJ_FILES = \
 	target/jbackend.o \
 	target/jbackend-format-tree.o \
 	target/jbackend-format-identity.o \
+	target/jbackend-llvm.o \
 	target/ast.o \
 	target/main.o \
 	target/xml.o \
 	target/jstring.o \
-	target/namespace.o
+	target/namespace.o \
+	target/jsemantics.o
 
 INCLUDES = \
 	-I. \
@@ -30,10 +32,9 @@ TEST_STRING_OBJS = \
 	target/test_string.o \
 	target/jstring.o
 
-#LIBRARIES = \
-#	-L/usr/lib/llvm-18/lib \
-#	-lLLVM-18
-LIBRARIES=
+LIBRARIES = \
+	-L/usr/lib/llvm-18/lib \
+	-lLLVM-18
 
 all: target/cparse test
 	target/cparse format-identity tests/valid-syntax-expression-primary.j >target/valid-syntax-expression-primary.j

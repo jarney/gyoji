@@ -6,7 +6,7 @@
 #include "namespace.hpp"
 #include "target/jlang.y.hpp"
 
-using namespace calc;
+using namespace jlang;
 std::string override_file;
 size_t lineno = 1;
 std::vector<ASTDataNonSyntax::ptr> non_syntax_data;

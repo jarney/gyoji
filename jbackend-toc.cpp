@@ -296,7 +296,7 @@ void JBackendToC::dump_types()
 }
 
 
-void JBackendToC::process(ASTNode::ptr file)
+int JBackendToC::process(ASTNode::ptr file)
 {
 
 
