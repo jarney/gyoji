@@ -72,9 +72,9 @@ namespace JSemantics {
     void visit(Visitor<FunctionDeclaration> &visitor);
     std::string name;
     std::string return_type;
-    std::vector<std::string> arg_type;
+    std::vector<std::pair<std::string, std::string>> arg_types;
   };
-  
+
   // This is the main unit of work for the LLVM because
   // it is what drives code generation for symbols.
   class FunctionDefinition {
@@ -83,7 +83,9 @@ namespace JSemantics {
     FunctionDefinition();
     ~FunctionDefinition();
     void visit(Visitor<FunctionDefinition> &visitor);
-    FunctionDeclaration::ptr functionDeclaration;
+    FunctionDeclaration::ptr function_declaration;
+
+    std::shared_ptr<ScopeBlock> scope_block;
   };
 
   class GlobalVariableDefinition {
@@ -103,6 +105,13 @@ namespace JSemantics {
     ~Statement();
   };
 
+  class StatementScopeBlock : public Statement {
+  public:
+    StatementScopeBlock();
+    ~StatementScopeBlock();
+    std::shared_ptr<ScopeBlock> scope_block;
+  };
+  
   class StatementFunctionCall : public Statement {
   public:
     StatementFunctionCall();
@@ -151,6 +160,7 @@ namespace JSemantics {
     typedef std::shared_ptr<ScopeBlock> ptr;
     ScopeBlock();
     ~ScopeBlock();
+    void visit(Visitor<ScopeBlock> &visitor);
     std::list<Statement::ptr> statements;
   };
   

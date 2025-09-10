@@ -48,6 +48,7 @@ int JBackendLLVM::process(ASTNode::ptr ast_translation_unit)
   // TODO: Resolve the types into fully-qualified namespaces.
 
   // TODO: Check semantic rules that cannot be evaluated during parse
+  //         * Function named arguments may not be void.
   //         * Type consistency (function return values and expression types)
   //         * Functions have return statements that match function return values.
   //         * Run the borrow checker to make sure that the requested

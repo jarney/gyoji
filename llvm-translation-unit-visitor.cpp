@@ -1,42 +1,10 @@
 #include "jbackend-llvm.hpp"
+#include "jbackend-llvm-types.hpp"
+#include "jbackend-llvm-operators.hpp"
 
 using namespace llvm::sys;
 using namespace JSemantics;
 using namespace JLang::Backend::LLVM;
-
-LLVMType::LLVMType(llvm::LLVMContext & _context)
-  : context(_context)
-{}
-LLVMType::~LLVMType()
-{}
-
-LLVMTypeVoid::LLVMTypeVoid(llvm::LLVMContext & _context)
-  : LLVMType(_context)
-{}
-LLVMTypeVoid::~LLVMTypeVoid()
-{}
-llvm::Type *LLVMTypeVoid::get_type()
-{
-  return llvm::Type::getVoidTy(context);
-}
-llvm::Value *LLVMTypeVoid::get_initializer_default()
-{
-  return llvm::UndefValue::get(llvm::Type::getVoidTy(context));
-}
-
-LLVMTypeDouble::LLVMTypeDouble(llvm::LLVMContext & _context)
-  : LLVMType(_context)
-{}
-LLVMTypeDouble::~LLVMTypeDouble()
-{}
-llvm::Type *LLVMTypeDouble::get_type()
-{
-  return llvm::Type::getDoubleTy(context);
-}
-llvm::Value *LLVMTypeDouble::get_initializer_default()
-{
-  return llvm::ConstantFP::get(context, llvm::APFloat(0.0));
-}
 
 LLVMTranslationUnitVisitor::LLVMTranslationUnitVisitor()
 {}
@@ -75,10 +43,21 @@ llvm::Function *LLVMTranslationUnitVisitor::getFunction(std::string name)
 }
 
 void
+LLVMTranslationUnitVisitor::visit(ScopeBlock &scope_block)
+{
+}
+
+void
 LLVMTranslationUnitVisitor::visit(FunctionDeclaration &functiondecl)
 {
   // Make the function type:  double(double,double) etc.
-  std::vector<llvm::Type *> Doubles(functiondecl.arg_type.size(), llvm::Type::getDoubleTy(*TheContext));
+  std::vector<llvm::Type *> Doubles;
+  for (auto pair : functiondecl.arg_types) {
+    LLVMType::ptr atype = types[pair.first];
+    fprintf(stderr, "Adding type %s\n", pair.first.c_str());
+    Doubles.push_back(atype->get_type());
+  }
+  fprintf(stderr, "Doubles type is %ld\n", Doubles.size());
   //  llvm::FunctionType *FT =
   //    llvm::FunctionType::get(llvm::Type::getDoubleTy(*TheContext), Doubles, false);
 
@@ -92,8 +71,12 @@ LLVMTranslationUnitVisitor::visit(FunctionDeclaration &functiondecl)
 
   // Set names for all arguments.
   unsigned Idx = 0;
-  for (auto &Arg : F->args())
-    Arg.setName(functiondecl.arg_type[Idx++]);
+  for (auto &Arg : F->args()) {
+    fprintf(stderr, "Indirecting arg_types\n");
+    auto pair = functiondecl.arg_types[Idx++];
+    fprintf(stderr, "Adding type %s %s\n", pair.first.c_str(), pair.second.c_str());
+    Arg.setName(pair.second);
+  }
 }
 
 /// CreateEntryBlockAlloca - Create an alloca instruction in the entry block of
@@ -113,11 +96,11 @@ LLVMTranslationUnitVisitor::visit(FunctionDefinition &functiondef)
   
   // Transfer ownership of the prototype to the FunctionProtos map, but keep a
   // reference to it for use below.
-  auto functionDeclaration = functiondef.functionDeclaration;
-  printf("Processing function %s\n", functionDeclaration->name.c_str());
-  auto &P = *functionDeclaration;
-  FunctionProtos[functionDeclaration->name] = functionDeclaration;
-  Function *TheFunction = getFunction(functionDeclaration->name);
+  auto function_declaration = functiondef.function_declaration;
+  printf("Processing function %s\n", function_declaration->name.c_str());
+  auto &P = *function_declaration;
+  FunctionProtos[function_declaration->name] = function_declaration;
+  Function *TheFunction = getFunction(function_declaration->name);
   if (!TheFunction) {
     fprintf(stderr, "Function declaration not found\n");
   }
@@ -151,8 +134,7 @@ LLVMTranslationUnitVisitor::visit(FunctionDefinition &functiondef)
   }
 #else
 
-  //LLVMScopeBodyVisitor scope_body_visitor;
-  //scope_body.visit(scope_body_visitor);
+  visit(*functiondef.scope_block);
   
 #if 0
   if (Value *RetVal = llvm::ConstantFP::get(*TheContext, llvm::APFloat(0.0))) {
@@ -162,7 +144,7 @@ LLVMTranslationUnitVisitor::visit(FunctionDefinition &functiondef)
   }
 #endif
   
-  LLVMType::ptr return_value_type = types[functionDeclaration->return_type];
+  LLVMType::ptr return_value_type = types[function_declaration->return_type];
   Builder->CreateRet(return_value_type->get_initializer_default());
   
   // Validate the generated code, checking for consistency.
@@ -207,8 +189,38 @@ LLVMTranslationUnitVisitor::initialize()
   // Create a new builder for the module.
   Builder = std::make_unique<llvm::IRBuilder<>>(*TheContext);
 
+  register_type_builtins();
+  register_operator_builtins();
+}
+
+void
+LLVMTranslationUnitVisitor::register_type_builtins()
+{
+  // Register the built-in types
   types["void"] = std::make_shared<LLVMTypeVoid>(*TheContext);
+  types["char"] = std::make_shared<LLVMTypeDouble>(*TheContext);
+  types["unsigned"] = std::make_shared<LLVMTypeDouble>(*TheContext);
+  types["short"] = std::make_shared<LLVMTypeDouble>(*TheContext);
+  types["int"] = std::make_shared<LLVMTypeDouble>(*TheContext);
+  types["long"] = std::make_shared<LLVMTypeDouble>(*TheContext);
+  types["float"] = std::make_shared<LLVMTypeDouble>(*TheContext);
   types["double"] = std::make_shared<LLVMTypeDouble>(*TheContext);
+}
+
+
+void
+LLVMTranslationUnitVisitor::register_operator_builtins()
+{
+  // Operator builtins are the basic operations
+  // like assignment, addition, etc.
+  // Each of them has rules about what it can operate on
+  // and what it can produce.  Casting is not allowed
+  // in the language.  If you need casting, you need to
+  // provide a 'cast' function that can change types
+  // in a library or something.
+  
+  binary_operators.register_operator("+", "double", "double", std::make_shared<LLVMBinaryOperatorAddDouble>(*Builder));
+  binary_operators.register_operator("+", "int", "int", std::make_shared<LLVMBinaryOperatorAddDouble>(*Builder));
 }
 
 int

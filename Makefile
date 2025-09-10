@@ -5,6 +5,8 @@ OBJ_FILES = \
 	target/jbackend-format-tree.o \
 	target/jbackend-format-identity.o \
 	target/jbackend-llvm.o \
+	target/jbackend-llvm-types.o \
+	target/jbackend-llvm-operators.o \
         target/llvm-translation-unit-visitor.o \
         target/ast.o \
 	target/main.o \

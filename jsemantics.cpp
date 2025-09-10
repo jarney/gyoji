@@ -68,9 +68,12 @@ FunctionDefinition::visit(Visitor<FunctionDefinition> &visitor)
 FunctionDefinition::ptr ast_to_file_statement_function_definition(ASTNode::ptr node)
 {
   FunctionDefinition::ptr ret = std::make_shared<FunctionDefinition>();
-  ret->functionDeclaration = std::make_shared<FunctionDeclaration>();
-  ret->functionDeclaration->name = node->children.at(3)->value;
-  ret->functionDeclaration->return_type = ast_to_type(node->children.at(2))->name;
+  ret->function_declaration = std::make_shared<FunctionDeclaration>();
+  ret->function_declaration->name = node->children.at(3)->value;
+  ret->function_declaration->return_type = ast_to_type(node->children.at(2))->name;
+  node->children.at(5);
+  ret->function_declaration->arg_types.push_back(std::make_pair("double", "first"));
+  ret->function_declaration->arg_types.push_back(std::make_pair("double", "second"));
   return ret;
 }
 

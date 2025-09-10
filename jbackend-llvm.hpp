@@ -45,32 +45,35 @@ public:
   llvm::LLVMContext & context;
 };
 
-class LLVMTypeVoid : public LLVMType {
+class LLVMBinaryOperator {
 public:
-  LLVMTypeVoid(llvm::LLVMContext &_context);;
-  ~LLVMTypeVoid();
-  llvm::Type *get_type();
-  llvm::Value *get_initializer_default();
+  typedef std::shared_ptr<LLVMBinaryOperator> ptr;
+  LLVMBinaryOperator(llvm::IRBuilder<> &_builder);
+  ~LLVMBinaryOperator();
+  llvm::IRBuilder<> &builder;
+  virtual std::string return_type() = 0;
+  virtual llvm::Value *perform(llvm::Value *a, llvm::Value *b) = 0;
 };
 
-class LLVMTypeDouble : public LLVMType {
+class LLVMBinaryOperatorTable {
 public:
-  LLVMTypeDouble(llvm::LLVMContext &_context);
-  ~LLVMTypeDouble();
-  llvm::Type *get_type();
-  llvm::Value *get_initializer_default();
+  // Returns the operator named 'name' that takes type_a and type_b as input types.
+  LLVMBinaryOperator::ptr find_operator(std::string name, std::string type_a, std::string type_b);
+  void register_operator(std::string name, std::string type_a, std::string type_b, LLVMBinaryOperator::ptr op);
 };
 
-      
 class LLVMTranslationUnitVisitor
   : public JSemantics::Visitor<JSemantics::TranslationUnit> {
 public:
   LLVMTranslationUnitVisitor();
   ~LLVMTranslationUnitVisitor();
   void initialize();
-  
+  void register_operator_builtins();
+  void register_type_builtins();
+
+  void visit(JSemantics::ScopeBlock &scope_block);
   void visit(JSemantics::TranslationUnit &visitable);
-  void visit(JSemantics::GlobalVariableDefinition &visitable);
+  void visit(JSemantics::GlobalVariableDefinition &global_variable_definition);
   void visit(JSemantics::FunctionDefinition &visitable);
   void visit(JSemantics::FunctionDeclaration &visitable);
   
@@ -83,7 +86,16 @@ private:
   
   std::map<std::string, llvm::Value *> NamedValues;
   std::map<std::string, JSemantics::FunctionDeclaration::ptr> FunctionProtos;
+
   std::map<std::string, LLVMType::ptr> types;
+  LLVMBinaryOperatorTable binary_operators;
+
+  // Binary operators are identified by the two types they accept
+  // and give back the type they return.  Actually, this is a language
+  // property, not a code-generation property, so this probably belongs
+  // more in the semantic layer and not in the LLVM layer.
+  //std::map<std::string, LLVMOperatorBinary::ptr> binary_operators;
+  //std::map<std::string, LLVMOperatorUnary::ptr> unary_operators;
 
   llvm::Function *getFunction(std::string name);
   llvm::AllocaInst *CreateEntryBlockAlloca(llvm::Function *TheFunction,
