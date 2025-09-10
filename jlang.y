@@ -263,7 +263,6 @@
 %nterm <ASTNode::ptr> type_specifier;
 %nterm <ASTNode::ptr> type_specifier_call_args;
 %nterm <ASTNode::ptr> type_name;
-%nterm <ASTNode::ptr> type_name_qualified;
 %nterm <ASTNode::ptr> type_access_qualifier;
 %nterm <ASTNode::ptr> opt_array_length;
 
@@ -383,11 +382,13 @@ file_global_declaration
 opt_global_initializer
         : /**/ {
                 $$ = std::make_shared<ASTNode>();
-                $$->type = Parser::symbol_kind_type::S_file_global_declaration;
+                $$->type = Parser::symbol_kind_type::S_global_initializer;
                 $$->typestr = std::string("global_initializer");
+                PRINT_NONTERMINALS($$);
         }
         | global_initializer {
                 $$ = $1;
+                PRINT_NONTERMINALS($$);
         }
         ;
 
@@ -398,6 +399,7 @@ global_initializer
                 $$->typestr = std::string("global_initializer");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
+                PRINT_NONTERMINALS($$);
         }
         | EQUALS ANDPERSAND expression_primary {
                 $$ = std::make_shared<ASTNode>();
@@ -406,6 +408,7 @@ global_initializer
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
+                PRINT_NONTERMINALS($$);
         }
         | EQUALS BRACE_L opt_struct_initializer_list BRACE_R {
                 $$ = std::make_shared<ASTNode>();
@@ -415,6 +418,7 @@ global_initializer
                 $$->children.push_back($2);
                 $$->children.push_back($3);
                 $$->children.push_back($4);
+                PRINT_NONTERMINALS($$);
         }
         ;
 
@@ -424,9 +428,11 @@ opt_struct_initializer_list
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_struct_initializer_list;
                 $$->typestr = std::string("struct_initializer_list");
+                PRINT_NONTERMINALS($$);
         }
         | struct_initializer_list {
                 $$ = $1;
+                PRINT_NONTERMINALS($$);
         }
         ;
 
@@ -436,10 +442,12 @@ struct_initializer_list
                 $$->type = Parser::symbol_kind_type::S_struct_initializer_list;
                 $$->typestr = std::string("struct_initializer_list");
                 $$->children.push_back($1);
+                PRINT_NONTERMINALS($$);
         }
         | struct_initializer_list struct_initializer {
                 $$ = $1;
                 $$->children.push_back($2);
+                PRINT_NONTERMINALS($$);
         }
         ;
 
@@ -452,32 +460,38 @@ struct_initializer
                 $$->children.push_back($2);
                 $$->children.push_back($3);
                 $$->children.push_back($4);
+                PRINT_NONTERMINALS($$);
         }
         ;
 
 opt_access_modifier
         :  {
-            $$ = std::make_shared<ASTNode>();
-            $$->type = Parser::symbol_kind_type::S_access_modifier;
-            $$->typestr = std::string("access_modifier");
+                $$ = std::make_shared<ASTNode>();
+                $$->type = Parser::symbol_kind_type::S_access_modifier;
+                $$->typestr = std::string("access_modifier");
+                PRINT_NONTERMINALS($$);
         }
         | access_modifier {
-            $$ = std::make_shared<ASTNode>();
-            $$->type = Parser::symbol_kind_type::S_access_modifier;
-            $$->typestr = std::string("access_modifier");
-            $$->children.push_back($1);
+                $$ = std::make_shared<ASTNode>();
+                $$->type = Parser::symbol_kind_type::S_access_modifier;
+                $$->typestr = std::string("access_modifier");
+                $$->children.push_back($1);
+                PRINT_NONTERMINALS($$);
         }
         ;
 
 access_modifier
         : PUBLIC {
                 $$ = $1;
+                PRINT_NONTERMINALS($$);
         }
         | PRIVATE {
                 $$ = $1;
+                PRINT_NONTERMINALS($$);
         }
         | PROTECTED {
                 $$ = $1;
+                PRINT_NONTERMINALS($$);
         }
         ;
 
@@ -491,6 +505,7 @@ namespace_declaration
                 $$->children.push_back($3);
                 return_data->namespace_context.namespace_new($3->value, Namespace::TYPE_NAMESPACE, visibility_from_modifier($1));
                 return_data->namespace_context.namespace_push($3->value);
+                PRINT_NONTERMINALS($$);
         }
         ;
 
@@ -505,6 +520,7 @@ file_statement_namespace
                 $$->children.push_back($4);
                 $$->children.push_back($5);
                 return_data->namespace_context.namespace_pop();
+                PRINT_NONTERMINALS($$);
         }
         ;
 
@@ -513,6 +529,7 @@ opt_as
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_opt_as;
                 $$->typestr = std::string("opt_as");
+                PRINT_NONTERMINALS($$);
         }
         | AS IDENTIFIER {
                 $$ = std::make_shared<ASTNode>();
@@ -520,6 +537,7 @@ opt_as
                 $$->typestr = std::string("opt_as");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
+                PRINT_NONTERMINALS($$);
         }
         ;
 
@@ -545,6 +563,7 @@ file_statement_using
                 else {
                   return_data->namespace_context.namespace_using("", found_std->location);
                 }
+                PRINT_NONTERMINALS($$);
         }
         | opt_access_modifier USING NAMESPACE TYPE_NAME opt_as SEMICOLON {
                 $$ = std::make_shared<ASTNode>();
@@ -567,14 +586,15 @@ file_statement_using
                 else {
                   return_data->namespace_context.namespace_using("", found_std->location);
                 }
+                PRINT_NONTERMINALS($$);
         }
         ;
 
 class_decl_start
         : opt_access_modifier CLASS IDENTIFIER opt_class_argument_list {
                 $$ = std::make_shared<ASTNode>();
-                $$->type = Parser::symbol_kind_type::S_class_definition;
-                $$->typestr = std::string("class_definition");
+                $$->type = Parser::symbol_kind_type::S_class_decl_start;
+                $$->typestr = std::string("class_decl_start");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
@@ -592,6 +612,7 @@ class_decl_start
                     }
                   }
                 }
+                PRINT_NONTERMINALS($$);
         }
         ;
 
@@ -600,6 +621,7 @@ opt_class_argument_list
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_opt_class_argument_list;
                 $$->typestr = std::string("opt_class_argument_list");
+                PRINT_NONTERMINALS($$);
         }
         | PAREN_L class_argument_list PAREN_R {
                 $$ = std::make_shared<ASTNode>();
@@ -608,6 +630,7 @@ opt_class_argument_list
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
+                PRINT_NONTERMINALS($$);
         }
         ;
 
@@ -621,11 +644,13 @@ class_argument_list
                 $$->type = Parser::symbol_kind_type::S_class_argument_list;
                 $$->typestr = std::string("class_argument_list");
                 $$->children.push_back($1);
+                PRINT_NONTERMINALS($$);
         }
         | class_argument_list COMMA IDENTIFIER {
                 $$ = $1;
                 $$->children.push_back($2);
                 $$->children.push_back($3);
+                PRINT_NONTERMINALS($$);
         }
         ;
 
@@ -639,8 +664,8 @@ class_definition
                 $$->children.push_back($3);
                 $$->children.push_back($4);
                 $$->children.push_back($5);
-                PRINT_NONTERMINALS($$);
                 return_data->namespace_context.namespace_pop();
+                PRINT_NONTERMINALS($$);
         }
         ;
 
@@ -654,8 +679,8 @@ type_definition
                 $$->children.push_back($3);
                 $$->children.push_back($4);
                 $$->children.push_back($5);
-                PRINT_NONTERMINALS($$);
                 return_data->namespace_context.namespace_new($4->value, Namespace::TYPE_TYPEDEF, visibility_from_modifier($1));
+                PRINT_NONTERMINALS($$);
         }
         ;
 
@@ -673,6 +698,7 @@ enum_definition
                 $$->children.push_back($7);
                 $$->children.push_back($8);
                 return_data->namespace_context.namespace_new($4->value, Namespace::TYPE_TYPEDEF, visibility_from_modifier($1));
+                PRINT_NONTERMINALS($$);
         }
         ;
 
@@ -681,9 +707,11 @@ opt_enum_value_list
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_enum_value_list;
                 $$->typestr = std::string("enum_value_list");
+                PRINT_NONTERMINALS($$);
         }
         | enum_value_list {
                 $$ = $1;
+                PRINT_NONTERMINALS($$);
         }
         ;
 
@@ -693,10 +721,12 @@ enum_value_list
                 $$->type = Parser::symbol_kind_type::S_enum_value_list;
                 $$->typestr = std::string("enum_value_list");
                 $$->children.push_back($1);
+                PRINT_NONTERMINALS($$);
         }
         | enum_value_list enum_value {
                 $$ = $1;
                 $$->children.push_back($2);
+                PRINT_NONTERMINALS($$);
         }
         ;
 
@@ -709,6 +739,7 @@ enum_value
                 $$->children.push_back($2);
                 $$->children.push_back($3);
                 $$->children.push_back($4);
+                PRINT_NONTERMINALS($$);
         }
         ;
   
@@ -717,17 +748,19 @@ opt_unsafe
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_opt_unsafe;
                 $$->typestr = std::string("opt_unsafe");
+                PRINT_NONTERMINALS($$);
         }
         | UNSAFE {
                 $$ = $1;
+                PRINT_NONTERMINALS($$);
         }
         ;
 
 file_statement_function_declaration
         : opt_access_modifier opt_unsafe type_specifier IDENTIFIER PAREN_L opt_function_definition_arg_list PAREN_R SEMICOLON {
                 $$ = std::make_shared<ASTNode>();
-                $$->type = Parser::symbol_kind_type::S_file_statement_function_definition;
-                $$->typestr = std::string("file_statement_function_definition");
+                $$->type = Parser::symbol_kind_type::S_file_statement_function_declaration;
+                $$->typestr = std::string("file_statement_function_declaration");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
@@ -762,9 +795,11 @@ opt_function_definition_arg_list
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_function_definition_arg_list;
                 $$->typestr = std::string("function_definition_arg_list");
+                PRINT_NONTERMINALS($$);
         }
         | function_definition_arg_list {
                 $$ = $1;
+                PRINT_NONTERMINALS($$);
         }
         ;
 
@@ -774,11 +809,13 @@ function_definition_arg_list
                 $$->type = Parser::symbol_kind_type::S_function_definition_arg_list;
                 $$->typestr = std::string("function_definition_arg_list");
                 $$->children.push_back($1);
+                PRINT_NONTERMINALS($$);
         }
         | function_definition_arg_list COMMA function_definition_arg {
                 $$ = $1;
                 $$->children.push_back($2);
                 $$->children.push_back($3);
+                PRINT_NONTERMINALS($$);
         }
         ;
 function_definition_arg
@@ -788,6 +825,7 @@ function_definition_arg
                 $$->typestr = std::string("function_definition_arg");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
+                PRINT_NONTERMINALS($$);
         }
         ;
 
@@ -808,67 +846,83 @@ statement_list
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_scope_body;
                 $$->typestr = std::string("statement_list");
+                PRINT_NONTERMINALS($$);
         }
         | statement_list statement {
                 $$ = $1;
                 $$->children.push_back($2);
+                PRINT_NONTERMINALS($$);
         }
         ;
 
 statement
         : statement_block {
                 $$ = $1;
+                PRINT_NONTERMINALS($$);
         }
         | statement_ifelse {
                 $$ = $1;
+                PRINT_NONTERMINALS($$);
         }
         | statement_while {
                 $$ = $1;
+                PRINT_NONTERMINALS($$);
         }
         | statement_for {
                 $$ = $1;
+                PRINT_NONTERMINALS($$);
         }
         | statement_switch {
                 $$ = $1;
+                PRINT_NONTERMINALS($$);
         }
         | statement_return {
                 $$ = $1;
+                PRINT_NONTERMINALS($$);
         }
         | statement_continue {
                 $$ = $1;
+                PRINT_NONTERMINALS($$);
         }
         | statement_goto {
                 $$ = $1;
+                PRINT_NONTERMINALS($$);
         }
         | statement_break {
                 $$ = $1;
+                PRINT_NONTERMINALS($$);
         }
         | statement_label {
                 $$ = $1;
+                PRINT_NONTERMINALS($$);
         }
         | statement_expression {
                 $$ = $1;
+                PRINT_NONTERMINALS($$);
         }
         | statement_variable_declaration {
                 $$ = $1;
+                PRINT_NONTERMINALS($$);
         }
         ;
 
 opt_array_length
-: /**/ {
-        $$ = std::make_shared<ASTNode>();
-        $$->type = Parser::symbol_kind_type::S_opt_array_length;
-        $$->typestr = std::string("opt_array_length");
-}
-| BRACKET_L LITERAL_INT BRACKET_R {
-        $$ = std::make_shared<ASTNode>();
-        $$->type = Parser::symbol_kind_type::S_opt_array_length;
-        $$->typestr = std::string("opt_array_length");
-        $$->children.push_back($1);
-        $$->children.push_back($2);
-        $$->children.push_back($3);
-}
-;
+        : /**/ {
+                $$ = std::make_shared<ASTNode>();
+                $$->type = Parser::symbol_kind_type::S_opt_array_length;
+                $$->typestr = std::string("opt_array_length");
+                PRINT_NONTERMINALS($$);
+        }
+        | BRACKET_L LITERAL_INT BRACKET_R {
+                $$ = std::make_shared<ASTNode>();
+                $$->type = Parser::symbol_kind_type::S_opt_array_length;
+                $$->typestr = std::string("opt_array_length");
+                $$->children.push_back($1);
+                $$->children.push_back($2);
+                $$->children.push_back($3);
+                PRINT_NONTERMINALS($$);
+        }
+        ;
 
 statement_variable_declaration
         : type_specifier IDENTIFIER opt_array_length opt_global_initializer SEMICOLON {
@@ -880,6 +934,7 @@ statement_variable_declaration
                 $$->children.push_back($3);
                 $$->children.push_back($4);
                 $$->children.push_back($5);
+                PRINT_NONTERMINALS($$);
         }
         ;
 
@@ -890,6 +945,7 @@ statement_block
                 $$->typestr = std::string("statement_block");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
+                PRINT_NONTERMINALS($$);
         }
         ;
 
@@ -900,6 +956,7 @@ statement_expression
                 $$->typestr = std::string("statement_expression");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
+                PRINT_NONTERMINALS($$);
         }
         ;
 statement_goto
@@ -910,6 +967,7 @@ statement_goto
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
+                PRINT_NONTERMINALS($$);
         }
         ;
 statement_break
@@ -919,6 +977,7 @@ statement_break
                  $$->typestr = std::string("statement_break");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
+                PRINT_NONTERMINALS($$);
         }
         ;
 statement_continue
@@ -928,6 +987,7 @@ statement_continue
                 $$->typestr = std::string("statement_continue");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
+                PRINT_NONTERMINALS($$);
         }
         ;
 statement_label
@@ -938,6 +998,7 @@ statement_label
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
+                PRINT_NONTERMINALS($$);
         }
         ;
 
@@ -949,6 +1010,7 @@ statement_return
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
+                PRINT_NONTERMINALS($$);
         }
         ; 
 
@@ -962,6 +1024,7 @@ statement_ifelse
                 $$->children.push_back($3);
                 $$->children.push_back($4);
                 $$->children.push_back($5);
+                PRINT_NONTERMINALS($$);
         }
         | IF PAREN_L expression PAREN_R scope_body ELSE statement_ifelse {
                 $$ = std::make_shared<ASTNode>();
@@ -974,6 +1037,7 @@ statement_ifelse
                 $$->children.push_back($5);
                 $$->children.push_back($6);
                 $$->children.push_back($7);
+                PRINT_NONTERMINALS($$);
         }
         | IF PAREN_L expression PAREN_R scope_body ELSE scope_body {
                 $$ = std::make_shared<ASTNode>();
@@ -986,6 +1050,7 @@ statement_ifelse
                 $$->children.push_back($5);
                 $$->children.push_back($6);
                 $$->children.push_back($7);
+                PRINT_NONTERMINALS($$);
         }
         ;
 
@@ -999,6 +1064,7 @@ statement_while
                 $$->children.push_back($3);
                 $$->children.push_back($4);
                 $$->children.push_back($5);
+                PRINT_NONTERMINALS($$);
         }
         ;
 
@@ -1016,6 +1082,7 @@ statement_for
                 $$->children.push_back($7);
                 $$->children.push_back($8);
                 $$->children.push_back($9);
+                PRINT_NONTERMINALS($$);
         }
         ;
 
@@ -1031,16 +1098,20 @@ statement_switch
                 $$->children.push_back($5);
                 $$->children.push_back($6);
                 $$->children.push_back($7);
+                PRINT_NONTERMINALS($$);
         }
+        ;
 
 opt_statement_switch_content
         : /**/ {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_statement_switch_content;
                 $$->typestr = std::string("statement_switch_content");
+                PRINT_NONTERMINALS($$);
         }
         | statement_switch_content {
                 $$ = $1;
+                PRINT_NONTERMINALS($$);
         }
         ;
 
@@ -1050,51 +1121,61 @@ statement_switch_content
                 $$->type = Parser::symbol_kind_type::S_statement_switch_content;
                 $$->typestr = std::string("statement_switch_content");
                 $$->children.push_back($1);
+                PRINT_NONTERMINALS($$);
         }
         | statement_switch_content statement_switch_block {
                 $$ = $1;
                 $$->children.push_back($2);
+                PRINT_NONTERMINALS($$);
         }
         ;
 
 statement_switch_block
         : DEFAULT COLON scope_body {
                 $$ = std::make_shared<ASTNode>();
-                $$->type = Parser::symbol_kind_type::S_statement_switch_content;
+                $$->type = Parser::symbol_kind_type::S_statement_switch_block;
                 $$->typestr = std::string("statement_switch_block");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
+                PRINT_NONTERMINALS($$);
         }
         | CASE expression COLON scope_body {
                 $$ = std::make_shared<ASTNode>();
-                $$->type = Parser::symbol_kind_type::S_statement_switch_content;
+                $$->type = Parser::symbol_kind_type::S_statement_switch_block;
                 $$->typestr = std::string("statement_switch_block");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
                 $$->children.push_back($4);
+                PRINT_NONTERMINALS($$);
         }
         ;
 
 expression_primary
         : expression_primary_nested {
                 $$ = $1;
+                PRINT_NONTERMINALS($$);
         }
         | expression_primary_identifier {
                 $$ = $1;
+                PRINT_NONTERMINALS($$);
         }
         | expression_primary_literal_int {
                 $$ = $1;
+                PRINT_NONTERMINALS($$);
         }
         | expression_primary_literal_float {
                 $$ = $1;
+                PRINT_NONTERMINALS($$);
         }
         | expression_primary_literal_char {
                 $$ = $1;
+                PRINT_NONTERMINALS($$);
         }
         | expression_primary_literal_string {
                 $$ = $1;
+                PRINT_NONTERMINALS($$);
         }
         ;
 
@@ -1160,30 +1241,38 @@ expression_primary_nested
 expression_postfix
         : expression_postfix_primary {
                 $$ = $1;
+                PRINT_NONTERMINALS($$);
         }
         | expression_postfix_arrayindex {
                 $$ = $1;
+                PRINT_NONTERMINALS($$);
         }
         | expression_postfix_function_call {
                 $$ = $1;
+                PRINT_NONTERMINALS($$);
         }
         | expression_postfix_dot {
                 $$ = $1;
+                PRINT_NONTERMINALS($$);
         }
         | expression_postfix_arrow {
                 $$ = $1;
+                PRINT_NONTERMINALS($$);
         }
         | expression_postfix_increment {
                 $$ = $1;
+                PRINT_NONTERMINALS($$);
         }
         | expression_postfix_decrement {
                 $$ = $1;
+                PRINT_NONTERMINALS($$);
         }
         ;
 
 expression_postfix_primary
         : expression_primary {
                 $$ = $1;
+                PRINT_NONTERMINALS($$);
         }
         ;
 
@@ -1262,20 +1351,26 @@ expression_postfix_decrement
 expression_unary
         : expression_postfix {
                 $$ = $1;
+                PRINT_NONTERMINALS($$);
         }
         | expression_unary_increment {
                 $$ = $1;
+                PRINT_NONTERMINALS($$);
         }
         | expression_unary_decrement {
                 $$ = $1;
+                PRINT_NONTERMINALS($$);
         }
         | expression_unary_cast {
                 $$ = $1;
+                PRINT_NONTERMINALS($$);
         }
         | expression_unary_sizeof_type {
                 $$ = $1;
+                PRINT_NONTERMINALS($$);
         }
         ;
+
 expression_unary_increment
         : INC_OP expression_unary {
                 $$ = std::make_shared<ASTNode>();
@@ -1283,6 +1378,7 @@ expression_unary_increment
                 $$->typestr = std::string("expression_unary_increment");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
+                PRINT_NONTERMINALS($$);
         }
         ;
 expression_unary_decrement
@@ -1292,6 +1388,7 @@ expression_unary_decrement
                 $$->typestr = std::string("expression_unary_decrement");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
+                PRINT_NONTERMINALS($$);
         }
         ;
 expression_unary_cast
@@ -1301,6 +1398,7 @@ expression_unary_cast
                 $$->typestr = std::string("expression_unary_cast");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
+                PRINT_NONTERMINALS($$);
         }
         ;
 expression_unary_sizeof_type
@@ -1312,6 +1410,7 @@ expression_unary_sizeof_type
                 $$->children.push_back($2);
                 $$->children.push_back($3);
                 $$->children.push_back($4);
+                PRINT_NONTERMINALS($$);
         }
         ;
 
@@ -1323,51 +1422,60 @@ operator_unary
                 $$->type = Parser::symbol_kind::S_operator_unary;
                 $$->typestr = std::string("operator_unary");
                 $$->children.push_back($1);
+                PRINT_NONTERMINALS($$);
         }
         | STAR {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind::S_operator_unary;
                 $$->typestr = std::string("operator_unary");
                 $$->children.push_back($1);
+                PRINT_NONTERMINALS($$);
         }
         | PLUS {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind::S_operator_unary;
                 $$->typestr = std::string("operator_unary");
                 $$->children.push_back($1);
+                PRINT_NONTERMINALS($$);
         }
         | MINUS {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind::S_operator_unary;
                 $$->typestr = std::string("operator_unary");
                 $$->children.push_back($1);
+                PRINT_NONTERMINALS($$);
         }
         | TILDE {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind::S_operator_unary;
                 $$->typestr = std::string("operator_unary");
                 $$->children.push_back($1);
+                PRINT_NONTERMINALS($$);
         }
         | BANG {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind::S_operator_unary;
                 $$->typestr = std::string("operator_unary");
                 $$->children.push_back($1);
+                PRINT_NONTERMINALS($$);
         }
 	;
 
 expression_cast
         : expression_cast_unary {
                 $$ = $1;
+                PRINT_NONTERMINALS($$);
         }
         | expression_cast_cast {
                 $$ = $1;
+                PRINT_NONTERMINALS($$);
         }
         ;
 
 expression_cast_unary
         : expression_unary {
                 $$ = $1;
+                PRINT_NONTERMINALS($$);
         }
         ;
 
@@ -1382,6 +1490,7 @@ expression_cast_cast
                 $$->children.push_back($4);
                 $$->children.push_back($5);
                 $$->children.push_back($6);
+                PRINT_NONTERMINALS($$);
         }
 	;
 
@@ -1389,21 +1498,26 @@ expression_cast_cast
 expression_multiplicative
         : expression_multiplicative_cast {
                 $$ = $1;
+                PRINT_NONTERMINALS($$);
         }
         | expression_multiplicative_multiply {
                 $$ = $1;
+                PRINT_NONTERMINALS($$);
         }
         | expression_multiplicative_divide {
                 $$ = $1;
+                PRINT_NONTERMINALS($$);
         }
         | expression_multiplicative_modulo {
                 $$ = $1;
+                PRINT_NONTERMINALS($$);
         }
         ;
 
 expression_multiplicative_cast
         : expression_cast {
                 $$ = $1;
+                PRINT_NONTERMINALS($$);
         }
         ;
 expression_multiplicative_multiply
@@ -1414,6 +1528,7 @@ expression_multiplicative_multiply
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
+                PRINT_NONTERMINALS($$);
         }
         ;
 expression_multiplicative_divide
@@ -1424,6 +1539,7 @@ expression_multiplicative_divide
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 $$->children.push_back($1);
+                PRINT_NONTERMINALS($$);
         }
         ;
 expression_multiplicative_modulo
@@ -1434,23 +1550,28 @@ expression_multiplicative_modulo
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
+                PRINT_NONTERMINALS($$);
         }
         ;
 
 expression_additive
         : expression_additive_multiplicative {
                 $$ = $1;
+                PRINT_NONTERMINALS($$);
         }
         | expression_additive_plus {
                 $$ = $1;
+                PRINT_NONTERMINALS($$);
         }
         | expression_additive_minus {
                 $$ = $1;
+                PRINT_NONTERMINALS($$);
         }
         ;
 expression_additive_multiplicative
         : expression_multiplicative {
                 $$ = $1;
+                PRINT_NONTERMINALS($$);
         }
         ;
 expression_additive_plus
@@ -1461,6 +1582,7 @@ expression_additive_plus
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
+                PRINT_NONTERMINALS($$);
         }
         ;
 expression_additive_minus
@@ -1471,24 +1593,29 @@ expression_additive_minus
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
+                PRINT_NONTERMINALS($$);
         }
         ;
 
 expression_shift
         : expression_shift_additive {
                 $$ = $1;
+                PRINT_NONTERMINALS($$);
         }
         | expression_shift_left {
                 $$ = $1;
+                PRINT_NONTERMINALS($$);
         }
         | expression_shift_right {
                 $$ = $1;
+                PRINT_NONTERMINALS($$);
         }
         ;
 
 expression_shift_additive
         : expression_additive {
                 $$ = $1;
+                PRINT_NONTERMINALS($$);
         }
         ;
 expression_shift_left
@@ -1499,6 +1626,7 @@ expression_shift_left
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
+                PRINT_NONTERMINALS($$);
         }
         ;
 expression_shift_right
@@ -1509,6 +1637,7 @@ expression_shift_right
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
+                PRINT_NONTERMINALS($$);
         }
         ;
 
@@ -1516,24 +1645,30 @@ expression_shift_right
 expression_relational
         : expression_relational_shift {
                 $$ = $1;
+                PRINT_NONTERMINALS($$);
         }
         | expression_relational_lt {
                 $$ = $1;
+                PRINT_NONTERMINALS($$);
         }
         | expression_relational_gt {
                 $$ = $1;
+                PRINT_NONTERMINALS($$);
         }
         | expression_relational_le {
                 $$ = $1;
+                PRINT_NONTERMINALS($$);
         }
         | expression_relational_ge {
                 $$ = $1;
+                PRINT_NONTERMINALS($$);
         }
         ;
 
 expression_relational_shift
         : expression_shift {
                 $$ = $1;
+                PRINT_NONTERMINALS($$);
         }
         ;
 expression_relational_lt
@@ -1544,6 +1679,7 @@ expression_relational_lt
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
+                PRINT_NONTERMINALS($$);
         }
         ;
 expression_relational_gt
@@ -1554,6 +1690,7 @@ expression_relational_gt
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
+                PRINT_NONTERMINALS($$);
         }
         ;
 expression_relational_le
@@ -1564,6 +1701,7 @@ expression_relational_le
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
+                PRINT_NONTERMINALS($$);
         }
         ;
 expression_relational_ge
@@ -1574,12 +1712,14 @@ expression_relational_ge
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
+                PRINT_NONTERMINALS($$);
         }
         ;
 
 expression_equality
         : expression_relational {
                 $$ = $1;
+                PRINT_NONTERMINALS($$);
         }
         | expression_equality EQ_OP expression_relational {
                 $$ = std::make_shared<ASTNode>();
@@ -1588,6 +1728,7 @@ expression_equality
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
+                PRINT_NONTERMINALS($$);
         }
         | expression_equality NE_OP expression_relational {
                 $$ = std::make_shared<ASTNode>();
@@ -1596,12 +1737,14 @@ expression_equality
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
+                PRINT_NONTERMINALS($$);
         }
 	;
 
 expression_and
         : expression_equality {
                 $$ = $1;
+                PRINT_NONTERMINALS($$);
         }
         | expression_and ANDPERSAND expression_equality {
                 $$ = std::make_shared<ASTNode>();
@@ -1610,12 +1753,14 @@ expression_and
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
+                PRINT_NONTERMINALS($$);
         }
 	;
 
 expression_exclusive_or
         : expression_and {
                 $$ = $1;
+                PRINT_NONTERMINALS($$);
         }
         | expression_exclusive_or XOR_OP expression_and {
                 $$ = std::make_shared<ASTNode>();
@@ -1624,12 +1769,14 @@ expression_exclusive_or
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
+                PRINT_NONTERMINALS($$);
         }
 	;
 
 expression_inclusive_or
         : expression_exclusive_or {
                 $$ = $1;
+                PRINT_NONTERMINALS($$);
         }
         | expression_inclusive_or PIPE expression_exclusive_or {
                 $$ = std::make_shared<ASTNode>();
@@ -1638,12 +1785,14 @@ expression_inclusive_or
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
+                PRINT_NONTERMINALS($$);
         }
 	;
 
 expression_logical_and
         : expression_inclusive_or {
                 $$ = $1;
+                PRINT_NONTERMINALS($$);
         }
         | expression_logical_and AND_OP expression_inclusive_or {
                 $$ = std::make_shared<ASTNode>();
@@ -1652,12 +1801,14 @@ expression_logical_and
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
+                PRINT_NONTERMINALS($$);
         }
 	;
 
 expression_logical_or
         : expression_logical_and {
                 $$ = $1;
+                PRINT_NONTERMINALS($$);
         }
         | expression_logical_or OR_OP expression_logical_and {
                 $$ = std::make_shared<ASTNode>();
@@ -1666,12 +1817,14 @@ expression_logical_or
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
+                PRINT_NONTERMINALS($$);
         }
 	;
 
 expression_conditional
         : expression_logical_or {
                 $$ = $1;
+                PRINT_NONTERMINALS($$);
         }
         | expression_logical_or QUESTIONMARK expression COLON expression_conditional {
                 $$ = std::make_shared<ASTNode>();
@@ -1682,12 +1835,14 @@ expression_conditional
                 $$->children.push_back($3);
                 $$->children.push_back($4);
                 $$->children.push_back($5);
+                PRINT_NONTERMINALS($$);
         }
 	;
 
 expression_assignment
         : expression_conditional {
                 $$ = $1;
+                PRINT_NONTERMINALS($$);
         }
         | expression_unary operator_assignment expression_assignment {
                 $$ = std::make_shared<ASTNode>();
@@ -1696,48 +1851,61 @@ expression_assignment
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
+                PRINT_NONTERMINALS($$);
         }
 	;
 
 operator_assignment
         : EQUALS {
                 $$ = $1;
+                PRINT_NONTERMINALS($$);
         }
 	| MUL_ASSIGN {
                 $$ = $1;
+                PRINT_NONTERMINALS($$);
         }
 	| DIV_ASSIGN {
                 $$ = $1;
+                PRINT_NONTERMINALS($$);
         }
 	| MOD_ASSIGN {
                 $$ = $1;
+                PRINT_NONTERMINALS($$);
         }
 	| ADD_ASSIGN {
                 $$ = $1;
+                PRINT_NONTERMINALS($$);
         }
 	| SUB_ASSIGN {
                 $$ = $1;
+                PRINT_NONTERMINALS($$);
         }
 	| LEFT_ASSIGN {
                 $$ = $1;
+                PRINT_NONTERMINALS($$);
         }
 	| RIGHT_ASSIGN {
                 $$ = $1;
+                PRINT_NONTERMINALS($$);
         }
 	| AND_ASSIGN {
                 $$ = $1;
+                PRINT_NONTERMINALS($$);
         } 
 	| XOR_ASSIGN {
                 $$ = $1;
+                PRINT_NONTERMINALS($$);
         }
 	| OR_ASSIGN {
                 $$ = $1;
+                PRINT_NONTERMINALS($$);
         }
 	;
 
 expression
         : expression_assignment {
                 $$ = $1;
+                PRINT_NONTERMINALS($$);
         }
         ;
 
@@ -1753,16 +1921,10 @@ type_name
                 $$->children.push_back($4);
                 PRINT_NONTERMINALS($$);
         }
-        | type_name_qualified {
-                $$ = $1;
-        }
-        ;
-
-type_name_qualified
-        : TYPE_NAME {
+        | TYPE_NAME {
                 $$ = std::make_shared<ASTNode>();
-                $$->type = Parser::symbol_kind_type::S_type_name_qualified;
-                $$->typestr = std::string("type_name_qualified");
+                $$->type = Parser::symbol_kind_type::S_type_name;
+                $$->typestr = std::string("type_name");
                 $$->children.push_back($1);
                 PRINT_NONTERMINALS($$);
         }
@@ -1773,9 +1935,11 @@ opt_class_member_declaration_list
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_class_member_declaration_list;
                 $$->typestr = std::string("class_member_declaration_list");
+                PRINT_NONTERMINALS($$);
         }
         | class_member_declaration_list {
                 $$ = $1;
+                PRINT_NONTERMINALS($$);
         }
         ;
 
@@ -1785,10 +1949,12 @@ class_member_declaration_list
                 $$->type = Parser::symbol_kind_type::S_class_member_declaration_list;
                 $$->typestr = std::string("class_member_declaration_list");
                 $$->children.push_back($1);
+                PRINT_NONTERMINALS($$);
         }
         | class_member_declaration_list class_member_declaration {
                 $$ = $1;
                 $$->children.push_back($2);
+                PRINT_NONTERMINALS($$);
         }
         ;
 
@@ -1803,6 +1969,7 @@ class_member_declaration
                 $$->children.push_back($3);
                 $$->children.push_back($4);
                 $$->children.push_back($5);
+                PRINT_NONTERMINALS($$);
         }
         | opt_access_modifier type_specifier IDENTIFIER PAREN_L opt_function_definition_arg_list PAREN_R SEMICOLON {
                 // Method
@@ -1816,6 +1983,7 @@ class_member_declaration
                 $$->children.push_back($5);
                 $$->children.push_back($6);
                 $$->children.push_back($7);
+                PRINT_NONTERMINALS($$);
         }
         | opt_access_modifier type_specifier PAREN_L opt_function_definition_arg_list PAREN_R SEMICOLON {
           // Constructor
@@ -1828,6 +1996,7 @@ class_member_declaration
                 $$->children.push_back($4);
                 $$->children.push_back($5);
                 $$->children.push_back($6);
+                PRINT_NONTERMINALS($$);
         }
         | opt_access_modifier TILDE type_specifier PAREN_L opt_function_definition_arg_list PAREN_R SEMICOLON {
           // Destructor
@@ -1841,8 +2010,8 @@ class_member_declaration
                 $$->children.push_back($5);
                 $$->children.push_back($6);
                 $$->children.push_back($7);
+                PRINT_NONTERMINALS($$);
         }
-
         | class_definition {
                 $$ = $1;
                 PRINT_NONTERMINALS($$);
@@ -1863,18 +2032,21 @@ type_access_qualifier
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_type_access_qualifier;
                 $$->typestr = std::string("type_access_qualifier");
+                PRINT_NONTERMINALS($$);
         }
         | CONST {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_type_access_qualifier;
                 $$->typestr = std::string("type_access_qualifier");
                 $$->children.push_back($1);
+                PRINT_NONTERMINALS($$);
         }
         | VOLATILE {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_type_access_qualifier;
                 $$->typestr = std::string("type_access_qualifier");
                 $$->children.push_back($1);
+                PRINT_NONTERMINALS($$);
         }
         ;
 
@@ -1884,11 +2056,13 @@ type_specifier_call_args
                 $$->type = Parser::symbol_kind_type::S_type_specifier_call_args;
                 $$->typestr = std::string("type_specifier_call_args");
                 $$->children.push_back($1);
+                PRINT_NONTERMINALS($$);
         }
         | type_specifier_call_args COMMA type_specifier {
                 $$ = $1;
                 $$->children.push_back($2);
                 $$->children.push_back($3);
+                PRINT_NONTERMINALS($$);
         }
         ;
 
@@ -1909,6 +2083,7 @@ type_specifier
                 $$->children.push_back($2);
                 $$->children.push_back($3);
                 $$->children.push_back($4);
+                PRINT_NONTERMINALS($$);
         }
         | type_specifier PAREN_L STAR IDENTIFIER PAREN_R PAREN_L opt_function_definition_arg_list PAREN_R {
                 $$ = std::make_shared<ASTNode>();
@@ -1949,9 +2124,11 @@ opt_argument_expression_list
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_argument_expression_list;
                 $$->typestr = std::string("argument_expression_list");
+                PRINT_NONTERMINALS($$);
         }
         | argument_expression_list {
                 $$ = $1;
+                PRINT_NONTERMINALS($$);
         }
         ;
 
@@ -1961,11 +2138,13 @@ argument_expression_list
                 $$->type = Parser::symbol_kind_type::S_argument_expression_list;
                 $$->typestr = std::string("argument_expression_list");
                 $$->children.push_back($1);
+                PRINT_NONTERMINALS($$);
         }
         | argument_expression_list COMMA expression {
                 $$ = $1;
                 $$->children.push_back($2);
                 $$->children.push_back($3);
+                PRINT_NONTERMINALS($$);
         }
         ;
 
