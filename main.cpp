@@ -49,13 +49,19 @@ int main(int argc, char **argv)
       return 1;
     }
 
-    data.namespace_context.namespace_new("char", Namespace::TYPE_TYPEDEF, Namespace::VISIBILITY_PUBLIC);
-    data.namespace_context.namespace_new("int", Namespace::TYPE_TYPEDEF, Namespace::VISIBILITY_PUBLIC);
-    data.namespace_context.namespace_new("float", Namespace::TYPE_TYPEDEF, Namespace::VISIBILITY_PUBLIC);
-    data.namespace_context.namespace_new("double", Namespace::TYPE_TYPEDEF, Namespace::VISIBILITY_PUBLIC);
-    data.namespace_context.namespace_new("long", Namespace::TYPE_TYPEDEF, Namespace::VISIBILITY_PUBLIC);
-    data.namespace_context.namespace_new("short", Namespace::TYPE_TYPEDEF, Namespace::VISIBILITY_PUBLIC);
-    data.namespace_context.namespace_new("unsigned", Namespace::TYPE_TYPEDEF, Namespace::VISIBILITY_PUBLIC);
+    data.namespace_context.namespace_new("u8", Namespace::TYPE_TYPEDEF, Namespace::VISIBILITY_PUBLIC);
+    
+    data.namespace_context.namespace_new("i16", Namespace::TYPE_TYPEDEF, Namespace::VISIBILITY_PUBLIC);
+    data.namespace_context.namespace_new("i32", Namespace::TYPE_TYPEDEF, Namespace::VISIBILITY_PUBLIC);
+    data.namespace_context.namespace_new("i64", Namespace::TYPE_TYPEDEF, Namespace::VISIBILITY_PUBLIC);
+
+    data.namespace_context.namespace_new("u16", Namespace::TYPE_TYPEDEF, Namespace::VISIBILITY_PUBLIC);
+    data.namespace_context.namespace_new("u32", Namespace::TYPE_TYPEDEF, Namespace::VISIBILITY_PUBLIC);
+    data.namespace_context.namespace_new("u64", Namespace::TYPE_TYPEDEF, Namespace::VISIBILITY_PUBLIC);
+
+    data.namespace_context.namespace_new("f32", Namespace::TYPE_TYPEDEF, Namespace::VISIBILITY_PUBLIC);
+    data.namespace_context.namespace_new("f64", Namespace::TYPE_TYPEDEF, Namespace::VISIBILITY_PUBLIC);
+
     data.namespace_context.namespace_new("void", Namespace::TYPE_TYPEDEF, Namespace::VISIBILITY_PUBLIC);
     
     jlang::Parser parser{ scanner, &data };

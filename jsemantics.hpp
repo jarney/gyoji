@@ -2,6 +2,7 @@
 #include <memory>
 #include <string>
 #include <list>
+#include <map>
 #include "ast.hpp"
 
 // Compute the semantic tree
@@ -58,9 +59,14 @@ namespace JSemantics {
   class Type {
   public:
     typedef std::shared_ptr<Type> ptr;
-    Type();
+    Type(std::string _name, size_t _size);
     ~Type();
+    size_t get_size_bytes();
     std::string name; // Fully-qualified name of the type.
+    size_t size;
+    Type::ptr supertype;
+    std::vector<Type::ptr> members;
+    std::vector<FunctionDeclaration> methods;
     // TODO: access modifier (volatile,const)
   };
 
@@ -170,13 +176,19 @@ namespace JSemantics {
     TranslationUnit();
     ~TranslationUnit();
     void visit(Visitor<TranslationUnit> &visitor);
+    void register_builtin_types();
 
-    std::list<Type::ptr> types;
+    FunctionDefinition::ptr ast_to_file_statement_function_definition(ASTNode::ptr node);
+    FunctionDeclaration::ptr ast_to_file_statement_function_declaration(ASTNode::ptr node);
+    GlobalVariableDefinition::ptr ast_to_file_global_definition(ASTNode::ptr node);
+    Type::ptr ast_to_type(ASTNode::ptr node);
+
+    
+    std::map<std::string, Type::ptr> types;
     std::list<FunctionDefinition::ptr> function_definitions;
     std::list<FunctionDeclaration::ptr> function_declarations;
     std::list<GlobalVariableDefinition::ptr> globals;
   };
 
-  GlobalVariableDefinition::ptr ast_to_file_global_definition(ASTNode::ptr node);
   TranslationUnit::ptr from_ast(ASTNode::ptr ast);
 };

@@ -1,13 +1,14 @@
 
-public const double q;
+public const f64 q;
 
 
-double doit(double v)
+f64 doit(f64 a, i32 b)
 {
         q = 10;
+        return a;
 }
 
-void voidfunction(double v)
+void voidfunction(u32 v)
 {
 
 }

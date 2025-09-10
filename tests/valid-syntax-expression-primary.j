@@ -1,11 +1,11 @@
 public class foo_t {
-    public int a;
-    protected char *b;
+    public i32 a;
+    protected u8 *b;
 };
 
 namespace std {
-    typedef char u8_t;
-    typedef char * string;
+    typedef u8 u8_t;
+    typedef u8 * string;
     private const foo_t string2;
 };
 
@@ -23,29 +23,29 @@ namespace My {
 
 using namespace std;
 
-private volatile int a/* = 4*/;
-public const int *b/* = &a*/;
+private volatile i32 a/* = 4*/;
+public const i32 *b/* = &a*/;
 
 public foo_t k = {
 .a = 4;
 .b = &a;
 };
 
-int do_something(char a)
+i32 do_something(u8 a)
 {
-//TODO        function (void)(int,int) fptr;
+//TODO        function (void)(i32,i32) fptr;
 
         // expression_primary:
 
         // expression_primary_identifier
         a;
-        // expression_primary_literal_int
+        // expression_primary_literal_i32
         4;
-        // expression_primary_literal_char
+        // expression_primary_literal_u8
         'a';
         // expression_primary_literal_string
         "324";
-        // expression_primary_literal_float
+        // expression_primary_literal_f32
         19.2;
         // expression_primary_nested
         (a);        
@@ -108,31 +108,31 @@ int do_something(char a)
         --b;
 
         // Type casts: We use our own type casting system
-        // here because the (char*) c-style casts lead
+        // here because the (u8*) c-style casts lead
         // to ambiguities in the language where we can't distinguish
         // between user-defined types and user-defined variables, so
         // we use the 'cast' keyword to make sure they are not
         // ambiguous.
-        cast(char, a);
-        cast(int, a);
-        cast(float, a);
-        cast(short, a);
+        cast(u8, a);
+        cast(i32, a);
+        cast(f32, a);
+        cast(i16, a);
         cast(MyNamespace::some::type, a);
         cast(MyNamespace::some::type, a++);
         cast(MyNamespace::some::type, --a);
         cast(MyNamespace::some::type, --'a');
         cast(MyNamespace::some::type*, --'a');
-        cast(char***, --'a');
+        cast(u8***, --'a');
 
         // Const-ness in declarations
-        cast(volatile char *, --'a');
-        cast(volatile char *const *volatile, --'a');
+        cast(volatile u8 *, --'a');
+        cast(volatile u8 *const *volatile, --'a');
 
         cast(volatile My::thing::Type *const *volatile, --'a');
 
         // Sizeof applied to types
         sizeof(MyNamespace::some::type);
-        sizeof(const char*);
+        sizeof(const u8*);
 
         a++();
 
@@ -256,7 +256,7 @@ int do_something(char a)
         goto foo;
 
         unsafe {
-            char *a;
+            u8 *a;
         }
 
 }

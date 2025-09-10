@@ -19,7 +19,6 @@ LLVMBinaryOperator::LLVMBinaryOperator(llvm::IRBuilder<> &_builder)
 LLVMBinaryOperator::~LLVMBinaryOperator()
 {}
 
-
 LLVMBinaryOperatorAddDouble::LLVMBinaryOperatorAddDouble(llvm::IRBuilder<> &_builder)
   : LLVMBinaryOperator(_builder)
 {}

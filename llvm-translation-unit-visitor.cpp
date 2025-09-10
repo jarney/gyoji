@@ -198,13 +198,17 @@ LLVMTranslationUnitVisitor::register_type_builtins()
 {
   // Register the built-in types
   types["void"] = std::make_shared<LLVMTypeVoid>(*TheContext);
-  types["char"] = std::make_shared<LLVMTypeDouble>(*TheContext);
-  types["unsigned"] = std::make_shared<LLVMTypeDouble>(*TheContext);
-  types["short"] = std::make_shared<LLVMTypeDouble>(*TheContext);
-  types["int"] = std::make_shared<LLVMTypeDouble>(*TheContext);
-  types["long"] = std::make_shared<LLVMTypeDouble>(*TheContext);
-  types["float"] = std::make_shared<LLVMTypeDouble>(*TheContext);
-  types["double"] = std::make_shared<LLVMTypeDouble>(*TheContext);
+  types["u8"] = std::make_shared<LLVMTypeDouble>(*TheContext);
+  types["i16"] = std::make_shared<LLVMTypeDouble>(*TheContext);
+  types["i32"] = std::make_shared<LLVMTypeDouble>(*TheContext);
+  types["i64"] = std::make_shared<LLVMTypeDouble>(*TheContext);
+
+  types["u16"] = std::make_shared<LLVMTypeDouble>(*TheContext);
+  types["u32"] = std::make_shared<LLVMTypeDouble>(*TheContext);
+  types["u64"] = std::make_shared<LLVMTypeDouble>(*TheContext);
+
+  types["f32"] = std::make_shared<LLVMTypeDouble>(*TheContext);
+  types["f64"] = std::make_shared<LLVMTypeDouble>(*TheContext);
 }
 
 
