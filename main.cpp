@@ -11,6 +11,8 @@
 #include "jbackend-llvm.hpp"
 #include "jbackend-toc.hpp"
 
+using namespace JLang::Backend::LLVM;
+
 int main(int argc, char **argv)
 {
 

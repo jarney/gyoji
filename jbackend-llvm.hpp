@@ -1,6 +1,7 @@
 #pragma once
 
 #include "jbackend.hpp"
+#include "jsemantics.hpp"
 #include "llvm/ADT/APFloat.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/IR/BasicBlock.h"
@@ -22,13 +23,48 @@
 #include "llvm/Target/TargetOptions.h"
 #include "llvm/TargetParser/Host.h"
 
+namespace JLang {
+  namespace Backend {
+    namespace LLVM {
+
 class JBackendLLVM : public JBackend {
 public:
   JBackendLLVM();
   ~JBackendLLVM();
   virtual int process(ASTNode::ptr file);
+};
+
+
+class LLVMTranslationUnitVisitor
+  : public JSemantics::Visitor<JSemantics::TranslationUnit> {
+public:
+  LLVMTranslationUnitVisitor();
+  ~LLVMTranslationUnitVisitor();
+  void initialize();
+  
+  void visit(JSemantics::TranslationUnit &visitable);
+  void visit(JSemantics::GlobalVariableDefinition &visitable);
+  void visit(JSemantics::FunctionDefinition &visitable);
+  void visit(JSemantics::FunctionDeclaration &visitable);
+  
+  int output(std::string filename);
+private:
 
   std::unique_ptr<llvm::LLVMContext> TheContext;
   std::unique_ptr<llvm::IRBuilder<>> Builder;
   std::unique_ptr<llvm::Module> TheModule;
+  
+  std::map<std::string, llvm::Value *> NamedValues;
+  std::map<std::string, JSemantics::FunctionDeclaration::ptr> FunctionProtos;
+
+  llvm::Function *getFunction(std::string name);
+  llvm::AllocaInst *CreateEntryBlockAlloca(llvm::Function *TheFunction,
+                                           llvm::StringRef VarName);
+
+};
+
+      
+      
+    };
+  };
 };

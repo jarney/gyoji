@@ -295,13 +295,13 @@ translation_unit
                 $$->typestr = std::string("translation_unit");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
-                return_data->translation_unit = $$;
                 PRINT_NONTERMINALS($$);
+                return_data->translation_unit = $$;
         }
         ;
 
-opt_file_statement_list
-        : /**/ {
+opt_file_statement_list 
+        : /**/ YYEOF {
                 $$ = std::make_shared<ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_file_statement_list;
                 $$->typestr = std::string("file_statement_list");
