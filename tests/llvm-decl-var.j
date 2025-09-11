@@ -17,7 +17,7 @@ float doit(f64 a, i32 b)
         return a;
 }
 
-void voidfunction(u32 v)
+float voidfunction(u32 v)
 {
 
 }

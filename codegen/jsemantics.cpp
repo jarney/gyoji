@@ -48,11 +48,7 @@ TranslationUnit::ast_to_type(ASTNode::ptr node)
   // TODO: We really should be looking this up
   // from the translation unit and returning what
   // we found there.
-  printf("Node name %s\n", node->typestr.c_str());
-  printf("Node name %s\n", node->children.at(1)->typestr.c_str());
-  printf("Node name %s\n", node->children.at(1)->children.at(0)->typestr.c_str());
-  auto name = node->children.at(1)->children.at(0)->value;
-  printf("Value is %s\n", name.c_str());
+  auto name = node->children.at(1)->children.at(0)->fully_qualified_name;
   Type::ptr ret = types[name];
   return ret;
 }
@@ -87,8 +83,8 @@ TranslationUnit::ast_to_file_statement_function_definition(ASTNode::ptr node)
   ret->function_declaration->name = node->children.at(3)->value;
   ret->function_declaration->return_type = ast_to_type(node->children.at(2))->name;
   node->children.at(5);
-  ret->function_declaration->arg_types.push_back(std::make_pair("f64", "first"));
-  ret->function_declaration->arg_types.push_back(std::make_pair("i32", "second"));
+  ret->function_declaration->arg_types.push_back(std::make_pair("::f64", "first"));
+  ret->function_declaration->arg_types.push_back(std::make_pair("::i32", "second"));
   return ret;
 }
 
@@ -113,22 +109,22 @@ TranslationUnit::ast_to_file_global_definition(ASTNode::ptr node)
 void
 TranslationUnit::register_builtin_types()
 {
-  types["void"] = std::make_shared<Type>("void", 0);
+  types["::void"] = std::make_shared<Type>("::void", 0);
   
   // Unsigned integers
-  types["u8"] = std::make_shared<Type>("u8", 1);
-  types["u16"] = std::make_shared<Type>("u16", 2);
-  types["u32"] = std::make_shared<Type>("u32", 4);
-  types["u64"] = std::make_shared<Type>("u64", 8);
+  types["::u8"] = std::make_shared<Type>("::u8", 1);
+  types["::u16"] = std::make_shared<Type>("::u16", 2);
+  types["::u32"] = std::make_shared<Type>("::u32", 4);
+  types["::u64"] = std::make_shared<Type>("::u64", 8);
 
   // Signed integers
-  types["i16"] = std::make_shared<Type>("i16", 2);
-  types["i32"] = std::make_shared<Type>("i32", 4);
-  types["i64"] = std::make_shared<Type>("i64", 8);
+  types["::i16"] = std::make_shared<Type>("::i16", 2);
+  types["::i32"] = std::make_shared<Type>("::i32", 4);
+  types["::i64"] = std::make_shared<Type>("::i64", 8);
 
   // 32 and 64 bit floating point (float, double respectively)
-  types["f32"] = std::make_shared<Type>("f32", 2);
-  types["f64"] = std::make_shared<Type>("f64", 4);
+  types["::f32"] = std::make_shared<Type>("::f32", 2);
+  types["::f64"] = std::make_shared<Type>("::f64", 4);
   
 }
 
@@ -143,6 +139,55 @@ void
 JSyntaxListener::eventFunctionDefinition(ASTNode::ptr node)
 {
 
+}
+
+int
+JSemantics::process_type_definition(TranslationUnit::ptr translation_unit, ASTNode::ptr ast_typedef)
+{
+  Type::ptr type = translation_unit->ast_to_type(ast_typedef->children.at(2));
+  std::string ns = ast_typedef->children.at(3)->fully_qualified_name;
+  std::string name = ns + std::string("::") + ast_typedef->children.at(3)->value;
+  translation_unit->types[name] = type;
+  return 0;
+}
+
+int
+JSemantics::file_statement_process(TranslationUnit::ptr translation_unit, ASTNode::ptr ast_statement_list)
+{
+  for (auto statement : ast_statement_list->children) {
+    fprintf(stderr, "Statement %s\n", statement->typestr.c_str());
+    if (statement->typestr == std::string("file_statement_function_definition")) {
+      FunctionDefinition::ptr file_statement_function_definition = translation_unit->ast_to_file_statement_function_definition(statement);
+      translation_unit->function_definitions.push_back(file_statement_function_definition);
+    }
+    else if (statement->typestr == std::string("file_statement_function_declaration")) {
+      FunctionDeclaration::ptr file_statement_function_declaration = translation_unit->ast_to_file_statement_function_declaration(statement);
+      translation_unit->function_declarations.push_back(file_statement_function_declaration);
+    }
+    else if (statement->typestr == std::string("class_definition")) {
+    }
+    else if (statement->typestr == std::string("enum_definition")) {
+    }
+    else if (statement->typestr == std::string("type_definition")) {
+      int rc = process_type_definition(translation_unit, statement);
+      if (rc) return rc;
+    }
+    else if (statement->typestr == std::string("file_statement_namespace")) {
+      int rc = file_statement_process(translation_unit, statement->children.at(2));
+      if (rc) return rc;
+    }
+    else if (statement->typestr == std::string("file_statement_using")) {
+    }
+    else if (statement->typestr == std::string("file_global_definition")) {
+      GlobalVariableDefinition::ptr file_global_definition = translation_unit->ast_to_file_global_definition(statement);
+      translation_unit->globals.push_back(file_global_definition);
+    }
+    else {
+      fprintf(stderr, "Error: Line %ld : Invalid statement type found in syntax %s\n", statement->lineno, statement->typestr.c_str());
+      return -1;
+    }
+  }
+  return 0;
 }
 
 TranslationUnit::ptr
@@ -170,35 +215,12 @@ JSemantics::from_ast(ASTNode::ptr ast_translation_unit)
   //extract_types(ast_translation_unit);
   //extract_definitions();
   ASTNode::ptr ast_statement_list = ast_translation_unit->children.at(0);
-  for (auto statement : ast_statement_list->children) {
-    fprintf(stderr, "Statement %s\n", statement->typestr.c_str());
-    if (statement->typestr == std::string("file_statement_function_definition")) {
-      FunctionDefinition::ptr file_statement_function_definition = translation_unit->ast_to_file_statement_function_definition(statement);
-      translation_unit->function_definitions.push_back(file_statement_function_definition);
-    }
-    else if (statement->typestr == std::string("file_statement_function_declaration")) {
-      FunctionDeclaration::ptr file_statement_function_declaration = translation_unit->ast_to_file_statement_function_declaration(statement);
-      translation_unit->function_declarations.push_back(file_statement_function_declaration);
-    }
-    else if (statement->typestr == std::string("class_definition")) {
-    }
-    else if (statement->typestr == std::string("enum_definition")) {
-    }
-    else if (statement->typestr == std::string("type_definition")) {
-    }
-    else if (statement->typestr == std::string("file_statement_namespace")) {
-    }
-    else if (statement->typestr == std::string("file_statement_using")) {
-    }
-    else if (statement->typestr == std::string("file_global_definition")) {
-      GlobalVariableDefinition::ptr file_global_definition = translation_unit->ast_to_file_global_definition(statement);
-      translation_unit->globals.push_back(file_global_definition);
-    }
-    else {
-      fprintf(stderr, "Error: Line %ld : Invalid statement type found in syntax %s\n", statement->lineno, statement->typestr.c_str());
-      return nullptr;
-    }
+
+  int rc = file_statement_process(translation_unit, ast_statement_list);
+  if (rc) {
+    printf("Error processing\n");
   }
+  
   
   return translation_unit;
 }

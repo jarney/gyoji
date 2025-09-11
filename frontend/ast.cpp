@@ -11,6 +11,8 @@ ASTDataNonSyntax::~ASTDataNonSyntax()
 {}
 
 ASTNode::ASTNode()
+  : lineno(0)
+  , colno(0)
 {}
 
 ASTNode::~ASTNode()

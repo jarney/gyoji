@@ -47,6 +47,12 @@ LLVMTranslationUnitVisitor::visit(ScopeBlock &scope_block)
 {
 }
 
+llvm::Value *LLVMTranslationUnitVisitor::codegen(ScopeBlock &scope_block)
+{
+  printf("Generating code for basic block\n");
+  return nullptr;
+}
+
 void
 LLVMTranslationUnitVisitor::visit(FunctionDeclaration &functiondecl)
 {
@@ -74,7 +80,7 @@ LLVMTranslationUnitVisitor::visit(FunctionDeclaration &functiondecl)
   for (auto &Arg : F->args()) {
     fprintf(stderr, "Indirecting arg_types\n");
     auto pair = functiondecl.arg_types[Idx++];
-    fprintf(stderr, "Adding type %s %s\n", pair.first.c_str(), pair.second.c_str());
+    fprintf(stderr, "Adding type %s %s thingy\n", pair.first.c_str(), pair.second.c_str());
     Arg.setName(pair.second);
   }
 }
@@ -134,7 +140,7 @@ LLVMTranslationUnitVisitor::visit(FunctionDefinition &functiondef)
   }
 #else
 
-  visit(*functiondef.scope_block);
+  Value *block = codegen(*functiondef.scope_block);
   
 #if 0
   if (Value *RetVal = llvm::ConstantFP::get(*TheContext, llvm::APFloat(0.0))) {
@@ -197,18 +203,18 @@ void
 LLVMTranslationUnitVisitor::register_type_builtins()
 {
   // Register the built-in types
-  types["void"] = std::make_shared<LLVMTypeVoid>(*TheContext);
-  types["u8"] = std::make_shared<LLVMTypeDouble>(*TheContext);
-  types["i16"] = std::make_shared<LLVMTypeDouble>(*TheContext);
-  types["i32"] = std::make_shared<LLVMTypeDouble>(*TheContext);
-  types["i64"] = std::make_shared<LLVMTypeDouble>(*TheContext);
+  types["::void"] = std::make_shared<LLVMTypeVoid>(*TheContext);
+  types["::u8"] = std::make_shared<LLVMTypeDouble>(*TheContext);
+  types["::i16"] = std::make_shared<LLVMTypeDouble>(*TheContext);
+  types["::i32"] = std::make_shared<LLVMTypeDouble>(*TheContext);
+  types["::i64"] = std::make_shared<LLVMTypeDouble>(*TheContext);
 
-  types["u16"] = std::make_shared<LLVMTypeDouble>(*TheContext);
-  types["u32"] = std::make_shared<LLVMTypeDouble>(*TheContext);
-  types["u64"] = std::make_shared<LLVMTypeDouble>(*TheContext);
+  types["::u16"] = std::make_shared<LLVMTypeDouble>(*TheContext);
+  types["::u32"] = std::make_shared<LLVMTypeDouble>(*TheContext);
+  types["::u64"] = std::make_shared<LLVMTypeDouble>(*TheContext);
 
-  types["f32"] = std::make_shared<LLVMTypeDouble>(*TheContext);
-  types["f64"] = std::make_shared<LLVMTypeDouble>(*TheContext);
+  types["::f32"] = std::make_shared<LLVMTypeDouble>(*TheContext);
+  types["::f64"] = std::make_shared<LLVMTypeDouble>(*TheContext);
 }
 
 

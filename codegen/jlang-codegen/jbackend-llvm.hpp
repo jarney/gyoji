@@ -74,6 +74,8 @@ public:
   void register_operator_builtins();
   void register_type_builtins();
 
+  llvm::Value* codegen(JSemantics::ScopeBlock &scope_block);
+  
   void visit(JSemantics::ScopeBlock &scope_block);
   void visit(JSemantics::TranslationUnit &visitable);
   void visit(JSemantics::GlobalVariableDefinition &global_variable_definition);

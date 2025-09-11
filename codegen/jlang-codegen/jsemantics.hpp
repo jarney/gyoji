@@ -185,12 +185,14 @@ namespace JSemantics {
     GlobalVariableDefinition::ptr ast_to_file_global_definition(ASTNode::ptr node);
     Type::ptr ast_to_type(ASTNode::ptr node);
 
-    
     std::map<std::string, Type::ptr> types;
     std::list<FunctionDefinition::ptr> function_definitions;
     std::list<FunctionDeclaration::ptr> function_declarations;
     std::list<GlobalVariableDefinition::ptr> globals;
   };
 
+  int file_statement_process(TranslationUnit::ptr translation_unit, ASTNode::ptr ast_statement_list);
+  int process_type_definition(TranslationUnit::ptr translation_unit, ASTNode::ptr ast_statement_list);
+    
   TranslationUnit::ptr from_ast(ASTNode::ptr ast);
 };
