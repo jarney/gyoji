@@ -3,6 +3,9 @@
 #include "../frontend/target/jlang.y.hpp"
 #include <iostream>
 
+using namespace JLang::frontend;
+using namespace JLang::backend;
+
 JBackendFormatPretty::JBackendFormatPretty()
 {}
 JBackendFormatPretty::~JBackendFormatPretty()

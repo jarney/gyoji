@@ -2,7 +2,9 @@
 #include "xml.hpp"
 #include "jstring.hpp"
 
-std::string xml_to_cdata(const std::string & str)
+using namespace JLang::misc;
+
+std::string JLang::misc::xml_to_cdata(const std::string & str)
 {
   std::string output;
   std::vector<std::string> split = string_split(str, "]]>");
@@ -37,12 +39,12 @@ static std::string replace_all(const std::string& source, const std::string& fro
     return newString;
 }
 
-std::string xml_escape_attribute(const std::string & str)
+std::string JLang::misc::xml_escape_attribute(const std::string & str)
 {
   return replace_all(replace_all(str, "\'", "&apos;"), "\"", "&quot;");
 }
 
-std::string xml_escape_whitespace(const std::string & str)
+std::string JLang::misc::xml_escape_whitespace(const std::string & str)
 {
   return replace_all(replace_all(str,
                                  "\n", "&#xA;"),

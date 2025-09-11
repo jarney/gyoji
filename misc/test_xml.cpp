@@ -1,6 +1,8 @@
 #include "xml.hpp"
 #include <jlang-misc/test.hpp>
 
+using namespace JLang::misc;
+
 int main(int argc, char **argv)
 {
   printf("Testing xml cdata conversions\n");

@@ -1,7 +1,9 @@
 #include <algorithm>
 #include "jstring.hpp"
 
-std::vector<std::string> string_split(const std::string &str, const std::string &delimiter)
+using namespace JLang::misc;
+
+std::vector<std::string> JLang::misc::string_split(const std::string &str, const std::string &delimiter)
 {
   std::vector<std::string> ret;
   size_t pos = 0;
@@ -21,7 +23,7 @@ std::vector<std::string> string_split(const std::string &str, const std::string 
   return ret;
 }
 
-std::string string_remove_nonidentifier(const std::string & str)
+std::string JLang::misc::string_remove_nonidentifier(const std::string & str)
 {
   std::string newStr;
   newStr.assign(str);  
@@ -37,7 +39,7 @@ std::string string_remove_nonidentifier(const std::string & str)
   return newStr; 
 }
 
-std::string string_replace_start(std::string str, const std::string from, const std::string to)
+std::string JLang::misc::string_replace_start(std::string str, const std::string from, const std::string to)
 {
   std::string ret(str);
   size_t start_pos = str.find(from);

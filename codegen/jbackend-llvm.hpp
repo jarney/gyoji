@@ -27,6 +27,9 @@ namespace JLang {
   namespace Backend {
     namespace LLVM {
 
+      using namespace JLang::frontend;
+      using namespace JLang::backend;
+
 class JBackendLLVM : public JBackend {
 public:
   JBackendLLVM();

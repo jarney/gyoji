@@ -6,6 +6,8 @@
 #include <map>
 #include <vector>
 
+namespace JLang::frontend {
+
 /**
  * This is a namespace resolver used in the lexical
  * analysis phase of compilation to share information
@@ -146,5 +148,7 @@ public:
 
   void namespace_dump_node(Namespace::ptr parent);
   void namespace_dump();
+
+};
 
 };

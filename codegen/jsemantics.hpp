@@ -21,6 +21,8 @@
 
 namespace JSemantics {
 
+  using namespace JLang::frontend;
+  
   class TranslationUnit;
 
   class Type;

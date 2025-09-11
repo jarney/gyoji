@@ -1,5 +1,7 @@
 #include "jsyntax.hpp"
 
+using namespace JLang::frontend;
+
 /*
   JSyntaxFile::JSyntaxFile(std::shared_ptr<JSyntaxImportList> _imports, std::shared_ptr<JSyntaxFileStatementList> _fileDefs)
   : imports(_imports)

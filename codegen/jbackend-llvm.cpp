@@ -4,6 +4,8 @@
 using namespace llvm;
 using namespace llvm::sys;
 using namespace JSemantics;
+
+using namespace JLang::frontend;
 using namespace JLang::Backend::LLVM;
 
 JBackendLLVM::JBackendLLVM()

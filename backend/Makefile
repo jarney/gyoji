@@ -28,6 +28,9 @@ TARGET_OBJ_FILES=$(addprefix target/,$(OBJ_FILES))
 
 all: target/$(TARGET_LIBRARY)
 
+test:
+	echo ""
+
 .target: target/
 
 target/:

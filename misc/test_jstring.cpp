@@ -1,6 +1,8 @@
 #include "jstring.hpp"
 #include <jtest/test.hpp>
 
+using namespace JLang::misc;
+
 int main(int argc, char **argv)
 {
   printf("Testing string manipulations\n");

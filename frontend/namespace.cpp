@@ -1,6 +1,9 @@
 #include "namespace.hpp"
 #include <jlang-misc/jstring.hpp>
 
+using namespace JLang::misc;
+using namespace JLang::frontend;
+
 NamespaceFoundReason::NamespaceFoundReason(int _reason)
   : reason(_reason)
   , location(nullptr)

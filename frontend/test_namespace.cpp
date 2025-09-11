@@ -1,6 +1,8 @@
 #include "namespace.hpp"
 #include <jlang-misc/test.hpp>
 
+using namespace JLang::frontend;
+
 int main(int argc, char **argv)
 {
   printf("Testing namespace search functionality\n");

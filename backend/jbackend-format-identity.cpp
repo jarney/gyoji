@@ -1,6 +1,9 @@
 #include <jlang-backend/jbackend-format-identity.hpp>
 #include <iostream>
 
+using namespace JLang::frontend;
+using namespace JLang::backend;
+
 JBackendFormatIdentity::JBackendFormatIdentity()
 {}
 JBackendFormatIdentity::~JBackendFormatIdentity()

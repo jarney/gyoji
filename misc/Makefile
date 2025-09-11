@@ -26,13 +26,14 @@ test: all
 	target/test_jstring
 
 .target: target/
+	touch .target
 
 target/:
 	mkdir -p target/
 	mkdir -p target/include/jlang-misc
 	cp $(TARGET_INCLUDES) target/include/jlang-misc
 
-$(TARGET_LIBRARY): target/ $(OBJ_FILES)
+$(TARGET_LIBRARY): .target $(OBJ_FILES)
 	ar rv $@ $(OBJ_FILES)
 
 target/test_jstring: $(TARGET_LIBRARY) $(TEST_JSTRING_OBJS)

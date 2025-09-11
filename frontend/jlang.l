@@ -9,7 +9,7 @@
 using namespace jlang;
 std::string override_file;
 size_t lineno = 1;
-std::vector<ASTDataNonSyntax::ptr> non_syntax_data;
+std::vector<JLang::frontend::ASTDataNonSyntax::ptr> non_syntax_data;
 
 #define DEBUG_TERMINALS 0
 #if DEBUG_TERMINALS
@@ -23,14 +23,14 @@ std::vector<ASTDataNonSyntax::ptr> non_syntax_data;
 #endif
 
 #define START_NODE(nodetype)                 \
-    ASTNode::ptr node = std::make_shared<ASTNode>(); \
+    JLang::frontend::ASTNode::ptr node = std::make_shared<JLang::frontend::ASTNode>(); \
     node->type = Parser::symbol_kind_type::S_ ## nodetype; \
     node->typestr = std::string(#nodetype);  \
     node->value = std::string(yytext);       \
     node->lineno = lineno;                   \
     node->non_syntax = non_syntax_data;      \
     non_syntax_data.clear();                 \
-    yylval->emplace<ASTNode::ptr>(node);
+    yylval->emplace<JLang::frontend::ASTNode::ptr>(node);
 
 #define RETURN_NODE(nodetype)                \
     return Parser::token::nodetype;
@@ -150,10 +150,10 @@ unsafe {PROCESS_NODE(UNSAFE);}
 {float} {PROCESS_NODE(LITERAL_FLOAT);}
 {integer} { PROCESS_NODE(LITERAL_INT);}
 (::)*{identifier}({whitespace}*:{whitespace}*:{whitespace}*{identifier})* {
-    NamespaceContext *context = (NamespaceContext*)yyget_extra(yyscanner);
-    NamespaceFoundReason::ptr found = context->namespace_lookup(std::string(yytext));
-    if (found->reason == NamespaceFoundReason::REASON_FOUND) {
-        if (found->location->type == Namespace::TYPE_NAMESPACE) {
+    JLang::frontend::NamespaceContext *context = (JLang::frontend::NamespaceContext*)yyget_extra(yyscanner);
+    JLang::frontend::NamespaceFoundReason::ptr found = context->namespace_lookup(std::string(yytext));
+    if (found->reason == JLang::frontend::NamespaceFoundReason::REASON_FOUND) {
+        if (found->location->type == JLang::frontend::Namespace::TYPE_NAMESPACE) {
             // When processing a namespace, the NAMESPACE_NAME
             // gives the fully-qualified name of the namespace.
             PROCESS_IDENTIFIER(NAMESPACE_NAME, found->location);
@@ -164,7 +164,7 @@ unsafe {PROCESS_NODE(UNSAFE);}
             PROCESS_IDENTIFIER(TYPE_NAME, found->location);
         }
     }
-    else if (found->reason == NamespaceFoundReason::REASON_NOT_FOUND) {
+    else if (found->reason == JLang::frontend::NamespaceFoundReason::REASON_NOT_FOUND) {
         // When declaring an identifier, the second
         // argument tells us what namespace the identifier
         // should go into.
@@ -177,8 +177,8 @@ unsafe {PROCESS_NODE(UNSAFE);}
 
 "/*"        {
   BEGIN(COMMENT);
-  ASTDataNonSyntax::ptr nsd = std::make_shared<ASTDataNonSyntax>(
-        ASTNonSyntaxType::NST_COMMENT_MULTI_LINE,
+  JLang::frontend::ASTDataNonSyntax::ptr nsd = std::make_shared<JLang::frontend::ASTDataNonSyntax>(
+        JLang::frontend::ASTNonSyntaxType::NST_COMMENT_MULTI_LINE,
         std::string()
         );
   non_syntax_data.push_back(nsd);
@@ -187,32 +187,32 @@ unsafe {PROCESS_NODE(UNSAFE);}
   BEGIN(INITIAL);
 }
 <COMMENT>[^*]* {
-  ASTDataNonSyntax::ptr current = non_syntax_data.back();
+  JLang::frontend::ASTDataNonSyntax::ptr current = non_syntax_data.back();
   current->data = current->data + std::string(yytext);
 }
 <COMMENT>\* {
-  ASTDataNonSyntax::ptr current = non_syntax_data.back();
+  JLang::frontend::ASTDataNonSyntax::ptr current = non_syntax_data.back();
   current->data = current->data + std::string(yytext);
 }
 
 \/\/.* {
 // Single-line comment:
-    ASTDataNonSyntax::ptr nsd = std::make_shared<ASTDataNonSyntax>(
-        ASTNonSyntaxType::NST_COMMENT_SINGLE_LINE,
+    JLang::frontend::ASTDataNonSyntax::ptr nsd = std::make_shared<JLang::frontend::ASTDataNonSyntax>(
+        JLang::frontend::ASTNonSyntaxType::NST_COMMENT_SINGLE_LINE,
         std::string(yytext+2)
     );
     non_syntax_data.push_back(nsd);
 }
 [ \t]+ {
-    ASTDataNonSyntax::ptr nsd = std::make_shared<ASTDataNonSyntax>(
-        ASTNonSyntaxType::NST_WHITESPACE, 
+    JLang::frontend::ASTDataNonSyntax::ptr nsd = std::make_shared<JLang::frontend::ASTDataNonSyntax>(
+        JLang::frontend::ASTNonSyntaxType::NST_WHITESPACE, 
         std::string(yytext)
     );
     non_syntax_data.push_back(nsd);
 }
 \n {
-    ASTDataNonSyntax::ptr nsd = std::make_shared<ASTDataNonSyntax>(
-        ASTNonSyntaxType::NST_WHITESPACE, 
+    JLang::frontend::ASTDataNonSyntax::ptr nsd = std::make_shared<JLang::frontend::ASTDataNonSyntax>(
+        JLang::frontend::ASTNonSyntaxType::NST_WHITESPACE, 
         std::string(yytext)
     );
     non_syntax_data.push_back(nsd);
@@ -220,8 +220,8 @@ unsafe {PROCESS_NODE(UNSAFE);}
 }
 \#[a-zA-Z]+\ [[:digit:]]+\ \".*\"\n {
     //printf("Preprocessor directive %s\n", yytext);
-    ASTDataNonSyntax::ptr nsd = std::make_shared<ASTDataNonSyntax>(
-        ASTNonSyntaxType::NST_FILE_METADATA,
+    JLang::frontend::ASTDataNonSyntax::ptr nsd = std::make_shared<JLang::frontend::ASTDataNonSyntax>(
+        JLang::frontend::ASTNonSyntaxType::NST_FILE_METADATA,
         std::string(yytext)
     );
     non_syntax_data.push_back(nsd);

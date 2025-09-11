@@ -9,8 +9,9 @@
 #include "ast.hpp"
 #include "namespace.hpp"
 
-typedef struct return_data_st {
-  ASTNode::ptr translation_unit;
-  NamespaceContext namespace_context;
-} return_data_t;
-
+namespace JLang::frontend {
+  typedef struct return_data_st {
+    ASTNode::ptr translation_unit;
+    NamespaceContext namespace_context;
+  } return_data_t;  
+}
