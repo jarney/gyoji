@@ -1,4 +1,4 @@
-#include "xml.hpp"
+#include <jlang-misc/xml.hpp>
 #include <jlang-misc/test.hpp>
 
 using namespace JLang::misc;

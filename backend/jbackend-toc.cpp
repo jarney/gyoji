@@ -2,8 +2,8 @@
 #include <jlang-backend/jbackend-toc.hpp>
 
 // TODO: This should not be so tightly coupled.
-#include "../frontend/target/jlang.l.hpp"
-#include "../frontend/target/jlang.y.hpp"
+#include <jlang.l.hpp>
+#include <jlang.y.hpp>
 #include <iostream>
 
 JBackendToC::JBackendToC()

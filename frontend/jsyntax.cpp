@@ -1,4 +1,4 @@
-#include "jsyntax.hpp"
+#include <jlang-frontend/jsyntax.hpp>
 
 using namespace JLang::frontend;
 

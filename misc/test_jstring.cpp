@@ -1,5 +1,5 @@
-#include "jstring.hpp"
-#include <jtest/test.hpp>
+#include <jlang-misc/jstring.hpp>
+#include <jlang-misc/test.hpp>
 
 using namespace JLang::misc;
 

@@ -1,4 +1,4 @@
-#include "jsemantics.hpp"
+#include <jlang-codegen/jsemantics.hpp>
 
 using namespace JSemantics;
 

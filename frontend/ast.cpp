@@ -1,4 +1,4 @@
-#include "ast.hpp"
+#include <jlang-frontend/ast.hpp>
 
 using namespace JLang::frontend;
 

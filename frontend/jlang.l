@@ -1,10 +1,10 @@
 %{
 #include <cstdlib>
 #include <memory>
-#include "jsyntax.hpp"
-#include "ast.hpp"
-#include "namespace.hpp"
-#include "target/jlang.y.hpp"
+#include <jlang-frontend/jsyntax.hpp>
+#include <jlang-frontend/ast.hpp>
+#include <jlang-frontend/namespace.hpp>
+#include <jlang.y.hpp>
 
 using namespace jlang;
 std::string override_file;
@@ -46,9 +46,10 @@ std::vector<JLang::frontend::ASTDataNonSyntax::ptr> non_syntax_data;
     PRINT_TERMINALS(#nodetype, yytext)       \
     RETURN_NODE(nodetype);
 
+//outfile="target/jlang.l.cpp" header="target/jlang.l.hpp"
 %}
  
-%option reentrant interactive noyywrap noyylineno nodefault outfile="target/jlang.l.cpp" header="target/jlang.l.hpp"
+%option reentrant interactive noyywrap noyylineno nodefault
 
 %x COMMENT
 

@@ -1,8 +1,8 @@
 #include <jlang-frontend/jsyntax.hpp>
 #include <jlang-frontend/ast.hpp>
 #include <jlang-frontend/namespace.hpp>
-#include "frontend/target/jlang.l.hpp"
-#include "frontend/target/jlang.y.hpp"
+#include <jlang.l.hpp>
+#include <jlang.y.hpp>
 
 #include <jlang-backend/jbackend.hpp>
 #include <jlang-backend/jbackend-format-identity.hpp>

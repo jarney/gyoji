@@ -1,5 +1,5 @@
 #include <algorithm>
-#include "jstring.hpp"
+#include <jlang-misc/jstring.hpp>
 
 using namespace JLang::misc;
 

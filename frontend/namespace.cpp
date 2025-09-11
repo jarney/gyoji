@@ -1,4 +1,4 @@
-#include "namespace.hpp"
+#include <jlang-frontend/namespace.hpp>
 #include <jlang-misc/jstring.hpp>
 
 using namespace JLang::misc;

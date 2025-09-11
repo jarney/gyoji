@@ -3,16 +3,16 @@
 #include <string>
 #include <cmath>
 #include <memory>
-#include "target/jlang.l.hpp"
-#include "jsyntax.hpp"
-#include "ast.hpp"
-#include "namespace.hpp"
+#include <jlang.l.hpp>
+#include <jlang-frontend/jsyntax.hpp>
+#include <jlang-frontend/ast.hpp>
+#include <jlang-frontend/namespace.hpp>
 %}
  
 %require "3.7.4"
 %language "C++"
-%defines "target/jlang.y.hpp"
-%output "target/jlang.y.cpp"
+ //%defines "target/jlang.y.hpp"
+ //%output "target/jlang.y.cpp"
  
 %define api.parser.class {Parser}
 %define api.namespace {jlang}

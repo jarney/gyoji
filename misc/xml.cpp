@@ -1,6 +1,6 @@
 #include <string>
-#include "xml.hpp"
-#include "jstring.hpp"
+#include <jlang-misc/xml.hpp>
+#include <jlang-misc/jstring.hpp>
 
 using namespace JLang::misc;
 
