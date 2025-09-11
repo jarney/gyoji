@@ -3,7 +3,7 @@
 #include <string>
 #include <list>
 #include <map>
-#include "ast.hpp"
+#include <jlang-frontend/ast.hpp>
 
 // Compute the semantic tree
 // from the given AST.  The purpose

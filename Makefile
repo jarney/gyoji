@@ -1,97 +1,73 @@
 
 OBJ_FILES = \
-	target/jsyntax.o \
-	target/jbackend.o \
-	target/jbackend-format-tree.o \
-	target/jbackend-format-identity.o \
-	target/jbackend-llvm.o \
-	target/jbackend-llvm-types.o \
-	target/jbackend-llvm-operators.o \
-        target/llvm-translation-unit-visitor.o \
-        target/ast.o \
-	target/main.o \
-	target/xml.o \
-	target/jstring.o \
-	target/namespace.o \
-	target/jsemantics.o
+	target/main.o
 
 INCLUDES = \
 	-I. \
-	-I.. \
+	-Imisc/target/include \
+	-Ifrontend/target/include \
+	-Ibackend/target/include \
+	-Icodegen/target/include \
 	-I/usr/include/llvm-18 \
 	-I/usr/include/llvm-c-18
 
-TEST_XML_OBJS = \
-	target/test_xml.o \
-	target/jstring.o \
-	target/xml.o
-
-TEST_NAMESPACE_OBJS = \
-	target/test_namespace.o \
-	target/jstring.o \
-	target/namespace.o
-
-TEST_STRING_OBJS = \
-	target/test_string.o \
-	target/jstring.o
-
 LIBRARIES = \
 	-L/usr/lib/llvm-18/lib \
-	-lLLVM-18
+	-lLLVM-18 \
+	-Lcodegen/target -ljlang-codegen \
+	-Lbackend/target -ljlang-backend \
+	-Lfrontend/target -ljlang-frontend \
+	-Lmisc/target -ljlang-misc
 
-all: target/cparse test
+LIBRARY_FILES=\
+	frontend/target/libjlang-frontend.a \
+	backend/target/libjlang-backend.a \
+	codegen/target/libjlang-codegen.a
+
+all: target/cparse
+
+test:
+	echo "Making"
+	cd misc; make test
+	cd frontend; make test
+	cd backend; make test
+	cd codegen; make test
 	target/cparse format-identity tests/valid-syntax-expression-primary.j >target/valid-syntax-expression-primary.j
 	diff tests/valid-syntax-expression-primary.j target/valid-syntax-expression-primary.j
 	target/cparse format-identity tests/valid-syntax-variable-declaration.j >target/valid-syntax-variable-declaration.j
 	diff tests/valid-syntax-variable-declaration.j target/valid-syntax-variable-declaration.j
-#	target/cparse format-tree tests/valid-syntax-typedefs.j
 
 
-test: target/test_string target/test_xml target/test_namespace
-	target/test_string
-	target/test_xml
-	target/test_namespace
 
-target/test_string: $(TEST_STRING_OBJS)
-	gcc -g -o $@ $(TEST_STRING_OBJS) -lstdc++
+target/cparse: $(OBJ_FILES) $(LIBRARY_FILES)
+	g++ -g -o target/cparse $(OBJ_FILES) $(LIBRARIES)
 
-target/test_xml: $(TEST_XML_OBJS)
-	gcc -g -o $@ $(TEST_XML_OBJS) -lstdc++
+target/:
+	mkdir -p target/
+	mkdir -p target/include/jlang-frontend
 
-target/test_namespace: $(TEST_NAMESPACE_OBJS)
-	gcc -g -o $@ $(TEST_NAMESPACE_OBJS) -lstdc++
+target/main.o: target/ $(LIBRARY_FILES)
 
-target/test_namespace2: $(TEST_NAMESPACE2_OBJS)
-	gcc -g -o $@ $(TEST_NAMESPACE2_OBJS) -lstdc++
+misc/target/libjlang-misc.a:
+	cd misc; make
 
+frontend/target/libjlang-frontend.a: misc/target/libjlang-misc.a
+	cd frontend; make
+
+backend/target/libjlang-backend.a: frontend/target/libjlang-frontend.a
+	cd backend; make
+
+codegen/target/libjlang-codegen.a: backend/target/libjlang-backend.a
+	cd codegen; make
 
 clean:
-	rm -rf target/*
+	rm -rf target/
 	rm -f *~
 	rm -f tests/*~
+	cd misc; make clean
+	cd frontend; make clean
+	cd backend; make clean
+	cd codegen; make clean
 
-target/cparse: target/jlang.y.o target/jlang.l.o $(OBJ_FILES)
-	g++ -g -o target/cparse target/jlang.y.o target/jlang.l.o $(OBJ_FILES) $(LIBRARIES)
-
-target/%.o: %.cpp
-	g++ -g -c $(INCLUDES) $< -o $@
-
-target/%.l.o: target/%.l.cpp
-	g++ -g -c $(INCLUDES) $< -o $@
-
-target/%.y.o: target/%.y.cpp
-	g++ -g -c $(INCLUDES) $< -o $@
-
-target/jlang.y.o: target/jlang.y.cpp target/jlang.l.cpp
-	g++ -g -c $(INCLUDES) $< -o $@
-
-target/jlang.l.o: target/jlang.l.cpp target/jlang.y.cpp
-	g++ -g -c $(INCLUDES) $< -o $@
-
-target/jlang.l.cpp: jlang.l target/jlang.y.hpp
-	flex -o target/jlang.l.cpp jlang.l
-
-target/jlang.y.cpp: jlang.y
-	bison jlang.y -Wcounterexamples --header=target/jlang.y.h --output=target/jlang.y.cpp
-
+include make/rules.mk
 

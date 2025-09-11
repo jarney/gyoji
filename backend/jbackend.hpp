@@ -1,6 +1,6 @@
 #pragma once
 
-#include "jsyntax.hpp"
+#include <jlang-frontend/jsyntax.hpp>
 
 class JBackend {
 public:

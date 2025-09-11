@@ -1,5 +1,5 @@
 #include "namespace.hpp"
-#include "jstring.hpp"
+#include <jlang-misc/jstring.hpp>
 
 NamespaceFoundReason::NamespaceFoundReason(int _reason)
   : reason(_reason)

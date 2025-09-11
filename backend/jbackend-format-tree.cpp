@@ -1,8 +1,6 @@
-#include "jbackend-format-tree.hpp"
-#include "target/jlang.l.hpp"
-#include "target/jlang.y.hpp"
+#include <jlang-backend/jbackend-format-tree.hpp>
 #include <iostream>
-#include "xml.hpp"
+#include <jlang-misc/xml.hpp>
 
 JBackendFormatTree::JBackendFormatTree()
   : indent(0)

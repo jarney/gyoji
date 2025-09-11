@@ -1,6 +1,4 @@
-#include "jbackend-format-identity.hpp"
-#include "target/jlang.l.hpp"
-#include "target/jlang.y.hpp"
+#include <jlang-backend/jbackend-format-identity.hpp>
 #include <iostream>
 
 JBackendFormatIdentity::JBackendFormatIdentity()

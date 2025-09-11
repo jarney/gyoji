@@ -1,15 +1,15 @@
-#include "jsyntax.hpp"
-#include "ast.hpp"
-#include "namespace.hpp"
-#include "target/jlang.l.hpp"
-#include "target/jlang.y.hpp"
+#include <jlang-frontend/jsyntax.hpp>
+#include <jlang-frontend/ast.hpp>
+#include <jlang-frontend/namespace.hpp>
+#include "frontend/target/jlang.l.hpp"
+#include "frontend/target/jlang.y.hpp"
 
-#include "jbackend.hpp"
-#include "jbackend-format-identity.hpp"
-#include "jbackend-format-tree.hpp"
-#include "jbackend-format-pretty.hpp"
-#include "jbackend-llvm.hpp"
-#include "jbackend-toc.hpp"
+#include <jlang-backend/jbackend.hpp>
+#include <jlang-backend/jbackend-format-identity.hpp>
+#include <jlang-backend/jbackend-format-tree.hpp>
+#include <jlang-backend/jbackend-format-pretty.hpp>
+
+#include <jlang-codegen/jbackend-llvm.hpp>
 
 using namespace JLang::Backend::LLVM;
 

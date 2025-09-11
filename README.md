@@ -1,4 +1,108 @@
+# Architecture
 
+The following diagram shows how the various parts of the
+compiler are organized.  Each of the components are designed
+to be independent of one another, exposing interfaces
+and all tied together in the "compiler" application
+using dependency-injection techniques.  This way,
+any part of the compiler can be modified and
+augmented without having to unwind the entire system.
+
+This makes the compiler/language system itself
+modular and reduces the load on any individual
+contributer to understand the whole flow too deeply.
+
+```
++-----------+                      +---------------+
+| Input .j  |                      |Error reporting|
++-----------+                      +---------------+
+      |                            |Input Context  |
++----------------------+           +---------------+
+| Front-end (lex/parse)|             |
+| namespace resolution |-------------+
++----------------------+             |
+               | AST tree            |
+       +------------------+          | Error/context api
+       | Syntax back-ends |          |
+       +------------------+          |
+           |            \            |
+           |             \ Semantic Translation Unit
+           |              \          |
++------------------+       \         |
+| formatters       |    +------------------+        +-----------------------------+
++------------------+    | Semantic Rules   |--------|Borrow Check (Polonius clone)|
+        | AST Tree      +------------------+        +-----------------------------+
++---------------+               |          \
+|format-identity|               |           \          +---------------+
+|format-pretty  |               |            ----------|Type resolution|
+|format-tree    |               |                      +---------------+
++---------------+               |                           |
+        |               +------------------+ /--------------+
+  +-----------+         | Code Generation  |/
+  |Text output|         +------------------+
+  +-----------+                 | LLVM
+                        +------------------+
+                        | ELF (.o) output  |
+                        +------------------+
+```
+
+The architecture of the compiler is as follows:
+* Front-end
+  Lexical and syntactical analysis is the first stage.  This involves
+  reading from input as bytes and producing a set of "tokens"
+  which are recognized by a set of regular expressions.  The lexical
+  analysis phase is lossless in the sense that it consumes and
+  records all data read as data associated with these tokens. 
+  This includes whitespace and comments.  This is useful
+  later in some back-ends which can reproduce the input exactly (for testing)
+  or produce the output as a "pretty-print" of the input (formatters).
+  The lexical stage also includes handling namespaces and types.  This is
+  because the syntax would be ambiguous with only identifiers, so the ability
+  to distinguish between types and variables is important.
+  The syntactical analysis uses the traditional LALR(1) algorithm
+  to recognize the syntax and produce a parse tree.  The output of this
+  stage is an abstract syntax tree which is used later to build the data-structures
+  for the semantic representation of the language.
+
+  Note that because of this structure, other front-ends for the language are possible
+  including representations with entirely different syntax so for example, a
+  "python-like" representation or a "rust-like" representation can be parsed into
+  the same semantic tree.
+
+* Syntax back-ends
+  After the syntax has been parsed, one or more backends can be applied directly
+  to the syntax tree.  Some of these are pure transformations of the input
+  such as code formatters and XML tree output for debugging purposes.
+  Other back-ends pass the information to the next stage of processing, the semantic
+  stage.  The semantic stage may also provide a number of back-ends
+  to perform code-generation, making use of all of the semantic information.
+
+* Semantic analysis is next.  At this stage, the syntax tree is processed into
+  a semantic representation of the language.  This semantic representation
+  discards the whitespace and original tokens and organizes the input program
+  in a way that closely matches the semantics.  At this layer, several additional
+  analyses can be perfored to ensure consistency and correctness as well as
+  preparing the program for a code generation phase later.  Specifically,
+  this semantic analysis applies rules such as:
+  
+  * Ensuring types match
+  * Resolving expression operations so that they are applied to the correct types.
+  * Performing borrow-checking
+  * Namespace and visibility rules.
+  * Generic programming and type parameters.
+
+* Code generation
+  During this stage of processing, a code generation back-end produces
+  executable output (ELF object files, for example) using LLVM or other
+  similar code generation utilities.
+
+  Some back-ends may even be possible allowing the generated code to
+  be run within other machine environments such as a bash or python shell
+  although there is probably very little utility in doing that, it might
+  be cool to try.
+
+
+# Features
 
 Changes from C syntax:
 * Types can be qualified with namespaces

@@ -1,5 +1,5 @@
 #include "namespace.hpp"
-#include "test.hpp"
+#include <jlang-misc/test.hpp>
 
 int main(int argc, char **argv)
 {
@@ -151,6 +151,10 @@ int main(int argc, char **argv)
     NamespaceFoundReason::ptr int_public = ctx.namespace_lookup("int");
     ASSERT_BOOL(true, int_public->reason == NamespaceFoundReason::REASON_FOUND, "Int is visible because we're 'using' the std::datatypes namespace");
   }
+
+  printf("    PASSED\n");
+
+  
 }
 // When can we find something
 // that is protected but not private?

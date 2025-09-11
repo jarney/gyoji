@@ -1,6 +1,6 @@
-#include "jbackend-format-pretty.hpp"
-#include "target/lexer.l.hpp"
-#include "target/syntax.y.hpp"
+#include <jlang-backend/jbackend-format-pretty.hpp>
+#include "../frontend/target/jlang.l.hpp"
+#include "../frontend/target/jlang.y.hpp"
 #include <iostream>
 
 JBackendFormatPretty::JBackendFormatPretty()
@@ -155,7 +155,7 @@ std::string JBackendFormatPretty::break_multiline_comment(std::string str)
 void JBackendFormatPretty::print_node(ASTNode::ptr node)
 {
   switch (node->type) {
-  case calc::Parser::symbol_kind_type::S_function_def:
+  case jlang::Parser::symbol_kind_type::S_file_statement_function_definition:
     print_node_function_def(node);
     break;
   default:

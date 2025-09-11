@@ -1,5 +1,5 @@
 #include "xml.hpp"
-#include "test.hpp"
+#include <jlang-misc/test.hpp>
 
 int main(int argc, char **argv)
 {

@@ -1,5 +1,5 @@
 #include "jstring.hpp"
-#include "test.hpp"
+#include <jtest/test.hpp>
 
 int main(int argc, char **argv)
 {

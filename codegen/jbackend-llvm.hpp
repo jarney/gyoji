@@ -1,7 +1,7 @@
 #pragma once
 
-#include "jbackend.hpp"
-#include "jsemantics.hpp"
+#include <jlang-backend/jbackend.hpp>
+#include <jlang-codegen/jsemantics.hpp>
 #include "llvm/ADT/APFloat.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/IR/BasicBlock.h"
