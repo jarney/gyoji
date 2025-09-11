@@ -24,6 +24,7 @@ add_subdirectory(backend)
 add_subdirectory(codegen)
 
 add_executable(cparse main.cpp)
+
 target_include_directories(cparse
     PUBLIC
         misc
@@ -43,9 +44,12 @@ target_link_libraries(cparse
 	-L/usr/lib/llvm-18/lib -lLLVM-18
 )
 
+add_test(NAME test-syntax COMMAND ${CMAKE_SOURCE_DIR}/test-syntax.sh ${CMAKE_BINARY_DIR} ${CMAKE_SOURCE_DIR})
 
 install(
     TARGETS
         cparse
         RUNTIME DESTINATION bin
 )
+
+

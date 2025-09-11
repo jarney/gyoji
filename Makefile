@@ -1,10 +1,19 @@
 
-all:
+all: build/Makefile
 	cd build; $(MAKE)
 
-test:
-	cd build; $(MAKE) test
+test: build/Makefile
+	cd build; $(MAKE) all; $(MAKE) test
 
-clean:
+clean: build/Makefile
 	cd build; $(MAKE) clean
 	find . -name "*~" -exec rm -f {} \; -print
+
+
+build/Makefile:
+	mkdir -p build
+	mkdir -p install
+	cmake \
+		-DCMAKE_INSTALL_PREFIX=install \
+		-B build -S .
+
