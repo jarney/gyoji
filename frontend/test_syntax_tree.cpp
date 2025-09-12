@@ -24,7 +24,7 @@ void JBackendFormatTree::print_comment_multi_line(TerminalNonSyntax::raw_ptr nod
   printf("<comment-multi-line>\n");
   indent++;
   print_indent();
-  printf("%s\n", xml_to_cdata(node->data).c_str());
+  printf("%s\n", xml_to_cdata(node->get_data()).c_str());
   indent--;
   print_indent();
   printf("</comment-multi-line>\n");
@@ -36,7 +36,7 @@ void JBackendFormatTree::print_comment_single_line(TerminalNonSyntax::raw_ptr no
   printf("<comment-single-line>\n");
   indent++;
   print_indent();
-  printf("%s\n", xml_to_cdata(node->data).c_str());
+  printf("%s\n", xml_to_cdata(node->get_data()).c_str());
   indent--;
   print_indent();
   printf("</comment-single-line>\n");
@@ -45,18 +45,18 @@ void JBackendFormatTree::print_comment_single_line(TerminalNonSyntax::raw_ptr no
 void JBackendFormatTree::print_whitespace(TerminalNonSyntax::raw_ptr node)
 {
   print_indent();
-  printf("<whitespace>%s</whitespace>\n", xml_escape_whitespace(node->data).c_str());
+  printf("<whitespace>%s</whitespace>\n", xml_escape_whitespace(node->get_data()).c_str());
 }
 
 void JBackendFormatTree::print_file_metadata(TerminalNonSyntax::raw_ptr node)
 {
-  printf("<metadata>%s</metadata>", xml_to_cdata(node->data).c_str());
+  printf("<metadata>%s</metadata>", xml_to_cdata(node->get_data()).c_str());
 }
 
 
 void JBackendFormatTree::print_non_syntax(TerminalNonSyntax::raw_ptr node)
 {
-  switch (node->type) {
+  switch (node->get_type()) {
   case TerminalNonSyntaxType::EXTRA_COMMENT_MULTI_LINE:
     print_comment_multi_line(node);
     break;
@@ -72,7 +72,7 @@ void JBackendFormatTree::print_non_syntax(TerminalNonSyntax::raw_ptr node)
   }
 }
 
-int JBackendFormatTree::process(SyntaxNode::raw_ptr node)
+int JBackendFormatTree::process(const SyntaxNode * node)
 {
   print_indent();
   printf("<node type='%s'", xml_escape_attribute(node->get_type()).c_str());

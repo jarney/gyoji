@@ -22,7 +22,7 @@ namespace JLang::frontend::alt_imp {
   public:
     JBackendFormatTree();
     ~JBackendFormatTree();
-    virtual int process(SyntaxNode::raw_ptr file);
+    virtual int process(const SyntaxNode* file);
   };
 
 };

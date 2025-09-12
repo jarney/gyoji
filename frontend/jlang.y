@@ -168,7 +168,7 @@
 %nterm <JLang::frontend::ASTNode::ptr> file_statement_namespace;
 %nterm <JLang::frontend::ASTNode::ptr> opt_as;
 %nterm <JLang::frontend::ASTNode::ptr> file_statement_using;
-%nterm <JLang::frontend::ASTNode::ptr> file_global_definition;
+%nterm <JLang::frontend::ASTNode::ptr> file_statement_global_definition;
 %nterm <JLang::frontend::ASTNode::ptr> opt_global_initializer;
 %nterm <JLang::frontend::ASTNode::ptr> global_initializer;
 %nterm <JLang::frontend::ASTNode::ptr> opt_struct_initializer_list;
@@ -338,7 +338,7 @@ file_statement
                 $$ = $1;
                 PRINT_NONTERMINALS($$);
         }
-        | file_global_definition {
+        | file_statement_global_definition {
                 $$ = $1;
                 PRINT_NONTERMINALS($$);
         }
@@ -364,11 +364,11 @@ file_statement
         }
         ;
 
-file_global_definition
+file_statement_global_definition
         : opt_access_modifier opt_unsafe type_specifier IDENTIFIER opt_array_length opt_global_initializer SEMICOLON {
                 $$ = std::make_shared<JLang::frontend::ASTNode>();
-                $$->type = Parser::symbol_kind_type::S_file_global_definition;
-                $$->typestr = std::string("file_global_definition");
+                $$->type = Parser::symbol_kind_type::S_file_statement_global_definition;
+                $$->typestr = std::string("file_statement_global_definition");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);

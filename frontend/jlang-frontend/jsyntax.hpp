@@ -16,117 +16,365 @@ namespace JLang::frontend {
   } return_data_t;
 
   namespace alt_imp {
-  enum TerminalNonSyntaxType {
-    EXTRA_COMMENT_SINGLE_LINE,
-    EXTRA_COMMENT_MULTI_LINE,
-    EXTRA_WHITESPACE,
-    EXTRA_FILE_METADATA
-  };
   
-  class TerminalNonSyntax {
-  public:
-    typedef std::unique_ptr<TerminalNonSyntax> ptr;
-    typedef TerminalNonSyntax *raw_ptr;
-    TerminalNonSyntax(TerminalNonSyntaxType _type, std::string _data);
-    ~TerminalNonSyntax();
-    
-    TerminalNonSyntaxType type;
-    std::string data;
-  };
-  
-  class Namespace;
+  class Terminal;
 
-    class Terminal;
-    class TranslationUnit;
+  class AccessModifier;
+  class UnsafeModifier;
+  class TypeSpecifier;
+  class FunctionDefinitionArgList;
+    
+  class TranslationUnit;
+
+        class ScopeBody;
+      class FileStatementFunctionDefinition;
+    
+      class FileStatementFunctionDeclaration;
+    
+        class ArrayLength;
+        class GlobalInitializer;
+      class FileStatementGlobalDefinition;
+      class FileStatementClassDefinition;
+      class FileStatementEnumDefinition;
+      class FileStatementTypeDefinition;
+      class FileStatementNamespace;
+      class FileStatementUsing;
+      class FileStatement;
     class FileStatementList;
 
-  class SyntaxNode {
-  public:
-    typedef SyntaxNode *raw_ptr;
-    typedef std::unique_ptr<SyntaxNode> owned_ptr;
-    typedef std::variant<
-      Terminal*,
-      TranslationUnit*,
-      FileStatementList*> specific_type_t;
-    
-    SyntaxNode(std::string _type, specific_type_t _data);
-    ~SyntaxNode();
-
-    // Access to the child list should be
-    // immutable because this is really
-    // just a view over the list.
-    std::vector<SyntaxNode::raw_ptr> & get_children();
-    std::string & get_type();
-    SyntaxNode::specific_type_t &get_data();
-
-  private:
-    // This list does NOT own its children, so
-    // the class deriving from this one must
-    // agree to own the pointers separately.
-    std::vector<SyntaxNode::raw_ptr> children; 
-
-  protected:
-    // Children are owned by their parents, so this is
-    // private and can only be called by the
-    // deriving class.
-    void add_child(SyntaxNode::raw_ptr node);
+    class SyntaxNode {
+    public:
+      typedef std::variant<
+        Terminal*,
       
-    std::string type;
-    specific_type_t data;
-  };
+        AccessModifier*,
+        UnsafeModifier*,
+        TypeSpecifier*,
+        FunctionDefinitionArgList*,
+      
+        TranslationUnit*,
+              ScopeBody *,
+            FileStatementFunctionDefinition*,
+            FileStatementFunctionDeclaration*,
+              ArrayLength*,
+              GlobalInitializer*,
+            FileStatementGlobalDefinition*,
+            FileStatementClassDefinition*,
+            FileStatementEnumDefinition*,
+            FileStatementTypeDefinition*,
+            FileStatementNamespace*,
+            FileStatementUsing*,
+            FileStatement*,
+          FileStatementList*
+      > specific_type_t;
+      
+      SyntaxNode(std::string _type, specific_type_t _data);
+      ~SyntaxNode();
+      
+      // Access to the child list should be
+      // immutable because this is really
+      // just a view over the list.
+      const std::vector<const SyntaxNode*> & get_children() const;
+      const std::string & get_type() const;
+      const SyntaxNode::specific_type_t &get_data() const;
+      
+    private:
+      // This list does NOT own its children, so
+      // the class deriving from this one must
+      // agree to own the pointers separately.
+      std::vector<const SyntaxNode*> children; 
+      
+    protected:
+      // Children are owned by their parents, so this is
+      // private and can only be called by the
+      // deriving class.
+      void add_child(const SyntaxNode* node);
+      
+      std::string type;
+      specific_type_t data;
+    };
+    
+    template <class T> class PtrProtocol {
+    public:
+      typedef T *raw_ptr;
+      typedef std::unique_ptr<T> owned_ptr;
+    };
+    
 
-  /**
-   * Terminals are the raw tokens received by the lexer.
-   * They carry the token information as well as any
-   * "Non-syntax" data like comments and whitespace.
-   */
-  class Terminal : public SyntaxNode {
-  public:
-    typedef Terminal *raw_ptr;
-    typedef std::unique_ptr<Terminal> owned_ptr;
-    Terminal();
-    ~Terminal();
-    int type;
-    std::string typestr;
-    std::string value;
-    size_t lineno;
-    size_t colno;
-    std::string fully_qualified_name;
-    std::vector<TerminalNonSyntax::raw_ptr> get_whitespace();
+    enum TerminalNonSyntaxType {
+      EXTRA_COMMENT_SINGLE_LINE,
+      EXTRA_COMMENT_MULTI_LINE,
+      EXTRA_WHITESPACE,
+      EXTRA_FILE_METADATA
+    };
+    
+    /**
+     * This class represents data obtained from the
+     * lexical stage that did not affect the syntax.
+     * This data includes whitespace, comments, and
+     * file metadata.  This data is useful to track because
+     * it may be used in code-formatters to faithfully
+     * reproduce the input and is also useful in providing
+     * meaningful error messaging with context surrounding
+     * the error.
+     */
+    class TerminalNonSyntax : public PtrProtocol<TerminalNonSyntax> {
+    public:
+      TerminalNonSyntax(TerminalNonSyntaxType _type, std::string _data);
+      ~TerminalNonSyntax();
 
-    // The terminal "owns" uniquely all of the non-syntax data
-    // in this vector.  It may be returned to access it,
-    // but these are owned pointers, so they must only
-    // be de-referenced and never assigned to
-    std::vector<TerminalNonSyntax::ptr> non_syntax;
-  };
+      /**
+       * This method returns the type of data
+       * from the enum above.
+       */
+      const TerminalNonSyntaxType &get_type() const;
+      /**
+       * This method provides access to the raw input
+       * for the type of non-syntax data available.
+       */
+      const std::string & get_data() const;
+      
+    private:
+      TerminalNonSyntaxType type;
+      std::string data;
+    };
 
-  class FileStatementList : public SyntaxNode {
-  public:
-    typedef FileStatementList                  *raw_ptr;
-    typedef std::unique_ptr<FileStatementList> owned_ptr;
-    FileStatementList();
-    ~FileStatementList();
-  };
-  
-  
-  class TranslationUnit : public SyntaxNode {
-  public:
-    typedef TranslationUnit                  *raw_ptr;
-    typedef std::unique_ptr<TranslationUnit> owned_ptr;
+    /**
+     * Terminals are the raw tokens received by the lexer.
+     * They carry the token information as well as any
+     * "Non-syntax" data like comments and whitespace.
+     */
+    class Terminal : public SyntaxNode, public PtrProtocol<Terminal> {
+    public:
+      //      typedef Terminal *raw_ptr;
+      //      typedef std::unique_ptr<Terminal> owned_ptr;
+      Terminal();
+      ~Terminal();
+      int type;
+      std::string typestr;
+      std::string value;
+      size_t lineno;
+      size_t colno;
+      std::string fully_qualified_name;
+      std::vector<TerminalNonSyntax::raw_ptr> get_whitespace();
+      
+      // The terminal "owns" uniquely all of the non-syntax data
+      // in this vector.  It may be returned to access it,
+      // but these are owned pointers, so they must only
+      // be de-referenced and never assigned to
+      std::vector<TerminalNonSyntax::owned_ptr> non_syntax;
+    };
 
-    TranslationUnit(
-        FileStatementList::owned_ptr file_statement_list,
-        Terminal::owned_ptr yyeof_token
-    );
-    ~TranslationUnit();
-    FileStatementList::raw_ptr get_statements();
-  private:
-    Terminal::owned_ptr yyeof_token;
-    FileStatementList::owned_ptr file_statement_list;
-  };
 
+    class FileStatement : public SyntaxNode, public PtrProtocol<FileStatement> {
+    public:
+      typedef std::variant<
+        std::unique_ptr<FileStatementFunctionDefinition>,
+        std::unique_ptr<FileStatementFunctionDeclaration>,
+        std::unique_ptr<FileStatementGlobalDefinition>,
+        std::unique_ptr<FileStatementClassDefinition>,
+        std::unique_ptr<FileStatementEnumDefinition>,
+        std::unique_ptr<FileStatementTypeDefinition>,
+        std::unique_ptr<FileStatementNamespace>,
+        std::unique_ptr<FileStatementUsing>> FileStatementType;
 
+      FileStatement(FileStatementType _statement);
+      ~FileStatement();
+
+      const FileStatementType & get_statement() const;
+
+    private:
+      FileStatementType statement;
+    };
+
+    class AccessModifier : public SyntaxNode, public PtrProtocol<AccessModifier> {
+    public:
+      AccessModifier();
+      ~AccessModifier();
+    };
+    class UnsafeModifier : public SyntaxNode, public PtrProtocol<UnsafeModifier> {
+    public:
+      UnsafeModifier();
+      ~UnsafeModifier();
+    };
+
+    class TypeSpecifier : public SyntaxNode, public PtrProtocol<TypeSpecifier> {
+    public:
+      TypeSpecifier();
+      ~TypeSpecifier();
+    };
+
+    class FunctionDefinitionArgList : public SyntaxNode, public PtrProtocol<FunctionDefinitionArgList> {
+    public:
+      FunctionDefinitionArgList();
+      ~FunctionDefinitionArgList();
+    };
+
+    class FileStatementFunctionDeclaration : public SyntaxNode, public PtrProtocol<FileStatementFunctionDeclaration> {
+    public:
+      FileStatementFunctionDeclaration(
+                                      AccessModifier::owned_ptr _access_modifier,
+                                      UnsafeModifier::owned_ptr _unsafe_modifier,
+                                      TypeSpecifier::owned_ptr _type_specifier,
+                                      Terminal::owned_ptr _name,
+                                      Terminal::owned_ptr _paren_l,
+                                      FunctionDefinitionArgList::owned_ptr _arguments,
+                                      Terminal::owned_ptr _paren_r,
+                                      Terminal::owned_ptr _semicolon
+                                      );
+      ~FileStatementFunctionDeclaration();
+      const AccessModifier & get_access_modifier() const;
+      const UnsafeModifier & get_unsafe_modifier() const;
+      const TypeSpecifier & get_type_specifier() const;
+      const Terminal & get_name() const;
+      const FunctionDefinitionArgList & get_arguments() const;
+      
+    private:
+      AccessModifier::owned_ptr access_modifier;
+      UnsafeModifier::owned_ptr unsafe_modifier;
+      TypeSpecifier::owned_ptr type_specifier;
+      Terminal::owned_ptr name; // function name (IDENTIFIER)
+      Terminal::owned_ptr paren_l; // argument list delimiter PAREN_L
+      FunctionDefinitionArgList::owned_ptr arguments;
+      Terminal::owned_ptr paren_r; // argument list delimiter PAREN_R
+      Terminal::owned_ptr semicolon; // argument list delimiter SEMICOLON
+    };
+
+    class ScopeBody : public SyntaxNode, public PtrProtocol<ScopeBody> {
+    public:
+      ScopeBody();
+      ~ScopeBody();
+    };
+    
+    class FileStatementFunctionDefinition : public SyntaxNode, public PtrProtocol<FileStatementFunctionDefinition> {
+    public:
+      FileStatementFunctionDefinition(
+                                      AccessModifier::owned_ptr _access_modifier,
+                                      UnsafeModifier::owned_ptr _unsafe_modifier,
+                                      TypeSpecifier::owned_ptr _type_specifier,
+                                      Terminal::owned_ptr _name,
+                                      Terminal::owned_ptr _paren_l,
+                                      FunctionDefinitionArgList::owned_ptr _arguments,
+                                      Terminal::owned_ptr _paren_r,
+                                      ScopeBody::owned_ptr _scope_body
+                                      );
+      ~FileStatementFunctionDefinition();
+      const AccessModifier & get_access_modifier() const;
+      const UnsafeModifier & get_unsafe_modifier() const;
+      const TypeSpecifier & get_type_specifier() const;
+      const Terminal & get_name() const;
+      const FunctionDefinitionArgList & get_arguments() const;
+      const ScopeBody & get_scope_body() const;
+      
+    private:
+      AccessModifier::owned_ptr access_modifier;
+      UnsafeModifier::owned_ptr unsafe_modifier;
+      TypeSpecifier::owned_ptr type_specifier;
+      Terminal::owned_ptr name; // function name (IDENTIFIER)
+      Terminal::owned_ptr paren_l; // argument list delimiter PAREN_L
+      FunctionDefinitionArgList::owned_ptr arguments;
+      Terminal::owned_ptr paren_r; // argument list delimiter PAREN_R
+      ScopeBody::owned_ptr scope_body; // argument list delimiter SEMICOLON
+    };
+
+    class ArrayLength : public SyntaxNode, public PtrProtocol<ArrayLength> {
+    public:
+      ArrayLength();
+      ~ArrayLength();
+    };
+    class GlobalInitializer : public SyntaxNode, public PtrProtocol<GlobalInitializer> {
+    public:
+      GlobalInitializer();
+      ~GlobalInitializer();
+    };
+    
+    class FileStatementGlobalDefinition : public SyntaxNode, public PtrProtocol<FileStatementGlobalDefinition> {
+    public:
+      FileStatementGlobalDefinition(
+                                    AccessModifier::owned_ptr _access_modifier,
+                                    UnsafeModifier::owned_ptr _unsafe_modifier,
+                                    TypeSpecifier::owned_ptr _type_specifier,
+                                    Terminal::owned_ptr _name,
+                                    ArrayLength::owned_ptr _array_length,
+                                    GlobalInitializer::owned_ptr _global_initializer,
+                                    Terminal::owned_ptr _semicolon
+                                    );
+      ~FileStatementGlobalDefinition();
+      const AccessModifier & get_access_modifier() const;
+      const UnsafeModifier & get_unsafe_modifier() const;
+      const TypeSpecifier & get_type_specifier() const;
+      const Terminal & get_name() const;
+      const ArrayLength & get_array_length() const;
+      const GlobalInitializer & get_global_initializer() const;
+    private:
+      AccessModifier::owned_ptr access_modifier;
+      UnsafeModifier::owned_ptr unsafe_modifier;
+      TypeSpecifier::owned_ptr type_specifier;
+      Terminal::owned_ptr name; // function name (IDENTIFIER)
+      ArrayLength::owned_ptr array_length;
+      GlobalInitializer::owned_ptr global_initializer;
+      Terminal::owned_ptr semicolon;
+    };
+    
+    class FileStatementClassDefinition : public SyntaxNode, public PtrProtocol<FileStatementClassDefinition> {
+    public:
+    private:
+    };
+    class FileStatementEnumDefinition : public SyntaxNode, public PtrProtocol<FileStatementEnumDefinition> {
+    public:
+    private:
+    };
+    class FileStatementTypeDefinition : public SyntaxNode, public PtrProtocol<FileStatementTypeDefinition> {
+    public:
+    private:
+    };
+    class FileStatementNamespace : public SyntaxNode, public PtrProtocol<FileStatementNamespace> {
+    public:
+    private:
+    };
+    class FileStatementUsing : public SyntaxNode, public PtrProtocol<FileStatementUsing> {
+    public:
+    private:
+    };
+
+    /**
+     * This class represents a list of statements at the file-level.
+     * These statements are things like global variable declarations,
+     * function declarations, function definitions, and type definitions
+     * that appear at the top-level of the translation unit or
+     * possibly nested inside namespaces at the translation unit level.
+     */
+    class FileStatementList : public SyntaxNode, public PtrProtocol<FileStatementList> {
+    public:
+      FileStatementList();
+      ~FileStatementList();
+      const std::vector<FileStatement::owned_ptr> & get_statements() const;
+      void add_statement(FileStatement::owned_ptr statement);
+    private:
+      std::vector<FileStatement::owned_ptr> statements;
+    };
+    
+    /**
+     * This class represents a translation unit, the top-level
+     * result of parsing a source-file.  All syntax information
+     * about the file appears in a tree-like structure beneath
+     * this node.
+     */
+    class TranslationUnit : public SyntaxNode, public PtrProtocol<TranslationUnit> {
+    public:
+      
+      TranslationUnit(
+                      FileStatementList::owned_ptr file_statement_list,
+                      Terminal::owned_ptr yyeof_token
+                      );
+      ~TranslationUnit();
+      FileStatementList::raw_ptr get_statements();
+    private:
+      Terminal::owned_ptr yyeof_token;
+      FileStatementList::owned_ptr file_statement_list;
+    };
+    
+    
   };
   
 };
