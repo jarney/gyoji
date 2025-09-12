@@ -50,3 +50,11 @@ target_link_libraries(test_namespace
     jlang-misc
 )
 add_test(NAME test_namespace COMMAND test_namespace)
+
+add_executable(test_syntax test_syntax.cpp test_syntax_tree.cpp)
+target_include_directories(test_syntax PUBLIC ${FRONTEND_INCLUDES})
+target_link_libraries(test_syntax
+    jlang-frontend
+    jlang-misc
+)
+add_test(NAME test_syntax COMMAND test_syntax)

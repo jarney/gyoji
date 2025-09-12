@@ -159,7 +159,7 @@ LLVMTranslationUnitVisitor::visit(FunctionDefinition &functiondef)
 }
 
 void
-LLVMTranslationUnitVisitor::visit(TranslationUnit &translation_unit)
+LLVMTranslationUnitVisitor::visit(JSemantics::TranslationUnit &translation_unit)
 {
   printf("Processing types\n");
   // Here, we process the types, making sure

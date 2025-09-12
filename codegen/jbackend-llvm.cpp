@@ -45,7 +45,7 @@ JBackendLLVM::~JBackendLLVM()
 int JBackendLLVM::process(ASTNode::ptr ast_translation_unit)
 {
   int rc = 0;
-  TranslationUnit::ptr translation_unit = from_ast(ast_translation_unit);
+  JSemantics::TranslationUnit::ptr translation_unit = from_ast(ast_translation_unit);
   
   // TODO: Resolve the types into fully-qualified namespaces.
 
