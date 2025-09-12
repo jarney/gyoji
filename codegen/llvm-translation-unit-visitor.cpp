@@ -20,7 +20,6 @@ LLVMTranslationUnitVisitor::visit(GlobalVariableDefinition &globaldef)
   llvm::GlobalVariable *globalVar = TheModule->getNamedGlobal(name);
   llvm::Constant *initValue = llvm::ConstantFP::get(*TheContext, llvm::APFloat(0.0));
   globalVar->setInitializer(initValue);
-  printf("Storing global variable %s\n", name.c_str());
   NamedValues[name] = globalVar;
 }
 
@@ -43,13 +42,12 @@ llvm::Function *LLVMTranslationUnitVisitor::getFunction(std::string name)
 }
 
 void
-LLVMTranslationUnitVisitor::visit(ScopeBlock &scope_block)
+LLVMTranslationUnitVisitor::visit(ScopeBody &scope_body)
 {
 }
 
-llvm::Value *LLVMTranslationUnitVisitor::codegen(ScopeBlock &scope_block)
+llvm::Value *LLVMTranslationUnitVisitor::codegen(ScopeBody &scope_body)
 {
-  printf("Generating code for basic block\n");
   return nullptr;
 }
 
@@ -57,20 +55,16 @@ void
 LLVMTranslationUnitVisitor::visit(FunctionDeclaration &functiondecl)
 {
   // Make the function type:  double(double,double) etc.
-  std::vector<llvm::Type *> Doubles;
-  for (auto pair : functiondecl.arg_types) {
-    LLVMType::ptr atype = types[pair.first];
-    fprintf(stderr, "Adding type %s\n", pair.first.c_str());
-    Doubles.push_back(atype->get_type());
+  std::vector<llvm::Type *> llvm_arguments;
+  for (auto semantic_arg : functiondecl.arg_types) {
+    LLVMType::ptr atype = types[semantic_arg->type->name];
+    llvm_arguments.push_back(atype->get_type());
   }
-  fprintf(stderr, "Doubles type is %ld\n", Doubles.size());
-  //  llvm::FunctionType *FT =
-  //    llvm::FunctionType::get(llvm::Type::getDoubleTy(*TheContext), Doubles, false);
 
-  LLVMType::ptr return_value_type = types[functiondecl.return_type];
+  LLVMType::ptr return_value_type = types[functiondecl.return_type->name];
   
   llvm::FunctionType *FT =
-    llvm::FunctionType::get(return_value_type->get_type(), Doubles, false);
+    llvm::FunctionType::get(return_value_type->get_type(), llvm_arguments, false);
 
   llvm::Function *F =
     llvm::Function::Create(FT, llvm::Function::ExternalLinkage, functiondecl.name, TheModule.get());
@@ -78,10 +72,8 @@ LLVMTranslationUnitVisitor::visit(FunctionDeclaration &functiondecl)
   // Set names for all arguments.
   unsigned Idx = 0;
   for (auto &Arg : F->args()) {
-    fprintf(stderr, "Indirecting arg_types\n");
-    auto pair = functiondecl.arg_types[Idx++];
-    fprintf(stderr, "Adding type %s %s thingy\n", pair.first.c_str(), pair.second.c_str());
-    Arg.setName(pair.second);
+    auto semantic_arg = functiondecl.arg_types[Idx++];
+    Arg.setName(semantic_arg->name);
   }
 }
 
@@ -103,7 +95,6 @@ LLVMTranslationUnitVisitor::visit(FunctionDefinition &functiondef)
   // Transfer ownership of the prototype to the FunctionProtos map, but keep a
   // reference to it for use below.
   auto function_declaration = functiondef.function_declaration;
-  printf("Processing function %s\n", function_declaration->name.c_str());
   auto &P = *function_declaration;
   FunctionProtos[function_declaration->name] = function_declaration;
   Function *TheFunction = getFunction(function_declaration->name);
@@ -140,7 +131,7 @@ LLVMTranslationUnitVisitor::visit(FunctionDefinition &functiondef)
   }
 #else
 
-  Value *block = codegen(*functiondef.scope_block);
+  Value *block = codegen(*functiondef.scope_body);
   
 #if 0
   if (Value *RetVal = llvm::ConstantFP::get(*TheContext, llvm::APFloat(0.0))) {
@@ -149,9 +140,13 @@ LLVMTranslationUnitVisitor::visit(FunctionDefinition &functiondef)
     Builder->CreateRet(RetVal);
   }
 #endif
-  
-  LLVMType::ptr return_value_type = types[function_declaration->return_type];
-  Builder->CreateRet(return_value_type->get_initializer_default());
+  if (!block) {
+    LLVMType::ptr return_value_type = types[function_declaration->return_type->name];
+    Builder->CreateRet(return_value_type->get_initializer_default());
+  }
+  else {
+    Builder->CreateRet(block);
+  }
   
   // Validate the generated code, checking for consistency.
   verifyFunction(*TheFunction);

@@ -30,7 +30,7 @@ namespace JSemantics {
   class FunctionDeclaration;
   class FunctionDefinition;
 
-  class ScopeBlock;
+  class ScopeBody;
   
   class Statement;
   class StatementFunctionCall;
@@ -72,6 +72,15 @@ namespace JSemantics {
     // TODO: access modifier (volatile,const)
   };
 
+  class FunctionDeclarationArg {
+  public:
+    typedef std::shared_ptr<FunctionDeclarationArg> ptr;
+    FunctionDeclarationArg();
+    ~FunctionDeclarationArg();
+    std::string name;
+    Type::ptr type;
+  };
+  
   class FunctionDeclaration {
   public:
     typedef std::shared_ptr<FunctionDeclaration> ptr;
@@ -79,8 +88,8 @@ namespace JSemantics {
     ~FunctionDeclaration();
     void visit(Visitor<FunctionDeclaration> &visitor);
     std::string name;
-    std::string return_type;
-    std::vector<std::pair<std::string, std::string>> arg_types;
+    Type::ptr return_type;
+    std::vector<FunctionDeclarationArg::ptr> arg_types;
   };
 
   // This is the main unit of work for the LLVM because
@@ -93,7 +102,7 @@ namespace JSemantics {
     void visit(Visitor<FunctionDefinition> &visitor);
     FunctionDeclaration::ptr function_declaration;
 
-    std::shared_ptr<ScopeBlock> scope_block;
+    std::shared_ptr<ScopeBody> scope_body;
   };
 
   class GlobalVariableDefinition {
@@ -113,17 +122,23 @@ namespace JSemantics {
     ~Statement();
   };
 
-  class StatementScopeBlock : public Statement {
+  class StatementScopeBody : public Statement {
   public:
-    StatementScopeBlock();
-    ~StatementScopeBlock();
-    std::shared_ptr<ScopeBlock> scope_block;
+    StatementScopeBody();
+    ~StatementScopeBody();
+    std::shared_ptr<ScopeBody> scope_body;
   };
   
   class StatementFunctionCall : public Statement {
   public:
     StatementFunctionCall();
     ~StatementFunctionCall();
+  };
+
+  class StatementVariableDeclaration : public Statement {
+  public:
+     StatementVariableDeclaration();
+    ~StatementVariableDeclaration();
   };
 
   class Expression {
@@ -163,12 +178,12 @@ namespace JSemantics {
     ~ExpressionAssignment();
   };
   
-  class ScopeBlock {
+  class ScopeBody {
   public:
-    typedef std::shared_ptr<ScopeBlock> ptr;
-    ScopeBlock();
-    ~ScopeBlock();
-    void visit(Visitor<ScopeBlock> &visitor);
+    typedef std::shared_ptr<ScopeBody> ptr;
+    ScopeBody();
+    ~ScopeBody();
+    void visit(Visitor<ScopeBody> &visitor);
     std::list<Statement::ptr> statements;
   };
   
@@ -180,11 +195,6 @@ namespace JSemantics {
     void visit(Visitor<TranslationUnit> &visitor);
     void register_builtin_types();
 
-    FunctionDefinition::ptr ast_to_file_statement_function_definition(ASTNode::ptr node);
-    FunctionDeclaration::ptr ast_to_file_statement_function_declaration(ASTNode::ptr node);
-    GlobalVariableDefinition::ptr ast_to_file_global_definition(ASTNode::ptr node);
-    Type::ptr ast_to_type(ASTNode::ptr node);
-
     std::map<std::string, Type::ptr> types;
     std::list<FunctionDefinition::ptr> function_definitions;
     std::list<FunctionDeclaration::ptr> function_declarations;
@@ -193,6 +203,20 @@ namespace JSemantics {
 
   int file_statement_process(TranslationUnit::ptr translation_unit, ASTNode::ptr ast_statement_list);
   int process_type_definition(TranslationUnit::ptr translation_unit, ASTNode::ptr ast_statement_list);
-    
+
+
+  Type::ptr ast_to_type(TranslationUnit::ptr translation_unit, ASTNode::ptr node);
+  Statement::ptr ast_to_statement(TranslationUnit::ptr translation_unit, ASTNode::ptr node);
+  FunctionDefinition::ptr ast_to_file_statement_function_definition(TranslationUnit::ptr translation_unit, ASTNode::ptr node);
+  ScopeBody::ptr ast_to_scope_body(TranslationUnit::ptr translation_unit, ASTNode::ptr node);
+  
+  FunctionDeclaration::ptr ast_to_file_statement_function_declaration(TranslationUnit::ptr translation_unit, ASTNode::ptr node);
+  FunctionDeclarationArg::ptr ast_to_function_declaration_arg(TranslationUnit::ptr translation_unit, ASTNode::ptr node);
+  
+
+  GlobalVariableDefinition::ptr ast_to_file_global_definition(TranslationUnit::ptr translation_unit, ASTNode::ptr node);
+  
+  std::list<ASTNode::ptr> get_children_by_type(ASTNode::ptr node, std::string type);
+  
   TranslationUnit::ptr from_ast(ASTNode::ptr ast);
 };

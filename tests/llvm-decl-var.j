@@ -5,7 +5,7 @@ namespace std {
     typedef f64 float;
 };
 
-std::float before_ns(f64 x)
+std::float before_ns(f64 x, std::float b, std::float d)
 {
 }
 
@@ -17,7 +17,7 @@ float doit(f64 a, i32 b)
         return a;
 }
 
-float voidfunction(u32 v)
+void voidfunction(u32 v)
 {
 
 }

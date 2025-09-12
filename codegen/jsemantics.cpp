@@ -43,13 +43,13 @@ Type::get_size_bytes()
 }
 
 Type::ptr
-TranslationUnit::ast_to_type(ASTNode::ptr node)
+JSemantics::ast_to_type(TranslationUnit::ptr translation_unit, ASTNode::ptr node)
 {
   // TODO: We really should be looking this up
   // from the translation unit and returning what
   // we found there.
   auto name = node->children.at(1)->children.at(0)->fully_qualified_name;
-  Type::ptr ret = types[name];
+  Type::ptr ret = translation_unit->types[name];
   return ret;
 }
             
@@ -59,10 +59,25 @@ FunctionDeclaration::visit(Visitor<FunctionDeclaration> &visitor)
   visitor.visit(*this);
 }
 FunctionDeclaration::ptr
-TranslationUnit::ast_to_file_statement_function_declaration(ASTNode::ptr node)
+JSemantics::ast_to_file_statement_function_declaration(TranslationUnit::ptr translation_unit, ASTNode::ptr node)
 {
   FunctionDeclaration::ptr ret = std::make_shared<FunctionDeclaration>();
   
+  return ret;
+}
+
+FunctionDeclarationArg::FunctionDeclarationArg()
+{}
+FunctionDeclarationArg::~FunctionDeclarationArg()
+{}
+FunctionDeclarationArg::ptr
+JSemantics::ast_to_function_declaration_arg(TranslationUnit::ptr translation_unit, ASTNode::ptr node)
+{
+  FunctionDeclarationArg::ptr ret = std::make_shared<FunctionDeclarationArg>();
+
+  ret->type = ast_to_type(translation_unit, node->children.at(0));
+  ret->name = node->children.at(1)->value;
+  printf("Argument parsed %s\n", ret->name.c_str());
   return ret;
 }
 
@@ -76,15 +91,57 @@ FunctionDefinition::visit(Visitor<FunctionDefinition> &visitor)
   visitor.visit(*this);
 }
 FunctionDefinition::ptr
-TranslationUnit::ast_to_file_statement_function_definition(ASTNode::ptr node)
+JSemantics::ast_to_file_statement_function_definition(TranslationUnit::ptr translation_unit, ASTNode::ptr node)
 {
   FunctionDefinition::ptr ret = std::make_shared<FunctionDefinition>();
   ret->function_declaration = std::make_shared<FunctionDeclaration>();
   ret->function_declaration->name = node->children.at(3)->value;
-  ret->function_declaration->return_type = ast_to_type(node->children.at(2))->name;
-  node->children.at(5);
-  ret->function_declaration->arg_types.push_back(std::make_pair("::f64", "first"));
-  ret->function_declaration->arg_types.push_back(std::make_pair("::i32", "second"));
+  ret->function_declaration->return_type = ast_to_type(translation_unit, node->children.at(2));
+  
+  std::list<ASTNode::ptr> args = get_children_by_type(node->children.at(5), "function_definition_arg");
+  for (ASTNode::ptr arg : args) {
+    FunctionDeclarationArg::ptr farg = ast_to_function_declaration_arg(translation_unit, arg);
+    ret->function_declaration->arg_types.push_back(farg);
+  }
+
+  ret->scope_body = ast_to_scope_body(translation_unit, node->children.at(7));
+  
+  return ret;
+}
+Statement::Statement()
+{}
+Statement::~Statement()
+{}
+
+StatementVariableDeclaration::StatementVariableDeclaration()
+{}
+StatementVariableDeclaration::~StatementVariableDeclaration()
+{}
+
+Statement::ptr
+JSemantics::ast_to_statement(TranslationUnit::ptr translation_unit, ASTNode::ptr node)
+{
+  StatementVariableDeclaration::ptr ret = std::make_shared<StatementVariableDeclaration>();
+  return ret;
+}
+
+ScopeBody::ScopeBody()
+{}
+ScopeBody::~ScopeBody()
+{}
+
+ScopeBody::ptr
+JSemantics::ast_to_scope_body(TranslationUnit::ptr translation_unit, ASTNode::ptr node)
+{
+  ScopeBody::ptr ret = std::make_shared<ScopeBody>();
+
+  ASTNode::ptr statement_list_node = node->children.at(2);
+  
+  for (ASTNode::ptr statement_node : statement_list_node->children) {
+    Statement::ptr statement = ast_to_statement(translation_unit, statement_node);
+    ret->statements.push_back(statement);
+  }
+
   return ret;
 }
 
@@ -99,7 +156,7 @@ GlobalVariableDefinition::visit(Visitor<GlobalVariableDefinition> &visitor)
 }
 
 GlobalVariableDefinition::ptr
-TranslationUnit::ast_to_file_global_definition(ASTNode::ptr node)
+JSemantics::ast_to_file_global_definition(TranslationUnit::ptr translation_unit, ASTNode::ptr node)
 {
   GlobalVariableDefinition::ptr ret = std::make_shared<GlobalVariableDefinition>();
   ret->name = node->children.at(3)->value;
@@ -141,10 +198,22 @@ JSyntaxListener::eventFunctionDefinition(ASTNode::ptr node)
 
 }
 
+std::list<ASTNode::ptr>
+JSemantics::get_children_by_type(ASTNode::ptr node, std::string type)
+{
+  std::list<ASTNode::ptr> found;
+  for (ASTNode::ptr child : node->children) {
+    if (child->typestr == type) {
+      found.push_back(child);
+    }
+  }
+  return found;
+}
+
 int
 JSemantics::process_type_definition(TranslationUnit::ptr translation_unit, ASTNode::ptr ast_typedef)
 {
-  Type::ptr type = translation_unit->ast_to_type(ast_typedef->children.at(2));
+  Type::ptr type = ast_to_type(translation_unit, ast_typedef->children.at(2));
   std::string ns = ast_typedef->children.at(3)->fully_qualified_name;
   std::string name = ns + std::string("::") + ast_typedef->children.at(3)->value;
   translation_unit->types[name] = type;
@@ -157,11 +226,11 @@ JSemantics::file_statement_process(TranslationUnit::ptr translation_unit, ASTNod
   for (auto statement : ast_statement_list->children) {
     fprintf(stderr, "Statement %s\n", statement->typestr.c_str());
     if (statement->typestr == std::string("file_statement_function_definition")) {
-      FunctionDefinition::ptr file_statement_function_definition = translation_unit->ast_to_file_statement_function_definition(statement);
+      FunctionDefinition::ptr file_statement_function_definition = ast_to_file_statement_function_definition(translation_unit, statement);
       translation_unit->function_definitions.push_back(file_statement_function_definition);
     }
     else if (statement->typestr == std::string("file_statement_function_declaration")) {
-      FunctionDeclaration::ptr file_statement_function_declaration = translation_unit->ast_to_file_statement_function_declaration(statement);
+      FunctionDeclaration::ptr file_statement_function_declaration = ast_to_file_statement_function_declaration(translation_unit, statement);
       translation_unit->function_declarations.push_back(file_statement_function_declaration);
     }
     else if (statement->typestr == std::string("class_definition")) {
@@ -177,9 +246,12 @@ JSemantics::file_statement_process(TranslationUnit::ptr translation_unit, ASTNod
       if (rc) return rc;
     }
     else if (statement->typestr == std::string("file_statement_using")) {
+      // There are no semantics associated with this node,
+      // this is used only for name and type resolution
+      // at the syntax and lexical layer.
     }
     else if (statement->typestr == std::string("file_global_definition")) {
-      GlobalVariableDefinition::ptr file_global_definition = translation_unit->ast_to_file_global_definition(statement);
+      GlobalVariableDefinition::ptr file_global_definition = ast_to_file_global_definition(translation_unit, statement);
       translation_unit->globals.push_back(file_global_definition);
     }
     else {
