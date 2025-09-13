@@ -196,35 +196,334 @@ FileStatementFunctionDeclaration::get_arguments() const
 
 
 ///////////////////////////////////////////////////
-StatementBlock::StatementBlock()
-  : SyntaxNode("statement_block", this)
+StatementVariableDeclaration::StatementVariableDeclaration(
+                                   std::unique_ptr<TypeSpecifier> _type_specifier,
+                                   Terminal::owned_ptr _identifier_token,
+                                   std::unique_ptr<ArrayLength> _array_length,
+                                   std::unique_ptr<GlobalInitializer> _global_initializer,
+                                   Terminal::owned_ptr _semicolon_token
+)
+  : SyntaxNode("statement_variable_declaration", this)
+  , type_specifier(std::move(_type_specifier))
+  , identifier_token(std::move(_identifier_token))
+  , array_length(std::move(_array_length))
+  , global_initializer(std::move(_global_initializer))
+  , semicolon_token(std::move(_semicolon_token))
+{
+  add_child(type_specifier.get());
+  add_child(identifier_token.get());
+  add_child(array_length.get());
+  add_child(global_initializer.get());
+  add_child(semicolon_token.get());
+}
+StatementVariableDeclaration::~StatementVariableDeclaration()
 {}
+const TypeSpecifier &
+StatementVariableDeclaration::get_type_specifier() const
+{ return *type_specifier;}
+const std::string &
+StatementVariableDeclaration::get_name() const
+{ return identifier_token->value; }
+const ArrayLength &
+StatementVariableDeclaration::get_array_length() const
+{ return *array_length; }
+const GlobalInitializer &
+StatementVariableDeclaration::get_initializer() const
+{ return *global_initializer;}
+///////////////////////////////////////////////////
+StatementBlock::StatementBlock(
+                     UnsafeModifier::owned_ptr _unsafe_modifier,
+                     ScopeBody::owned_ptr _scope_body
+                     )
+  : SyntaxNode("statement_block", this)
+  , unsafe_modifier(std::move(_unsafe_modifier))
+  , scope_body(std::move(_scope_body))
+{
+  add_child(unsafe_modifier.get());
+  add_child(scope_body.get());
+}
 StatementBlock::~StatementBlock()
 {}
+const UnsafeModifier &
+StatementBlock::get_unsafe_modifier() const
+{ return *unsafe_modifier; }
+const ScopeBody &
+StatementBlock::get_scope_body() const
+{ return *scope_body; }
 ///////////////////////////////////////////////////
-StatementIfElse::StatementIfElse()
-  : SyntaxNode("statement_ifelse", this)
+StatementExpression::StatementExpression(
+                          std::unique_ptr<Expression> _expression,
+                          Terminal::owned_ptr _semicolon_token
+                          )
+  : SyntaxNode("statement_expression", this)
+  , expression(std::move(_expression))
+  , semicolon_token(std::move(_semicolon_token))
+{
+  add_child(expression.get());
+  add_child(semicolon_token.get());
+}
+StatementExpression::~StatementExpression()
 {}
+const Expression &
+StatementExpression::get_expression() const
+{ return *expression; }
+///////////////////////////////////////////////////
+StatementGoto::StatementGoto(
+                    Terminal::owned_ptr _goto_token,
+                    Terminal::owned_ptr _identifier_token,
+                    Terminal::owned_ptr _semicolon_token
+                    )
+  : SyntaxNode("statement_goto", this)
+  , goto_token(std::move(_goto_token))
+  , identifier_token(std::move(_identifier_token))
+  , semicolon_token(std::move(_semicolon_token))
+{
+  add_child(goto_token.get());
+  add_child(identifier_token.get());
+  add_child(semicolon_token.get());
+}
+StatementGoto::~StatementGoto()
+{}
+const std::string &
+StatementGoto::get_label() const
+{ return identifier_token->value; }
+///////////////////////////////////////////////////
+StatementIfElse::StatementIfElse(
+                      Terminal::owned_ptr _if_token,
+                      Terminal::owned_ptr _paren_l_token,
+                      std::unique_ptr<Expression> _expression,
+                      Terminal::owned_ptr _paren_r_token,
+                      ScopeBody::owned_ptr _if_scope_body,
+                      Terminal::owned_ptr _else_token,
+                      ScopeBody::owned_ptr _else_scope_body
+                                 )                                 
+  : SyntaxNode("statement_ifelse", this)
+  , m_has_else(true)
+  , if_token(std::move(_if_token))
+  , paren_l_token(std::move(_paren_l_token))
+  , expression(std::move(_expression))
+  , paren_r_token(std::move(_paren_r_token))
+  , if_scope_body(std::move(_if_scope_body))
+  , else_token(std::move(_else_token))
+  , else_scope_body(std::move(_else_scope_body))
+{
+  add_child(if_token.get());
+  add_child(paren_l_token.get());
+  add_child(expression.get());
+  add_child(paren_r_token.get());
+  add_child(if_scope_body.get());
+  add_child(else_token.get());
+  add_child(else_scope_body.get());
+}
+StatementIfElse::StatementIfElse(
+                      Terminal::owned_ptr _if_token,
+                      Terminal::owned_ptr _paren_l_token,
+                      std::unique_ptr<Expression> _expression,
+                      Terminal::owned_ptr _paren_r_token,
+                      ScopeBody::owned_ptr _if_scope_body
+                                 )
+  : SyntaxNode("statement_ifelse", this)
+  , m_has_else(false)
+  , if_token(std::move(_if_token))
+  , paren_l_token(std::move(_paren_l_token))
+  , expression(std::move(_expression))
+  , paren_r_token(std::move(_paren_r_token))
+  , if_scope_body(std::move(_if_scope_body))
+  , else_token(nullptr)
+  , else_scope_body(nullptr)
+{
+  add_child(if_token.get());
+  add_child(paren_l_token.get());
+  add_child(expression.get());
+  add_child(paren_r_token.get());
+  add_child(if_scope_body.get());
+}  
 StatementIfElse::~StatementIfElse()
 {}
+bool
+StatementIfElse::has_else() const
+{ return m_has_else; }
+const Expression &
+StatementIfElse::get_expression() const
+{ return *expression; }
+const ScopeBody &
+StatementIfElse::get_if_scope_body() const
+{ return *if_scope_body; }
+const ScopeBody &
+StatementIfElse::get_else_scope_body() const
+{ return *else_scope_body; }
+
 ///////////////////////////////////////////////////
-StatementWhile::StatementWhile()
+StatementWhile::StatementWhile(
+                     Terminal::owned_ptr _while_token,
+                     Terminal::owned_ptr _paren_l_token,
+                     std::unique_ptr<Expression> _expression,
+                     Terminal::owned_ptr _paren_r_token,
+                     std::unique_ptr<ScopeBody> _scope_body
+                     )
   : SyntaxNode("statement_while", this)
-{}
+  , while_token(std::move(_while_token))
+  , paren_l_token(std::move(_paren_l_token))
+  , expression(std::move(_expression))
+  , paren_r_token(std::move(_paren_r_token))
+  , scope_body(std::move(_scope_body))
+{
+  add_child(while_token.get());
+  add_child(paren_l_token.get());
+  add_child(expression.get());
+  add_child(paren_r_token.get());
+  add_child(scope_body.get());
+}
 StatementWhile::~StatementWhile()
 {}
+const Expression &
+StatementWhile::get_expression() const
+{ return *expression; }
+const ScopeBody &
+StatementWhile::get_scope_body() const
+{ return *scope_body; }
 ///////////////////////////////////////////////////
-StatementFor::StatementFor()
+StatementFor::StatementFor(
+                   Terminal::owned_ptr _for_token,
+                   Terminal::owned_ptr _paren_l_token,
+                   std::unique_ptr<Expression> _expression_initial,
+                   Terminal::owned_ptr _semicolon_initial,
+                   std::unique_ptr<Expression> _expression_termination,
+                   Terminal::owned_ptr _semicolon_termination,
+                   std::unique_ptr<Expression> _expression_increment,
+                   Terminal::owned_ptr _paren_r_token,
+                   std::unique_ptr<ScopeBody> _scope_body
+  )
   : SyntaxNode("statement_for", this)
-{}
+  , for_token(std::move(_for_token))
+  , paren_l_token(std::move(_paren_l_token))
+  , expression_initial(std::move(_expression_initial))
+  , semicolon_initial(std::move(_semicolon_initial))
+  , expression_termination(std::move(_expression_termination))
+  , semicolon_termination(std::move(_semicolon_termination))
+  , expression_increment(std::move(_expression_increment))
+  , paren_r_token(std::move(_paren_r_token))
+  , scope_body(std::move(_scope_body))
+{
+  add_child(for_token.get());
+  add_child(paren_l_token.get());
+  add_child(expression_initial.get());
+  add_child(semicolon_initial.get());
+  add_child(expression_termination.get());
+  add_child(semicolon_termination.get());
+  add_child(expression_increment.get());
+  add_child(paren_r_token.get());
+  add_child(scope_body.get());
+}
 StatementFor::~StatementFor()
 {}
+const Expression &
+StatementFor::get_expression_initial() const
+{ return *expression_initial; }
+const Expression &
+StatementFor::get_expression_termination() const
+{ return *expression_termination; }
+const Expression &
+StatementFor::get_expression_increment() const
+{ return *expression_increment; }
+const ScopeBody &
+StatementFor::get_scope_body() const
+{ return *scope_body; }
 ///////////////////////////////////////////////////
-StatementSwitch::StatementSwitch()
-  : SyntaxNode("statement_switch", this)
+StatementSwitchBlock::StatementSwitchBlock(
+                           Terminal::owned_ptr _default_token,
+                           Terminal::owned_ptr _colon_token,
+                           std::unique_ptr<ScopeBody> _scope_body
+                           )
+  : SyntaxNode("statement_switch_block", this)
+  , m_is_default(true)
+  , default_token(std::move(_default_token))
+  , colon_token(std::move(_colon_token))
+  , scope_body(std::move(_scope_body))
+{
+  add_child(default_token.get());
+  add_child(colon_token.get());
+  add_child(scope_body.get());
+}
+StatementSwitchBlock::StatementSwitchBlock(
+                           Terminal::owned_ptr _case_token,
+                           std::unique_ptr<Expression> _expression,
+                           Terminal::owned_ptr _colon_token,
+                           std::unique_ptr<ScopeBody> _scope_body
+                           )
+  : SyntaxNode("statement_switch_block", this)
+  , m_is_default(false)
+  , case_token(std::move(_case_token))
+  , expression(std::move(_expression))
+  , colon_token(std::move(_colon_token))
+  , scope_body(std::move(_scope_body))
+{
+  add_child(case_token.get());
+  add_child(expression.get());
+  add_child(colon_token.get());
+  add_child(scope_body.get());
+}
+StatementSwitchBlock::~StatementSwitchBlock()
 {}
+bool
+StatementSwitchBlock::is_default() const
+{ return m_is_default; }
+const Expression &
+StatementSwitchBlock::get_expression()
+{ return *expression; }
+const ScopeBody &
+StatementSwitchBlock::get_scope_body()
+{ return *scope_body; }
+
+///////////////////////////////////////////////////
+
+StatementSwitchContent::StatementSwitchContent()
+  : SyntaxNode("statement_switch_content", this)
+{}
+StatementSwitchContent::~StatementSwitchContent()
+{}
+const std::vector<StatementSwitchBlock::owned_ptr> &
+StatementSwitchContent::get_blocks() const
+{ return blocks; }
+void
+StatementSwitchContent::add_block(StatementSwitchBlock::owned_ptr _block)
+{ blocks.push_back(std::move(_block)); }
+///////////////////////////////////////////////////
+StatementSwitch::StatementSwitch(
+                      Terminal::owned_ptr _switch_token,
+                      Terminal::owned_ptr _paren_l_token,
+                      std::unique_ptr<Expression> _expression,
+                      Terminal::owned_ptr _paren_r_token,
+                      Terminal::owned_ptr _brace_l_token,
+                      StatementSwitchContent::owned_ptr _switch_content,
+                      Terminal::owned_ptr _brace_r_token
+                      )
+  : SyntaxNode("statement_switch", this)
+  , switch_token(std::move(_switch_token))
+  , paren_l_token(std::move(_paren_l_token))
+  , expression(std::move(_expression))
+  , paren_r_token(std::move(_paren_r_token))
+  , brace_l_token(std::move(_brace_l_token))
+  , switch_content(std::move(_switch_content))
+  , brace_r_token(std::move(_brace_r_token))
+{
+  add_child(switch_token.get());
+  add_child(expression.get());
+  add_child(paren_l_token.get());
+  add_child(expression.get());
+  add_child(paren_r_token.get());
+  add_child(brace_l_token.get());
+  add_child(switch_content.get());
+  add_child(brace_r_token.get());
+}
 StatementSwitch::~StatementSwitch()
 {}
+const Expression &
+StatementSwitch::get_expression() const
+{ return *expression; }
+const StatementSwitchContent &
+StatementSwitch::get_switch_content() const
+{ return *switch_content; }
 ///////////////////////////////////////////////////
 StatementReturn::StatementReturn()
   : SyntaxNode("statement_return", this)
@@ -238,12 +537,6 @@ StatementContinue::StatementContinue()
 StatementContinue::~StatementContinue()
 {}
 ///////////////////////////////////////////////////
-StatementGoto::StatementGoto()
-  : SyntaxNode("statement_goto", this)
-{}
-StatementGoto::~StatementGoto()
-{}
-///////////////////////////////////////////////////
 StatementBreak::StatementBreak()
   : SyntaxNode("StatementBreak();", this)
 {}
@@ -254,18 +547,6 @@ StatementLabel::StatementLabel()
   : SyntaxNode("statement_label", this)
 {}
 StatementLabel::~StatementLabel()
-{}
-///////////////////////////////////////////////////
-StatementExpression::StatementExpression()
-  : SyntaxNode("statement_expression", this)
-{}
-StatementExpression::~StatementExpression()
-{}
-///////////////////////////////////////////////////
-StatementVariableDeclaration::StatementVariableDeclaration()
-  : SyntaxNode("StatementVariableDeclaration();", this)
-{}
-StatementVariableDeclaration::~StatementVariableDeclaration()
 {}
 ///////////////////////////////////////////////////
 Statement::Statement(StatementType _statement)
@@ -620,6 +901,14 @@ EnumDefinition::enum_name() const
 const EnumDefinitionValueList &
 EnumDefinition::get_value_list() const
 { return *enum_value_list; }
+///////////////////////////////////////////////////
+Expression::Expression()
+  : SyntaxNode("expression", this)
+{}
+Expression::~Expression()
+{}
+///////////////////////////////////////////////////
+
 ///////////////////////////////////////////////////
 ExpressionPrimary::ExpressionPrimary()
   : SyntaxNode("expression_primary", this)

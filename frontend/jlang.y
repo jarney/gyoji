@@ -187,15 +187,15 @@
 %nterm <JLang::frontend::ASTNode::ptr> statement_variable_declaration;
 %nterm <JLang::frontend::ASTNode::ptr> statement_expression;
 %nterm <JLang::frontend::ASTNode::ptr> statement_block;
-%nterm <JLang::frontend::ASTNode::ptr> statement_return;
-%nterm <JLang::frontend::ASTNode::ptr> statement_break;
-%nterm <JLang::frontend::ASTNode::ptr> statement_continue;
 %nterm <JLang::frontend::ASTNode::ptr> statement_goto;
-%nterm <JLang::frontend::ASTNode::ptr> statement_label;
 %nterm <JLang::frontend::ASTNode::ptr> statement_ifelse;
 %nterm <JLang::frontend::ASTNode::ptr> statement_while;
 %nterm <JLang::frontend::ASTNode::ptr> statement_for;
 %nterm <JLang::frontend::ASTNode::ptr> statement_switch;
+%nterm <JLang::frontend::ASTNode::ptr> statement_return;
+%nterm <JLang::frontend::ASTNode::ptr> statement_continue;
+%nterm <JLang::frontend::ASTNode::ptr> statement_break;
+%nterm <JLang::frontend::ASTNode::ptr> statement_label;
 %nterm <JLang::frontend::ASTNode::ptr> statement_switch_block;
 %nterm <JLang::frontend::ASTNode::ptr> statement_switch_content;
 %nterm <JLang::frontend::ASTNode::ptr> opt_statement_switch_content;
@@ -879,7 +879,19 @@ statement_list
         ;
 
 statement
-        : statement_block {
+        : statement_variable_declaration {
+                $$ = $1;
+                PRINT_NONTERMINALS($$);
+        }
+        | statement_expression {
+                $$ = $1;
+                PRINT_NONTERMINALS($$);
+        }
+        | statement_block {
+                $$ = $1;
+                PRINT_NONTERMINALS($$);
+        }
+        | statement_goto {
                 $$ = $1;
                 PRINT_NONTERMINALS($$);
         }
@@ -907,23 +919,11 @@ statement
                 $$ = $1;
                 PRINT_NONTERMINALS($$);
         }
-        | statement_goto {
-                $$ = $1;
-                PRINT_NONTERMINALS($$);
-        }
         | statement_break {
                 $$ = $1;
                 PRINT_NONTERMINALS($$);
         }
         | statement_label {
-                $$ = $1;
-                PRINT_NONTERMINALS($$);
-        }
-        | statement_expression {
-                $$ = $1;
-                PRINT_NONTERMINALS($$);
-        }
-        | statement_variable_declaration {
                 $$ = $1;
                 PRINT_NONTERMINALS($$);
         }

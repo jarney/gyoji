@@ -37,19 +37,22 @@ namespace JLang::frontend {
   class EnumDefinition;
 
   class ExpressionPrimary;
+  class Expression;
 
+      class StatementVariableDeclaration;
       class StatementBlock;
+      class StatementExpression;
+      class StatementGoto;
       class StatementIfElse;
       class StatementWhile;
       class StatementFor;
+          class StatementSwitchBlock;
+        class StatementSwitchContent;
       class StatementSwitch;
       class StatementReturn;
       class StatementContinue;
-      class StatementGoto;
       class StatementBreak;
       class StatementLabel;
-      class StatementExpression;
-      class StatementVariableDeclaration;
     class Statement;
   class StatementList;
     
@@ -101,20 +104,23 @@ namespace JLang::frontend {
           EnumDefinitionValueList*,
         EnumDefinition*,
       
-        ExpressionPrimary *,
+        ExpressionPrimary*,
+        Expression*,
 
+            StatementVariableDeclaration*,
             StatementBlock*,
+            StatementExpression*,
+            StatementGoto*,
             StatementIfElse*,
             StatementWhile*,
             StatementFor*,
+                StatementSwitchBlock*,
+              StatementSwitchContent*,
             StatementSwitch*,
             StatementReturn*,
             StatementContinue*,
-            StatementGoto*,
             StatementBreak*,
             StatementLabel*,
-            StatementExpression*,
-            StatementVariableDeclaration*,
           Statement*,
         StatementList*,
       
@@ -346,35 +352,211 @@ namespace JLang::frontend {
     };
 
 
+    class StatementVariableDeclaration : public SyntaxNode, public PtrProtocol<StatementVariableDeclaration> {
+    public:
+      StatementVariableDeclaration(
+                                   std::unique_ptr<TypeSpecifier> _type_specifier,
+                                   Terminal::owned_ptr _identifier_token,
+                                   std::unique_ptr<ArrayLength> _array_length,
+                                   std::unique_ptr<GlobalInitializer> _global_initializer,
+                                   Terminal::owned_ptr _semicolon_token
+                                   );
+      ~StatementVariableDeclaration();
+      const TypeSpecifier & get_type_specifier() const;
+      const std::string & get_name() const;
+      const ArrayLength & get_array_length() const;
+      const GlobalInitializer & get_initializer() const;
+    private:
+      std::unique_ptr<TypeSpecifier> type_specifier;
+      Terminal::owned_ptr identifier_token;
+      std::unique_ptr<ArrayLength> array_length;
+      std::unique_ptr<GlobalInitializer> global_initializer;
+      Terminal::owned_ptr semicolon_token;
+    private:
+    };
     class StatementBlock : public SyntaxNode, public PtrProtocol<StatementBlock> {
     public:
-      StatementBlock();
+      StatementBlock(
+                     UnsafeModifier::owned_ptr _unsafe_modifier,
+                     std::unique_ptr<ScopeBody> _scope_body
+                     );
       ~StatementBlock();
+      const UnsafeModifier & get_unsafe_modifier() const;
+      const ScopeBody & get_scope_body() const;
     private:
+      UnsafeModifier::owned_ptr unsafe_modifier;
+      std::unique_ptr<ScopeBody> scope_body;
+    private:
+    };
+    class StatementExpression : public SyntaxNode, public PtrProtocol<StatementExpression> {
+    public:
+      StatementExpression(
+                          std::unique_ptr<Expression> _expression,
+                          Terminal::owned_ptr _semicolon_token
+                          );
+      ~StatementExpression();
+      const Expression & get_expression() const;
+    private:
+      std::unique_ptr<Expression> expression;
+      Terminal::owned_ptr semicolon_token;
+    };
+    class StatementGoto : public SyntaxNode, public PtrProtocol<StatementGoto> {
+    public:
+      StatementGoto(
+                    Terminal::owned_ptr _goto_token,
+                    Terminal::owned_ptr _identifier_token,
+                    Terminal::owned_ptr _semicolon_token
+                    );
+      ~StatementGoto();
+      const std::string & get_label() const;
+    private:
+      Terminal::owned_ptr goto_token;
+      Terminal::owned_ptr identifier_token;
+      Terminal::owned_ptr semicolon_token;
     };
     class StatementIfElse : public SyntaxNode, public PtrProtocol<StatementIfElse> {
     public:
-      StatementIfElse();
+      StatementIfElse(
+                      Terminal::owned_ptr _if_token,
+                      Terminal::owned_ptr _paren_l_token,
+                      std::unique_ptr<Expression> _expression,
+                      Terminal::owned_ptr _paren_r_token,
+                      std::unique_ptr<ScopeBody> _if_scope_body,
+                      Terminal::owned_ptr _else_token,
+                      std::unique_ptr<ScopeBody> _else_scope_body
+                      );
+      StatementIfElse(
+                      Terminal::owned_ptr _if_token,
+                      Terminal::owned_ptr _paren_l_token,
+                      std::unique_ptr<Expression> _expression,
+                      Terminal::owned_ptr _paren_r_token,
+                      std::unique_ptr<ScopeBody> _if_scope_body
+                      );
       ~StatementIfElse();
+      const Expression & get_expression() const;
+      const ScopeBody & get_if_scope_body() const;
+      const ScopeBody & get_else_scope_body() const;
+      bool has_else() const;
     private:
+      bool m_has_else;
+      Terminal::owned_ptr if_token;
+      Terminal::owned_ptr paren_l_token;
+      std::unique_ptr<Expression> expression;
+      Terminal::owned_ptr paren_r_token;
+      std::unique_ptr<ScopeBody> if_scope_body;
+      Terminal::owned_ptr else_token;
+      std::unique_ptr<ScopeBody> else_scope_body;
     };
     class StatementWhile : public SyntaxNode, public PtrProtocol<StatementWhile> {
     public:
-      StatementWhile();
-      ~StatementWhile();
+      StatementWhile(
+                     Terminal::owned_ptr _while_token,
+                     Terminal::owned_ptr _paren_l_token,
+                     std::unique_ptr<Expression> _expression,
+                     Terminal::owned_ptr _paren_r_token,
+                     std::unique_ptr<ScopeBody> _scope_body
+                     );
+     ~StatementWhile();
+      const Expression & get_expression() const;
+      const ScopeBody & get_scope_body() const;
     private:
+      Terminal::owned_ptr while_token;
+      Terminal::owned_ptr paren_l_token;
+      std::unique_ptr<Expression> expression;
+      Terminal::owned_ptr paren_r_token;
+      std::unique_ptr<ScopeBody> scope_body;
     };
     class StatementFor : public SyntaxNode, public PtrProtocol<StatementFor> {
     public:
-      StatementFor();
+      StatementFor(
+                   Terminal::owned_ptr _for_token,
+                   Terminal::owned_ptr _paren_l_token,
+                   std::unique_ptr<Expression> _expression_initial,
+                   Terminal::owned_ptr _semicolon_initial,
+                   std::unique_ptr<Expression> _expression_termination,
+                   Terminal::owned_ptr _semicolon_termination,
+                   std::unique_ptr<Expression> _expression_increment,
+                   Terminal::owned_ptr _paren_r_token,
+                   std::unique_ptr<ScopeBody> _scope_body
+                   );
       ~StatementFor();
+      const Expression & get_expression_initial() const;
+      const Expression & get_expression_termination() const;
+      const Expression & get_expression_increment() const;
+      const ScopeBody & get_scope_body() const;
     private:
+      Terminal::owned_ptr for_token;
+      Terminal::owned_ptr paren_l_token;
+      std::unique_ptr<Expression> expression_initial;
+      Terminal::owned_ptr semicolon_initial;
+      std::unique_ptr<Expression> expression_termination;
+      Terminal::owned_ptr semicolon_termination;
+      std::unique_ptr<Expression> expression_increment;
+      Terminal::owned_ptr paren_r_token;
+      std::unique_ptr<ScopeBody> scope_body;
     };
+
+    class StatementSwitchBlock : public SyntaxNode, public PtrProtocol<StatementSwitchBlock> {
+    public:
+      StatementSwitchBlock(
+                           Terminal::owned_ptr _default_token,
+                           Terminal::owned_ptr _colon_token,
+                           std::unique_ptr<ScopeBody> _scope_body
+                           );
+      StatementSwitchBlock(
+                           Terminal::owned_ptr _case_token,
+                           std::unique_ptr<Expression> _expression,
+                           Terminal::owned_ptr _colon_token,
+                           std::unique_ptr<ScopeBody> _scope_body
+                           );
+      ~StatementSwitchBlock();
+      bool is_default() const;
+      const Expression & get_expression();
+      const ScopeBody & get_scope_body();
+    private:
+      bool m_is_default;
+      // For the default case
+      Terminal::owned_ptr default_token;
+      // For the expression case
+      Terminal::owned_ptr case_token;
+      std::unique_ptr<Expression> expression;
+      // Common:
+      Terminal::owned_ptr colon_token;
+      std::unique_ptr<ScopeBody> scope_body;
+    };
+    
+    class StatementSwitchContent : public SyntaxNode, public PtrProtocol<StatementSwitchContent> {
+    public:
+      StatementSwitchContent();
+      ~StatementSwitchContent();
+      const std::vector<StatementSwitchBlock::owned_ptr> & get_blocks() const;
+      void add_block(StatementSwitchBlock::owned_ptr _block);
+    private:
+      std::vector<StatementSwitchBlock::owned_ptr> blocks;
+    };
+    
     class StatementSwitch : public SyntaxNode, public PtrProtocol<StatementSwitch> {
     public:
-      StatementSwitch();
+      StatementSwitch(
+                      Terminal::owned_ptr _switch_token,
+                      Terminal::owned_ptr _paren_l_token,
+                      std::unique_ptr<Expression> expression,
+                      Terminal::owned_ptr _paren_r_token,
+                      Terminal::owned_ptr _brace_l_token,
+                      StatementSwitchContent::owned_ptr _switch_content,
+                      Terminal::owned_ptr _brace_r_token
+                      );
       ~StatementSwitch();
+      const Expression & get_expression() const;
+      const StatementSwitchContent & get_switch_content() const;
     private:
+      Terminal::owned_ptr switch_token;
+      Terminal::owned_ptr paren_l_token;
+      std::unique_ptr<Expression> expression;
+      Terminal::owned_ptr paren_r_token;
+      Terminal::owned_ptr brace_l_token;
+      StatementSwitchContent::owned_ptr switch_content;
+      Terminal::owned_ptr brace_r_token;
     };
     class StatementReturn : public SyntaxNode, public PtrProtocol<StatementReturn> {
     public:
@@ -388,12 +570,6 @@ namespace JLang::frontend {
       ~StatementContinue();
     private:
     };
-    class StatementGoto : public SyntaxNode, public PtrProtocol<StatementGoto> {
-    public:
-      StatementGoto();
-      ~StatementGoto();
-    private:
-    };
     class StatementBreak : public SyntaxNode, public PtrProtocol<StatementBreak> {
     public:
       StatementBreak();
@@ -404,18 +580,6 @@ namespace JLang::frontend {
     public:
       StatementLabel();
       ~StatementLabel();
-    private:
-    };
-    class StatementExpression : public SyntaxNode, public PtrProtocol<StatementExpression> {
-    public:
-      StatementExpression();
-      ~StatementExpression();
-    private:
-    };
-    class StatementVariableDeclaration : public SyntaxNode, public PtrProtocol<StatementVariableDeclaration> {
-    public:
-      StatementVariableDeclaration();
-      ~StatementVariableDeclaration();
     private:
     };
     
@@ -651,6 +815,12 @@ namespace JLang::frontend {
     public:
       ExpressionPrimary();
       ~ExpressionPrimary();
+    };
+    
+    class Expression : public SyntaxNode, public PtrProtocol<Expression> {
+    public:
+      Expression();
+      ~Expression();
     };
     
     class GlobalInitializerExpressionPrimary : public SyntaxNode, public PtrProtocol<GlobalInitializerExpressionPrimary> {
