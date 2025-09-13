@@ -21,13 +21,22 @@ namespace JLang::frontend {
 
   class AccessModifier;
   class UnsafeModifier;
+    class TypeName;
   class TypeSpecifier;
     class FunctionDefinitionArg;
   class FunctionDefinitionArgList;
 
     class ClassDeclStart;
     class ClassArgumentList;
-    class ClassDeclarationMemberList;
+        class ClassMemberDeclarationVariable;
+        class ClassMemberDeclarationMethod;
+        class ClassMemberDeclarationConstructor;
+        class ClassMemberDeclarationDestructor;
+        class ClassMemberDeclarationClass;
+        class ClassMemberDeclarationEnum;
+        class ClassMemberDeclarationTypedef;
+      class ClassMemberDeclaration;
+    class ClassMemberDeclarationList;
   class ClassDefinition;
     
   class TypeDefinition;
@@ -49,6 +58,7 @@ namespace JLang::frontend {
     class ExpressionUnarySizeofType;
     class ExpressionCast;
     class ExpressionBinary;
+    class ExpressionTrinary;
   class Expression;
 
       class StatementVariableDeclaration;
@@ -101,13 +111,22 @@ namespace JLang::frontend {
       
         AccessModifier*,
         UnsafeModifier*,
+          TypeName*,
         TypeSpecifier*,
           FunctionDefinitionArg*,
         FunctionDefinitionArgList*,
 
           ClassDeclStart*,
           ClassArgumentList*,
-          ClassDeclarationMemberList*,
+              ClassMemberDeclarationVariable*,
+              ClassMemberDeclarationMethod*,
+              ClassMemberDeclarationConstructor*,
+              ClassMemberDeclarationDestructor*,
+              ClassMemberDeclarationClass*,
+              ClassMemberDeclarationEnum*,
+              ClassMemberDeclarationTypedef*,
+            ClassMemberDeclaration*,
+          ClassMemberDeclarationList*,
         ClassDefinition*,
 
         TypeDefinition*,
@@ -129,6 +148,7 @@ namespace JLang::frontend {
           ExpressionUnarySizeofType*,
           ExpressionCast*,
           ExpressionBinary*,
+          ExpressionTrinary*,
         Expression*,
 
             StatementVariableDeclaration*,
@@ -317,6 +337,30 @@ namespace JLang::frontend {
       
     };
 
+    class TypeName : public SyntaxNode, public PtrProtocol<TypeName> {
+    public:
+      TypeName(Terminal::owned_ptr _type_name);
+      TypeName(Terminal::owned_ptr _typeof_token,
+               Terminal::owned_ptr _paren_l_token,
+               std::unique_ptr<Expression> _expression,
+               Terminal::owned_ptr _paren_r_token
+               );
+      ~TypeName();
+      bool is_expression() const;
+      const std::string & get_name() const;
+      const Expression & get_expression() const;
+    private:
+      bool m_is_expression;
+      // For raw names
+      Terminal::owned_ptr type_name;
+      // for typeof expressions
+      Terminal::owned_ptr typeof_token;
+      Terminal::owned_ptr paren_l_token;
+      std::unique_ptr<Expression> expression;
+      Terminal::owned_ptr paren_r_token;
+    };
+    
+    
     class TypeSpecifier : public SyntaxNode, public PtrProtocol<TypeSpecifier> {
     public:
       TypeSpecifier();
@@ -728,11 +772,93 @@ namespace JLang::frontend {
       Terminal::owned_ptr paren_r;
     };
 
-    class ClassDeclarationMemberList : public SyntaxNode, public PtrProtocol<ClassDeclarationMemberList> {
+    class ClassMemberDeclarationVariable : public SyntaxNode, public PtrProtocol<ClassMemberDeclarationVariable> {
     public:
-      ClassDeclarationMemberList();
-      ~ClassDeclarationMemberList();
+      ClassMemberDeclarationVariable(
+                                     AccessModifier::owned_ptr _access_modifier,
+                                     TypeSpecifier::owned_ptr _type_specifier,
+                                     Terminal::owned_ptr _identifier_token,
+                                     ArrayLength::owned_ptr _array_length,
+                                     Terminal::owned_ptr _semicolon_token
+                                     );
+      ~ClassMemberDeclarationVariable();
+      const AccessModifier & get_access_modifier() const;
+      const TypeSpecifier & get_type_specifier() const;
+      const std::string & get_name() const;
+      const ArrayLength & get_array_length() const;
     private:
+      AccessModifier::owned_ptr access_modifier;
+      TypeSpecifier::owned_ptr type_specifier;
+      Terminal::owned_ptr identifier_token;
+      ArrayLength::owned_ptr array_length;
+      Terminal::owned_ptr semicolon_token;
+    };    
+    class ClassMemberDeclarationMethod : public SyntaxNode, public PtrProtocol<ClassMemberDeclarationMethod> {
+    public:
+      ClassMemberDeclarationMethod(
+                                     AccessModifier::owned_ptr _access_modifier,
+                                     TypeSpecifier::owned_ptr _type_specifier,
+                                     Terminal::owned_ptr _identifier_token,
+                                     Terminal::owned_ptr _paren_l_token,
+                                     FunctionDefinitionArgList::owned_ptr _function_definition_arg_list,
+                                     Terminal::owned_ptr _paren_r_token,
+                                     Terminal::owned_ptr _semicolon_token
+                                   );
+      ~ClassMemberDeclarationMethod();
+      const AccessModifier & get_access_modifier() const;
+      const TypeSpecifier & get_type_specifier() const;
+      const std::string & get_name() const;
+      const FunctionDefinitionArgList & get_arguments() const;
+    private:
+      AccessModifier::owned_ptr access_modifier;
+      TypeSpecifier::owned_ptr type_specifier;
+      Terminal::owned_ptr identifier_token;
+      Terminal::owned_ptr paren_l_token;
+      FunctionDefinitionArgList::owned_ptr function_definition_arg_list;
+      Terminal::owned_ptr paren_r_token;
+      Terminal::owned_ptr semicolon_token;
+    };
+    class ClassMemberDeclarationConstructor : public SyntaxNode, public PtrProtocol<ClassMemberDeclarationConstructor> {
+    };
+    class ClassMemberDeclarationDestructor : public SyntaxNode, public PtrProtocol<ClassMemberDeclarationDestructor> {
+    };
+    class ClassMemberDeclarationClass : public SyntaxNode, public PtrProtocol<ClassMemberDeclarationDestructor> {
+    };
+    class ClassMemberDeclarationEnum : public SyntaxNode, public PtrProtocol<ClassMemberDeclarationEnum> {
+    };
+    class ClassMemberDeclarationTypedef : public SyntaxNode, public PtrProtocol<ClassMemberDeclarationTypedef> {
+    };
+    
+    
+    class ClassMemberDeclaration : public SyntaxNode, public PtrProtocol<ClassMemberDeclaration> {
+    public:
+      typedef std::variant<
+        ClassMemberDeclarationVariable::owned_ptr,
+        ClassMemberDeclarationMethod::owned_ptr,
+        ClassMemberDeclarationConstructor::owned_ptr,
+        ClassMemberDeclarationDestructor::owned_ptr,
+        ClassMemberDeclarationClass::owned_ptr,
+        ClassMemberDeclarationEnum::owned_ptr,
+        ClassMemberDeclarationTypedef::owned_ptr
+      > MemberType;
+      ClassMemberDeclaration(
+                             MemberType _member,
+                             SyntaxNode *raw_ptr
+                             );
+      ~ClassMemberDeclaration();
+      const ClassMemberDeclaration::MemberType & get_member();
+    private:
+      MemberType member;
+    };
+    
+    class ClassMemberDeclarationList : public SyntaxNode, public PtrProtocol<ClassMemberDeclarationList> {
+    public:
+      ClassMemberDeclarationList();
+      ~ClassMemberDeclarationList();
+      const std::vector<ClassMemberDeclaration::owned_ptr> & get_members() const;
+      void add_member(ClassMemberDeclaration::owned_ptr _member);
+    private:
+      std::vector<ClassMemberDeclaration::owned_ptr> members;
     };
           
     class ClassDefinition : public SyntaxNode, public PtrProtocol<ClassDefinition> {
@@ -740,7 +866,7 @@ namespace JLang::frontend {
       ClassDefinition(
                       ClassDeclStart::owned_ptr _class_decl_start,
                       Terminal::owned_ptr _brace_l_token,
-                      ClassDeclarationMemberList::owned_ptr _class_declaration_member_list,
+                      ClassMemberDeclarationList::owned_ptr _class_member_declaration_list,
                       Terminal::owned_ptr _brace_r_token,
                       Terminal::owned_ptr _semicolon_token
                       );
@@ -748,11 +874,11 @@ namespace JLang::frontend {
       const AccessModifier & get_access_modifier() const;
       const std::string & get_name() const;
       const ClassArgumentList & get_argument_list() const;
-      const ClassDeclarationMemberList & get_members() const;
+      const ClassMemberDeclarationList & get_members() const;
     private:
       ClassDeclStart::owned_ptr class_decl_start;
       Terminal::owned_ptr brace_l_token;
-      ClassDeclarationMemberList::owned_ptr class_declaration_member_list;
+      ClassMemberDeclarationList::owned_ptr class_member_declaration_list;
       Terminal::owned_ptr brace_r_token;
       Terminal::owned_ptr semicolon_token;
     };
@@ -1031,25 +1157,44 @@ namespace JLang::frontend {
     class ExpressionBinary : public SyntaxNode, public PtrProtocol<ExpressionBinary> {
     public:
       typedef enum {
+        // Arithmetic
         ADD,
         SUBTRACT,
         MULTIPLY,
         DIVIDE,
         MODULO,
+        // Logical
         LOGICAL_AND,
         LOGICAL_OR,
         LOGICAL_XOR,
+
+        // Bitwise
         BITWISE_AND,
         BITWISE_OR,
         BITWISE_XOR,
         SHIFT_LEFT,
         SHIFT_RIGHT,
+        
+        // Relational
         COMPARE_LT,
         COMPARE_GT,
         COMPARE_LE,
         COMPARE_GE,
         COMPARE_EQ,
-        COMPARE_NE
+        COMPARE_NE,
+
+        // Assignment
+        EQUALS,
+        MUL_ASSIGN,
+        DIV_ASSIGN,
+        MOD_ASSIGN,
+        ADD_ASSIGN,
+        SUB_ASSIGN,
+        LEFT_ASSIGN,
+        RIGHT_ASSIGN,
+        AND_ASSIGN,
+        XOR_ASSIGN,
+        OR_ASSIGN        
       } OperationType;
       ExpressionBinary(
                        std::unique_ptr<Expression> _expression_a,
@@ -1066,6 +1211,27 @@ namespace JLang::frontend {
       std::unique_ptr<Expression> expression_a;
       Terminal::owned_ptr operator_token;
       std::unique_ptr<Expression> expression_b;
+    };
+    
+    class ExpressionTrinary : public SyntaxNode, public PtrProtocol<ExpressionTrinary> {
+    public:
+      ExpressionTrinary(
+                        std::unique_ptr<Expression> _condition,
+                        Terminal::owned_ptr _questionmark_token,
+                        std::unique_ptr<Expression> _if_expression,
+                        Terminal::owned_ptr _colon_token,
+                        std::unique_ptr<Expression> _else_expression
+                        );
+      ~ExpressionTrinary();
+      const Expression & get_condition() const;
+      const Expression & get_if() const;
+      const Expression & get_else() const;
+    private:
+      std::unique_ptr<Expression> condition;
+      Terminal::owned_ptr questionmark_token;
+      std::unique_ptr<Expression> if_expression;
+      Terminal::owned_ptr colon_token;
+      std::unique_ptr<Expression> else_expression;      
     };
     
     class Expression : public SyntaxNode, public PtrProtocol<Expression> {

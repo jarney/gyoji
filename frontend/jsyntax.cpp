@@ -96,6 +96,47 @@ UnsafeModifier::is_unsafe() const
 }
 
 ///////////////////////////////////////////////////
+TypeName::TypeName(Terminal::owned_ptr _type_name)
+  : SyntaxNode("type_name", this)
+  , m_is_expression(false)
+  , type_name(std::move(_type_name))
+  , typeof_token(nullptr)
+  , paren_l_token(nullptr)
+  , expression(nullptr)
+  , paren_r_token(nullptr)
+{
+  add_child(type_name.get());
+}
+TypeName::TypeName(Terminal::owned_ptr _typeof_token,
+               Terminal::owned_ptr _paren_l_token,
+               std::unique_ptr<Expression> _expression,
+               Terminal::owned_ptr _paren_r_token
+               )
+  : SyntaxNode("type_name", this)
+  , m_is_expression(true)
+  , type_name(nullptr)
+  , typeof_token(std::move(_typeof_token))
+  , paren_l_token(std::move(_paren_l_token))
+  , expression(std::move(_expression))
+  , paren_r_token(std::move(_paren_r_token))
+{
+  add_child(typeof_token.get());
+  add_child(paren_l_token.get());
+  add_child(expression.get());
+  add_child(paren_r_token.get());
+}
+TypeName::~TypeName()
+{}
+bool
+TypeName::is_expression() const
+{ return m_is_expression; }
+const std::string &
+TypeName::get_name() const
+{ return type_name->fully_qualified_name; }
+const Expression &
+TypeName::get_expression() const
+{ return *expression; }
+///////////////////////////////////////////////////
 
 TypeSpecifier::TypeSpecifier()
   : SyntaxNode("type_specifier", this)
@@ -732,29 +773,132 @@ const std::vector<Terminal::owned_ptr> &
 ClassArgumentList::get_arguments() const
 { return argument_list; }
 ///////////////////////////////////////////////////
-ClassDeclarationMemberList::ClassDeclarationMemberList()
-  : SyntaxNode("class_declaration_member_list", this)
+ClassMemberDeclarationVariable::ClassMemberDeclarationVariable(
+                                     AccessModifier::owned_ptr _access_modifier,
+                                     TypeSpecifier::owned_ptr _type_specifier,
+                                     Terminal::owned_ptr _identifier_token,
+                                     ArrayLength::owned_ptr _array_length,
+                                     Terminal::owned_ptr _semicolon_token
+                                     )
+  : SyntaxNode("class_member_declaration_variable", this)
+  , access_modifier(std::move(_access_modifier))
+  , type_specifier(std::move(_type_specifier))
+  , identifier_token(std::move(_identifier_token))
+  , array_length(std::move(_array_length))
+  , semicolon_token(std::move(_semicolon_token))
+{
+  add_child(access_modifier.get());
+  add_child(type_specifier.get());
+  add_child(identifier_token.get());
+  add_child(array_length.get());
+  add_child(semicolon_token.get());
+}
+ClassMemberDeclarationVariable::~ClassMemberDeclarationVariable()
 {}
-ClassDeclarationMemberList::~ClassDeclarationMemberList()
+const AccessModifier &
+ClassMemberDeclarationVariable::get_access_modifier() const
+{ return *access_modifier; }
+const TypeSpecifier &
+ClassMemberDeclarationVariable::get_type_specifier() const
+{ return *type_specifier; }
+const std::string &
+ClassMemberDeclarationVariable::get_name() const
+{ return identifier_token->value; }
+const ArrayLength &
+ClassMemberDeclarationVariable::get_array_length() const
+{ return *array_length; }
+///////////////////////////////////////////////////
+ClassMemberDeclarationMethod::ClassMemberDeclarationMethod(
+                                                           AccessModifier::owned_ptr _access_modifier,
+                                                           TypeSpecifier::owned_ptr _type_specifier,
+                                                           Terminal::owned_ptr _identifier_token,
+                                                           Terminal::owned_ptr _paren_l_token,
+                                                           FunctionDefinitionArgList::owned_ptr _function_definition_arg_list,
+                                                           Terminal::owned_ptr _paren_r_token,
+                                                           Terminal::owned_ptr _semicolon_token
+                                                           )
+ : SyntaxNode("class_member_declaration_method", this)
+ , access_modifier(std::move(_access_modifier))
+ , type_specifier(std::move(_type_specifier))
+ , identifier_token(std::move(_identifier_token))
+ , paren_l_token(std::move(_paren_l_token))
+ , function_definition_arg_list(std::move(_function_definition_arg_list))
+ , paren_r_token(std::move(_paren_r_token))
+ , semicolon_token(std::move(_semicolon_token))
+{
+  add_child(access_modifier.get());
+  add_child(type_specifier.get());
+  add_child(identifier_token.get());
+  add_child(paren_l_token.get());
+  add_child(function_definition_arg_list.get());
+  add_child(paren_r_token.get());
+  add_child(semicolon_token.get());
+}
+ClassMemberDeclarationMethod::~ClassMemberDeclarationMethod()
 {}
+const AccessModifier &
+ClassMemberDeclarationMethod::get_access_modifier() const
+{ return *access_modifier; }
+const TypeSpecifier &
+ClassMemberDeclarationMethod::get_type_specifier() const
+{ return *type_specifier; }
+const std::string &
+ClassMemberDeclarationMethod::get_name() const
+{ return identifier_token->value; }
+const FunctionDefinitionArgList &
+ClassMemberDeclarationMethod::get_arguments() const
+{ return *function_definition_arg_list; }
+///////////////////////////////////////////////////
+ClassMemberDeclaration::ClassMemberDeclaration(
+                                               MemberType _member,
+                                               SyntaxNode *raw_ptr
+                                               )
+  : SyntaxNode("class_member_declaration", this)
+  , member(std::move(_member))
+{
+  add_child(raw_ptr);
+}
+ClassMemberDeclaration::~ClassMemberDeclaration()
+{}
+const ClassMemberDeclaration::MemberType &
+ClassMemberDeclaration::get_member()
+{ return member; }
+///////////////////////////////////////////////////
+
+
+ClassMemberDeclarationList::ClassMemberDeclarationList()
+  : SyntaxNode("class_member_declaration_list", this)
+{}
+ClassMemberDeclarationList::~ClassMemberDeclarationList()
+{}
+const std::vector<ClassMemberDeclaration::owned_ptr> &
+ClassMemberDeclarationList::get_members() const
+{
+  return members;
+}
+void
+ClassMemberDeclarationList::add_member(ClassMemberDeclaration::owned_ptr _member)
+{
+  members.push_back(std::move(_member));
+}
 ///////////////////////////////////////////////////
 ClassDefinition::ClassDefinition(
                       ClassDeclStart::owned_ptr _class_decl_start,
                       Terminal::owned_ptr _brace_l_token,
-                      ClassDeclarationMemberList::owned_ptr _class_declaration_member_list,
+                      ClassMemberDeclarationList::owned_ptr _class_member_declaration_list,
                       Terminal::owned_ptr _brace_r_token,
                       Terminal::owned_ptr _semicolon_token
                       )
   : SyntaxNode("class_definition", this)
   , class_decl_start(std::move(_class_decl_start))
   , brace_l_token(std::move(_brace_l_token))
-  , class_declaration_member_list(std::move(_class_declaration_member_list))
+  , class_member_declaration_list(std::move(_class_member_declaration_list))
   , brace_r_token(std::move(_brace_r_token))
   , semicolon_token(std::move(_semicolon_token))
 {
   add_child(class_decl_start.get());
   add_child(brace_l_token.get());
-  add_child(class_declaration_member_list.get());
+  add_child(class_member_declaration_list.get());
   add_child(brace_r_token.get());
   add_child(semicolon_token.get());
 }
@@ -775,9 +919,9 @@ ClassDefinition::get_argument_list() const
 {
   return class_decl_start->get_argument_list();
 }
-const ClassDeclarationMemberList &
+const ClassMemberDeclarationList &
 ClassDefinition::get_members() const
-{ return *class_declaration_member_list; }
+{ return *class_member_declaration_list; }
 
 ///////////////////////////////////////////////////
 TypeDefinition::TypeDefinition(
@@ -1171,6 +1315,38 @@ ExpressionBinary::get_operator() const
 const Expression &
 ExpressionBinary::get_b() const
 { return *expression_a; }
+///////////////////////////////////////////////////
+ExpressionTrinary::ExpressionTrinary(
+                        std::unique_ptr<Expression> _condition,
+                        Terminal::owned_ptr _questionmark_token,
+                        std::unique_ptr<Expression> _if_expression,
+                        Terminal::owned_ptr _colon_token,
+                        std::unique_ptr<Expression> _else_expression
+                        )
+  : SyntaxNode("expression_trinary", this)
+  , condition(std::move(_condition))
+  , questionmark_token(std::move(_questionmark_token))
+  , if_expression(std::move(_if_expression))
+  , colon_token(std::move(_colon_token))
+  , else_expression(std::move(_else_expression))
+{
+  add_child(condition.get());
+  add_child(questionmark_token.get());
+  add_child(if_expression.get());
+  add_child(colon_token.get());
+  add_child(else_expression.get());
+}
+ExpressionTrinary::~ExpressionTrinary()
+{}
+const Expression &
+ExpressionTrinary::get_condition() const
+{ return *condition; }
+const Expression &
+ExpressionTrinary::get_if() const
+{ return *if_expression; }
+const Expression &
+ExpressionTrinary::get_else() const
+{ return *else_expression; }
 ///////////////////////////////////////////////////
 Expression::Expression(Expression::ExpressionType _expression_type)
       : SyntaxNode("expression", this)
