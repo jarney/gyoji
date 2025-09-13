@@ -708,7 +708,7 @@ type_definition
         ;
 
 enum_definition
-        : opt_access_modifier ENUM type_name IDENTIFIER BRACE_L opt_enum_value_list BRACE_R SEMICOLON {
+        : opt_access_modifier ENUM TYPE_NAME IDENTIFIER BRACE_L opt_enum_value_list BRACE_R SEMICOLON {
                 $$ = std::make_shared<JLang::frontend::ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_enum_definition;
                 $$->typestr = std::string("enum_definition");

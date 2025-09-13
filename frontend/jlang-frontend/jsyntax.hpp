@@ -24,6 +24,16 @@ namespace JLang::frontend {
   class TypeSpecifier;
   class FunctionDefinitionArgList;
 
+    class ClassDeclStart;
+    class ClassArgumentList;
+    class ClassDeclarationMemberList;
+  class ClassDefinition;
+    
+  class TypeDefinition;
+
+    class EnumDefinitionValueList;
+  class EnumDefinition;
+
   class ExpressionPrimary;
     
   class TranslationUnit;
@@ -47,6 +57,7 @@ namespace JLang::frontend {
     
         class NamespaceDeclaration;
       class FileStatementNamespace;
+        class UsingAs;
       class FileStatementUsing;
       class FileStatement;
     class FileStatementList;
@@ -61,6 +72,16 @@ namespace JLang::frontend {
         TypeSpecifier*,
         FunctionDefinitionArgList*,
 
+          ClassDeclStart*,
+          ClassArgumentList*,
+          ClassDeclarationMemberList*,
+        ClassDefinition*,
+
+        TypeDefinition*,
+
+          EnumDefinitionValueList*,
+        EnumDefinition*,
+      
         ExpressionPrimary *,
       
         TranslationUnit*,
@@ -81,6 +102,7 @@ namespace JLang::frontend {
             FileStatementTypeDefinition*,
               NamespaceDeclaration*,
             FileStatementNamespace*,
+              UsingAs*,
             FileStatementUsing*,
             FileStatement*,
           FileStatementList*
@@ -107,6 +129,7 @@ namespace JLang::frontend {
       // private and can only be called by the
       // deriving class.
       void add_child(const SyntaxNode* node);
+      void prepend_child(const SyntaxNode* node);
       
       std::string type;
       specific_type_t data;
@@ -310,6 +333,125 @@ namespace JLang::frontend {
       ~ArrayLength();
     };
 
+    class ClassDeclStart : public SyntaxNode, public PtrProtocol<ClassDeclStart> {
+    public:
+      ClassDeclStart(
+                     AccessModifier::owned_ptr _access_modifier,
+                     Terminal::owned_ptr _class_token,
+                     Terminal::owned_ptr _identifier_token,
+                     std::unique_ptr<ClassArgumentList> _class_argument_list
+                     );
+                     
+      ~ClassDeclStart();
+      const AccessModifier & get_access_modifier() const;
+      const std::string & get_name() const;
+      const ClassArgumentList & get_argument_list() const;
+    private:
+      AccessModifier::owned_ptr access_modifier;
+      Terminal::owned_ptr class_token;
+      Terminal::owned_ptr identifier_token;
+      std::unique_ptr<ClassArgumentList> class_argument_list;
+    };
+    class ClassArgumentList : public SyntaxNode, public PtrProtocol<ClassArgumentList> {
+    public:
+      ClassArgumentList(Terminal::owned_ptr _argument);
+      ~ClassArgumentList();
+      void add_argument(Terminal::owned_ptr _comma, Terminal::owned_ptr _argument);
+      void add_parens(Terminal::owned_ptr _paren_l, Terminal::owned_ptr _paren_r);
+      const std::vector<Terminal::owned_ptr> & get_arguments() const;
+    private:
+      Terminal::owned_ptr paren_l;
+      std::vector<Terminal::owned_ptr> comma_list;
+      std::vector<Terminal::owned_ptr> argument_list;
+      Terminal::owned_ptr paren_r;
+    };
+
+    class ClassDeclarationMemberList : public SyntaxNode, public PtrProtocol<ClassDeclarationMemberList> {
+    public:
+      ClassDeclarationMemberList();
+      ~ClassDeclarationMemberList();
+    private:
+    };
+          
+    class ClassDefinition : public SyntaxNode, public PtrProtocol<ClassDefinition> {
+    public:
+      ClassDefinition(
+                      ClassDeclStart::owned_ptr _class_decl_start,
+                      Terminal::owned_ptr _brace_l_token,
+                      ClassDeclarationMemberList::owned_ptr _class_declaration_member_list,
+                      Terminal::owned_ptr _brace_r_token,
+                      Terminal::owned_ptr _semicolon_token
+                      );
+      ~ClassDefinition();
+      const AccessModifier & get_access_modifier() const;
+      const std::string & get_name() const;
+      const ClassArgumentList & get_argument_list() const;
+      const ClassDeclarationMemberList & get_members() const;
+    private:
+      ClassDeclStart::owned_ptr class_decl_start;
+      Terminal::owned_ptr brace_l_token;
+      ClassDeclarationMemberList::owned_ptr class_declaration_member_list;
+      Terminal::owned_ptr brace_r_token;
+      Terminal::owned_ptr semicolon_token;
+    };
+
+    class TypeDefinition : public SyntaxNode, public PtrProtocol<TypeDefinition> {
+    public:
+      TypeDefinition(
+                     AccessModifier::owned_ptr _access_modifier,
+                     Terminal::owned_ptr _typedef_token,
+                     TypeSpecifier::owned_ptr _type_specifier,
+                     Terminal::owned_ptr _identifier_token,
+                     Terminal::owned_ptr _semicolon_token
+                     );
+      ~TypeDefinition();
+      const AccessModifier & get_access_modifier() const;
+      const std::string & get_name() const;
+      const TypeSpecifier & get_type_specifier() const;
+    private:
+      AccessModifier::owned_ptr access_modifier;
+      Terminal::owned_ptr typedef_token;
+      TypeSpecifier::owned_ptr type_specifier;
+      Terminal::owned_ptr identifier_token;
+      Terminal::owned_ptr semicolon_token;
+    };
+
+    class EnumDefinitionValueList : public SyntaxNode, public PtrProtocol<EnumDefinitionValueList> {
+    public:
+      EnumDefinitionValueList();
+      ~EnumDefinitionValueList();
+    private:
+    };
+
+    class EnumDefinition : public SyntaxNode, public PtrProtocol<EnumDefinition> {
+    public:
+      EnumDefinition(
+                     AccessModifier::owned_ptr _access_modifier,
+                     Terminal::owned_ptr _enum_token,
+                     Terminal::owned_ptr _type_name_token,
+                     Terminal::owned_ptr _identifier_token,
+                     Terminal::owned_ptr _brace_l_token,
+                     EnumDefinitionValueList::owned_ptr _enum_value_list,
+                     Terminal::owned_ptr _brace_r_token,
+                     Terminal::owned_ptr _semicolon_token
+                     );
+      ~EnumDefinition();
+      const AccessModifier & get_access_modifier() const;
+      const std::string & type_name() const;
+      const std::string & enum_name() const;
+      const EnumDefinitionValueList & get_value_list() const;
+    private:
+      AccessModifier::owned_ptr access_modifier;
+      Terminal::owned_ptr enum_token;
+      Terminal::owned_ptr type_name_token;
+      Terminal::owned_ptr identifier_token;
+      Terminal::owned_ptr brace_l_token;
+      EnumDefinitionValueList::owned_ptr enum_value_list;
+      Terminal::owned_ptr brace_r_token;
+      Terminal::owned_ptr semicolon_token;
+      
+    };
+    
     class ExpressionPrimary : public SyntaxNode, public PtrProtocol<ExpressionPrimary> {
     public:
       ExpressionPrimary();
@@ -458,16 +600,58 @@ namespace JLang::frontend {
 
     class FileStatementNamespace : public SyntaxNode, public PtrProtocol<FileStatementNamespace> {
     public:
-      FileStatementNamespace(NamespaceDeclaration::owned_ptr _namespace_declaration);
+      FileStatementNamespace(NamespaceDeclaration::owned_ptr _namespace_declaration,
+                             Terminal::owned_ptr _brace_l_token,
+                             std::unique_ptr<FileStatementList> _file_statement_list,
+                             Terminal::owned_ptr _brace_r_token,
+                             Terminal::owned_ptr _semicolon_token
+                             );
       ~FileStatementNamespace();
       const NamespaceDeclaration & get_declaration() const;
+      const FileStatementList & get_statement_list() const;
     private:
       NamespaceDeclaration::owned_ptr namespace_declaration;
+      Terminal::owned_ptr brace_l_token;
+      std::unique_ptr<FileStatementList> file_statement_list;
+      Terminal::owned_ptr brace_r_token;
+      Terminal::owned_ptr semicolon_token;
+    };
+
+    class UsingAs : public SyntaxNode, public PtrProtocol<UsingAs> {
+    public:
+      UsingAs(
+              Terminal::owned_ptr _as_token,
+              Terminal::owned_ptr _identifier_token
+              );
+      UsingAs();
+      ~UsingAs();
+      const std::string & get_using_name() const;
+    private:
+      std::string using_name;
+      Terminal::owned_ptr as_token;
+      Terminal::owned_ptr identifier_token;
     };
     
     class FileStatementUsing : public SyntaxNode, public PtrProtocol<FileStatementUsing> {
     public:
+          FileStatementUsing(AccessModifier::owned_ptr _access_modifier,
+                             Terminal::owned_ptr _using,
+                             Terminal::owned_ptr _namespace,
+                             Terminal::owned_ptr _namespace_name,
+                             UsingAs::owned_ptr _using_as,
+                             Terminal::owned_ptr _semicolon);
+      ~FileStatementUsing();
     private:
+      const AccessModifier & get_access_modifier() const;
+      std::string & get_namespace() const;
+      const UsingAs &get_using_as() const;
+      
+      AccessModifier::owned_ptr access_modifier;
+      Terminal::owned_ptr using_token;
+      Terminal::owned_ptr namespace_token;
+      Terminal::owned_ptr namespace_name_token;
+      UsingAs::owned_ptr using_as;
+      Terminal::owned_ptr semicolon_token;
     };
 
     /**
