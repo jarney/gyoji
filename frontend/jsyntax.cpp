@@ -2,6 +2,7 @@
 
 using namespace JLang::frontend::alt_imp;
 
+///////////////////////////////////////////////////
 Terminal::Terminal()
   : SyntaxNode("terminal", this)
 {}
@@ -27,6 +28,7 @@ const std::string & TerminalNonSyntax::get_data() const
   return data;
 }
 
+///////////////////////////////////////////////////
 SyntaxNode::SyntaxNode(std::string _type, SyntaxNode::specific_type_t _data)
   : type(_type)
   , data(_data)
@@ -57,6 +59,7 @@ const SyntaxNode::specific_type_t &SyntaxNode::get_data() const
   return data;
 }
 
+///////////////////////////////////////////////////
 AccessModifier::AccessModifier(Terminal::owned_ptr _modifier, AccessModifier::AccessModifierType _type)
   : SyntaxNode("access_modifier", this)
   , modifier(std::move(_modifier))
@@ -71,13 +74,28 @@ AccessModifier::get_type() const
 {
   return type;
 }
+///////////////////////////////////////////////////
 
 
 UnsafeModifier::UnsafeModifier()
   : SyntaxNode("unsafe_modifier", this)
+  , unsafe_token(nullptr)
 {}
+UnsafeModifier::UnsafeModifier(Terminal::owned_ptr _unsafe_token)
+  : SyntaxNode("unsafe_modifier", this)
+  , unsafe_token(std::move(_unsafe_token))
+{
+  add_child(unsafe_token.get());
+}
 UnsafeModifier::~UnsafeModifier()
 {}
+bool
+UnsafeModifier::is_unsafe() const
+{
+  return unsafe_token.get() != nullptr;
+}
+
+///////////////////////////////////////////////////
 
 TypeSpecifier::TypeSpecifier()
   : SyntaxNode("type_specifier", this)
@@ -85,15 +103,44 @@ TypeSpecifier::TypeSpecifier()
 TypeSpecifier::~TypeSpecifier()
 {}
 
+///////////////////////////////////////////////////
+FunctionDefinitionArg::FunctionDefinitionArg(TypeSpecifier::owned_ptr _type_specifier,
+                                             Terminal::owned_ptr _identifier_token
+                                             )
+  : SyntaxNode("function_definition_arg", this)
+  , type_specifier(std::move(_type_specifier))
+  , identifier_token(std::move(_identifier_token))
+{
+  add_child(type_specifier.get());
+  add_child(identifier_token.get());
+}
+FunctionDefinitionArg::~FunctionDefinitionArg()
+{}
+const TypeSpecifier &
+FunctionDefinitionArg::get_type_specifier() const
+{ return *type_specifier; }
+const std::string &
+FunctionDefinitionArg::get_name() const
+{ return identifier_token->value; }
+
+///////////////////////////////////////////////////
 FunctionDefinitionArgList::FunctionDefinitionArgList()
   : SyntaxNode("function_definition_arg_list", this)
 {}
 FunctionDefinitionArgList::~FunctionDefinitionArgList()
 {}
-
+const std::vector<FunctionDefinitionArg::owned_ptr> &
+FunctionDefinitionArgList::get_arguments() const
+{ return arguments; }
+void
+FunctionDefinitionArgList::add_argument(FunctionDefinitionArg::owned_ptr _argument)
+{
+  arguments.push_back(std::move(_argument));
+}
 
 
 ///////////////////////////////////////////////////
+
 FileStatementFunctionDeclaration::FileStatementFunctionDeclaration(
     AccessModifier::owned_ptr _access_modifier,
     UnsafeModifier::owned_ptr _unsafe_modifier,
@@ -147,6 +194,104 @@ const FunctionDefinitionArgList &
 FileStatementFunctionDeclaration::get_arguments() const
 { return *arguments; }
 
+
+///////////////////////////////////////////////////
+StatementBlock::StatementBlock()
+  : SyntaxNode("statement_block", this)
+{}
+StatementBlock::~StatementBlock()
+{}
+///////////////////////////////////////////////////
+StatementIfElse::StatementIfElse()
+  : SyntaxNode("statement_ifelse", this)
+{}
+StatementIfElse::~StatementIfElse()
+{}
+///////////////////////////////////////////////////
+StatementWhile::StatementWhile()
+  : SyntaxNode("statement_while", this)
+{}
+StatementWhile::~StatementWhile()
+{}
+///////////////////////////////////////////////////
+StatementFor::StatementFor()
+  : SyntaxNode("statement_for", this)
+{}
+StatementFor::~StatementFor()
+{}
+///////////////////////////////////////////////////
+StatementSwitch::StatementSwitch()
+  : SyntaxNode("statement_switch", this)
+{}
+StatementSwitch::~StatementSwitch()
+{}
+///////////////////////////////////////////////////
+StatementReturn::StatementReturn()
+  : SyntaxNode("statement_return", this)
+{}
+StatementReturn::~StatementReturn()
+{}
+///////////////////////////////////////////////////
+StatementContinue::StatementContinue()
+  : SyntaxNode("statement_continue", this)
+{}
+StatementContinue::~StatementContinue()
+{}
+///////////////////////////////////////////////////
+StatementGoto::StatementGoto()
+  : SyntaxNode("statement_goto", this)
+{}
+StatementGoto::~StatementGoto()
+{}
+///////////////////////////////////////////////////
+StatementBreak::StatementBreak()
+  : SyntaxNode("StatementBreak();", this)
+{}
+StatementBreak::~StatementBreak()
+{}
+///////////////////////////////////////////////////
+StatementLabel::StatementLabel()
+  : SyntaxNode("statement_label", this)
+{}
+StatementLabel::~StatementLabel()
+{}
+///////////////////////////////////////////////////
+StatementExpression::StatementExpression()
+  : SyntaxNode("statement_expression", this)
+{}
+StatementExpression::~StatementExpression()
+{}
+///////////////////////////////////////////////////
+StatementVariableDeclaration::StatementVariableDeclaration()
+  : SyntaxNode("StatementVariableDeclaration();", this)
+{}
+StatementVariableDeclaration::~StatementVariableDeclaration()
+{}
+///////////////////////////////////////////////////
+Statement::Statement(StatementType _statement)
+  : SyntaxNode("statement", this)
+  , statement(std::move(_statement))
+{}
+Statement::~Statement()
+{}
+const Statement::StatementType &
+Statement::get_statement() const
+{ return statement; }
+
+///////////////////////////////////////////////////
+StatementList::StatementList()
+  : SyntaxNode("statement_list", this)
+{}
+StatementList::~StatementList()
+{}
+void
+StatementList::add_statement(Statement::owned_ptr _statement)
+{
+  statements.push_back(std::move(_statement));
+}
+const std::vector<Statement::owned_ptr> &
+StatementList::get_statements() const
+{ return statements; }
 
 ///////////////////////////////////////////////////
 ScopeBody::ScopeBody()
@@ -216,9 +361,36 @@ FileStatementFunctionDefinition::get_scope_body() const
 
 ArrayLength::ArrayLength()
   : SyntaxNode("array_length", this)
+  , bracket_l_token(nullptr)
+  , literal_int_token(nullptr)
+  , bracket_r_token(nullptr)
 {}
+
+ArrayLength::ArrayLength(
+                  Terminal::owned_ptr _bracket_l_token,
+                  Terminal::owned_ptr _literal_int_token,
+                  Terminal::owned_ptr _bracket_r_token
+                  )
+  : SyntaxNode("array_length", this)
+  , bracket_l_token(std::move(_bracket_l_token))
+  , literal_int_token(std::move(_literal_int_token))
+  , bracket_r_token(std::move(_bracket_r_token))
+{
+  add_child(bracket_l_token.get());
+  add_child(literal_int_token.get());
+  add_child(bracket_r_token.get());
+}
 ArrayLength::~ArrayLength()
 {}
+bool
+ArrayLength::is_array() const
+{
+  return literal_int_token.get() != nullptr;
+}
+size_t
+ArrayLength::get_size() const
+{ return (size_t)atol(literal_int_token->value.c_str());}
+
 ///////////////////////////////////////////////////
 ClassDeclStart::ClassDeclStart(
                      AccessModifier::owned_ptr _access_modifier,
@@ -360,12 +532,49 @@ TypeDefinition::get_type_specifier() const
 { return *type_specifier; }
 
 ///////////////////////////////////////////////////
+EnumDefinitionValue::EnumDefinitionValue(
+                          Terminal::owned_ptr _identifier_token,
+                          Terminal::owned_ptr _equals_token,
+                          std::unique_ptr<ExpressionPrimary> _expression_primary,
+                          Terminal::owned_ptr _semicolon_token
+                          )
+  : SyntaxNode("enum_definition_value", this)
+  , identifier_token(std::move(_identifier_token))
+  , equals_token(std::move(_equals_token))
+  , expression_primary(std::move(_expression_primary))
+  , semicolon_token(std::move(_semicolon_token))
+{
+  add_child(identifier_token.get());
+  add_child(equals_token.get());
+  add_child(expression_primary.get());
+  add_child(semicolon_token.get());
+}
+EnumDefinitionValue::~EnumDefinitionValue()
+{}
+const std::string &
+EnumDefinitionValue::get_name() const
+{ return identifier_token->value; }
+
+const ExpressionPrimary &
+EnumDefinitionValue::get_expression() const
+{ return *expression_primary; }
+
+///////////////////////////////////////////////////
 EnumDefinitionValueList::EnumDefinitionValueList()
   : SyntaxNode("enum_definition_value_list", this)
 {}
 
 EnumDefinitionValueList::~EnumDefinitionValueList()
 {}
+void
+EnumDefinitionValueList::add_value(EnumDefinitionValue::owned_ptr _value)
+{
+  add_child(_value.get());
+  values.push_back(std::move(_value));
+}
+const std::vector<EnumDefinitionValue::owned_ptr> &
+EnumDefinitionValueList::get_values() const
+{ return values; }
 
 ///////////////////////////////////////////////////
 EnumDefinition::EnumDefinition(

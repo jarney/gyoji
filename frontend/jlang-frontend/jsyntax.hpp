@@ -22,6 +22,7 @@ namespace JLang::frontend {
   class AccessModifier;
   class UnsafeModifier;
   class TypeSpecifier;
+    class FunctionDefinitionArg;
   class FunctionDefinitionArgList;
 
     class ClassDeclStart;
@@ -31,10 +32,26 @@ namespace JLang::frontend {
     
   class TypeDefinition;
 
+    class EnumDefinitionValue;
     class EnumDefinitionValueList;
   class EnumDefinition;
 
   class ExpressionPrimary;
+
+      class StatementBlock;
+      class StatementIfElse;
+      class StatementWhile;
+      class StatementFor;
+      class StatementSwitch;
+      class StatementReturn;
+      class StatementContinue;
+      class StatementGoto;
+      class StatementBreak;
+      class StatementLabel;
+      class StatementExpression;
+      class StatementVariableDeclaration;
+    class Statement;
+  class StatementList;
     
   class TranslationUnit;
 
@@ -70,6 +87,7 @@ namespace JLang::frontend {
         AccessModifier*,
         UnsafeModifier*,
         TypeSpecifier*,
+          FunctionDefinitionArg*,
         FunctionDefinitionArgList*,
 
           ClassDeclStart*,
@@ -79,10 +97,26 @@ namespace JLang::frontend {
 
         TypeDefinition*,
 
+            EnumDefinitionValue*,
           EnumDefinitionValueList*,
         EnumDefinition*,
       
         ExpressionPrimary *,
+
+            StatementBlock*,
+            StatementIfElse*,
+            StatementWhile*,
+            StatementFor*,
+            StatementSwitch*,
+            StatementReturn*,
+            StatementContinue*,
+            StatementGoto*,
+            StatementBreak*,
+            StatementLabel*,
+            StatementExpression*,
+            StatementVariableDeclaration*,
+          Statement*,
+        StatementList*,
       
         TranslationUnit*,
               ScopeBody *,
@@ -244,8 +278,13 @@ namespace JLang::frontend {
     };
     class UnsafeModifier : public SyntaxNode, public PtrProtocol<UnsafeModifier> {
     public:
+      UnsafeModifier(Terminal::owned_ptr _unsafe_token);
       UnsafeModifier();
       ~UnsafeModifier();
+      bool is_unsafe() const;
+    private:
+      Terminal::owned_ptr unsafe_token;
+      
     };
 
     class TypeSpecifier : public SyntaxNode, public PtrProtocol<TypeSpecifier> {
@@ -254,10 +293,26 @@ namespace JLang::frontend {
       ~TypeSpecifier();
     };
 
+    class FunctionDefinitionArg : public SyntaxNode, public PtrProtocol<FunctionDefinitionArg> {
+    public:
+      FunctionDefinitionArg(TypeSpecifier::owned_ptr _type_specifier,
+                            Terminal::owned_ptr _identifier_token
+                            );
+      ~FunctionDefinitionArg();
+      const TypeSpecifier & get_type_specifier() const;
+      const std::string & get_name() const;
+    private:
+      TypeSpecifier::owned_ptr type_specifier;
+      Terminal::owned_ptr identifier_token;
+    };
     class FunctionDefinitionArgList : public SyntaxNode, public PtrProtocol<FunctionDefinitionArgList> {
     public:
       FunctionDefinitionArgList();
       ~FunctionDefinitionArgList();
+      const std::vector<FunctionDefinitionArg::owned_ptr> & get_arguments() const;
+      void add_argument(FunctionDefinitionArg::owned_ptr _argument);
+    private:
+      std::vector<FunctionDefinitionArg::owned_ptr> arguments;
     };
 
     class FileStatementFunctionDeclaration : public SyntaxNode, public PtrProtocol<FileStatementFunctionDeclaration> {
@@ -290,6 +345,114 @@ namespace JLang::frontend {
       Terminal::owned_ptr semicolon; // argument list delimiter SEMICOLON
     };
 
+
+    class StatementBlock : public SyntaxNode, public PtrProtocol<StatementBlock> {
+    public:
+      StatementBlock();
+      ~StatementBlock();
+    private:
+    };
+    class StatementIfElse : public SyntaxNode, public PtrProtocol<StatementIfElse> {
+    public:
+      StatementIfElse();
+      ~StatementIfElse();
+    private:
+    };
+    class StatementWhile : public SyntaxNode, public PtrProtocol<StatementWhile> {
+    public:
+      StatementWhile();
+      ~StatementWhile();
+    private:
+    };
+    class StatementFor : public SyntaxNode, public PtrProtocol<StatementFor> {
+    public:
+      StatementFor();
+      ~StatementFor();
+    private:
+    };
+    class StatementSwitch : public SyntaxNode, public PtrProtocol<StatementSwitch> {
+    public:
+      StatementSwitch();
+      ~StatementSwitch();
+    private:
+    };
+    class StatementReturn : public SyntaxNode, public PtrProtocol<StatementReturn> {
+    public:
+      StatementReturn();
+      ~StatementReturn();
+    private:
+    };
+    class StatementContinue : public SyntaxNode, public PtrProtocol<StatementContinue> {
+    public:
+      StatementContinue();
+      ~StatementContinue();
+    private:
+    };
+    class StatementGoto : public SyntaxNode, public PtrProtocol<StatementGoto> {
+    public:
+      StatementGoto();
+      ~StatementGoto();
+    private:
+    };
+    class StatementBreak : public SyntaxNode, public PtrProtocol<StatementBreak> {
+    public:
+      StatementBreak();
+      ~StatementBreak();
+    private:
+    };
+    class StatementLabel : public SyntaxNode, public PtrProtocol<StatementLabel> {
+    public:
+      StatementLabel();
+      ~StatementLabel();
+    private:
+    };
+    class StatementExpression : public SyntaxNode, public PtrProtocol<StatementExpression> {
+    public:
+      StatementExpression();
+      ~StatementExpression();
+    private:
+    };
+    class StatementVariableDeclaration : public SyntaxNode, public PtrProtocol<StatementVariableDeclaration> {
+    public:
+      StatementVariableDeclaration();
+      ~StatementVariableDeclaration();
+    private:
+    };
+    
+    class Statement : public SyntaxNode, public PtrProtocol<StatementList> {
+    public:
+      typedef std::variant<
+            StatementBlock::owned_ptr,
+            StatementIfElse::owned_ptr,
+            StatementWhile::owned_ptr,
+            StatementFor::owned_ptr,
+            StatementSwitch::owned_ptr,
+            StatementReturn::owned_ptr,
+            StatementContinue::owned_ptr,
+            StatementGoto::owned_ptr,
+            StatementBreak::owned_ptr,
+            StatementLabel::owned_ptr,
+            StatementExpression::owned_ptr,
+            StatementVariableDeclaration::owned_ptr
+      > StatementType;
+
+      Statement(StatementType _statement);
+      ~Statement();
+      const StatementType & get_statement() const;
+    private:
+      StatementType statement;
+    };
+    
+    class StatementList : public SyntaxNode, public PtrProtocol<StatementList> {
+    public:
+      StatementList();
+      ~StatementList();
+      void add_statement(Statement::owned_ptr _statement);
+      const std::vector<Statement::owned_ptr> &get_statements() const;
+    private:
+      std::vector<Statement::owned_ptr> statements;
+    };
+    
     class ScopeBody : public SyntaxNode, public PtrProtocol<ScopeBody> {
     public:
       ScopeBody();
@@ -330,7 +493,18 @@ namespace JLang::frontend {
     class ArrayLength : public SyntaxNode, public PtrProtocol<ArrayLength> {
     public:
       ArrayLength();
+      ArrayLength(
+                  Terminal::owned_ptr _bracket_l_token,
+                  Terminal::owned_ptr _literal_int_token,
+                  Terminal::owned_ptr _bracket_r_token
+                  );
       ~ArrayLength();
+      bool is_array() const;
+      size_t get_size() const;
+    private:
+      Terminal::owned_ptr bracket_l_token;
+      Terminal::owned_ptr literal_int_token;
+      Terminal::owned_ptr bracket_r_token;
     };
 
     class ClassDeclStart : public SyntaxNode, public PtrProtocol<ClassDeclStart> {
@@ -416,11 +590,32 @@ namespace JLang::frontend {
       Terminal::owned_ptr semicolon_token;
     };
 
+    class EnumDefinitionValue : public SyntaxNode, public PtrProtocol<EnumDefinitionValue> {
+    public:
+      EnumDefinitionValue(
+                          Terminal::owned_ptr _identifier_token,
+                          Terminal::owned_ptr _equals_token,
+                          std::unique_ptr<ExpressionPrimary> _expression_primary,
+                          Terminal::owned_ptr _semicolon_token
+                          );                          
+      ~EnumDefinitionValue();
+      const std::string & get_name() const;
+      const ExpressionPrimary & get_expression() const;
+    private:
+      Terminal::owned_ptr identifier_token;
+      Terminal::owned_ptr equals_token;
+      std::unique_ptr<ExpressionPrimary> expression_primary;
+      Terminal::owned_ptr semicolon_token;
+    };
+    
     class EnumDefinitionValueList : public SyntaxNode, public PtrProtocol<EnumDefinitionValueList> {
     public:
       EnumDefinitionValueList();
       ~EnumDefinitionValueList();
+      void add_value(EnumDefinitionValue::owned_ptr);
+      const std::vector<EnumDefinitionValue::owned_ptr> &get_values() const;
     private:
+      std::vector<EnumDefinitionValue::owned_ptr> values;
     };
 
     class EnumDefinition : public SyntaxNode, public PtrProtocol<EnumDefinition> {
