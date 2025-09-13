@@ -170,6 +170,10 @@
 %nterm <JLang::frontend::ASTNode::ptr> file_statement_using;
 %nterm <JLang::frontend::ASTNode::ptr> file_statement_global_definition;
 %nterm <JLang::frontend::ASTNode::ptr> opt_global_initializer;
+
+%nterm <JLang::frontend::ASTNode::ptr> global_initializer_expression_primary;
+%nterm <JLang::frontend::ASTNode::ptr> global_initializer_addressof_expression_primary;
+%nterm <JLang::frontend::ASTNode::ptr> global_initializer_struct_initializer_list;
 %nterm <JLang::frontend::ASTNode::ptr> global_initializer;
 %nterm <JLang::frontend::ASTNode::ptr> opt_struct_initializer_list;
 %nterm <JLang::frontend::ASTNode::ptr> struct_initializer_list;
@@ -394,6 +398,18 @@ opt_global_initializer
         ;
 
 global_initializer
+        : global_initializer_expression_primary {
+                $$ = $1;
+        }
+        | global_initializer_addressof_expression_primary {
+                $$ = $1;
+        }
+        | global_initializer_struct_initializer_list {
+                $$ = $1;
+        }
+        ;
+
+global_initializer_expression_primary
         : EQUALS expression_primary {
                 $$ = std::make_shared<JLang::frontend::ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_global_initializer;
@@ -402,7 +418,10 @@ global_initializer
                 $$->children.push_back($2);
                 PRINT_NONTERMINALS($$);
         }
-        | EQUALS ANDPERSAND expression_primary {
+        ;
+
+global_initializer_addressof_expression_primary
+        : EQUALS ANDPERSAND expression_primary {
                 $$ = std::make_shared<JLang::frontend::ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_global_initializer;
                 $$->typestr = std::string("global_initializer");
@@ -411,7 +430,10 @@ global_initializer
                 $$->children.push_back($3);
                 PRINT_NONTERMINALS($$);
         }
-        | EQUALS BRACE_L opt_struct_initializer_list BRACE_R {
+        ;
+
+global_initializer_struct_initializer_list
+        : EQUALS BRACE_L opt_struct_initializer_list BRACE_R {
                 $$ = std::make_shared<JLang::frontend::ASTNode>();
                 $$->type = Parser::symbol_kind_type::S_global_initializer;
                 $$->typestr = std::string("global_initializer");

@@ -23,6 +23,8 @@ namespace JLang::frontend {
   class UnsafeModifier;
   class TypeSpecifier;
   class FunctionDefinitionArgList;
+
+  class ExpressionPrimary;
     
   class TranslationUnit;
 
@@ -32,11 +34,18 @@ namespace JLang::frontend {
       class FileStatementFunctionDeclaration;
     
         class ArrayLength;
+          class GlobalInitializerExpressionPrimary;
+          class GlobalInitializerAddressofExpressionPrimary;
+              class StructInitializer;
+            class StructInitializerList;
+          class GlobalInitializerStructInitializerList;
         class GlobalInitializer;
       class FileStatementGlobalDefinition;
       class FileStatementClassDefinition;
       class FileStatementEnumDefinition;
       class FileStatementTypeDefinition;
+    
+        class NamespaceDeclaration;
       class FileStatementNamespace;
       class FileStatementUsing;
       class FileStatement;
@@ -51,17 +60,26 @@ namespace JLang::frontend {
         UnsafeModifier*,
         TypeSpecifier*,
         FunctionDefinitionArgList*,
+
+        ExpressionPrimary *,
       
         TranslationUnit*,
               ScopeBody *,
             FileStatementFunctionDefinition*,
             FileStatementFunctionDeclaration*,
               ArrayLength*,
+      
+                GlobalInitializerExpressionPrimary*,
+                GlobalInitializerAddressofExpressionPrimary*,
+                    StructInitializer*,
+                  StructInitializerList*,
+                GlobalInitializerStructInitializerList*,
               GlobalInitializer*,
             FileStatementGlobalDefinition*,
             FileStatementClassDefinition*,
             FileStatementEnumDefinition*,
             FileStatementTypeDefinition*,
+              NamespaceDeclaration*,
             FileStatementNamespace*,
             FileStatementUsing*,
             FileStatement*,
@@ -178,7 +196,7 @@ namespace JLang::frontend {
         std::unique_ptr<FileStatementNamespace>,
         std::unique_ptr<FileStatementUsing>> FileStatementType;
 
-      FileStatement(FileStatementType _statement);
+      FileStatement(FileStatementType _statement, SyntaxNode *raw_ptr);
       ~FileStatement();
 
       const FileStatementType & get_statement() const;
@@ -189,8 +207,17 @@ namespace JLang::frontend {
 
     class AccessModifier : public SyntaxNode, public PtrProtocol<AccessModifier> {
     public:
-      AccessModifier();
+      typedef enum {
+        PUBLIC,
+        PROTECTED,
+        PRIVATE
+      } AccessModifierType;
+      AccessModifier(Terminal::owned_ptr _modifier, AccessModifierType _type);
       ~AccessModifier();
+      const AccessModifierType & get_type() const;
+    private:
+      AccessModifierType type;
+      Terminal::owned_ptr modifier;
     };
     class UnsafeModifier : public SyntaxNode, public PtrProtocol<UnsafeModifier> {
     public:
@@ -282,10 +309,95 @@ namespace JLang::frontend {
       ArrayLength();
       ~ArrayLength();
     };
+
+    class ExpressionPrimary : public SyntaxNode, public PtrProtocol<ExpressionPrimary> {
+    public:
+      ExpressionPrimary();
+      ~ExpressionPrimary();
+    };
+    
+    class GlobalInitializerExpressionPrimary : public SyntaxNode, public PtrProtocol<GlobalInitializerExpressionPrimary> {
+    public:
+      GlobalInitializerExpressionPrimary(Terminal::owned_ptr _equals_token,
+                                         ExpressionPrimary::owned_ptr _expression
+                                         );
+      ~GlobalInitializerExpressionPrimary();
+      const ExpressionPrimary & get_expression() const;
+    private:
+      Terminal::owned_ptr equals_token;
+      ExpressionPrimary::owned_ptr expression;
+
+    };
+    class GlobalInitializerAddressofExpressionPrimary : public SyntaxNode, public PtrProtocol<GlobalInitializerExpressionPrimary> {
+      GlobalInitializerAddressofExpressionPrimary(
+                                                  Terminal::owned_ptr _equals_token,
+                                                  Terminal::owned_ptr _addressof_token,
+                                                  ExpressionPrimary::owned_ptr _expression
+                                         );
+      ~GlobalInitializerAddressofExpressionPrimary();
+      const ExpressionPrimary & get_expression() const;
+    private:
+      Terminal::owned_ptr equals_token;
+      Terminal::owned_ptr addressof_token;
+      ExpressionPrimary::owned_ptr expression;
+    };
+
+    class StructInitializer : public SyntaxNode, public PtrProtocol<StructInitializer> {
+    public:
+      StructInitializer(
+                        Terminal::owned_ptr _dot_token,
+                        Terminal::owned_ptr _identifier_token,
+                        std::unique_ptr<GlobalInitializer> _global_initializer,
+                        Terminal::owned_ptr _semicolon_token
+                        );
+      ~StructInitializer();
+      const GlobalInitializer & get_initializer() const;
+    private:
+      Terminal::owned_ptr dot_token;
+      Terminal::owned_ptr identifier_token;
+      std::unique_ptr<GlobalInitializer> global_initializer;
+      Terminal::owned_ptr semicolon_token;
+    };
+          
+    class StructInitializerList : public SyntaxNode, public PtrProtocol<StructInitializerList> {
+    public:
+      StructInitializerList();
+      ~StructInitializerList();
+      void add_initializer(StructInitializer::owned_ptr initializer);
+      const std::vector<StructInitializer::owned_ptr> & get_initializers() const;
+    private:
+      std::vector<StructInitializer::owned_ptr> initializers;
+    };
+          
+    class GlobalInitializerStructInitializerList : public SyntaxNode, public PtrProtocol<GlobalInitializerExpressionPrimary> {
+    public:
+      GlobalInitializerStructInitializerList(
+                                             Terminal::owned_ptr _equals_token,
+                                             Terminal::owned_ptr _brace_l_token,
+                                             StructInitializerList::owned_ptr _struct_initializer,
+                                             Terminal::owned_ptr _brace_r_token
+                                             );
+
+      ~GlobalInitializerStructInitializerList();
+      const StructInitializerList & get_struct_initializer() const;
+    private:
+      Terminal::owned_ptr equals_token;
+      Terminal::owned_ptr brace_l_token;
+      StructInitializerList::owned_ptr struct_initializer;
+      Terminal::owned_ptr brace_r_token;
+    };
+    
     class GlobalInitializer : public SyntaxNode, public PtrProtocol<GlobalInitializer> {
     public:
-      GlobalInitializer();
+      typedef std::variant<
+        GlobalInitializerExpressionPrimary::owned_ptr,
+        GlobalInitializerAddressofExpressionPrimary::owned_ptr,
+        GlobalInitializerStructInitializerList::owned_ptr> GlobalInitializerType;
+      GlobalInitializer(GlobalInitializerType initializer, SyntaxNode *raw_ptr);
       ~GlobalInitializer();
+      const GlobalInitializerType & get_initializer() const;
+    private:
+      GlobalInitializerType initializer;
     };
     
     class FileStatementGlobalDefinition : public SyntaxNode, public PtrProtocol<FileStatementGlobalDefinition> {
@@ -328,10 +440,31 @@ namespace JLang::frontend {
     public:
     private:
     };
+    class NamespaceDeclaration : public SyntaxNode, public PtrProtocol<NamespaceDeclaration> {
+    public:
+      NamespaceDeclaration(
+                           AccessModifier::owned_ptr _access_modifier,
+                           Terminal::owned_ptr _namespace_token,
+                           Terminal::owned_ptr _identifier_token
+                           );
+      ~NamespaceDeclaration();
+      const AccessModifier & get_access_modifier() const;
+      const Terminal & get_name() const;
+    private:
+      AccessModifier::owned_ptr access_modifier;
+      Terminal::owned_ptr namespace_token;
+      Terminal::owned_ptr identifier_token;
+    };
+
     class FileStatementNamespace : public SyntaxNode, public PtrProtocol<FileStatementNamespace> {
     public:
+      FileStatementNamespace(NamespaceDeclaration::owned_ptr _namespace_declaration);
+      ~FileStatementNamespace();
+      const NamespaceDeclaration & get_declaration() const;
     private:
+      NamespaceDeclaration::owned_ptr namespace_declaration;
     };
+    
     class FileStatementUsing : public SyntaxNode, public PtrProtocol<FileStatementUsing> {
     public:
     private:
