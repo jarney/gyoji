@@ -902,20 +902,285 @@ const EnumDefinitionValueList &
 EnumDefinition::get_value_list() const
 { return *enum_value_list; }
 ///////////////////////////////////////////////////
-Expression::Expression()
-  : SyntaxNode("expression", this)
+ExpressionPrimaryIdentifier::ExpressionPrimaryIdentifier(Terminal::owned_ptr _identifier_token)
+  : SyntaxNode("expression_primary_identifier", this)
+  , identifier_token(std::move(_identifier_token))
+{
+  add_child(identifier_token.get());
+}
+ExpressionPrimaryIdentifier::~ExpressionPrimaryIdentifier()
 {}
-Expression::~Expression()
-{}
+const std::string &
+ExpressionPrimaryIdentifier::get_identifier() const
+{ return identifier_token->value; }
 ///////////////////////////////////////////////////
+ExpressionPrimaryNested::ExpressionPrimaryNested(
+                                                 Terminal::owned_ptr _paren_l_token,
+                                                 std::unique_ptr<Expression> _expression,
+                                                 Terminal::owned_ptr _paren_r_token
+                                                 )
+  : SyntaxNode("expression_primary_nested", this)
+  , paren_l_token(std::move(_paren_l_token))
+  , expression(std::move(_expression))
+  , paren_r_token(std::move(_paren_r_token))
+{
+  add_child(paren_l_token.get());
+  add_child(expression.get());
+  add_child(paren_r_token.get());
+}
+ExpressionPrimaryNested::~ExpressionPrimaryNested()
+{}
+const Expression &
+ExpressionPrimaryNested::get_expression() const
+{ return *expression; }
 
 ///////////////////////////////////////////////////
-ExpressionPrimary::ExpressionPrimary()
+ExpressionPrimary::ExpressionPrimary(ExpressionPrimary::ExpressionType _expression_type)
   : SyntaxNode("expression_primary", this)
+  , expression_type(std::move(_expression_type))
 {}
 ExpressionPrimary::~ExpressionPrimary()
 {}
+const ExpressionPrimary::ExpressionType &
+ExpressionPrimary::get_expression() const
+{ return expression_type; }
 
+///////////////////////////////////////////////////
+ExpressionPostfixArrayIndex::ExpressionPostfixArrayIndex(
+                                  std::unique_ptr<Expression> _array_expression,
+                                  Terminal::owned_ptr _bracket_l_token,
+                                  std::unique_ptr<Expression> _index_expression,
+                                  Terminal::owned_ptr _bracket_r_token
+                                  )
+  : SyntaxNode("expression_postfix_array_index", this)
+  , array_expression(std::move(_array_expression))
+  , bracket_l_token(std::move(_bracket_l_token))
+  , index_expression(std::move(_index_expression))
+  , bracket_r_token(std::move(_bracket_r_token))
+{
+  add_child(array_expression.get());
+  add_child(bracket_l_token.get());
+  add_child(index_expression.get());
+  add_child(bracket_r_token.get());
+}
+ExpressionPostfixArrayIndex::~ExpressionPostfixArrayIndex()
+{}
+const Expression &
+ExpressionPostfixArrayIndex::get_array() const
+{ return *array_expression; }
+const Expression &
+ExpressionPostfixArrayIndex::get_index() const
+{ return *index_expression; }
+///////////////////////////////////////////////////
+ArgumentExpressionList::ArgumentExpressionList()
+  : SyntaxNode("argument_expression_list", this)
+{}
+ArgumentExpressionList::~ArgumentExpressionList()
+{}
+
+///////////////////////////////////////////////////
+ExpressionPostfixFunctionCall::ExpressionPostfixFunctionCall(
+                                    std::unique_ptr<Expression> _function_expression,
+                                    Terminal::owned_ptr _paren_l_token,
+                                    std::unique_ptr<ArgumentExpressionList> _arguments,
+                                    Terminal::owned_ptr _paren_r_token
+                                    )
+  : SyntaxNode("expression_postfix_function_call", this)
+  , function_expression(std::move(_function_expression))
+  , paren_l_token(std::move(_paren_l_token))
+  , arguments(std::move(_arguments))
+  , paren_r_token(std::move(_paren_r_token))
+{
+  add_child(function_expression.get());
+  add_child(paren_l_token.get());
+  add_child(arguments.get());
+  add_child(paren_r_token.get());
+}
+ExpressionPostfixFunctionCall::~ExpressionPostfixFunctionCall()
+{}
+const Expression &
+ExpressionPostfixFunctionCall::get_function() const
+{ return *function_expression; }
+const ArgumentExpressionList &
+ExpressionPostfixFunctionCall::get_arguments() const
+{ return *arguments; }
+///////////////////////////////////////////////////
+ExpressionPostfixDot::ExpressionPostfixDot(
+                           std::unique_ptr<Expression> _expression,
+                           Terminal::owned_ptr _dot_token,
+                           Terminal::owned_ptr _identifier_token
+                           )
+  : SyntaxNode("expression_postfix_dot", this)
+  , expression(std::move(_expression))
+  , dot_token(std::move(_dot_token))
+  , identifier_token(std::move(_identifier_token))
+{
+  add_child(expression.get());
+  add_child(dot_token.get());
+  add_child(identifier_token.get());
+}
+ExpressionPostfixDot::~ExpressionPostfixDot()
+{}
+const Expression &
+ExpressionPostfixDot::get_expression() const
+{ return *expression; }
+const std::string &
+ExpressionPostfixDot::get_identifier() const
+{ return identifier_token->value; }
+
+///////////////////////////////////////////////////
+ExpressionPostfixArrow::ExpressionPostfixArrow(
+                           std::unique_ptr<Expression> _expression,
+                           Terminal::owned_ptr _arrow_token,
+                           Terminal::owned_ptr _identifier_token
+                           )
+  : SyntaxNode("expression_postfix_arrow", this)
+  , expression(std::move(_expression))
+  , arrow_token(std::move(_arrow_token))
+  , identifier_token(std::move(_identifier_token))
+{
+  add_child(expression.get());
+  add_child(arrow_token.get());
+  add_child(identifier_token.get());
+}
+ExpressionPostfixArrow::~ExpressionPostfixArrow()
+{}
+const Expression &
+ExpressionPostfixArrow::get_expression() const
+{ return *expression; }
+const std::string &
+ExpressionPostfixArrow::get_identifier() const
+{ return identifier_token->value; }
+
+///////////////////////////////////////////////////
+ExpressionPostfixIncDec::ExpressionPostfixIncDec(
+                                                 std::unique_ptr<Expression> _expression,
+                                                 Terminal::owned_ptr _operator_token,
+                                                 ExpressionPostfixIncDec::OperationType _type
+                                                 )
+  : SyntaxNode("expression_postfix_incdec", this)
+  , expression(std::move(_expression))
+  , operator_token(std::move(_operator_token))
+  , type(_type)
+{
+  add_child(expression.get());
+  add_child(operator_token.get());
+}
+ExpressionPostfixIncDec::~ExpressionPostfixIncDec()
+{}
+const ExpressionPostfixIncDec::OperationType &
+ExpressionPostfixIncDec::get_type()
+{ return type; }
+const Expression &
+ExpressionPostfixIncDec::get_expression()
+{ return *expression; }
+///////////////////////////////////////////////////
+ExpressionUnaryPrefix::ExpressionUnaryPrefix(
+                                             std::unique_ptr<Expression> _expression,
+                                             Terminal::owned_ptr _operator_token,
+                                             ExpressionUnaryPrefix::OperationType _type
+                                                 )
+  : SyntaxNode("expression_unary_prefix", this)
+  , operator_token(std::move(_operator_token))
+  , expression(std::move(_expression))
+  , type(_type)
+{
+  add_child(operator_token.get());
+  add_child(expression.get());
+}
+ExpressionUnaryPrefix::~ExpressionUnaryPrefix()
+{}
+const ExpressionUnaryPrefix::OperationType &
+ExpressionUnaryPrefix::get_type()
+{ return type; }
+const Expression &
+ExpressionUnaryPrefix::get_expression()
+{ return *expression; }
+///////////////////////////////////////////////////
+ExpressionUnarySizeofType::ExpressionUnarySizeofType(
+                                Terminal::owned_ptr _sizeof_token,
+                                Terminal::owned_ptr _paren_l_token,
+                                TypeSpecifier::owned_ptr _type_specifier,
+                                Terminal::owned_ptr _paren_r_token
+                                )
+  : SyntaxNode("expression_unary_sizeof_type", this)
+  , sizeof_token(std::move(_sizeof_token))
+  , paren_l_token(std::move(_paren_l_token))
+  , type_specifier(std::move(_type_specifier))
+  , paren_r_token(std::move(_paren_r_token))
+{
+  add_child(sizeof_token.get());
+  add_child(paren_l_token.get());
+  add_child(type_specifier.get());
+  add_child(paren_r_token.get());
+}
+ExpressionUnarySizeofType::~ExpressionUnarySizeofType()
+{}
+const TypeSpecifier &
+ExpressionUnarySizeofType::get_type_specifier() const
+{ return *type_specifier; }
+///////////////////////////////////////////////////
+ExpressionCast::ExpressionCast(
+                     Terminal::owned_ptr _cast_token,
+                     Terminal::owned_ptr _paren_l_token,
+                     TypeSpecifier::owned_ptr _type_specifier,
+                     Terminal::owned_ptr _comma_token,
+                     std::unique_ptr<Expression> _expression,
+                     Terminal::owned_ptr _paren_r_token
+                     )
+  : SyntaxNode("expression_cast", this)
+  , cast_token(std::move(_cast_token))
+  , paren_l_token(std::move(_paren_l_token))
+  , type_specifier(std::move(_type_specifier))
+  , comma_token(std::move(_comma_token))
+  , expression(std::move(_expression))
+  , paren_r_token(std::move(_paren_r_token))
+{}
+ExpressionCast::~ExpressionCast()
+{}
+const TypeSpecifier &
+ExpressionCast::get_type() const
+{ return *type_specifier; }
+const Expression &
+ExpressionCast::get_expression() const
+{ return *expression; }
+///////////////////////////////////////////////////
+ExpressionBinary::ExpressionBinary(
+                       std::unique_ptr<Expression> _expression_a,
+                       Terminal::owned_ptr _operator_token,
+                       std::unique_ptr<Expression> _expression_b
+                       )
+  : SyntaxNode("expression_binary", this)
+  , expression_a(std::move(_expression_a))
+  , operator_token(std::move(_operator_token))
+  , expression_b(std::move(_expression_b))
+{
+  add_child(expression_a.get());
+  add_child(operator_token.get());
+  add_child(expression_b.get());
+  type = OperationType::LOGICAL_AND; // XXX TODO: get these from the tokens.
+}
+ExpressionBinary::~ExpressionBinary()
+{}
+const Expression &
+ExpressionBinary::get_a() const
+{ return *expression_b; }
+const ExpressionBinary::OperationType &
+ExpressionBinary::get_operator() const
+{ return type; }
+const Expression &
+ExpressionBinary::get_b() const
+{ return *expression_a; }
+///////////////////////////////////////////////////
+Expression::Expression(Expression::ExpressionType _expression_type)
+      : SyntaxNode("expression", this)
+      , expression_type(std::move(_expression_type))
+{}
+Expression::~Expression()
+{}
+const Expression::ExpressionType &
+Expression::get_expression() const
+{ return expression_type; }
 ///////////////////////////////////////////////////
 
 GlobalInitializerExpressionPrimary::GlobalInitializerExpressionPrimary(

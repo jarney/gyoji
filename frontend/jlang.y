@@ -224,7 +224,7 @@
 %nterm <JLang::frontend::ASTNode::ptr> expression_unary;
 %nterm <JLang::frontend::ASTNode::ptr> expression_unary_increment;
 %nterm <JLang::frontend::ASTNode::ptr> expression_unary_decrement;
-%nterm <JLang::frontend::ASTNode::ptr> expression_unary_cast;
+%nterm <JLang::frontend::ASTNode::ptr> expression_unary_prefix;
 %nterm <JLang::frontend::ASTNode::ptr> expression_unary_sizeof_type;
 
 %nterm <JLang::frontend::ASTNode::ptr> expression_cast;
@@ -1384,7 +1384,7 @@ expression_unary
                 $$ = $1;
                 PRINT_NONTERMINALS($$);
         }
-        | expression_unary_cast {
+        | expression_unary_prefix {
                 $$ = $1;
                 PRINT_NONTERMINALS($$);
         }
@@ -1414,11 +1414,11 @@ expression_unary_decrement
                 PRINT_NONTERMINALS($$);
         }
         ;
-expression_unary_cast
+expression_unary_prefix
         : operator_unary expression_cast {
                 $$ = std::make_shared<JLang::frontend::ASTNode>();
-                $$->type = Parser::symbol_kind::S_expression_unary_cast;
-                $$->typestr = std::string("expression_unary_cast");
+                $$->type = Parser::symbol_kind::S_expression_unary_prefix;
+                $$->typestr = std::string("expression_unary_prefix");
                 $$->children.push_back($1);
                 $$->children.push_back($2);
                 PRINT_NONTERMINALS($$);

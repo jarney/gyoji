@@ -36,7 +36,19 @@ namespace JLang::frontend {
     class EnumDefinitionValueList;
   class EnumDefinition;
 
+    class ExpressionPrimaryIdentifier;
+    class ExpressionPrimaryNested;
   class ExpressionPrimary;
+    class ExpressionPostfixArrayIndex;
+      class ArgumentExpressionList;
+    class ExpressionPostfixFunctionCall;
+    class ExpressionPostfixDot;
+    class ExpressionPostfixArrow;
+    class ExpressionPostfixIncDec;
+    class ExpressionUnaryPrefix;
+    class ExpressionUnarySizeofType;
+    class ExpressionCast;
+    class ExpressionBinary;
   class Expression;
 
       class StatementVariableDeclaration;
@@ -104,7 +116,19 @@ namespace JLang::frontend {
           EnumDefinitionValueList*,
         EnumDefinition*,
       
+          ExpressionPrimaryIdentifier*,
+          ExpressionPrimaryNested*,
         ExpressionPrimary*,
+          ExpressionPostfixArrayIndex*,
+            ArgumentExpressionList*,
+          ExpressionPostfixFunctionCall*,
+          ExpressionPostfixDot*,
+          ExpressionPostfixArrow*,
+          ExpressionPostfixIncDec*,
+          ExpressionUnaryPrefix*,
+          ExpressionUnarySizeofType*,
+          ExpressionCast*,
+          ExpressionBinary*,
         Expression*,
 
             StatementVariableDeclaration*,
@@ -810,17 +834,257 @@ namespace JLang::frontend {
       Terminal::owned_ptr semicolon_token;
       
     };
+
+    class ExpressionPrimaryIdentifier : public SyntaxNode, public PtrProtocol<ExpressionPrimary> {
+    public:
+      ExpressionPrimaryIdentifier(Terminal::owned_ptr _identifier_token);
+      ~ExpressionPrimaryIdentifier();
+      const std::string & get_identifier() const;
+    private:
+      Terminal::owned_ptr identifier_token;
+    };
+    class ExpressionPrimaryNested : public SyntaxNode, public PtrProtocol<ExpressionPrimary> {
+    public:
+      ExpressionPrimaryNested(
+                              Terminal::owned_ptr _paren_l_token,
+                              std::unique_ptr<Expression> _expression,
+                              Terminal::owned_ptr _paren_r_token
+                              );
+      ~ExpressionPrimaryNested();
+      const Expression & get_expression() const;
+    private:
+      Terminal::owned_ptr paren_l_token;
+      std::unique_ptr<Expression> expression;
+      Terminal::owned_ptr paren_r_token;
+    };
     
     class ExpressionPrimary : public SyntaxNode, public PtrProtocol<ExpressionPrimary> {
     public:
-      ExpressionPrimary();
+      typedef std::variant<ExpressionPrimaryIdentifier::owned_ptr
+                           > ExpressionType;
+      ExpressionPrimary(ExpressionPrimary::ExpressionType _expression_type);
       ~ExpressionPrimary();
+      const ExpressionPrimary::ExpressionType & get_expression() const;
+    private:
+      ExpressionPrimary::ExpressionType expression_type;
+    };
+
+    class ExpressionPostfixArrayIndex : public SyntaxNode, public PtrProtocol<ExpressionPostfixArrayIndex> {
+    public:
+      ExpressionPostfixArrayIndex(
+                                  std::unique_ptr<Expression> _array_expression,
+                                  Terminal::owned_ptr _bracket_l_token,
+                                  std::unique_ptr<Expression> _index_expression,
+                                  Terminal::owned_ptr _bracket_r_token
+                                  );
+      ~ExpressionPostfixArrayIndex();
+      const Expression & get_array() const;
+      const Expression & get_index() const;
+    private:
+      std::unique_ptr<Expression> array_expression;
+      Terminal::owned_ptr bracket_l_token;
+      std::unique_ptr<Expression> index_expression;
+      Terminal::owned_ptr bracket_r_token;
+    };
+
+    class ArgumentExpressionList : public SyntaxNode, public PtrProtocol<ExpressionPostfixFunctionCall> {
+    public:
+      ArgumentExpressionList();
+      ~ArgumentExpressionList();
+    };
+    
+    class ExpressionPostfixFunctionCall : public SyntaxNode, public PtrProtocol<ExpressionPostfixFunctionCall> {
+    public:
+      ExpressionPostfixFunctionCall(
+                                    std::unique_ptr<Expression> _function_expression,
+                                    Terminal::owned_ptr _paren_l_token,
+                                    std::unique_ptr<ArgumentExpressionList> _arguments,
+                                    Terminal::owned_ptr _paren_r_token
+                                    );
+      ~ExpressionPostfixFunctionCall();
+      const Expression & get_function() const;
+      const ArgumentExpressionList & get_arguments() const;
+    private:
+      std::unique_ptr<Expression> function_expression;
+      Terminal::owned_ptr paren_l_token;
+      std::unique_ptr<ArgumentExpressionList> arguments;
+      Terminal::owned_ptr paren_r_token;
+    };
+
+    class ExpressionPostfixDot : public SyntaxNode, public PtrProtocol<ExpressionPostfixDot> {
+    public:
+      ExpressionPostfixDot(
+                           std::unique_ptr<Expression> _expression,
+                           Terminal::owned_ptr _dot_token,
+                           Terminal::owned_ptr _identifier_token
+                           );
+      ~ExpressionPostfixDot();
+      const Expression & get_expression() const;
+      const std::string & get_identifier() const;
+    private:
+      std::unique_ptr<Expression> expression;
+      Terminal::owned_ptr dot_token;
+      Terminal::owned_ptr identifier_token;
+    };
+    
+    class ExpressionPostfixArrow : public SyntaxNode, public PtrProtocol<ExpressionPostfixArrow> {
+    public:
+      ExpressionPostfixArrow(
+                             std::unique_ptr<Expression> _expression,
+                             Terminal::owned_ptr _arrow_token,
+                             Terminal::owned_ptr _identifier_token
+                             );
+      ~ExpressionPostfixArrow();
+      const Expression & get_expression() const;
+      const std::string & get_identifier() const;
+    private:
+      std::unique_ptr<Expression> expression;
+      Terminal::owned_ptr arrow_token;
+      Terminal::owned_ptr identifier_token;
+    };
+
+    class ExpressionPostfixIncDec : public SyntaxNode, public PtrProtocol<Expression> {
+    public:
+      typedef enum {
+        INCREMENT,
+        DECREMENT
+      } OperationType;
+      ExpressionPostfixIncDec(
+                              std::unique_ptr<Expression> _expression,
+                              Terminal::owned_ptr _operator_token,
+                              ExpressionPostfixIncDec::OperationType _type
+                              );
+      ~ExpressionPostfixIncDec();
+      const ExpressionPostfixIncDec::OperationType & get_type();
+      const Expression & get_expression();
+    private:
+      ExpressionPostfixIncDec::OperationType type;
+      Terminal::owned_ptr operator_token;
+      std::unique_ptr<Expression> expression;
+    };
+
+    class ExpressionUnaryPrefix : public SyntaxNode, public PtrProtocol<ExpressionUnaryPrefix> {
+    public:
+      typedef enum {
+        INCREMENT,
+        DECREMENT,
+        ADDRESSOF,
+        DEREFERENCE,
+        PLUS,
+        MINUS,
+        BITWISE_NOT,
+        LOGICAL_NOT
+      } OperationType;
+      ExpressionUnaryPrefix(
+                              std::unique_ptr<Expression> _expression,
+                              Terminal::owned_ptr _operator_token,
+                              ExpressionUnaryPrefix::OperationType _type
+                              );
+      ~ExpressionUnaryPrefix();
+      const ExpressionUnaryPrefix::OperationType & get_type();
+      const Expression & get_expression();
+    private:
+      ExpressionUnaryPrefix::OperationType type;
+      Terminal::owned_ptr operator_token;
+      std::unique_ptr<Expression> expression;
+    };
+
+    class ExpressionUnarySizeofType : public SyntaxNode, public PtrProtocol<ExpressionUnarySizeofType> {
+    public:
+      ExpressionUnarySizeofType(
+                                Terminal::owned_ptr _sizeof_token,
+                                Terminal::owned_ptr _paren_l_token,
+                                TypeSpecifier::owned_ptr _type_specifier,
+                                Terminal::owned_ptr _paren_r_token
+                                );
+      ~ExpressionUnarySizeofType();
+      const TypeSpecifier & get_type_specifier() const;
+    private:
+      Terminal::owned_ptr sizeof_token;
+      Terminal::owned_ptr paren_l_token;
+      TypeSpecifier::owned_ptr type_specifier;
+      Terminal::owned_ptr paren_r_token;
+    };
+
+    class ExpressionCast : public SyntaxNode, public PtrProtocol<ExpressionCast> {
+    public:
+      ExpressionCast(
+                     Terminal::owned_ptr _cast_token,
+                     Terminal::owned_ptr _paren_l_token,
+                     TypeSpecifier::owned_ptr _type_specifier,
+                     Terminal::owned_ptr _comma_token,
+                     std::unique_ptr<Expression> _expression,
+                     Terminal::owned_ptr _paren_r_token
+                     );
+      ~ExpressionCast();
+      const TypeSpecifier & get_type() const;
+      const Expression & get_expression() const;
+    private:
+      Terminal::owned_ptr cast_token;
+      Terminal::owned_ptr paren_l_token;
+      TypeSpecifier::owned_ptr type_specifier;
+      Terminal::owned_ptr comma_token;
+      std::unique_ptr<Expression> expression;
+      Terminal::owned_ptr paren_r_token;
+    };
+
+    class ExpressionBinary : public SyntaxNode, public PtrProtocol<ExpressionBinary> {
+    public:
+      typedef enum {
+        ADD,
+        SUBTRACT,
+        MULTIPLY,
+        DIVIDE,
+        MODULO,
+        LOGICAL_AND,
+        LOGICAL_OR,
+        LOGICAL_XOR,
+        BITWISE_AND,
+        BITWISE_OR,
+        BITWISE_XOR,
+        SHIFT_LEFT,
+        SHIFT_RIGHT,
+        COMPARE_LT,
+        COMPARE_GT,
+        COMPARE_LE,
+        COMPARE_GE,
+        COMPARE_EQ,
+        COMPARE_NE
+      } OperationType;
+      ExpressionBinary(
+                       std::unique_ptr<Expression> _expression_a,
+                       Terminal::owned_ptr _operator_token,
+                       std::unique_ptr<Expression> _expression_b
+                       );
+      ~ExpressionBinary();
+      const Expression & get_a() const;
+      const ExpressionBinary::OperationType & get_operator() const;
+      const Expression & get_b() const;
+      
+    private:
+      OperationType type;
+      std::unique_ptr<Expression> expression_a;
+      Terminal::owned_ptr operator_token;
+      std::unique_ptr<Expression> expression_b;
     };
     
     class Expression : public SyntaxNode, public PtrProtocol<Expression> {
     public:
-      Expression();
+      typedef std::variant<ExpressionPrimary::owned_ptr,
+                           ExpressionPostfixArrayIndex::owned_ptr,
+                           ExpressionPostfixFunctionCall::owned_ptr,
+                           ExpressionPostfixDot::owned_ptr,
+                           ExpressionPostfixArrow::owned_ptr,
+                           ExpressionPostfixIncDec::owned_ptr,
+                           ExpressionUnaryPrefix::owned_ptr,
+                           ExpressionUnarySizeofType::owned_ptr,
+                           ExpressionCast::owned_ptr
+                           > ExpressionType;
+      Expression(Expression::ExpressionType _expression_type);
       ~Expression();
+      const Expression::ExpressionType & get_expression() const;
+    private:
+      Expression::ExpressionType expression_type;
     };
     
     class GlobalInitializerExpressionPrimary : public SyntaxNode, public PtrProtocol<GlobalInitializerExpressionPrimary> {
