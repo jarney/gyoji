@@ -19,9 +19,16 @@ namespace JLang::frontend {
   
   class Terminal;
 
+  class AccessQualifier;
   class AccessModifier;
   class UnsafeModifier;
     class TypeName;
+    class TypeSpecifierCallArgs;
+    class TypeSpecifierSimple;
+    class TypeSpecifierTemplate;
+    class TypeSpecifierFunctionPointer;
+    class TypeSpecifierPointerTo;
+    class TypeSpecifierReferenceTo;
   class TypeSpecifier;
     class FunctionDefinitionArg;
   class FunctionDefinitionArgList;
@@ -32,9 +39,6 @@ namespace JLang::frontend {
         class ClassMemberDeclarationMethod;
         class ClassMemberDeclarationConstructor;
         class ClassMemberDeclarationDestructor;
-        class ClassMemberDeclarationClass;
-        class ClassMemberDeclarationEnum;
-        class ClassMemberDeclarationTypedef;
       class ClassMemberDeclaration;
     class ClassMemberDeclarationList;
   class ClassDefinition;
@@ -109,9 +113,16 @@ namespace JLang::frontend {
       typedef std::variant<
         Terminal*,
       
+        AccessQualifier*,
         AccessModifier*,
         UnsafeModifier*,
           TypeName*,
+          TypeSpecifierCallArgs*,
+          TypeSpecifierSimple*,
+          TypeSpecifierTemplate*,
+          TypeSpecifierFunctionPointer*,
+          TypeSpecifierPointerTo*,
+          TypeSpecifierReferenceTo*,
         TypeSpecifier*,
           FunctionDefinitionArg*,
         FunctionDefinitionArgList*,
@@ -122,9 +133,6 @@ namespace JLang::frontend {
               ClassMemberDeclarationMethod*,
               ClassMemberDeclarationConstructor*,
               ClassMemberDeclarationDestructor*,
-              ClassMemberDeclarationClass*,
-              ClassMemberDeclarationEnum*,
-              ClassMemberDeclarationTypedef*,
             ClassMemberDeclaration*,
           ClassMemberDeclarationList*,
         ClassDefinition*,
@@ -312,6 +320,22 @@ namespace JLang::frontend {
       FileStatementType statement;
     };
 
+    class AccessQualifier : public SyntaxNode, public PtrProtocol<AccessQualifier> {
+    public:
+      typedef enum {
+        UNSPECIFIED,
+        VOLATILE,
+        CONST
+      } AccessQualifierType;
+      AccessQualifier(AccessQualifier::AccessQualifierType _type);
+      AccessQualifier(Terminal::owned_ptr _qualifier, AccessQualifierType _type);
+      ~AccessQualifier();
+      const AccessQualifier::AccessQualifierType & get_type() const;
+    private:
+      AccessQualifier::AccessQualifierType type;
+      Terminal::owned_ptr qualifier;
+    };
+    
     class AccessModifier : public SyntaxNode, public PtrProtocol<AccessModifier> {
     public:
       typedef enum {
@@ -326,6 +350,7 @@ namespace JLang::frontend {
       AccessModifierType type;
       Terminal::owned_ptr modifier;
     };
+
     class UnsafeModifier : public SyntaxNode, public PtrProtocol<UnsafeModifier> {
     public:
       UnsafeModifier(Terminal::owned_ptr _unsafe_token);
@@ -360,11 +385,63 @@ namespace JLang::frontend {
       Terminal::owned_ptr paren_r_token;
     };
     
+    class TypeSpecifierCallArgs : public SyntaxNode, public PtrProtocol<TypeSpecifierCallArgs> {
+    public:
+      TypeSpecifierCallArgs();
+      ~TypeSpecifierCallArgs();
+      const std::vector<std::unique_ptr<TypeSpecifier>> & get_arguments() const;
+      void add_argument(std::unique_ptr<TypeSpecifier> _argument);
+      void add_argument(Terminal::owned_ptr _comma_token, std::unique_ptr<TypeSpecifier> _argument);
+    private:
+      std::vector<Terminal::owned_ptr> comma_list;
+      std::vector<std::unique_ptr<TypeSpecifier>> arguments;
+    };
+
+    class TypeSpecifierSimple : public SyntaxNode, public PtrProtocol<TypeSpecifierSimple> {
+    public:
+      TypeSpecifierSimple();
+      ~TypeSpecifierSimple();
+    private:
+    };
+    class TypeSpecifierTemplate : public SyntaxNode, public PtrProtocol<TypeSpecifierTemplate> {
+    public:
+      TypeSpecifierTemplate();
+      ~TypeSpecifierTemplate();
+    private:
+    };
+    class TypeSpecifierFunctionPointer : public SyntaxNode, public PtrProtocol<TypeSpecifierFunctionPointer> {
+    public:
+      TypeSpecifierFunctionPointer();
+      ~TypeSpecifierFunctionPointer();
+    private:
+    };
+    class TypeSpecifierPointerTo : public SyntaxNode, public PtrProtocol<TypeSpecifierPointerTo> {
+    public:
+      TypeSpecifierPointerTo();
+      ~TypeSpecifierPointerTo();
+    private:
+    };
+    class TypeSpecifierReferenceTo : public SyntaxNode, public PtrProtocol<TypeSpecifierReferenceTo> {
+    public:
+      TypeSpecifierReferenceTo();
+      ~TypeSpecifierReferenceTo();
+    private:
+    };
     
     class TypeSpecifier : public SyntaxNode, public PtrProtocol<TypeSpecifier> {
     public:
-      TypeSpecifier();
+      typedef std::variant<
+        TypeSpecifierSimple::owned_ptr,
+        TypeSpecifierTemplate::owned_ptr,
+        TypeSpecifierFunctionPointer::owned_ptr,
+        TypeSpecifierPointerTo::owned_ptr,
+        TypeSpecifierReferenceTo::owned_ptr
+      > TypeSpecifierType;
+      TypeSpecifier(TypeSpecifier::TypeSpecifierType _type, SyntaxNode *node);
       ~TypeSpecifier();
+      const TypeSpecifier::TypeSpecifierType & get_type() const;
+    private:
+      TypeSpecifier::TypeSpecifierType type;
     };
 
     class FunctionDefinitionArg : public SyntaxNode, public PtrProtocol<FunctionDefinitionArg> {
@@ -819,6 +896,7 @@ namespace JLang::frontend {
       Terminal::owned_ptr semicolon_token;
     };
     class ClassMemberDeclarationConstructor : public SyntaxNode, public PtrProtocol<ClassMemberDeclarationConstructor> {
+    public:
       ClassMemberDeclarationConstructor(
                                         AccessModifier::owned_ptr _access_modifier,
                                         TypeSpecifier::owned_ptr _type_specifier,
@@ -840,6 +918,7 @@ namespace JLang::frontend {
       Terminal::owned_ptr semicolon_token;
     };
     class ClassMemberDeclarationDestructor : public SyntaxNode, public PtrProtocol<ClassMemberDeclarationDestructor> {
+    public:
       ClassMemberDeclarationDestructor(
                                        Terminal::owned_ptr _tilde_token,
                                        AccessModifier::owned_ptr _access_modifier,
@@ -877,9 +956,9 @@ namespace JLang::frontend {
         ClassMemberDeclarationMethod::owned_ptr,
         ClassMemberDeclarationConstructor::owned_ptr,
         ClassMemberDeclarationDestructor::owned_ptr,
-        ClassMemberDeclarationClass::owned_ptr,
-        ClassMemberDeclarationEnum::owned_ptr,
-        ClassMemberDeclarationTypedef::owned_ptr
+        std::unique_ptr<ClassDefinition>,
+        std::unique_ptr<EnumDefinition>,
+        std::unique_ptr<TypeDefinition>
       > MemberType;
       ClassMemberDeclaration(
                              MemberType _member,
@@ -1057,6 +1136,12 @@ namespace JLang::frontend {
     public:
       ArgumentExpressionList();
       ~ArgumentExpressionList();
+      const std::vector<std::unique_ptr<Expression>> & get_arguments() const;
+      void add_argument(std::unique_ptr<Expression> _argument);
+      void add_argument(Terminal::owned_ptr _comma_token, std::unique_ptr<Expression> _argument);
+    private:
+      std::vector<Terminal::owned_ptr> comma_list;
+      std::vector<std::unique_ptr<Expression>> arguments;
     };
     
     class ExpressionPostfixFunctionCall : public SyntaxNode, public PtrProtocol<ExpressionPostfixFunctionCall> {

@@ -60,6 +60,25 @@ const SyntaxNode::specific_type_t &SyntaxNode::get_data() const
 }
 
 ///////////////////////////////////////////////////
+AccessQualifier::AccessQualifier(AccessQualifier::AccessQualifierType _type)
+  : SyntaxNode("access_qualifier", this)
+  , type(_type)
+  , qualifier(nullptr)
+{}
+AccessQualifier::AccessQualifier(Terminal::owned_ptr _qualifier, AccessQualifierType _type)
+  : SyntaxNode("access_qualifier", this)
+  , type(_type)
+  , qualifier(std::move(_qualifier))
+{
+  add_child(qualifier.get());
+}
+AccessQualifier::~AccessQualifier()
+{}
+const AccessQualifier::AccessQualifierType &
+AccessQualifier::get_type() const
+{ return type; }
+
+///////////////////////////////////////////////////
 AccessModifier::AccessModifier(Terminal::owned_ptr _modifier, AccessModifier::AccessModifierType _type)
   : SyntaxNode("access_modifier", this)
   , modifier(std::move(_modifier))
@@ -137,12 +156,71 @@ const Expression &
 TypeName::get_expression() const
 { return *expression; }
 ///////////////////////////////////////////////////
-
-TypeSpecifier::TypeSpecifier()
-  : SyntaxNode("type_specifier", this)
+TypeSpecifierCallArgs::TypeSpecifierCallArgs()
+  : SyntaxNode("type_specifier_call_args", this)
 {}
+TypeSpecifierCallArgs::~TypeSpecifierCallArgs()
+{}
+const std::vector<std::unique_ptr<TypeSpecifier>> &
+TypeSpecifierCallArgs::get_arguments() const
+{ return arguments; }
+void
+TypeSpecifierCallArgs::add_argument(std::unique_ptr<TypeSpecifier> _argument)
+{
+  add_child(_argument.get());
+  arguments.push_back(std::move(_argument));
+}
+void
+TypeSpecifierCallArgs::add_argument(Terminal::owned_ptr _comma_token, std::unique_ptr<TypeSpecifier> _argument)
+{
+  add_child(_comma_token.get());
+  add_child(_argument.get());
+  comma_list.push_back(std::move(_comma_token));
+  arguments.push_back(std::move(_argument));
+}
+
+///////////////////////////////////////////////////
+TypeSpecifierSimple::TypeSpecifierSimple()
+  : SyntaxNode("type_specifier_simple", this)
+{}
+TypeSpecifierSimple::~TypeSpecifierSimple()
+{}
+///////////////////////////////////////////////////
+TypeSpecifierTemplate::TypeSpecifierTemplate()
+  : SyntaxNode("type_specifier_template", this)
+{}
+TypeSpecifierTemplate::~TypeSpecifierTemplate()
+{}
+///////////////////////////////////////////////////
+TypeSpecifierFunctionPointer::TypeSpecifierFunctionPointer()
+  : SyntaxNode("type_specifier_function_pointer", this)
+{}
+TypeSpecifierFunctionPointer::~TypeSpecifierFunctionPointer()
+{}
+///////////////////////////////////////////////////
+TypeSpecifierPointerTo::TypeSpecifierPointerTo()
+  : SyntaxNode("type_specifier_pointer_to", this)
+{}
+TypeSpecifierPointerTo::~TypeSpecifierPointerTo()
+{}
+///////////////////////////////////////////////////
+TypeSpecifierReferenceTo::TypeSpecifierReferenceTo()
+  : SyntaxNode("type_specifier_reference_to", this)
+{}
+TypeSpecifierReferenceTo::~TypeSpecifierReferenceTo()
+{}
+///////////////////////////////////////////////////
+TypeSpecifier::TypeSpecifier(TypeSpecifier::TypeSpecifierType _type, SyntaxNode *node)
+  : SyntaxNode("type_specifier", this)
+  , type(std::move(_type))
+{
+  add_child(node);
+}
 TypeSpecifier::~TypeSpecifier()
 {}
+const TypeSpecifier::TypeSpecifierType &
+TypeSpecifier::get_type() const
+{ return type; }
 
 ///////////////////////////////////////////////////
 FunctionDefinitionArg::FunctionDefinitionArg(TypeSpecifier::owned_ptr _type_specifier,
@@ -852,7 +930,6 @@ ClassMemberDeclarationMethod::get_arguments() const
 ClassMemberDeclarationConstructor::ClassMemberDeclarationConstructor(
                                                            AccessModifier::owned_ptr _access_modifier,
                                                            TypeSpecifier::owned_ptr _type_specifier,
-                                                           Terminal::owned_ptr _identifier_token,
                                                            Terminal::owned_ptr _paren_l_token,
                                                            FunctionDefinitionArgList::owned_ptr _function_definition_arg_list,
                                                            Terminal::owned_ptr _paren_r_token,
@@ -881,20 +958,21 @@ ClassMemberDeclarationConstructor::get_access_modifier() const
 const TypeSpecifier &
 ClassMemberDeclarationConstructor::get_type_specifier() const
 { return *type_specifier; }
-const std::string &
 const FunctionDefinitionArgList &
 ClassMemberDeclarationConstructor::get_arguments() const
 { return *function_definition_arg_list; }
 ///////////////////////////////////////////////////
 ClassMemberDeclarationDestructor::ClassMemberDeclarationDestructor(
-                                                           AccessModifier::owned_ptr _access_modifier,
-                                                           TypeSpecifier::owned_ptr _type_specifier,
-                                                           Terminal::owned_ptr _paren_l_token,
-                                                           FunctionDefinitionArgList::owned_ptr _function_definition_arg_list,
-                                                           Terminal::owned_ptr _paren_r_token,
-                                                           Terminal::owned_ptr _semicolon_token
+                                                                   Terminal::owned_ptr _tilde_token,
+                                                                   AccessModifier::owned_ptr _access_modifier,
+                                                                   TypeSpecifier::owned_ptr _type_specifier,
+                                                                   Terminal::owned_ptr _paren_l_token,
+                                                                   FunctionDefinitionArgList::owned_ptr _function_definition_arg_list,
+                                                                   Terminal::owned_ptr _paren_r_token,
+                                                                   Terminal::owned_ptr _semicolon_token
                                                            )
  : SyntaxNode("class_member_declaration_method", this)
+ , tilde_token(std::move(_tilde_token))
  , access_modifier(std::move(_access_modifier))
  , type_specifier(std::move(_type_specifier))
  , paren_l_token(std::move(_paren_l_token))
@@ -902,6 +980,7 @@ ClassMemberDeclarationDestructor::ClassMemberDeclarationDestructor(
  , paren_r_token(std::move(_paren_r_token))
  , semicolon_token(std::move(_semicolon_token))
 {
+  add_child(tilde_token.get());
   add_child(access_modifier.get());
   add_child(type_specifier.get());
   add_child(paren_l_token.get());
@@ -917,7 +996,6 @@ ClassMemberDeclarationDestructor::get_access_modifier() const
 const TypeSpecifier &
 ClassMemberDeclarationDestructor::get_type_specifier() const
 { return *type_specifier; }
-const std::string &
 const FunctionDefinitionArgList &
 ClassMemberDeclarationDestructor::get_arguments() const
 { return *function_definition_arg_list; }
@@ -1194,6 +1272,23 @@ ArgumentExpressionList::ArgumentExpressionList()
 {}
 ArgumentExpressionList::~ArgumentExpressionList()
 {}
+const std::vector<std::unique_ptr<Expression>> &
+ArgumentExpressionList::get_arguments() const
+{ return arguments; }
+void
+ArgumentExpressionList::add_argument(std::unique_ptr<Expression> _argument)
+{
+  add_child(_argument.get());
+  arguments.push_back(std::move(_argument));
+}
+void
+ArgumentExpressionList::add_argument(Terminal::owned_ptr _comma_token, std::unique_ptr<Expression> _argument)
+{
+  add_child(_comma_token.get());
+  add_child(_argument.get());
+  comma_list.push_back(std::move(_comma_token));
+  arguments.push_back(std::move(_argument));
+}
 
 ///////////////////////////////////////////////////
 ExpressionPostfixFunctionCall::ExpressionPostfixFunctionCall(
