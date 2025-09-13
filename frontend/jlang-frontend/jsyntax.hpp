@@ -819,8 +819,48 @@ namespace JLang::frontend {
       Terminal::owned_ptr semicolon_token;
     };
     class ClassMemberDeclarationConstructor : public SyntaxNode, public PtrProtocol<ClassMemberDeclarationConstructor> {
+      ClassMemberDeclarationConstructor(
+                                        AccessModifier::owned_ptr _access_modifier,
+                                        TypeSpecifier::owned_ptr _type_specifier,
+                                        Terminal::owned_ptr _paren_l_token,
+                                        FunctionDefinitionArgList::owned_ptr _function_definition_arg_list,
+                                        Terminal::owned_ptr _paren_r_token,
+                                        Terminal::owned_ptr _semicolon_token
+                                        );
+      ~ClassMemberDeclarationConstructor();
+      const AccessModifier & get_access_modifier() const;
+      const TypeSpecifier & get_type_specifier() const;
+      const FunctionDefinitionArgList & get_arguments() const;
+    private:
+      AccessModifier::owned_ptr access_modifier;
+      TypeSpecifier::owned_ptr type_specifier;
+      Terminal::owned_ptr paren_l_token;
+      FunctionDefinitionArgList::owned_ptr function_definition_arg_list;
+      Terminal::owned_ptr paren_r_token;
+      Terminal::owned_ptr semicolon_token;
     };
     class ClassMemberDeclarationDestructor : public SyntaxNode, public PtrProtocol<ClassMemberDeclarationDestructor> {
+      ClassMemberDeclarationDestructor(
+                                       Terminal::owned_ptr _tilde_token,
+                                       AccessModifier::owned_ptr _access_modifier,
+                                       TypeSpecifier::owned_ptr _type_specifier,
+                                       Terminal::owned_ptr _paren_l_token,
+                                       FunctionDefinitionArgList::owned_ptr _function_definition_arg_list,
+                                       Terminal::owned_ptr _paren_r_token,
+                                       Terminal::owned_ptr _semicolon_token
+                                   );
+      ~ClassMemberDeclarationDestructor();
+      const AccessModifier & get_access_modifier() const;
+      const TypeSpecifier & get_type_specifier() const;
+      const FunctionDefinitionArgList & get_arguments() const;
+    private:
+      Terminal::owned_ptr tilde_token;
+      AccessModifier::owned_ptr access_modifier;
+      TypeSpecifier::owned_ptr type_specifier;
+      Terminal::owned_ptr paren_l_token;
+      FunctionDefinitionArgList::owned_ptr function_definition_arg_list;
+      Terminal::owned_ptr paren_r_token;
+      Terminal::owned_ptr semicolon_token;
     };
     class ClassMemberDeclarationClass : public SyntaxNode, public PtrProtocol<ClassMemberDeclarationDestructor> {
     };

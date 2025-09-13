@@ -849,6 +849,79 @@ const FunctionDefinitionArgList &
 ClassMemberDeclarationMethod::get_arguments() const
 { return *function_definition_arg_list; }
 ///////////////////////////////////////////////////
+ClassMemberDeclarationConstructor::ClassMemberDeclarationConstructor(
+                                                           AccessModifier::owned_ptr _access_modifier,
+                                                           TypeSpecifier::owned_ptr _type_specifier,
+                                                           Terminal::owned_ptr _identifier_token,
+                                                           Terminal::owned_ptr _paren_l_token,
+                                                           FunctionDefinitionArgList::owned_ptr _function_definition_arg_list,
+                                                           Terminal::owned_ptr _paren_r_token,
+                                                           Terminal::owned_ptr _semicolon_token
+                                                           )
+ : SyntaxNode("class_member_declaration_method", this)
+ , access_modifier(std::move(_access_modifier))
+ , type_specifier(std::move(_type_specifier))
+ , paren_l_token(std::move(_paren_l_token))
+ , function_definition_arg_list(std::move(_function_definition_arg_list))
+ , paren_r_token(std::move(_paren_r_token))
+ , semicolon_token(std::move(_semicolon_token))
+{
+  add_child(access_modifier.get());
+  add_child(type_specifier.get());
+  add_child(paren_l_token.get());
+  add_child(function_definition_arg_list.get());
+  add_child(paren_r_token.get());
+  add_child(semicolon_token.get());
+}
+ClassMemberDeclarationConstructor::~ClassMemberDeclarationConstructor()
+{}
+const AccessModifier &
+ClassMemberDeclarationConstructor::get_access_modifier() const
+{ return *access_modifier; }
+const TypeSpecifier &
+ClassMemberDeclarationConstructor::get_type_specifier() const
+{ return *type_specifier; }
+const std::string &
+const FunctionDefinitionArgList &
+ClassMemberDeclarationConstructor::get_arguments() const
+{ return *function_definition_arg_list; }
+///////////////////////////////////////////////////
+ClassMemberDeclarationDestructor::ClassMemberDeclarationDestructor(
+                                                           AccessModifier::owned_ptr _access_modifier,
+                                                           TypeSpecifier::owned_ptr _type_specifier,
+                                                           Terminal::owned_ptr _paren_l_token,
+                                                           FunctionDefinitionArgList::owned_ptr _function_definition_arg_list,
+                                                           Terminal::owned_ptr _paren_r_token,
+                                                           Terminal::owned_ptr _semicolon_token
+                                                           )
+ : SyntaxNode("class_member_declaration_method", this)
+ , access_modifier(std::move(_access_modifier))
+ , type_specifier(std::move(_type_specifier))
+ , paren_l_token(std::move(_paren_l_token))
+ , function_definition_arg_list(std::move(_function_definition_arg_list))
+ , paren_r_token(std::move(_paren_r_token))
+ , semicolon_token(std::move(_semicolon_token))
+{
+  add_child(access_modifier.get());
+  add_child(type_specifier.get());
+  add_child(paren_l_token.get());
+  add_child(function_definition_arg_list.get());
+  add_child(paren_r_token.get());
+  add_child(semicolon_token.get());
+}
+ClassMemberDeclarationDestructor::~ClassMemberDeclarationDestructor()
+{}
+const AccessModifier &
+ClassMemberDeclarationDestructor::get_access_modifier() const
+{ return *access_modifier; }
+const TypeSpecifier &
+ClassMemberDeclarationDestructor::get_type_specifier() const
+{ return *type_specifier; }
+const std::string &
+const FunctionDefinitionArgList &
+ClassMemberDeclarationDestructor::get_arguments() const
+{ return *function_definition_arg_list; }
+///////////////////////////////////////////////////
 ClassMemberDeclaration::ClassMemberDeclaration(
                                                MemberType _member,
                                                SyntaxNode *raw_ptr
