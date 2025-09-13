@@ -1230,6 +1230,31 @@ ExpressionPrimaryNested::get_expression() const
 { return *expression; }
 
 ///////////////////////////////////////////////////
+ExpressionPrimaryLiteralChar::ExpressionPrimaryLiteralChar()
+  : SyntaxNode("expression_primary_literal_char", this)
+{}
+ExpressionPrimaryLiteralChar::~ExpressionPrimaryLiteralChar()
+{}
+///////////////////////////////////////////////////
+ExpressionPrimaryLiteralString::ExpressionPrimaryLiteralString()
+  : SyntaxNode("expression_primary_literal_string", this)
+{}
+ExpressionPrimaryLiteralString::~ExpressionPrimaryLiteralString()
+{}
+///////////////////////////////////////////////////
+ExpressionPrimaryLiteralInt::ExpressionPrimaryLiteralInt()
+  : SyntaxNode("expression_primary_literal_int", this)
+{}
+ExpressionPrimaryLiteralInt::~ExpressionPrimaryLiteralInt()
+{}
+///////////////////////////////////////////////////
+ExpressionPrimaryLiteralFloat::ExpressionPrimaryLiteralFloat()
+  : SyntaxNode("expression_primary_literal_float", this)
+{}
+ExpressionPrimaryLiteralFloat::~ExpressionPrimaryLiteralFloat()
+{}
+
+///////////////////////////////////////////////////
 ExpressionPrimary::ExpressionPrimary(ExpressionPrimary::ExpressionType _expression_type)
   : SyntaxNode("expression_primary", this)
   , expression_type(std::move(_expression_type))

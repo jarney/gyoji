@@ -10,11 +10,6 @@
 #include "namespace.hpp"
 
 namespace JLang::frontend {
-  typedef struct return_data_st {
-    ASTNode::ptr translation_unit;
-    NamespaceContext namespace_context;
-  } return_data_t;
-
   namespace alt_imp {
   
   class Terminal;
@@ -51,6 +46,10 @@ namespace JLang::frontend {
 
     class ExpressionPrimaryIdentifier;
     class ExpressionPrimaryNested;
+    class ExpressionPrimaryLiteralChar;
+    class ExpressionPrimaryLiteralString;
+    class ExpressionPrimaryLiteralInt;
+    class ExpressionPrimaryLiteralFloat;
   class ExpressionPrimary;
     class ExpressionPostfixArrayIndex;
       class ArgumentExpressionList;
@@ -145,6 +144,10 @@ namespace JLang::frontend {
       
           ExpressionPrimaryIdentifier*,
           ExpressionPrimaryNested*,
+          ExpressionPrimaryLiteralChar*,
+          ExpressionPrimaryLiteralString*,
+          ExpressionPrimaryLiteralInt*,
+          ExpressionPrimaryLiteralFloat*,
         ExpressionPrimary*,
           ExpressionPostfixArrayIndex*,
             ArgumentExpressionList*,
@@ -1102,10 +1105,40 @@ namespace JLang::frontend {
       std::unique_ptr<Expression> expression;
       Terminal::owned_ptr paren_r_token;
     };
+
+    class ExpressionPrimaryLiteralChar : public SyntaxNode, public PtrProtocol<ExpressionPrimaryLiteralChar> {
+    public:
+      ExpressionPrimaryLiteralChar();
+      ~ExpressionPrimaryLiteralChar();
+    private:
+    };
+    class ExpressionPrimaryLiteralString : public SyntaxNode, public PtrProtocol<ExpressionPrimaryLiteralString> {
+    public:
+      ExpressionPrimaryLiteralString();
+      ~ExpressionPrimaryLiteralString();
+    private:
+    };
+    class ExpressionPrimaryLiteralInt : public SyntaxNode, public PtrProtocol<ExpressionPrimaryLiteralInt> {
+    public:
+      ExpressionPrimaryLiteralInt();
+      ~ExpressionPrimaryLiteralInt();
+    private:
+    };
+    class ExpressionPrimaryLiteralFloat : public SyntaxNode, public PtrProtocol<ExpressionPrimaryLiteralFloat> {
+    public:
+      ExpressionPrimaryLiteralFloat();
+      ~ExpressionPrimaryLiteralFloat();
+    private:
+    };
     
     class ExpressionPrimary : public SyntaxNode, public PtrProtocol<ExpressionPrimary> {
     public:
-      typedef std::variant<ExpressionPrimaryIdentifier::owned_ptr
+      typedef std::variant<ExpressionPrimaryIdentifier::owned_ptr,
+                           ExpressionPrimaryNested::owned_ptr,
+                           ExpressionPrimaryLiteralChar::owned_ptr,
+                           ExpressionPrimaryLiteralString::owned_ptr,
+                           ExpressionPrimaryLiteralInt::owned_ptr,
+                           ExpressionPrimaryLiteralFloat::owned_ptr
                            > ExpressionType;
       ExpressionPrimary(ExpressionPrimary::ExpressionType _expression_type);
       ~ExpressionPrimary();
@@ -1369,6 +1402,8 @@ namespace JLang::frontend {
                            ExpressionPostfixIncDec::owned_ptr,
                            ExpressionUnaryPrefix::owned_ptr,
                            ExpressionUnarySizeofType::owned_ptr,
+                           ExpressionBinary::owned_ptr,
+                           ExpressionTrinary::owned_ptr,
                            ExpressionCast::owned_ptr
                            > ExpressionType;
       Expression(Expression::ExpressionType _expression_type);
@@ -1614,5 +1649,10 @@ namespace JLang::frontend {
     
   };
   
+  typedef struct return_data_st {
+    alt_imp::TranslationUnit::owned_ptr translation_unit;
+    NamespaceContext namespace_context;
+  } return_data_t;
+
 };
 

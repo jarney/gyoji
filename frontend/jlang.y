@@ -36,251 +36,252 @@
 }
 
 %token INVALID_INPUT
-%token <JLang::frontend::ASTNode::ptr> YYEOF
-%token <JLang::frontend::ASTNode::ptr> IDENTIFIER
-%token <JLang::frontend::ASTNode::ptr> NAMESPACE_NAME
-%token <JLang::frontend::ASTNode::ptr> TYPE_NAME
-%token <JLang::frontend::ASTNode::ptr> CLASS
-%token <JLang::frontend::ASTNode::ptr> ENUM
+%token <JLang::frontend::alt_imp::Terminal::owned_ptr> YYEOF
+%token <JLang::frontend::alt_imp::Terminal::owned_ptr> IDENTIFIER
+%token <JLang::frontend::alt_imp::Terminal::owned_ptr> NAMESPACE_NAME
+%token <JLang::frontend::alt_imp::Terminal::owned_ptr> TYPE_NAME
+%token <JLang::frontend::alt_imp::Terminal::owned_ptr> CLASS
+%token <JLang::frontend::alt_imp::Terminal::owned_ptr> ENUM
 
-%token <JLang::frontend::ASTNode::ptr> NAMESPACE
-%token <JLang::frontend::ASTNode::ptr> AS
-%token <JLang::frontend::ASTNode::ptr> USING
-%token <JLang::frontend::ASTNode::ptr> TYPEDEF
-%token <JLang::frontend::ASTNode::ptr> STRUCT
-%token <JLang::frontend::ASTNode::ptr> UNION
-%token <JLang::frontend::ASTNode::ptr> SIZEOF
-%token <JLang::frontend::ASTNode::ptr> TYPEOF
-%token <JLang::frontend::ASTNode::ptr> CAST
-%token <JLang::frontend::ASTNode::ptr> UNSAFE
- //%token <JLang::frontend::ASTNode::ptr> VAR
-%token <JLang::frontend::ASTNode::ptr> CONST
-%token <JLang::frontend::ASTNode::ptr> VOLATILE
+%token <JLang::frontend::alt_imp::Terminal::owned_ptr> NAMESPACE
+%token <JLang::frontend::alt_imp::Terminal::owned_ptr> AS
+%token <JLang::frontend::alt_imp::Terminal::owned_ptr> USING
+%token <JLang::frontend::alt_imp::Terminal::owned_ptr> TYPEDEF
+%token <JLang::frontend::alt_imp::Terminal::owned_ptr> STRUCT
+%token <JLang::frontend::alt_imp::Terminal::owned_ptr> UNION
+%token <JLang::frontend::alt_imp::Terminal::owned_ptr> SIZEOF
+%token <JLang::frontend::alt_imp::Terminal::owned_ptr> TYPEOF
+%token <JLang::frontend::alt_imp::Terminal::owned_ptr> CAST
+%token <JLang::frontend::alt_imp::Terminal::owned_ptr> UNSAFE
+ //%token <JLang::frontend::alt_imp::Terminal::owned_ptr> VAR
+%token <JLang::frontend::alt_imp::Terminal::owned_ptr> CONST
+%token <JLang::frontend::alt_imp::Terminal::owned_ptr> VOLATILE
 
-%token <JLang::frontend::ASTNode::ptr> PUBLIC
-%token <JLang::frontend::ASTNode::ptr> PRIVATE
-%token <JLang::frontend::ASTNode::ptr> PROTECTED
+%token <JLang::frontend::alt_imp::Terminal::owned_ptr> PUBLIC
+%token <JLang::frontend::alt_imp::Terminal::owned_ptr> PRIVATE
+%token <JLang::frontend::alt_imp::Terminal::owned_ptr> PROTECTED
 
  /* Logical Operations */
-%token <JLang::frontend::ASTNode::ptr> LOGICAL_NOT
-%token <JLang::frontend::ASTNode::ptr> LOGICAL_AND
-%token <JLang::frontend::ASTNode::ptr>  LOGICAL_OR
+%token <JLang::frontend::alt_imp::Terminal::owned_ptr> LOGICAL_NOT
+%token <JLang::frontend::alt_imp::Terminal::owned_ptr> LOGICAL_AND
+%token <JLang::frontend::alt_imp::Terminal::owned_ptr>  LOGICAL_OR
 
  /* Control Flow */
-%token <JLang::frontend::ASTNode::ptr> RETURN
-%token <JLang::frontend::ASTNode::ptr> IF
-%token <JLang::frontend::ASTNode::ptr> ELSE
-%token <JLang::frontend::ASTNode::ptr> WHILE
-%token <JLang::frontend::ASTNode::ptr> FOR
-%token <JLang::frontend::ASTNode::ptr> CONTINUE
-%token <JLang::frontend::ASTNode::ptr> GOTO
-%token <JLang::frontend::ASTNode::ptr> LABEL
-%token <JLang::frontend::ASTNode::ptr> BREAK
-%token <JLang::frontend::ASTNode::ptr> SWITCH
-%token <JLang::frontend::ASTNode::ptr> CASE
-%token <JLang::frontend::ASTNode::ptr> DEFAULT
+%token <JLang::frontend::alt_imp::Terminal::owned_ptr> RETURN
+%token <JLang::frontend::alt_imp::Terminal::owned_ptr> IF
+%token <JLang::frontend::alt_imp::Terminal::owned_ptr> ELSE
+%token <JLang::frontend::alt_imp::Terminal::owned_ptr> WHILE
+%token <JLang::frontend::alt_imp::Terminal::owned_ptr> FOR
+%token <JLang::frontend::alt_imp::Terminal::owned_ptr> CONTINUE
+%token <JLang::frontend::alt_imp::Terminal::owned_ptr> GOTO
+%token <JLang::frontend::alt_imp::Terminal::owned_ptr> LABEL
+%token <JLang::frontend::alt_imp::Terminal::owned_ptr> BREAK
+%token <JLang::frontend::alt_imp::Terminal::owned_ptr> SWITCH
+%token <JLang::frontend::alt_imp::Terminal::owned_ptr> CASE
+%token <JLang::frontend::alt_imp::Terminal::owned_ptr> DEFAULT
 
  /* Binary operations */
-%token <JLang::frontend::ASTNode::ptr> PLUS
-%token <JLang::frontend::ASTNode::ptr> MINUS
-%token <JLang::frontend::ASTNode::ptr> SLASH
-%token <JLang::frontend::ASTNode::ptr> PERCENT
-%token <JLang::frontend::ASTNode::ptr> STAR
-%token <JLang::frontend::ASTNode::ptr> EQUALS
-%token <JLang::frontend::ASTNode::ptr> BANG
-%token <JLang::frontend::ASTNode::ptr> TILDE
-%token <JLang::frontend::ASTNode::ptr> ANDPERSAND
-%token <JLang::frontend::ASTNode::ptr> MUL_ASSIGN
-%token <JLang::frontend::ASTNode::ptr> DIV_ASSIGN
-%token <JLang::frontend::ASTNode::ptr> MOD_ASSIGN
-%token <JLang::frontend::ASTNode::ptr> ADD_ASSIGN
-%token <JLang::frontend::ASTNode::ptr> SUB_ASSIGN
-%token <JLang::frontend::ASTNode::ptr> LEFT_ASSIGN
-%token <JLang::frontend::ASTNode::ptr> RIGHT_ASSIGN
-%token <JLang::frontend::ASTNode::ptr> AND_ASSIGN
-%token <JLang::frontend::ASTNode::ptr> XOR_ASSIGN
-%token <JLang::frontend::ASTNode::ptr> OR_ASSIGN
+%token <JLang::frontend::alt_imp::Terminal::owned_ptr> PLUS
+%token <JLang::frontend::alt_imp::Terminal::owned_ptr> MINUS
+%token <JLang::frontend::alt_imp::Terminal::owned_ptr> SLASH
+%token <JLang::frontend::alt_imp::Terminal::owned_ptr> PERCENT
+%token <JLang::frontend::alt_imp::Terminal::owned_ptr> STAR
+%token <JLang::frontend::alt_imp::Terminal::owned_ptr> EQUALS
+%token <JLang::frontend::alt_imp::Terminal::owned_ptr> BANG
+%token <JLang::frontend::alt_imp::Terminal::owned_ptr> TILDE
+%token <JLang::frontend::alt_imp::Terminal::owned_ptr> ANDPERSAND
+%token <JLang::frontend::alt_imp::Terminal::owned_ptr> MUL_ASSIGN
+%token <JLang::frontend::alt_imp::Terminal::owned_ptr> DIV_ASSIGN
+%token <JLang::frontend::alt_imp::Terminal::owned_ptr> MOD_ASSIGN
+%token <JLang::frontend::alt_imp::Terminal::owned_ptr> ADD_ASSIGN
+%token <JLang::frontend::alt_imp::Terminal::owned_ptr> SUB_ASSIGN
+%token <JLang::frontend::alt_imp::Terminal::owned_ptr> LEFT_ASSIGN
+%token <JLang::frontend::alt_imp::Terminal::owned_ptr> RIGHT_ASSIGN
+%token <JLang::frontend::alt_imp::Terminal::owned_ptr> AND_ASSIGN
+%token <JLang::frontend::alt_imp::Terminal::owned_ptr> XOR_ASSIGN
+%token <JLang::frontend::alt_imp::Terminal::owned_ptr> OR_ASSIGN
 
-%token <JLang::frontend::ASTNode::ptr>  LITERAL_CHAR
-%token <JLang::frontend::ASTNode::ptr>  LITERAL_FLOAT
-%token <JLang::frontend::ASTNode::ptr>  LITERAL_INT
-%token <JLang::frontend::ASTNode::ptr>  LITERAL_STRING
+%token <JLang::frontend::alt_imp::Terminal::owned_ptr>  LITERAL_CHAR
+%token <JLang::frontend::alt_imp::Terminal::owned_ptr>  LITERAL_FLOAT
+%token <JLang::frontend::alt_imp::Terminal::owned_ptr>  LITERAL_INT
+%token <JLang::frontend::alt_imp::Terminal::owned_ptr>  LITERAL_STRING
 
 %token NST_COMMENT_MULTILINE
 %token NST_COMMENT_SINGLE_LINE
 %token NST_WHITESPACE
 %token NST_FILE_METADATA
 
-%token <JLang::frontend::ASTNode::ptr> LT_OP
-%token <JLang::frontend::ASTNode::ptr> GT_OP
-%token <JLang::frontend::ASTNode::ptr> LE_OP
-%token <JLang::frontend::ASTNode::ptr> GE_OP
-%token <JLang::frontend::ASTNode::ptr> NE_OP
-%token <JLang::frontend::ASTNode::ptr> EQ_OP
+%token <JLang::frontend::alt_imp::Terminal::owned_ptr> LT_OP
+%token <JLang::frontend::alt_imp::Terminal::owned_ptr> GT_OP
+%token <JLang::frontend::alt_imp::Terminal::owned_ptr> LE_OP
+%token <JLang::frontend::alt_imp::Terminal::owned_ptr> GE_OP
+%token <JLang::frontend::alt_imp::Terminal::owned_ptr> NE_OP
+%token <JLang::frontend::alt_imp::Terminal::owned_ptr> EQ_OP
 
-%token <JLang::frontend::ASTNode::ptr> XOR_OP
-%token <JLang::frontend::ASTNode::ptr> AND_OP
-%token <JLang::frontend::ASTNode::ptr> PIPE
-%token <JLang::frontend::ASTNode::ptr> OR_OP
-%token <JLang::frontend::ASTNode::ptr> LEFT_OP
-%token <JLang::frontend::ASTNode::ptr> RIGHT_OP
+%token <JLang::frontend::alt_imp::Terminal::owned_ptr> XOR_OP
+%token <JLang::frontend::alt_imp::Terminal::owned_ptr> AND_OP
+%token <JLang::frontend::alt_imp::Terminal::owned_ptr> PIPE
+%token <JLang::frontend::alt_imp::Terminal::owned_ptr> OR_OP
+%token <JLang::frontend::alt_imp::Terminal::owned_ptr> LEFT_OP
+%token <JLang::frontend::alt_imp::Terminal::owned_ptr> RIGHT_OP
 
 /* Common punctuation */
-%token <JLang::frontend::ASTNode::ptr> COMMA
-%token <JLang::frontend::ASTNode::ptr> INC_OP
-%token <JLang::frontend::ASTNode::ptr> DEC_OP
-%token <JLang::frontend::ASTNode::ptr> PTR_OP
-%token <JLang::frontend::ASTNode::ptr> DOT
-%token <JLang::frontend::ASTNode::ptr> PAREN_L
-%token <JLang::frontend::ASTNode::ptr> PAREN_R
-%token <JLang::frontend::ASTNode::ptr> BRACE_L
-%token <JLang::frontend::ASTNode::ptr> BRACKET_R
-%token <JLang::frontend::ASTNode::ptr> BRACKET_L
-%token <JLang::frontend::ASTNode::ptr> BRACE_R
-%token <JLang::frontend::ASTNode::ptr> SEMICOLON
-%token <JLang::frontend::ASTNode::ptr> COLON
-%token <JLang::frontend::ASTNode::ptr> QUESTIONMARK
+%token <JLang::frontend::alt_imp::Terminal::owned_ptr> COMMA
+%token <JLang::frontend::alt_imp::Terminal::owned_ptr> INC_OP
+%token <JLang::frontend::alt_imp::Terminal::owned_ptr> DEC_OP
+%token <JLang::frontend::alt_imp::Terminal::owned_ptr> PTR_OP
+%token <JLang::frontend::alt_imp::Terminal::owned_ptr> DOT
+%token <JLang::frontend::alt_imp::Terminal::owned_ptr> PAREN_L
+%token <JLang::frontend::alt_imp::Terminal::owned_ptr> PAREN_R
+%token <JLang::frontend::alt_imp::Terminal::owned_ptr> BRACE_L
+%token <JLang::frontend::alt_imp::Terminal::owned_ptr> BRACKET_R
+%token <JLang::frontend::alt_imp::Terminal::owned_ptr> BRACKET_L
+%token <JLang::frontend::alt_imp::Terminal::owned_ptr> BRACE_R
+%token <JLang::frontend::alt_imp::Terminal::owned_ptr> SEMICOLON
+%token <JLang::frontend::alt_imp::Terminal::owned_ptr> COLON
+%token <JLang::frontend::alt_imp::Terminal::owned_ptr> QUESTIONMARK
 
-%token <JLang::frontend::ASTNode::ptr> PREC_FIRST
-%token <JLang::frontend::ASTNode::ptr> PREC_SECOND
+%token <JLang::frontend::alt_imp::Terminal::owned_ptr> PREC_FIRST
+%token <JLang::frontend::alt_imp::Terminal::owned_ptr> PREC_SECOND
 
-%nterm <JLang::frontend::ASTNode::ptr> translation_unit;
+%nterm <JLang::frontend::alt_imp::TranslationUnit::owned_ptr> translation_unit;
 
-%nterm <JLang::frontend::ASTNode::ptr> opt_file_statement_list;
-%nterm <JLang::frontend::ASTNode::ptr> file_statement_list;
-%nterm <JLang::frontend::ASTNode::ptr> file_statement;
-%nterm <JLang::frontend::ASTNode::ptr> file_statement_function_definition;
-%nterm <JLang::frontend::ASTNode::ptr> file_statement_function_declaration;
-%nterm <JLang::frontend::ASTNode::ptr> type_definition;
-%nterm <JLang::frontend::ASTNode::ptr> class_definition;
-%nterm <JLang::frontend::ASTNode::ptr> class_decl_start;
-%nterm <JLang::frontend::ASTNode::ptr> opt_class_argument_list;
-%nterm <JLang::frontend::ASTNode::ptr> class_argument_list;
+%nterm <JLang::frontend::alt_imp::FileStatementList::owned_ptr> opt_file_statement_list;
+%nterm <JLang::frontend::alt_imp::FileStatementList::owned_ptr> file_statement_list;
+%nterm <JLang::frontend::alt_imp::FileStatement::owned_ptr> file_statement;
+%nterm <JLang::frontend::alt_imp::FileStatementFunctionDefinition::owned_ptr> file_statement_function_definition;
+%nterm <JLang::frontend::alt_imp::FileStatementFunctionDeclaration::owned_ptr> file_statement_function_declaration;
+%nterm <JLang::frontend::alt_imp::TypeDefinition::owned_ptr> type_definition;
+%nterm <JLang::frontend::alt_imp::ClassDefinition::owned_ptr> class_definition;
+%nterm <JLang::frontend::alt_imp::ClassDeclStart::owned_ptr> class_decl_start;
+%nterm <JLang::frontend::alt_imp::ClassArgumentList::owned_ptr> opt_class_argument_list;
+%nterm <JLang::frontend::alt_imp::ClassArgumentList::owned_ptr> class_argument_list;
 
 
-%nterm <JLang::frontend::ASTNode::ptr> enum_definition;
-%nterm <JLang::frontend::ASTNode::ptr> opt_enum_value_list;
-%nterm <JLang::frontend::ASTNode::ptr> enum_value_list;
-%nterm <JLang::frontend::ASTNode::ptr> enum_value;
+%nterm <JLang::frontend::alt_imp::EnumDefinition::owned_ptr> enum_definition;
+%nterm <JLang::frontend::alt_imp::EnumDefinitionValueList::owned_ptr> opt_enum_value_list;
+%nterm <JLang::frontend::alt_imp::EnumDefinitionValueList::owned_ptr> enum_value_list;
+%nterm <JLang::frontend::alt_imp::EnumDefinitionValue::owned_ptr> enum_value;
 
-%nterm <JLang::frontend::ASTNode::ptr> opt_unsafe
-%nterm <JLang::frontend::ASTNode::ptr> namespace_declaration;
-%nterm <JLang::frontend::ASTNode::ptr> file_statement_namespace;
-%nterm <JLang::frontend::ASTNode::ptr> opt_as;
-%nterm <JLang::frontend::ASTNode::ptr> file_statement_using;
-%nterm <JLang::frontend::ASTNode::ptr> file_statement_global_definition;
-%nterm <JLang::frontend::ASTNode::ptr> opt_global_initializer;
+%nterm <JLang::frontend::alt_imp::UnsafeModifier::owned_ptr> opt_unsafe
+%nterm <JLang::frontend::alt_imp::NamespaceDeclaration::owned_ptr> namespace_declaration;
+%nterm <JLang::frontend::alt_imp::FileStatementNamespace::owned_ptr> file_statement_namespace;
+%nterm <JLang::frontend::alt_imp::UsingAs::owned_ptr> opt_as;
+%nterm <JLang::frontend::alt_imp::FileStatementUsing::owned_ptr> file_statement_using;
+%nterm <JLang::frontend::alt_imp::FileStatementGlobalDefinition::owned_ptr> file_statement_global_definition;
+%nterm <JLang::frontend::alt_imp::GlobalInitializer::owned_ptr> opt_global_initializer;
 
-%nterm <JLang::frontend::ASTNode::ptr> global_initializer_expression_primary;
-%nterm <JLang::frontend::ASTNode::ptr> global_initializer_addressof_expression_primary;
-%nterm <JLang::frontend::ASTNode::ptr> global_initializer_struct_initializer_list;
-%nterm <JLang::frontend::ASTNode::ptr> global_initializer;
-%nterm <JLang::frontend::ASTNode::ptr> opt_struct_initializer_list;
-%nterm <JLang::frontend::ASTNode::ptr> struct_initializer_list;
-%nterm <JLang::frontend::ASTNode::ptr> struct_initializer;
-%nterm <JLang::frontend::ASTNode::ptr> opt_access_modifier;
-%nterm <JLang::frontend::ASTNode::ptr> access_modifier;
+%nterm <JLang::frontend::alt_imp::GlobalInitializerExpressionPrimary::owned_ptr> global_initializer_expression_primary;
+%nterm <JLang::frontend::alt_imp::GlobalInitializerAddressofExpressionPrimary::owned_ptr> global_initializer_addressof_expression_primary;
+%nterm <JLang::frontend::alt_imp::GlobalInitializerStructInitializerList::owned_ptr> global_initializer_struct_initializer_list;
+%nterm <JLang::frontend::alt_imp::GlobalInitializer::owned_ptr> global_initializer;
+%nterm <JLang::frontend::alt_imp::StructInitializerList::owned_ptr> opt_struct_initializer_list;
+%nterm <JLang::frontend::alt_imp::StructInitializerList::owned_ptr> struct_initializer_list;
+%nterm <JLang::frontend::alt_imp::StructInitializer::owned_ptr> struct_initializer;
 
-%nterm <JLang::frontend::ASTNode::ptr> scope_body;
-%nterm <JLang::frontend::ASTNode::ptr> statement_list;
-%nterm <JLang::frontend::ASTNode::ptr> statement;
-%nterm <JLang::frontend::ASTNode::ptr> statement_variable_declaration;
-%nterm <JLang::frontend::ASTNode::ptr> statement_expression;
-%nterm <JLang::frontend::ASTNode::ptr> statement_block;
-%nterm <JLang::frontend::ASTNode::ptr> statement_goto;
-%nterm <JLang::frontend::ASTNode::ptr> statement_ifelse;
-%nterm <JLang::frontend::ASTNode::ptr> statement_while;
-%nterm <JLang::frontend::ASTNode::ptr> statement_for;
-%nterm <JLang::frontend::ASTNode::ptr> statement_switch;
-%nterm <JLang::frontend::ASTNode::ptr> statement_return;
-%nterm <JLang::frontend::ASTNode::ptr> statement_continue;
-%nterm <JLang::frontend::ASTNode::ptr> statement_break;
-%nterm <JLang::frontend::ASTNode::ptr> statement_label;
-%nterm <JLang::frontend::ASTNode::ptr> statement_switch_block;
-%nterm <JLang::frontend::ASTNode::ptr> statement_switch_content;
-%nterm <JLang::frontend::ASTNode::ptr> opt_statement_switch_content;
+%nterm <JLang::frontend::alt_imp::AccessModifier::owned_ptr> opt_access_modifier;
+%nterm <JLang::frontend::alt_imp::AccessModifier::owned_ptr> access_modifier;
 
-%nterm <JLang::frontend::ASTNode::ptr> opt_function_definition_arg_list;
-%nterm <JLang::frontend::ASTNode::ptr> function_definition_arg_list;
-%nterm <JLang::frontend::ASTNode::ptr> function_definition_arg
+%nterm <JLang::frontend::alt_imp::ScopeBody::owned_ptr> scope_body;
+%nterm <JLang::frontend::alt_imp::StatementList::owned_ptr> statement_list;
+%nterm <JLang::frontend::alt_imp::Statement::owned_ptr> statement;
+%nterm <JLang::frontend::alt_imp::StatementVariableDeclaration::owned_ptr> statement_variable_declaration;
+%nterm <JLang::frontend::alt_imp::StatementExpression::owned_ptr> statement_expression;
+%nterm <JLang::frontend::alt_imp::StatementBlock::owned_ptr> statement_block;
+%nterm <JLang::frontend::alt_imp::StatementGoto::owned_ptr> statement_goto;
+%nterm <JLang::frontend::alt_imp::StatementIfElse::owned_ptr> statement_ifelse;
+%nterm <JLang::frontend::alt_imp::StatementWhile::owned_ptr> statement_while;
+%nterm <JLang::frontend::alt_imp::StatementFor::owned_ptr> statement_for;
+%nterm <JLang::frontend::alt_imp::StatementSwitch::owned_ptr> statement_switch;
+%nterm <JLang::frontend::alt_imp::StatementReturn::owned_ptr> statement_return;
+%nterm <JLang::frontend::alt_imp::StatementContinue::owned_ptr> statement_continue;
+%nterm <JLang::frontend::alt_imp::StatementBreak::owned_ptr> statement_break;
+%nterm <JLang::frontend::alt_imp::StatementLabel::owned_ptr> statement_label;
+%nterm <JLang::frontend::alt_imp::StatementSwitchBlock::owned_ptr> statement_switch_block;
+%nterm <JLang::frontend::alt_imp::StatementSwitchContent::owned_ptr> statement_switch_content;
+%nterm <JLang::frontend::alt_imp::StatementSwitchContent::owned_ptr> opt_statement_switch_content;
 
-%nterm <JLang::frontend::ASTNode::ptr> expression_primary;
-%nterm <JLang::frontend::ASTNode::ptr> expression_primary_identifier;
-%nterm <JLang::frontend::ASTNode::ptr> expression_primary_literal_int;
-%nterm <JLang::frontend::ASTNode::ptr> expression_primary_literal_float;
-%nterm <JLang::frontend::ASTNode::ptr> expression_primary_literal_char;
-%nterm <JLang::frontend::ASTNode::ptr> expression_primary_literal_string;
-%nterm <JLang::frontend::ASTNode::ptr> expression_primary_nested;
+%nterm <JLang::frontend::alt_imp::FunctionDefinitionArgList::owned_ptr> opt_function_definition_arg_list;
+%nterm <JLang::frontend::alt_imp::FunctionDefinitionArgList::owned_ptr> function_definition_arg_list;
+%nterm <JLang::frontend::alt_imp::FunctionDefinitionArg::owned_ptr> function_definition_arg
 
-%nterm <JLang::frontend::ASTNode::ptr> expression_postfix;
-%nterm <JLang::frontend::ASTNode::ptr> expression_postfix_primary;
-%nterm <JLang::frontend::ASTNode::ptr> expression_postfix_arrayindex;
-%nterm <JLang::frontend::ASTNode::ptr> expression_postfix_function_call;
-%nterm <JLang::frontend::ASTNode::ptr> expression_postfix_dot;
-%nterm <JLang::frontend::ASTNode::ptr> expression_postfix_arrow;
-%nterm <JLang::frontend::ASTNode::ptr> expression_postfix_increment;
-%nterm <JLang::frontend::ASTNode::ptr> expression_postfix_decrement;
+%nterm <JLang::frontend::alt_imp::ExpressionPrimary::owned_ptr> expression_primary;
+%nterm <JLang::frontend::alt_imp::ExpressionPrimaryNested::owned_ptr> expression_primary_nested;
+%nterm <JLang::frontend::alt_imp::ExpressionPrimaryIdentifier::owned_ptr> expression_primary_identifier;
+%nterm <JLang::frontend::alt_imp::ExpressionPrimaryLiteralInt::owned_ptr> expression_primary_literal_int;
+%nterm <JLang::frontend::alt_imp::ExpressionPrimaryLiteralFloat::owned_ptr> expression_primary_literal_float;
+%nterm <JLang::frontend::alt_imp::ExpressionPrimaryLiteralChar::owned_ptr> expression_primary_literal_char;
+%nterm <JLang::frontend::alt_imp::ExpressionPrimaryLiteralString::owned_ptr> expression_primary_literal_string;
 
-%nterm <JLang::frontend::ASTNode::ptr> expression_unary;
-%nterm <JLang::frontend::ASTNode::ptr> expression_unary_increment;
-%nterm <JLang::frontend::ASTNode::ptr> expression_unary_decrement;
-%nterm <JLang::frontend::ASTNode::ptr> expression_unary_prefix;
-%nterm <JLang::frontend::ASTNode::ptr> expression_unary_sizeof_type;
+%nterm <JLang::frontend::alt_imp::Expression::owned_ptr> expression_postfix;
+%nterm <JLang::frontend::alt_imp::Expression::owned_ptr> expression_postfix_primary;
+%nterm <JLang::frontend::alt_imp::Expression::owned_ptr> expression_postfix_arrayindex;
+%nterm <JLang::frontend::alt_imp::Expression::owned_ptr> expression_postfix_function_call;
+%nterm <JLang::frontend::alt_imp::Expression::owned_ptr> expression_postfix_dot;
+%nterm <JLang::frontend::alt_imp::Expression::owned_ptr> expression_postfix_arrow;
+%nterm <JLang::frontend::alt_imp::Expression::owned_ptr> expression_postfix_increment;
+%nterm <JLang::frontend::alt_imp::Expression::owned_ptr> expression_postfix_decrement;
 
-%nterm <JLang::frontend::ASTNode::ptr> expression_cast;
-%nterm <JLang::frontend::ASTNode::ptr> expression_cast_unary;
-%nterm <JLang::frontend::ASTNode::ptr> expression_cast_cast;
+%nterm <JLang::frontend::alt_imp::Expression::owned_ptr> expression_unary;
+%nterm <JLang::frontend::alt_imp::Expression::owned_ptr> expression_unary_increment;
+%nterm <JLang::frontend::alt_imp::Expression::owned_ptr> expression_unary_decrement;
+%nterm <JLang::frontend::alt_imp::Expression::owned_ptr> expression_unary_prefix;
+%nterm <JLang::frontend::alt_imp::Expression::owned_ptr> expression_unary_sizeof_type;
 
-%nterm <JLang::frontend::ASTNode::ptr> expression_multiplicative;
-%nterm <JLang::frontend::ASTNode::ptr> expression_multiplicative_cast;
-%nterm <JLang::frontend::ASTNode::ptr> expression_multiplicative_multiply;
-%nterm <JLang::frontend::ASTNode::ptr> expression_multiplicative_divide;
-%nterm <JLang::frontend::ASTNode::ptr> expression_multiplicative_modulo;
+%nterm <JLang::frontend::alt_imp::Expression::owned_ptr> expression_cast;
+%nterm <JLang::frontend::alt_imp::Expression::owned_ptr> expression_cast_unary;
+%nterm <JLang::frontend::alt_imp::Expression::owned_ptr> expression_cast_cast;
 
-%nterm <JLang::frontend::ASTNode::ptr> expression_additive;
-%nterm <JLang::frontend::ASTNode::ptr> expression_additive_multiplicative;
-%nterm <JLang::frontend::ASTNode::ptr> expression_additive_plus;
-%nterm <JLang::frontend::ASTNode::ptr> expression_additive_minus;
+%nterm <JLang::frontend::alt_imp::Expression::owned_ptr> expression_multiplicative;
+%nterm <JLang::frontend::alt_imp::Expression::owned_ptr> expression_multiplicative_cast;
+%nterm <JLang::frontend::alt_imp::Expression::owned_ptr> expression_multiplicative_multiply;
+%nterm <JLang::frontend::alt_imp::Expression::owned_ptr> expression_multiplicative_divide;
+%nterm <JLang::frontend::alt_imp::Expression::owned_ptr> expression_multiplicative_modulo;
 
-%nterm <JLang::frontend::ASTNode::ptr> expression_shift;
-%nterm <JLang::frontend::ASTNode::ptr> expression_shift_additive;
-%nterm <JLang::frontend::ASTNode::ptr> expression_shift_left;
-%nterm <JLang::frontend::ASTNode::ptr> expression_shift_right;
+%nterm <JLang::frontend::alt_imp::Expression::owned_ptr> expression_additive;
+%nterm <JLang::frontend::alt_imp::Expression::owned_ptr> expression_additive_multiplicative;
+%nterm <JLang::frontend::alt_imp::Expression::owned_ptr> expression_additive_plus;
+%nterm <JLang::frontend::alt_imp::Expression::owned_ptr> expression_additive_minus;
 
-%nterm <JLang::frontend::ASTNode::ptr> expression_relational;
-%nterm <JLang::frontend::ASTNode::ptr> expression_relational_shift;
-%nterm <JLang::frontend::ASTNode::ptr> expression_relational_gt;
-%nterm <JLang::frontend::ASTNode::ptr> expression_relational_lt;
-%nterm <JLang::frontend::ASTNode::ptr> expression_relational_le;
-%nterm <JLang::frontend::ASTNode::ptr> expression_relational_ge;
+%nterm <JLang::frontend::alt_imp::Expression::owned_ptr> expression_shift;
+%nterm <JLang::frontend::alt_imp::Expression::owned_ptr> expression_shift_additive;
+%nterm <JLang::frontend::alt_imp::Expression::owned_ptr> expression_shift_left;
+%nterm <JLang::frontend::alt_imp::Expression::owned_ptr> expression_shift_right;
 
-%nterm <JLang::frontend::ASTNode::ptr> expression_equality;
-%nterm <JLang::frontend::ASTNode::ptr> expression_and;
-%nterm <JLang::frontend::ASTNode::ptr> expression_exclusive_or;
-%nterm <JLang::frontend::ASTNode::ptr> expression_inclusive_or;
-%nterm <JLang::frontend::ASTNode::ptr> expression_logical_and;
-%nterm <JLang::frontend::ASTNode::ptr> expression_logical_or;
+%nterm <JLang::frontend::alt_imp::Expression::owned_ptr> expression_relational;
+%nterm <JLang::frontend::alt_imp::Expression::owned_ptr>  expression_relational_shift;
+%nterm <JLang::frontend::alt_imp::Expression::owned_ptr> expression_relational_gt;
+%nterm <JLang::frontend::alt_imp::Expression::owned_ptr> expression_relational_lt;
+%nterm <JLang::frontend::alt_imp::Expression::owned_ptr> expression_relational_le;
+%nterm <JLang::frontend::alt_imp::Expression::owned_ptr> expression_relational_ge;
 
-%nterm <JLang::frontend::ASTNode::ptr> expression_conditional;
-%nterm <JLang::frontend::ASTNode::ptr> expression_assignment;
+%nterm <JLang::frontend::alt_imp::Expression::owned_ptr> expression_equality;
+%nterm <JLang::frontend::alt_imp::Expression::owned_ptr> expression_and;
+%nterm <JLang::frontend::alt_imp::Expression::owned_ptr> expression_exclusive_or;
+%nterm <JLang::frontend::alt_imp::Expression::owned_ptr> expression_inclusive_or;
+%nterm <JLang::frontend::alt_imp::Expression::owned_ptr> expression_logical_and;
+%nterm <JLang::frontend::alt_imp::Expression::owned_ptr> expression_logical_or;
 
-%nterm <JLang::frontend::ASTNode::ptr> type_specifier;
-%nterm <JLang::frontend::ASTNode::ptr> type_specifier_call_args;
-%nterm <JLang::frontend::ASTNode::ptr> type_name;
-%nterm <JLang::frontend::ASTNode::ptr> type_access_qualifier;
-%nterm <JLang::frontend::ASTNode::ptr> opt_array_length;
+%nterm <JLang::frontend::alt_imp::Expression::owned_ptr> expression_conditional;
+%nterm <JLang::frontend::alt_imp::Expression::owned_ptr> expression_assignment;
 
-%nterm <JLang::frontend::ASTNode::ptr> opt_class_member_declaration_list;
-%nterm <JLang::frontend::ASTNode::ptr> class_member_declaration_list;
-%nterm <JLang::frontend::ASTNode::ptr> class_member_declaration;
+%nterm <JLang::frontend::alt_imp::TypeSpecifier::owned_ptr> type_specifier;
+%nterm <JLang::frontend::alt_imp::TypeSpecifierCallArgs::owned_ptr> type_specifier_call_args;
+%nterm <JLang::frontend::alt_imp::TypeName::owned_ptr> type_name;
+%nterm <JLang::frontend::alt_imp::AccessQualifier::owned_ptr> type_access_qualifier;
+%nterm <JLang::frontend::alt_imp::ArrayLength::owned_ptr> opt_array_length;
 
-%nterm <JLang::frontend::ASTNode::ptr> operator_unary;
-%nterm <JLang::frontend::ASTNode::ptr> operator_assignment;
+%nterm <JLang::frontend::alt_imp::ClassMemberDeclarationList::owned_ptr> opt_class_member_declaration_list;
+%nterm <JLang::frontend::alt_imp::ClassMemberDeclarationList::owned_ptr> class_member_declaration_list;
+%nterm <JLang::frontend::alt_imp::ClassMemberDeclaration::owned_ptr> class_member_declaration;
 
-%nterm <JLang::frontend::ASTNode::ptr> opt_argument_expression_list;
-%nterm <JLang::frontend::ASTNode::ptr> argument_expression_list;
+%nterm <JLang::frontend::alt_imp::ExpressionUnaryPrefix::OperationType> operator_unary;
+%nterm <JLang::frontend::alt_imp::ExpressionBinary::OperationType> operator_assignment;
 
-%nterm <JLang::frontend::ASTNode::ptr> expression;
+%nterm <JLang::frontend::alt_imp::ArgumentExpressionList::owned_ptr> opt_argument_expression_list;
+%nterm <JLang::frontend::alt_imp::ArgumentExpressionList::owned_ptr> argument_expression_list;
+
+%nterm <JLang::frontend::alt_imp::Expression::owned_ptr> expression;
 
 %parse-param {JLang::frontend::return_data_t *return_data}
 
@@ -1643,156 +1644,136 @@ expression_shift_additive
         ;
 expression_shift_left
         : expression_shift LEFT_OP expression_additive {
-                $$ = std::make_shared<JLang::frontend::ASTNode>();
-                $$->type = Parser::symbol_kind::S_expression_shift_left;
-                $$->typestr = std::string("expression_shift_left");
-                $$->children.push_back($1);
-                $$->children.push_back($2);
-                $$->children.push_back($3);
-                PRINT_NONTERMINALS($$);
+          {
+            auto expr = std::make_unique<JLang::frontend::alt_imp::ExpressionBinary>($1, $2, $3);
+            $$ = std::make_unique<JLang::frontend::alt_imp::Expression>(std::move(expr));
+            PRINT_NONTERMINALS($$);
+          }
         }
         ;
 expression_shift_right
         : expression_shift RIGHT_OP expression_additive {
-                $$ = std::make_shared<JLang::frontend::ASTNode>();
-                $$->type = Parser::symbol_kind::S_expression_shift_right;
-                $$->typestr = std::string("expression_shift_right");
-                $$->children.push_back($1);
-                $$->children.push_back($2);
-                $$->children.push_back($3);
-                PRINT_NONTERMINALS($$);
+          {
+            auto expr = std::make_unique<JLang::frontend::alt_imp::ExpressionBinary>($1, $2, $3);
+            $$ = std::make_unique<JLang::frontend::alt_imp::Expression>(std::move(expr));
+            PRINT_NONTERMINALS($$);
+          }
         }
         ;
 
 
 expression_relational
         : expression_relational_shift {
-                $$ = $1;
-                PRINT_NONTERMINALS($$);
+          $$ = std::move($1);
+          PRINT_NONTERMINALS($$);
         }
         | expression_relational_lt {
-                $$ = $1;
-                PRINT_NONTERMINALS($$);
+          $$ = std::move($1);
+          PRINT_NONTERMINALS($$);
         }
         | expression_relational_gt {
-                $$ = $1;
-                PRINT_NONTERMINALS($$);
+          $$ = std::move($1);
+          PRINT_NONTERMINALS($$);
         }
         | expression_relational_le {
-                $$ = $1;
-                PRINT_NONTERMINALS($$);
+          $$ = std::move($1);
+          PRINT_NONTERMINALS($$);
         }
         | expression_relational_ge {
-                $$ = $1;
-                PRINT_NONTERMINALS($$);
+          $$ = std::move($1);
+          PRINT_NONTERMINALS($$);
         }
         ;
 
 expression_relational_shift
         : expression_shift {
-                $$ = $1;
-                PRINT_NONTERMINALS($$);
+          $$ = std::move($1);
+          PRINT_NONTERMINALS($$);
         }
         ;
 expression_relational_lt
         : expression_relational LT_OP expression_shift {
-                $$ = std::make_shared<JLang::frontend::ASTNode>();
-                $$->type = Parser::symbol_kind::S_expression_relational_lt;
-                $$->typestr = std::string("expression_relational_lt");
-                $$->children.push_back($1);
-                $$->children.push_back($2);
-                $$->children.push_back($3);
-                PRINT_NONTERMINALS($$);
+          {
+            auto expr = std::make_unique<JLang::frontend::alt_imp::ExpressionBinary>($1, $2, $3);
+            $$ = std::make_unique<JLang::frontend::alt_imp::Expression>(std::move(expr));
+            PRINT_NONTERMINALS($$);
+          }
         }
         ;
 expression_relational_gt
         : expression_relational GT_OP expression_shift {
-                $$ = std::make_shared<JLang::frontend::ASTNode>();
-                $$->type = Parser::symbol_kind::S_expression_relational_gt;
-                $$->typestr = std::string("expression_relational_gt");
-                $$->children.push_back($1);
-                $$->children.push_back($2);
-                $$->children.push_back($3);
-                PRINT_NONTERMINALS($$);
+          {
+            auto expr = std::make_unique<JLang::frontend::alt_imp::ExpressionBinary>($1, $2, $3);
+            $$ = std::make_unique<JLang::frontend::alt_imp::Expression>(std::move(expr));
+            PRINT_NONTERMINALS($$);
+          }
         }
         ;
 expression_relational_le
         : expression_relational LE_OP expression_shift {
-                $$ = std::make_shared<JLang::frontend::ASTNode>();
-                $$->type = Parser::symbol_kind::S_expression_relational_le;
-                $$->typestr = std::string("expression_relational_le");
-                $$->children.push_back($1);
-                $$->children.push_back($2);
-                $$->children.push_back($3);
-                PRINT_NONTERMINALS($$);
+          {
+            auto expr = std::make_unique<JLang::frontend::alt_imp::ExpressionBinary>($1, $2, $3);
+            $$ = std::make_unique<JLang::frontend::alt_imp::Expression>(std::move(expr));
+            PRINT_NONTERMINALS($$);
+          }
         }
         ;
 expression_relational_ge
         : expression_relational GE_OP expression_shift {
-                $$ = std::make_shared<JLang::frontend::ASTNode>();
-                $$->type = Parser::symbol_kind::S_expression_relational_ge;
-                $$->typestr = std::string("expression_relational_ge");
-                $$->children.push_back($1);
-                $$->children.push_back($2);
-                $$->children.push_back($3);
-                PRINT_NONTERMINALS($$);
+          {
+            auto expr = std::make_unique<JLang::frontend::alt_imp::ExpressionBinary>($1, $2, $3);
+            $$ = std::make_unique<JLang::frontend::alt_imp::Expression>(std::move(expr));
+            PRINT_NONTERMINALS($$);
+          }
         }
         ;
 
 expression_equality
         : expression_relational {
-                $$ = $1;
-                PRINT_NONTERMINALS($$);
+          $$ = std::move($1);
+          PRINT_NONTERMINALS($$);
         }
         | expression_equality EQ_OP expression_relational {
-                $$ = std::make_shared<JLang::frontend::ASTNode>();
-                $$->type = Parser::symbol_kind::S_expression_equality;
-                $$->typestr = std::string("expression_equality");
-                $$->children.push_back($1);
-                $$->children.push_back($2);
-                $$->children.push_back($3);
-                PRINT_NONTERMINALS($$);
+          {
+            auto expr = std::make_unique<JLang::frontend::alt_imp::ExpressionBinary>($1, $2, $3);
+            $$ = std::make_unique<JLang::frontend::alt_imp::Expression>(std::move(expr));
+            PRINT_NONTERMINALS($$);
+          }
         }
         | expression_equality NE_OP expression_relational {
-                $$ = std::make_shared<JLang::frontend::ASTNode>();
-                $$->type = Parser::symbol_kind::S_expression_equality;
-                $$->typestr = std::string("expression_equality");
-                $$->children.push_back($1);
-                $$->children.push_back($2);
-                $$->children.push_back($3);
-                PRINT_NONTERMINALS($$);
+          {
+            auto expr = std::make_unique<JLang::frontend::alt_imp::ExpressionBinary>($1, $2, $3);
+            $$ = std::make_unique<JLang::frontend::alt_imp::Expression>(std::move(expr));
+            PRINT_NONTERMINALS($$);
+          }
         }
 	;
 
 expression_and
         : expression_equality {
-                $$ = $1;
+          $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         }
         | expression_and ANDPERSAND expression_equality {
-                $$ = std::make_shared<JLang::frontend::ASTNode>();
-                $$->type = Parser::symbol_kind::S_expression_and;
-                $$->typestr = std::string("expression_and");
-                $$->children.push_back($1);
-                $$->children.push_back($2);
-                $$->children.push_back($3);
-                PRINT_NONTERMINALS($$);
+          {
+            auto expr = std::make_unique<JLang::frontend::alt_imp::ExpressionBinary>($1, $2, $3);
+            $$ = std::make_unique<JLang::frontend::alt_imp::Expression>(std::move(expr));
+            PRINT_NONTERMINALS($$);
+          }
         }
 	;
 
 expression_exclusive_or
         : expression_and {
-                $$ = $1;
-                PRINT_NONTERMINALS($$);
+          $$ = std::move($1);
+          PRINT_NONTERMINALS($$);
         }
         | expression_exclusive_or XOR_OP expression_and {
-                $$ = std::make_shared<JLang::frontend::ASTNode>();
-                $$->type = Parser::symbol_kind::S_expression_exclusive_or;
-                $$->typestr = std::string("expression_exclusive_or");
-                $$->children.push_back($1);
-                $$->children.push_back($2);
-                $$->children.push_back($3);
-                PRINT_NONTERMINALS($$);
+          {
+            auto expr = std::make_unique<JLang::frontend::alt_imp::ExpressionBinary>($1, $2, $3);
+            $$ = std::make_unique<JLang::frontend::alt_imp::Expression>(std::move(expr));
+            PRINT_NONTERMINALS($$);
+          }
         }
 	;
 
