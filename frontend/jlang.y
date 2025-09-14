@@ -5,7 +5,6 @@
 #include <memory>
 #include <jlang.l.hpp>
 #include <jlang-frontend/jsyntax.hpp>
-#include <jlang-frontend/ast.hpp>
 #include <jlang-frontend/namespace.hpp>
 %}
  

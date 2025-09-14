@@ -5,13 +5,11 @@ set(FRONTEND_INCLUDES
 )
 
 set(FRONTEND_PUBLIC_HEADERS
-    jlang-frontend/ast.hpp
     jlang-frontend/jsyntax.hpp
     jlang-frontend/namespace.hpp
 )
 
 set(FRONTEND_SOURCES
-    ast.cpp
     jlang.l
     jlang.y
     jsyntax.cpp

@@ -2,14 +2,13 @@
 #include <cstdlib>
 #include <memory>
 #include <jlang-frontend/jsyntax.hpp>
-#include <jlang-frontend/ast.hpp>
 #include <jlang-frontend/namespace.hpp>
 #include <jlang.y.hpp>
 
 using namespace jlang;
 std::string override_file;
 size_t lineno = 1;
-std::vector<JLang::frontend::ASTDataNonSyntax::ptr> non_syntax_data;
+std::vector<JLang::frontend::alt_imp::TerminalNonSyntax::owned_ptr> non_syntax_data;
 
 #define DEBUG_TERMINALS 0
 #if DEBUG_TERMINALS
@@ -23,14 +22,14 @@ std::vector<JLang::frontend::ASTDataNonSyntax::ptr> non_syntax_data;
 #endif
 
 #define START_NODE(nodetype)                 \
-    JLang::frontend::ASTNode::ptr node = std::make_shared<JLang::frontend::ASTNode>(); \
+    JLang::frontend::alt_imp::Terminal::owned_ptr node = std::make_unique<JLang::frontend::alt_imp::Terminal>(); \
     node->type = Parser::symbol_kind_type::S_ ## nodetype; \
     node->typestr = std::string(#nodetype);  \
     node->value = std::string(yytext);       \
     node->lineno = lineno;                   \
-    node->non_syntax = non_syntax_data;      \
+    node->non_syntax = std::move(non_syntax_data);      \
     non_syntax_data.clear();                 \
-    yylval->emplace<JLang::frontend::ASTNode::ptr>(node);
+    yylval->emplace<JLang::frontend::alt_imp::Terminal::owned_ptr>(std::move(node));
 
 #define RETURN_NODE(nodetype)                \
     return Parser::token::nodetype;
@@ -178,54 +177,54 @@ unsafe {PROCESS_NODE(UNSAFE);}
 
 "/*"        {
   BEGIN(COMMENT);
-  JLang::frontend::ASTDataNonSyntax::ptr nsd = std::make_shared<JLang::frontend::ASTDataNonSyntax>(
-        JLang::frontend::ASTNonSyntaxType::NST_COMMENT_MULTI_LINE,
+  JLang::frontend::alt_imp::TerminalNonSyntax::owned_ptr nsd = std::make_unique<JLang::frontend::alt_imp::TerminalNonSyntax>(
+        JLang::frontend::alt_imp::TerminalNonSyntaxType::EXTRA_COMMENT_MULTI_LINE,
         std::string()
         );
-  non_syntax_data.push_back(nsd);
+  non_syntax_data.push_back(std::move(nsd));
 }
 <COMMENT>"*/" {
   BEGIN(INITIAL);
 }
 <COMMENT>[^*]* {
-  JLang::frontend::ASTDataNonSyntax::ptr current = non_syntax_data.back();
-  current->data = current->data + std::string(yytext);
+  JLang::frontend::alt_imp::TerminalNonSyntax* current = non_syntax_data.back().get();
+  current->append(std::string(yytext));
 }
 <COMMENT>\* {
-  JLang::frontend::ASTDataNonSyntax::ptr current = non_syntax_data.back();
-  current->data = current->data + std::string(yytext);
+  JLang::frontend::alt_imp::TerminalNonSyntax *current = non_syntax_data.back().get();
+  current->append(std::string(yytext));
 }
 
 \/\/.* {
 // Single-line comment:
-    JLang::frontend::ASTDataNonSyntax::ptr nsd = std::make_shared<JLang::frontend::ASTDataNonSyntax>(
-        JLang::frontend::ASTNonSyntaxType::NST_COMMENT_SINGLE_LINE,
+    JLang::frontend::alt_imp::TerminalNonSyntax::owned_ptr nsd = std::make_unique<JLang::frontend::alt_imp::TerminalNonSyntax>(
+        JLang::frontend::alt_imp::TerminalNonSyntaxType::EXTRA_COMMENT_SINGLE_LINE,
         std::string(yytext+2)
     );
-    non_syntax_data.push_back(nsd);
+    non_syntax_data.push_back(std::move(nsd));
 }
 [ \t]+ {
-    JLang::frontend::ASTDataNonSyntax::ptr nsd = std::make_shared<JLang::frontend::ASTDataNonSyntax>(
-        JLang::frontend::ASTNonSyntaxType::NST_WHITESPACE, 
+    JLang::frontend::alt_imp::TerminalNonSyntax::owned_ptr nsd = std::make_unique<JLang::frontend::alt_imp::TerminalNonSyntax>(
+        JLang::frontend::alt_imp::TerminalNonSyntaxType::EXTRA_WHITESPACE, 
         std::string(yytext)
     );
-    non_syntax_data.push_back(nsd);
+    non_syntax_data.push_back(std::move(nsd));
 }
 \n {
-    JLang::frontend::ASTDataNonSyntax::ptr nsd = std::make_shared<JLang::frontend::ASTDataNonSyntax>(
-        JLang::frontend::ASTNonSyntaxType::NST_WHITESPACE, 
+    JLang::frontend::alt_imp::TerminalNonSyntax::owned_ptr nsd = std::make_unique<JLang::frontend::alt_imp::TerminalNonSyntax>(
+        JLang::frontend::alt_imp::TerminalNonSyntaxType::EXTRA_WHITESPACE, 
         std::string(yytext)
     );
-    non_syntax_data.push_back(nsd);
+    non_syntax_data.push_back(std::move(nsd));
     lineno++;
 }
 \#[a-zA-Z]+\ [[:digit:]]+\ \".*\"\n {
     //printf("Preprocessor directive %s\n", yytext);
-    JLang::frontend::ASTDataNonSyntax::ptr nsd = std::make_shared<JLang::frontend::ASTDataNonSyntax>(
-        JLang::frontend::ASTNonSyntaxType::NST_FILE_METADATA,
+    JLang::frontend::alt_imp::TerminalNonSyntax::owned_ptr nsd = std::make_unique<JLang::frontend::alt_imp::TerminalNonSyntax>(
+        JLang::frontend::alt_imp::TerminalNonSyntaxType::EXTRA_FILE_METADATA,
         std::string(yytext)
     );
-    non_syntax_data.push_back(nsd);
+    non_syntax_data.push_back(std::move(nsd));
 }
 . {
     return Parser::token::INVALID_INPUT;

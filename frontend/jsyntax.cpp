@@ -27,6 +27,10 @@ const std::string & TerminalNonSyntax::get_data() const
 {
   return data;
 }
+void TerminalNonSyntax::append(std::string _data)
+{
+  data = data + _data;
+}
 
 ///////////////////////////////////////////////////
 SyntaxNode::SyntaxNode(std::string _type, SyntaxNode::specific_type_t _data)

@@ -6,7 +6,6 @@
 #include <memory>
 #include <variant>
 
-#include "ast.hpp"
 #include "namespace.hpp"
 
 namespace JLang::frontend {
@@ -264,6 +263,8 @@ namespace JLang::frontend {
        * for the type of non-syntax data available.
        */
       const std::string & get_data() const;
+
+      void append(std::string _data);
       
     private:
       TerminalNonSyntaxType type;
