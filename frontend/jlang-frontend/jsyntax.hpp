@@ -1490,6 +1490,7 @@ namespace JLang::frontend {
         GlobalInitializerExpressionPrimary::owned_ptr,
         GlobalInitializerAddressofExpressionPrimary::owned_ptr,
         GlobalInitializerStructInitializerList::owned_ptr> GlobalInitializerType;
+      GlobalInitializer();
       GlobalInitializer(GlobalInitializerType initializer, SyntaxNode *raw_ptr);
       ~GlobalInitializer();
       const GlobalInitializerType & get_initializer() const;
@@ -1619,10 +1620,12 @@ namespace JLang::frontend {
     class FileStatementList : public SyntaxNode, public PtrProtocol<FileStatementList> {
     public:
       FileStatementList();
+      FileStatementList(Terminal::owned_ptr _yyeof);
       ~FileStatementList();
       const std::vector<FileStatement::owned_ptr> & get_statements() const;
       void add_statement(FileStatement::owned_ptr statement);
     private:
+      Terminal::owned_ptr yyeof;
       std::vector<FileStatement::owned_ptr> statements;
     };
     

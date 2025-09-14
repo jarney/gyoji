@@ -296,153 +296,137 @@
 /*** Rules Section ***/
 translation_unit
         : opt_file_statement_list YYEOF {
-                $$ = std::make_shared<JLang::frontend::ASTNode>();
-                $$->type = Parser::symbol_kind_type::S_translation_unit;
-                $$->typestr = std::string("translation_unit");
-                $$->children.push_back($1);
-                $$->children.push_back($2);
-                PRINT_NONTERMINALS($$);
-                return_data->translation_unit = $$;
+          $$ = std::make_unique<JLang::frontend::alt_imp::TranslationUnit>(std::move($1), std::move($2));
+          PRINT_NONTERMINALS($$);
+          return_data->translation_unit = $$;
         }
         ;
 
 opt_file_statement_list 
         : /**/ YYEOF {
-                $$ = std::make_shared<JLang::frontend::ASTNode>();
-                $$->type = Parser::symbol_kind_type::S_file_statement_list;
-                $$->typestr = std::string("file_statement_list");
-                PRINT_NONTERMINALS($$);
+          $$ = std::make_unique<JLang::frontend::alt_imp::FileStatementList>(std::move($1));
+          PRINT_NONTERMINALS($$);
         }
         | file_statement_list {
-                $$ = $1;
-                PRINT_NONTERMINALS($$);
+          $$ = std::move($1);
+          PRINT_NONTERMINALS($$);
         }
         ;
 
 file_statement_list 
         : file_statement {
-                $$ = std::make_shared<JLang::frontend::ASTNode>();
-                $$->type = Parser::symbol_kind_type::S_file_statement_list;
-                $$->typestr = std::string("file_statement_list");
-                $$->children.push_back($1);
-                PRINT_NONTERMINALS($$);
+          $$ = std::make_unique<FileStatementList>();
+          $$->add_statement(std::move($1));
+          PRINT_NONTERMINALS($$);
         }
         | file_statement_list file_statement {
-                $$ = $1;
-                $$->children.push_back($2);
-                PRINT_NONTERMINALS($$);
+          $$ = std::move($1);
+          $$->add_statement($2);
+          PRINT_NONTERMINALS($$);
         }
         ;
 
 file_statement
         : file_statement_function_definition {
-                $$ = $1;
+                $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         }
         | file_statement_function_declaration {
-                $$ = $1;
+                $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         }
         | file_statement_global_definition {
-                $$ = $1;
+                $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         }
         | class_definition {
-                $$ = $1;
+                $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         }
         | enum_definition {
-                $$ = $1;
+                $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         }
         | type_definition {
-                $$ = $1;
+                $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         }
         | file_statement_namespace {
-                $$ = $1;
+                $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         }
         | file_statement_using {
-                $$ = $1;
+                $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         }
         ;
 
 file_statement_global_definition
         : opt_access_modifier opt_unsafe type_specifier IDENTIFIER opt_array_length opt_global_initializer SEMICOLON {
-                $$ = std::make_shared<JLang::frontend::ASTNode>();
-                $$->type = Parser::symbol_kind_type::S_file_statement_global_definition;
-                $$->typestr = std::string("file_statement_global_definition");
-                $$->children.push_back($1);
-                $$->children.push_back($2);
-                $$->children.push_back($3);
-                $$->children.push_back($4);
-                $$->children.push_back($5);
-                $$->children.push_back($6);
-                $$->children.push_back($7);
-                PRINT_NONTERMINALS($$);
+          $$ = std::make_unique<JLang::frontend::alt_imp::FileStatementGlobalDefinition>(
+                                                               std::move($1),
+                                                               std::move($2),
+                                                               std::move($3),
+                                                               std::move($4),
+                                                               std::move($5),
+                                                               std::move($6),
+                                                               std::move($7));
+          PRINT_NONTERMINALS($$);
         }
         ;
 
 opt_global_initializer
         : /**/ {
-                $$ = std::make_shared<JLang::frontend::ASTNode>();
-                $$->type = Parser::symbol_kind_type::S_global_initializer;
-                $$->typestr = std::string("global_initializer");
+                $$ = std::make_unique<GlobalInitializer>();
                 PRINT_NONTERMINALS($$);
         }
         | global_initializer {
-                $$ = $1;
+                $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         }
         ;
 
 global_initializer
         : global_initializer_expression_primary {
-                $$ = $1;
+                $$ = std::move($1);
         }
         | global_initializer_addressof_expression_primary {
-                $$ = $1;
+                $$ = std::move($1);
         }
         | global_initializer_struct_initializer_list {
-                $$ = $1;
+                $$ = std::move($1);
         }
         ;
 
 global_initializer_expression_primary
         : EQUALS expression_primary {
-                $$ = std::make_shared<JLang::frontend::ASTNode>();
-                $$->type = Parser::symbol_kind_type::S_global_initializer;
-                $$->typestr = std::string("global_initializer");
-                $$->children.push_back($1);
-                $$->children.push_back($2);
-                PRINT_NONTERMINALS($$);
+          auto expr = std::make_unique<JLang::frontend::alt_imp::GlobalInitializerExpressionPrimary>(std::move($1),
+                                                                           std::move($2));
+          $$ = std::make_unique<JLang::frontend::alt_imp::GlobalInitializer>(std::move(expr));
+          PRINT_NONTERMINALS($$);
         }
         ;
 
 global_initializer_addressof_expression_primary
         : EQUALS ANDPERSAND expression_primary {
-                $$ = std::make_shared<JLang::frontend::ASTNode>();
-                $$->type = Parser::symbol_kind_type::S_global_initializer;
-                $$->typestr = std::string("global_initializer");
-                $$->children.push_back($1);
-                $$->children.push_back($2);
-                $$->children.push_back($3);
-                PRINT_NONTERMINALS($$);
+          auto expr = std::make_unique<JLang::frontend::alt_imp::GlobalInitializerAddressofExpressionPrimary>(std::move($1),
+                                                                                    std::move($2),
+                                                                                    std::move($3)
+                                                                                    );
+          $$ = std::make_unique<JLang::frontend::alt_imp::GlobalInitializer>(std::move(expr));
+          PRINT_NONTERMINALS($$);
         }
         ;
 
 global_initializer_struct_initializer_list
         : EQUALS BRACE_L opt_struct_initializer_list BRACE_R {
-                $$ = std::make_shared<JLang::frontend::ASTNode>();
-                $$->type = Parser::symbol_kind_type::S_global_initializer;
-                $$->typestr = std::string("global_initializer");
-                $$->children.push_back($1);
-                $$->children.push_back($2);
-                $$->children.push_back($3);
-                $$->children.push_back($4);
-                PRINT_NONTERMINALS($$);
+          auto expr = std::make_unique<JLang::frontend::alt_imp::GlobalInitializerStructInitializerList>(std::move($1),
+                                                                               std::move($2),
+                                                                               std::move($3),
+                                                                               std::move($4)
+                                                                               );
+          $$ = std::make_unique<JLang::frontend::alt_imp::GlobalInitializer>(std::move(expr));
+          PRINT_NONTERMINALS($$);
         }
         ;
 
@@ -455,7 +439,7 @@ opt_struct_initializer_list
                 PRINT_NONTERMINALS($$);
         }
         | struct_initializer_list {
-                $$ = $1;
+                $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         }
         ;
@@ -469,7 +453,7 @@ struct_initializer_list
                 PRINT_NONTERMINALS($$);
         }
         | struct_initializer_list struct_initializer {
-                $$ = $1;
+                $$ = std::move($1);
                 $$->children.push_back($2);
                 PRINT_NONTERMINALS($$);
         }
@@ -506,15 +490,15 @@ opt_access_modifier
 
 access_modifier
         : PUBLIC {
-                $$ = $1;
+                $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         }
         | PRIVATE {
-                $$ = $1;
+                $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         }
         | PROTECTED {
-                $$ = $1;
+                $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         }
         ;
@@ -671,7 +655,7 @@ class_argument_list
                 PRINT_NONTERMINALS($$);
         }
         | class_argument_list COMMA IDENTIFIER {
-                $$ = $1;
+                $$ = std::move($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
                 PRINT_NONTERMINALS($$);
@@ -734,7 +718,7 @@ opt_enum_value_list
                 PRINT_NONTERMINALS($$);
         }
         | enum_value_list {
-                $$ = $1;
+                $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         }
         ;
@@ -748,7 +732,7 @@ enum_value_list
                 PRINT_NONTERMINALS($$);
         }
         | enum_value_list enum_value {
-                $$ = $1;
+                $$ = std::move($1);
                 $$->children.push_back($2);
                 PRINT_NONTERMINALS($$);
         }
@@ -775,7 +759,7 @@ opt_unsafe
                 PRINT_NONTERMINALS($$);
         }
         | UNSAFE {
-                $$ = $1;
+                $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         }
         ;
@@ -822,7 +806,7 @@ opt_function_definition_arg_list
                 PRINT_NONTERMINALS($$);
         }
         | function_definition_arg_list {
-                $$ = $1;
+                $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         }
         ;
@@ -836,7 +820,7 @@ function_definition_arg_list
                 PRINT_NONTERMINALS($$);
         }
         | function_definition_arg_list COMMA function_definition_arg {
-                $$ = $1;
+                $$ = std::move($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
                 PRINT_NONTERMINALS($$);
@@ -873,7 +857,7 @@ statement_list
                 PRINT_NONTERMINALS($$);
         }
         | statement_list statement {
-                $$ = $1;
+                $$ = std::move($1);
                 $$->children.push_back($2);
                 PRINT_NONTERMINALS($$);
         }
@@ -881,51 +865,51 @@ statement_list
 
 statement
         : statement_variable_declaration {
-                $$ = $1;
+                $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         }
         | statement_expression {
-                $$ = $1;
+                $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         }
         | statement_block {
-                $$ = $1;
+                $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         }
         | statement_goto {
-                $$ = $1;
+                $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         }
         | statement_ifelse {
-                $$ = $1;
+                $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         }
         | statement_while {
-                $$ = $1;
+                $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         }
         | statement_for {
-                $$ = $1;
+                $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         }
         | statement_switch {
-                $$ = $1;
+                $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         }
         | statement_return {
-                $$ = $1;
+                $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         }
         | statement_continue {
-                $$ = $1;
+                $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         }
         | statement_break {
-                $$ = $1;
+                $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         }
         | statement_label {
-                $$ = $1;
+                $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         }
         ;
@@ -1134,7 +1118,7 @@ opt_statement_switch_content
                 PRINT_NONTERMINALS($$);
         }
         | statement_switch_content {
-                $$ = $1;
+                $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         }
         ;
@@ -1148,7 +1132,7 @@ statement_switch_content
                 PRINT_NONTERMINALS($$);
         }
         | statement_switch_content statement_switch_block {
-                $$ = $1;
+                $$ = std::move($1);
                 $$->children.push_back($2);
                 PRINT_NONTERMINALS($$);
         }
@@ -1178,27 +1162,27 @@ statement_switch_block
 
 expression_primary
         : expression_primary_nested {
-                $$ = $1;
+                $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         }
         | expression_primary_identifier {
-                $$ = $1;
+                $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         }
         | expression_primary_literal_int {
-                $$ = $1;
+                $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         }
         | expression_primary_literal_float {
-                $$ = $1;
+                $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         }
         | expression_primary_literal_char {
-                $$ = $1;
+                $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         }
         | expression_primary_literal_string {
-                $$ = $1;
+                $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         }
         ;
@@ -1264,38 +1248,38 @@ expression_primary_nested
 
 expression_postfix
         : expression_postfix_primary {
-                $$ = $1;
+                $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         }
         | expression_postfix_arrayindex {
-                $$ = $1;
+                $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         }
         | expression_postfix_function_call {
-                $$ = $1;
+                $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         }
         | expression_postfix_dot {
-                $$ = $1;
+                $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         }
         | expression_postfix_arrow {
-                $$ = $1;
+                $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         }
         | expression_postfix_increment {
-                $$ = $1;
+                $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         }
         | expression_postfix_decrement {
-                $$ = $1;
+                $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         }
         ;
 
 expression_postfix_primary
         : expression_primary {
-                $$ = $1;
+                $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         }
         ;
@@ -1374,23 +1358,23 @@ expression_postfix_decrement
 
 expression_unary
         : expression_postfix {
-                $$ = $1;
+                $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         }
         | expression_unary_increment {
-                $$ = $1;
+                $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         }
         | expression_unary_decrement {
-                $$ = $1;
+                $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         }
         | expression_unary_prefix {
-                $$ = $1;
+                $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         }
         | expression_unary_sizeof_type {
-                $$ = $1;
+                $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         }
         ;
@@ -1487,18 +1471,18 @@ operator_unary
 
 expression_cast
         : expression_cast_unary {
-                $$ = $1;
+                $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         }
         | expression_cast_cast {
-                $$ = $1;
+                $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         }
         ;
 
 expression_cast_unary
         : expression_unary {
-                $$ = $1;
+                $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         }
         ;
@@ -1521,26 +1505,26 @@ expression_cast_cast
 
 expression_multiplicative
         : expression_multiplicative_cast {
-                $$ = $1;
+                $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         }
         | expression_multiplicative_multiply {
-                $$ = $1;
+                $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         }
         | expression_multiplicative_divide {
-                $$ = $1;
+                $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         }
         | expression_multiplicative_modulo {
-                $$ = $1;
+                $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         }
         ;
 
 expression_multiplicative_cast
         : expression_cast {
-                $$ = $1;
+                $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         }
         ;
@@ -1580,21 +1564,21 @@ expression_multiplicative_modulo
 
 expression_additive
         : expression_additive_multiplicative {
-                $$ = $1;
+                $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         }
         | expression_additive_plus {
-                $$ = $1;
+                $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         }
         | expression_additive_minus {
-                $$ = $1;
+                $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         }
         ;
 expression_additive_multiplicative
         : expression_multiplicative {
-                $$ = $1;
+                $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         }
         ;
@@ -1623,22 +1607,22 @@ expression_additive_minus
 
 expression_shift
         : expression_shift_additive {
-                $$ = $1;
+                $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         }
         | expression_shift_left {
-                $$ = $1;
+                $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         }
         | expression_shift_right {
-                $$ = $1;
+                $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         }
         ;
 
 expression_shift_additive
         : expression_additive {
-                $$ = $1;
+                $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         }
         ;
@@ -1779,7 +1763,7 @@ expression_exclusive_or
 
 expression_inclusive_or
         : expression_exclusive_or {
-                $$ = $1;
+                $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         }
         | expression_inclusive_or PIPE expression_exclusive_or {
@@ -1795,7 +1779,7 @@ expression_inclusive_or
 
 expression_logical_and
         : expression_inclusive_or {
-                $$ = $1;
+                $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         }
         | expression_logical_and AND_OP expression_inclusive_or {
@@ -1811,7 +1795,7 @@ expression_logical_and
 
 expression_logical_or
         : expression_logical_and {
-                $$ = $1;
+                $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         }
         | expression_logical_or OR_OP expression_logical_and {
@@ -1827,7 +1811,7 @@ expression_logical_or
 
 expression_conditional
         : expression_logical_or {
-                $$ = $1;
+                $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         }
         | expression_logical_or QUESTIONMARK expression COLON expression_conditional {
@@ -1845,7 +1829,7 @@ expression_conditional
 
 expression_assignment
         : expression_conditional {
-                $$ = $1;
+                $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         }
         | expression_unary operator_assignment expression_assignment {
@@ -1861,54 +1845,54 @@ expression_assignment
 
 operator_assignment
         : EQUALS {
-                $$ = $1;
+                $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         }
 	| MUL_ASSIGN {
-                $$ = $1;
+                $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         }
 	| DIV_ASSIGN {
-                $$ = $1;
+                $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         }
 	| MOD_ASSIGN {
-                $$ = $1;
+                $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         }
 	| ADD_ASSIGN {
-                $$ = $1;
+                $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         }
 	| SUB_ASSIGN {
-                $$ = $1;
+                $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         }
 	| LEFT_ASSIGN {
-                $$ = $1;
+                $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         }
 	| RIGHT_ASSIGN {
-                $$ = $1;
+                $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         }
 	| AND_ASSIGN {
-                $$ = $1;
+                $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         } 
 	| XOR_ASSIGN {
-                $$ = $1;
+                $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         }
 	| OR_ASSIGN {
-                $$ = $1;
+                $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         }
 	;
 
 expression
         : expression_assignment {
-                $$ = $1;
+                $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         }
         ;
@@ -1942,7 +1926,7 @@ opt_class_member_declaration_list
                 PRINT_NONTERMINALS($$);
         }
         | class_member_declaration_list {
-                $$ = $1;
+                $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         }
         ;
@@ -1956,7 +1940,7 @@ class_member_declaration_list
                 PRINT_NONTERMINALS($$);
         }
         | class_member_declaration_list class_member_declaration {
-                $$ = $1;
+                $$ = std::move($1);
                 $$->children.push_back($2);
                 PRINT_NONTERMINALS($$);
         }
@@ -2017,15 +2001,15 @@ class_member_declaration
                 PRINT_NONTERMINALS($$);
         }
         | class_definition {
-                $$ = $1;
+                $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         }
         | enum_definition {
-                $$ = $1;
+                $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         }
         | type_definition {
-                $$ = $1;
+                $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         }
         ;
@@ -2063,7 +2047,7 @@ type_specifier_call_args
                 PRINT_NONTERMINALS($$);
         }
         | type_specifier_call_args COMMA type_specifier {
-                $$ = $1;
+                $$ = std::move($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
                 PRINT_NONTERMINALS($$);
@@ -2131,7 +2115,7 @@ opt_argument_expression_list
                 PRINT_NONTERMINALS($$);
         }
         | argument_expression_list {
-                $$ = $1;
+                $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         }
         ;
@@ -2145,7 +2129,7 @@ argument_expression_list
                 PRINT_NONTERMINALS($$);
         }
         | argument_expression_list COMMA expression {
-                $$ = $1;
+                $$ = std::move($1);
                 $$->children.push_back($2);
                 $$->children.push_back($3);
                 PRINT_NONTERMINALS($$);

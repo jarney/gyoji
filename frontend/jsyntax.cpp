@@ -1663,6 +1663,10 @@ GlobalInitializer::GlobalInitializer(GlobalInitializer::GlobalInitializerType _i
 {
   add_child(raw_ptr);
 }
+GlobalInitializer::GlobalInitializer()
+  : SyntaxNode("global_initializer", this)
+  , initializer(nullptr)
+{}
 GlobalInitializer::~GlobalInitializer()
 {}
 const GlobalInitializer::GlobalInitializerType &
@@ -1849,7 +1853,14 @@ FileStatement::get_statement() const
 
 FileStatementList::FileStatementList()
   : SyntaxNode("file_statement_list", this)
+  , yyeof(nullptr)
 {}
+FileStatementList::FileStatementList(Terminal::owned_ptr _yyeof)
+  : SyntaxNode("file_statement_list", this)
+  , yyeof(std::move(_yyeof))
+{
+  add_child(yyeof.get());
+}
 FileStatementList::~FileStatementList()
 {}
 const std::vector<FileStatement::owned_ptr> &
