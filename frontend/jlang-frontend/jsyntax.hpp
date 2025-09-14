@@ -347,6 +347,7 @@ namespace JLang::frontend {
         PRIVATE
       } AccessModifierType;
       AccessModifier(Terminal::owned_ptr _modifier, AccessModifierType _type);
+      AccessModifier(AccessModifier::AccessModifierType _type);
       ~AccessModifier();
       const AccessModifierType & get_type() const;
     private:
@@ -465,7 +466,9 @@ namespace JLang::frontend {
       ~FunctionDefinitionArgList();
       const std::vector<FunctionDefinitionArg::owned_ptr> & get_arguments() const;
       void add_argument(FunctionDefinitionArg::owned_ptr _argument);
+      void add_comma(Terminal::owned_ptr _comma);
     private:
+      std::vector<Terminal::owned_ptr> commas;
       std::vector<FunctionDefinitionArg::owned_ptr> arguments;
     };
 
@@ -562,6 +565,7 @@ namespace JLang::frontend {
       Terminal::owned_ptr identifier_token;
       Terminal::owned_ptr semicolon_token;
     };
+    class StatementIfElse;
     class StatementIfElse : public SyntaxNode, public PtrProtocol<StatementIfElse> {
     public:
       StatementIfElse(
@@ -578,15 +582,27 @@ namespace JLang::frontend {
                       Terminal::owned_ptr _paren_l_token,
                       std::unique_ptr<Expression> _expression,
                       Terminal::owned_ptr _paren_r_token,
+                      std::unique_ptr<ScopeBody> _if_scope_body,
+                      Terminal::owned_ptr _else_token,
+                      StatementIfElse::owned_ptr _statement_if_else
+                      );
+      StatementIfElse(
+                      Terminal::owned_ptr _if_token,
+                      Terminal::owned_ptr _paren_l_token,
+                      std::unique_ptr<Expression> _expression,
+                      Terminal::owned_ptr _paren_r_token,
                       std::unique_ptr<ScopeBody> _if_scope_body
                       );
       ~StatementIfElse();
       const Expression & get_expression() const;
       const ScopeBody & get_if_scope_body() const;
+      const StatementIfElse & get_else_if() const;
       const ScopeBody & get_else_scope_body() const;
       bool has_else() const;
+      bool has_else_if() const;
     private:
       bool m_has_else;
+      bool m_has_else_if;
       Terminal::owned_ptr if_token;
       Terminal::owned_ptr paren_l_token;
       std::unique_ptr<Expression> expression;
@@ -594,6 +610,7 @@ namespace JLang::frontend {
       std::unique_ptr<ScopeBody> if_scope_body;
       Terminal::owned_ptr else_token;
       std::unique_ptr<ScopeBody> else_scope_body;
+      StatementIfElse::owned_ptr else_if;
     };
     class StatementWhile : public SyntaxNode, public PtrProtocol<StatementWhile> {
     public:
@@ -840,6 +857,7 @@ namespace JLang::frontend {
     };
     class ClassArgumentList : public SyntaxNode, public PtrProtocol<ClassArgumentList> {
     public:
+      ClassArgumentList();
       ClassArgumentList(Terminal::owned_ptr _argument);
       ~ClassArgumentList();
       void add_argument(Terminal::owned_ptr _comma, Terminal::owned_ptr _argument);
@@ -1261,8 +1279,7 @@ namespace JLang::frontend {
       } OperationType;
       ExpressionUnaryPrefix(
                               std::unique_ptr<Expression> _expression,
-                              Terminal::owned_ptr _operator_token,
-                              ExpressionUnaryPrefix::OperationType _type
+                              Terminal::owned_ptr _operator_token
                               );
       ~ExpressionUnaryPrefix();
       const ExpressionUnaryPrefix::OperationType & get_type();
@@ -1425,7 +1442,7 @@ namespace JLang::frontend {
       ExpressionPrimary::owned_ptr expression;
 
     };
-    class GlobalInitializerAddressofExpressionPrimary : public SyntaxNode, public PtrProtocol<GlobalInitializerExpressionPrimary> {
+    class GlobalInitializerAddressofExpressionPrimary : public SyntaxNode, public PtrProtocol<GlobalInitializerAddressofExpressionPrimary> {
       GlobalInitializerAddressofExpressionPrimary(
                                                   Terminal::owned_ptr _equals_token,
                                                   Terminal::owned_ptr _addressof_token,
@@ -1466,7 +1483,7 @@ namespace JLang::frontend {
       std::vector<StructInitializer::owned_ptr> initializers;
     };
           
-    class GlobalInitializerStructInitializerList : public SyntaxNode, public PtrProtocol<GlobalInitializerExpressionPrimary> {
+    class GlobalInitializerStructInitializerList : public SyntaxNode, public PtrProtocol<GlobalInitializerStructInitializerList> {
     public:
       GlobalInitializerStructInitializerList(
                                              Terminal::owned_ptr _equals_token,

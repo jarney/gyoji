@@ -86,6 +86,11 @@ AccessModifier::AccessModifier(Terminal::owned_ptr _modifier, AccessModifier::Ac
 {
   add_child(modifier.get());
 }
+AccessModifier::AccessModifier(AccessModifier::AccessModifierType _type)
+  : SyntaxNode("access_modifier", this)
+  , modifier(nullptr)
+  , type(_type)
+{}
 AccessModifier::~AccessModifier()
 {}
 const AccessModifier::AccessModifierType &
@@ -254,7 +259,14 @@ FunctionDefinitionArgList::get_arguments() const
 void
 FunctionDefinitionArgList::add_argument(FunctionDefinitionArg::owned_ptr _argument)
 {
+  add_child(_argument.get());
   arguments.push_back(std::move(_argument));
+}
+void
+FunctionDefinitionArgList::add_comma(Terminal::owned_ptr _comma)
+{
+  add_child(_comma.get());
+  commas.push_back(std::move(_comma));
 }
 
 
@@ -418,6 +430,7 @@ StatementIfElse::StatementIfElse(
                                  )                                 
   : SyntaxNode("statement_ifelse", this)
   , m_has_else(true)
+  , m_has_else_if(false)
   , if_token(std::move(_if_token))
   , paren_l_token(std::move(_paren_l_token))
   , expression(std::move(_expression))
@@ -439,10 +452,40 @@ StatementIfElse::StatementIfElse(
                       Terminal::owned_ptr _paren_l_token,
                       std::unique_ptr<Expression> _expression,
                       Terminal::owned_ptr _paren_r_token,
+                      ScopeBody::owned_ptr _if_scope_body,
+                      Terminal::owned_ptr _else_token,
+                      StatementIfElse::owned_ptr _else_if
+                                 )
+  : SyntaxNode("statement_ifelse", this)
+  , m_has_else(false)
+  , m_has_else_if(true)
+  , if_token(std::move(_if_token))
+  , paren_l_token(std::move(_paren_l_token))
+  , expression(std::move(_expression))
+  , paren_r_token(std::move(_paren_r_token))
+  , if_scope_body(std::move(_if_scope_body))
+  , else_token(std::move(_else_token))
+  , else_scope_body(nullptr)
+  , else_if(std::move(_else_if))
+{
+  add_child(if_token.get());
+  add_child(paren_l_token.get());
+  add_child(expression.get());
+  add_child(paren_r_token.get());
+  add_child(if_scope_body.get());
+  add_child(else_token.get());
+  add_child(else_if.get());
+}
+StatementIfElse::StatementIfElse(
+                      Terminal::owned_ptr _if_token,
+                      Terminal::owned_ptr _paren_l_token,
+                      std::unique_ptr<Expression> _expression,
+                      Terminal::owned_ptr _paren_r_token,
                       ScopeBody::owned_ptr _if_scope_body
                                  )
   : SyntaxNode("statement_ifelse", this)
   , m_has_else(false)
+  , m_has_else_if(false)
   , if_token(std::move(_if_token))
   , paren_l_token(std::move(_paren_l_token))
   , expression(std::move(_expression))
@@ -462,6 +505,9 @@ StatementIfElse::~StatementIfElse()
 bool
 StatementIfElse::has_else() const
 { return m_has_else; }
+bool
+StatementIfElse::has_else_if() const
+{ return m_has_else_if; }
 const Expression &
 StatementIfElse::get_expression() const
 { return *expression; }
@@ -828,6 +874,12 @@ ClassArgumentList::ClassArgumentList(Terminal::owned_ptr _argument)
 {
   add_child(_argument.get());
   argument_list.push_back(std::move(_argument));
+}
+ClassArgumentList::ClassArgumentList()
+  : SyntaxNode("class_argument_list", this)
+  , paren_l(nullptr)
+  , paren_r(nullptr)
+{
 }
 ClassArgumentList::~ClassArgumentList()
 {}
@@ -1414,14 +1466,15 @@ ExpressionPostfixIncDec::get_expression()
 ///////////////////////////////////////////////////
 ExpressionUnaryPrefix::ExpressionUnaryPrefix(
                                              std::unique_ptr<Expression> _expression,
-                                             Terminal::owned_ptr _operator_token,
-                                             ExpressionUnaryPrefix::OperationType _type
-                                                 )
+                                             Terminal::owned_ptr _operator_token
+                                             )
   : SyntaxNode("expression_unary_prefix", this)
   , operator_token(std::move(_operator_token))
   , expression(std::move(_expression))
-  , type(_type)
+  , type(ExpressionUnaryPrefix::OperationType::INCREMENT)
 {
+  // TODO: Calculate this from the operator given.
+  //type(ExpressionUnaryPrefix::OperationType::INCREMENT)
   add_child(operator_token.get());
   add_child(expression.get());
 }

@@ -180,7 +180,7 @@
 %nterm <JLang::frontend::alt_imp::StructInitializer::owned_ptr> struct_initializer;
 
 %nterm <JLang::frontend::alt_imp::AccessModifier::owned_ptr> opt_access_modifier;
-%nterm <JLang::frontend::alt_imp::AccessModifier::owned_ptr> access_modifier;
+%nterm <JLang::frontend::alt_imp::Terminal::owned_ptr> access_modifier;
 
 %nterm <JLang::frontend::alt_imp::ScopeBody::owned_ptr> scope_body;
 %nterm <JLang::frontend::alt_imp::StatementList::owned_ptr> statement_list;
@@ -275,8 +275,8 @@
 %nterm <JLang::frontend::alt_imp::ClassMemberDeclarationList::owned_ptr> class_member_declaration_list;
 %nterm <JLang::frontend::alt_imp::ClassMemberDeclaration::owned_ptr> class_member_declaration;
 
-%nterm <JLang::frontend::alt_imp::ExpressionUnaryPrefix::OperationType> operator_unary;
-%nterm <JLang::frontend::alt_imp::ExpressionBinary::OperationType> operator_assignment;
+%nterm <JLang::frontend::alt_imp::Terminal::owned_ptr> operator_unary;
+%nterm <JLang::frontend::alt_imp::Terminal::owned_ptr> operator_assignment;
 
 %nterm <JLang::frontend::alt_imp::ArgumentExpressionList::owned_ptr> opt_argument_expression_list;
 %nterm <JLang::frontend::alt_imp::ArgumentExpressionList::owned_ptr> argument_expression_list;
@@ -298,7 +298,7 @@ translation_unit
         : opt_file_statement_list YYEOF {
           $$ = std::make_unique<JLang::frontend::alt_imp::TranslationUnit>(std::move($1), std::move($2));
           PRINT_NONTERMINALS($$);
-          return_data->translation_unit = $$;
+          return_data->translation_unit = std::move($$);
         }
         ;
 
@@ -315,48 +315,80 @@ opt_file_statement_list
 
 file_statement_list 
         : file_statement {
-          $$ = std::make_unique<FileStatementList>();
+          $$ = std::make_unique<JLang::frontend::alt_imp::FileStatementList>();
           $$->add_statement(std::move($1));
           PRINT_NONTERMINALS($$);
         }
         | file_statement_list file_statement {
           $$ = std::move($1);
-          $$->add_statement($2);
+          $$->add_statement(std::move($2));
           PRINT_NONTERMINALS($$);
         }
         ;
 
 file_statement
         : file_statement_function_definition {
-                $$ = std::move($1);
+                JLang::frontend::alt_imp::SyntaxNode *sn = $1.get();
+                $$ = std::make_unique<JLang::frontend::alt_imp::FileStatement>(
+                                                                               std::move($1),
+                                                                               sn
+                                                                               );
                 PRINT_NONTERMINALS($$);
         }
         | file_statement_function_declaration {
-                $$ = std::move($1);
+                JLang::frontend::alt_imp::SyntaxNode *sn = $1.get();
+                $$ = std::make_unique<JLang::frontend::alt_imp::FileStatement>(
+                                                                               std::move($1),
+                                                                               sn
+                                                                               );
                 PRINT_NONTERMINALS($$);
         }
         | file_statement_global_definition {
-                $$ = std::move($1);
+                JLang::frontend::alt_imp::SyntaxNode *sn = $1.get();
+                $$ = std::make_unique<JLang::frontend::alt_imp::FileStatement>(
+                                                                               std::move($1),
+                                                                               sn
+                                                                               );
                 PRINT_NONTERMINALS($$);
         }
         | class_definition {
-                $$ = std::move($1);
+                JLang::frontend::alt_imp::SyntaxNode *sn = $1.get();
+                $$ = std::make_unique<JLang::frontend::alt_imp::FileStatement>(
+                                                                               std::move($1),
+                                                                               sn
+                                                                               );
                 PRINT_NONTERMINALS($$);
         }
         | enum_definition {
-                $$ = std::move($1);
+                JLang::frontend::alt_imp::SyntaxNode *sn = $1.get();
+                $$ = std::make_unique<JLang::frontend::alt_imp::FileStatement>(
+                                                                               std::move($1),
+                                                                               sn
+                                                                               );
                 PRINT_NONTERMINALS($$);
         }
         | type_definition {
-                $$ = std::move($1);
+                JLang::frontend::alt_imp::SyntaxNode *sn = $1.get();
+                $$ = std::make_unique<JLang::frontend::alt_imp::FileStatement>(
+                                                                               std::move($1),
+                                                                               sn
+                                                                               );
                 PRINT_NONTERMINALS($$);
         }
         | file_statement_namespace {
-                $$ = std::move($1);
+                JLang::frontend::alt_imp::SyntaxNode *sn = $1.get();
+                $$ = std::make_unique<JLang::frontend::alt_imp::FileStatement>(
+                                                                               std::move($1),
+                                                                               sn
+                                                                               );
                 PRINT_NONTERMINALS($$);
         }
         | file_statement_using {
-                $$ = std::move($1);
+                JLang::frontend::alt_imp::SyntaxNode *sn = $1.get();
+                $$ = std::make_unique<JLang::frontend::alt_imp::FileStatement>(
+                                                                               std::move($1),
+                                                                               sn
+                                                                               );
                 PRINT_NONTERMINALS($$);
         }
         ;
@@ -377,7 +409,7 @@ file_statement_global_definition
 
 opt_global_initializer
         : /**/ {
-                $$ = std::make_unique<GlobalInitializer>();
+                $$ = std::make_unique<JLang::frontend::alt_imp::GlobalInitializer>();
                 PRINT_NONTERMINALS($$);
         }
         | global_initializer {
@@ -388,44 +420,44 @@ opt_global_initializer
 
 global_initializer
         : global_initializer_expression_primary {
-                $$ = std::move($1);
+                JLang::frontend::alt_imp::SyntaxNode *sn = $1.get();
+                $$ = std::make_unique<JLang::frontend::alt_imp::GlobalInitializer>(std::move($1), sn);
         }
         | global_initializer_addressof_expression_primary {
-                $$ = std::move($1);
+                JLang::frontend::alt_imp::SyntaxNode *sn = $1.get();
+                $$ = std::make_unique<JLang::frontend::alt_imp::GlobalInitializer>(std::move($1), sn);
         }
         | global_initializer_struct_initializer_list {
-                $$ = std::move($1);
+                JLang::frontend::alt_imp::SyntaxNode *sn = $1.get();
+                $$ = std::make_unique<JLang::frontend::alt_imp::GlobalInitializer>(std::move($1), sn);
         }
         ;
 
 global_initializer_expression_primary
         : EQUALS expression_primary {
-          auto expr = std::make_unique<JLang::frontend::alt_imp::GlobalInitializerExpressionPrimary>(std::move($1),
-                                                                           std::move($2));
-          $$ = std::make_unique<JLang::frontend::alt_imp::GlobalInitializer>(std::move(expr));
+          $$ = std::make_unique<JLang::frontend::alt_imp::GlobalInitializerExpressionPrimary>(std::move($1),
+                                                                                              std::move($2));
           PRINT_NONTERMINALS($$);
         }
         ;
 
 global_initializer_addressof_expression_primary
         : EQUALS ANDPERSAND expression_primary {
-          auto expr = std::make_unique<JLang::frontend::alt_imp::GlobalInitializerAddressofExpressionPrimary>(std::move($1),
-                                                                                    std::move($2),
-                                                                                    std::move($3)
-                                                                                    );
-          $$ = std::make_unique<JLang::frontend::alt_imp::GlobalInitializer>(std::move(expr));
+          $$ = std::make_unique<JLang::frontend::alt_imp::GlobalInitializerAddressofExpressionPrimary>(std::move($1),
+                                                                                                       std::move($2),
+                                                                                                       std::move($3)
+                                                                                                       );
           PRINT_NONTERMINALS($$);
         }
         ;
 
 global_initializer_struct_initializer_list
         : EQUALS BRACE_L opt_struct_initializer_list BRACE_R {
-          auto expr = std::make_unique<JLang::frontend::alt_imp::GlobalInitializerStructInitializerList>(std::move($1),
-                                                                               std::move($2),
-                                                                               std::move($3),
-                                                                               std::move($4)
-                                                                               );
-          $$ = std::make_unique<JLang::frontend::alt_imp::GlobalInitializer>(std::move(expr));
+          $$ = std::make_unique<JLang::frontend::alt_imp::GlobalInitializerStructInitializerList>(std::move($1),
+                                                                                                  std::move($2),
+                                                                                                  std::move($3),
+                                                                                                  std::move($4)
+                                                                                                  );
           PRINT_NONTERMINALS($$);
         }
         ;
@@ -433,9 +465,7 @@ global_initializer_struct_initializer_list
 
 opt_struct_initializer_list
         : /**/ {
-                $$ = std::make_shared<JLang::frontend::ASTNode>();
-                $$->type = Parser::symbol_kind_type::S_struct_initializer_list;
-                $$->typestr = std::string("struct_initializer_list");
+                $$ = std::make_unique<JLang::frontend::alt_imp::StructInitializerList>();
                 PRINT_NONTERMINALS($$);
         }
         | struct_initializer_list {
@@ -446,44 +476,39 @@ opt_struct_initializer_list
 
 struct_initializer_list
         : struct_initializer {
-                $$ = std::make_shared<JLang::frontend::ASTNode>();
-                $$->type = Parser::symbol_kind_type::S_struct_initializer_list;
-                $$->typestr = std::string("struct_initializer_list");
-                $$->children.push_back($1);
+                $$ = std::make_unique<JLang::frontend::alt_imp::StructInitializerList>();
+                $$->add_initializer(std::move($1));
                 PRINT_NONTERMINALS($$);
         }
         | struct_initializer_list struct_initializer {
                 $$ = std::move($1);
-                $$->children.push_back($2);
+                $$->add_initializer(std::move($2));
                 PRINT_NONTERMINALS($$);
         }
         ;
 
 struct_initializer
         : DOT IDENTIFIER global_initializer SEMICOLON {
-                $$ = std::make_shared<JLang::frontend::ASTNode>();
-                $$->type = Parser::symbol_kind_type::S_global_initializer;
-                $$->typestr = std::string("struct_initializer");
-                $$->children.push_back($1);
-                $$->children.push_back($2);
-                $$->children.push_back($3);
-                $$->children.push_back($4);
+                $$ = std::make_unique<JLang::frontend::alt_imp::StructInitializer>(
+                                                                                   std::move($1),
+                                                                                   std::move($2),
+                                                                                   std::move($3),
+                                                                                   std::move($4)
+                                                                                   );
                 PRINT_NONTERMINALS($$);
         }
         ;
 
 opt_access_modifier
-        :  {
-                $$ = std::make_shared<JLang::frontend::ASTNode>();
-                $$->type = Parser::symbol_kind_type::S_access_modifier;
-                $$->typestr = std::string("access_modifier");
+        : /**/ {
+                $$ = std::make_unique<JLang::frontend::alt_imp::AccessModifier>(AccessModifier::AccessModifierType::PUBLIC);
                 PRINT_NONTERMINALS($$);
         }
         | access_modifier {
-                $$ = std::make_shared<JLang::frontend::ASTNode>();
-                $$->type = Parser::symbol_kind_type::S_access_modifier;
-                $$->typestr = std::string("access_modifier");
-                $$->children.push_back($1);
+                $$ = std::make_unique<JLang::frontend::alt_imp::AccessModifier>(
+                                                                                std::move($1),
+                                                                                AccessModifier::AccessModifierType::PUBLIC
+                                                                                );
                 PRINT_NONTERMINALS($$);
         }
         ;
@@ -505,28 +530,28 @@ access_modifier
 
 namespace_declaration
         : opt_access_modifier NAMESPACE IDENTIFIER {
-                $$ = std::make_shared<JLang::frontend::ASTNode>();
-                $$->type = Parser::symbol_kind_type::S_namespace_declaration;
-                $$->typestr = std::string("namespace_declaration");
-                $$->children.push_back($1);
-                $$->children.push_back($2);
-                $$->children.push_back($3);
-                return_data->namespace_context.namespace_new($3->value, JLang::frontend::Namespace::TYPE_NAMESPACE, visibility_from_modifier($1));
-                return_data->namespace_context.namespace_push($3->value);
+                AccessModifier::AccessModifierType access_modifier = $1->get_type();
+                std::string namespace_name = $3->value;
+                $$ = std::make_unique<JLang::frontend::alt_imp::NamespaceDeclaration>(
+                                                                                      std::move($1),
+                                                                                      std::move($2),
+                                                                                      std::move($3)
+                                                                                      );
+                return_data->namespace_context.namespace_new(namespace_name, JLang::frontend::Namespace::TYPE_NAMESPACE, visibility_from_modifier(access_modifier));
+                return_data->namespace_context.namespace_push(namespace_name);
                 PRINT_NONTERMINALS($$);
         }
         ;
 
 file_statement_namespace
         : namespace_declaration BRACE_L opt_file_statement_list BRACE_R SEMICOLON {
-                $$ = std::make_shared<JLang::frontend::ASTNode>();
-                $$->type = Parser::symbol_kind_type::S_file_statement_namespace;
-                $$->typestr = std::string("file_statement_namespace");
-                $$->children.push_back($1);
-                $$->children.push_back($2);
-                $$->children.push_back($3);
-                $$->children.push_back($4);
-                $$->children.push_back($5);
+                $$ = std::make_unique<JLang::frontend::alt_imp::FileStatementNamespace>(
+                                                                                        std::move($1),
+                                                                                        std::move($2),
+                                                                                        std::move($3),
+                                                                                        std::move($4),
+                                                                                        std::move($5)
+                                                                                        );
                 return_data->namespace_context.namespace_pop();
                 PRINT_NONTERMINALS($$);
         }
@@ -534,39 +559,37 @@ file_statement_namespace
 
 opt_as
         : /**/ {
-                $$ = std::make_shared<JLang::frontend::ASTNode>();
-                $$->type = Parser::symbol_kind_type::S_opt_as;
-                $$->typestr = std::string("opt_as");
+                $$ = std::make_unique<JLang::frontend::alt_imp::UsingAs>();
                 PRINT_NONTERMINALS($$);
         }
         | AS IDENTIFIER {
-                $$ = std::make_shared<JLang::frontend::ASTNode>();
-                $$->type = Parser::symbol_kind_type::S_opt_as;
-                $$->typestr = std::string("opt_as");
-                $$->children.push_back($1);
-                $$->children.push_back($2);
+                $$ = std::make_unique<JLang::frontend::alt_imp::UsingAs>(
+                                                                std::move($1),
+                                                                std::move($2)
+                                                                );
                 PRINT_NONTERMINALS($$);
         }
         ;
 
 file_statement_using
         : opt_access_modifier USING NAMESPACE NAMESPACE_NAME opt_as SEMICOLON {
-                $$ = std::make_shared<JLang::frontend::ASTNode>();
-                $$->type = Parser::symbol_kind_type::S_file_statement_using;
-                $$->typestr = std::string("file_statement_using");
-                $$->children.push_back($1);
-                $$->children.push_back($2);
-                $$->children.push_back($3);
-                $$->children.push_back($4);
-                $$->children.push_back($5);
-                $$->children.push_back($6);
-                JLang::frontend::NamespaceFoundReason::ptr found_std = return_data->namespace_context.namespace_lookup($4->value);
+                std::string namespace_name = $4->value;
+                std::string as_name = $5->get_using_name();
+                $$ = std::make_unique<JLang::frontend::alt_imp::FileStatementUsing>(
+                                                                                    std::move($1),
+                                                                                    std::move($2),
+                                                                                    std::move($3),
+                                                                                    std::move($4),
+                                                                                    std::move($5),
+                                                                                    std::move($6)
+                                                                                    );
+                JLang::frontend::NamespaceFoundReason::ptr found_std = return_data->namespace_context.namespace_lookup(namespace_name);
                 if (!found_std) {
-                  fprintf(stderr, "Error: no such namespace %s in using statement\n", $4->value.c_str());
+                  fprintf(stderr, "Error: no such namespace %s in using statement\n", namespace_name.c_str());
                   exit(1);
                 }
-                if ($5->children.size() == 2) {
-                  return_data->namespace_context.namespace_using($5->children.back()->value, found_std->location);
+                if (as_name.size() > 0) {
+                  return_data->namespace_context.namespace_using(as_name, found_std->location);
                 }
                 else {
                   return_data->namespace_context.namespace_using("", found_std->location);
@@ -574,22 +597,23 @@ file_statement_using
                 PRINT_NONTERMINALS($$);
         }
         | opt_access_modifier USING NAMESPACE TYPE_NAME opt_as SEMICOLON {
-                $$ = std::make_shared<JLang::frontend::ASTNode>();
-                $$->type = Parser::symbol_kind_type::S_file_statement_using;
-                $$->typestr = std::string("file_statement_using");
-                $$->children.push_back($1);
-                $$->children.push_back($2);
-                $$->children.push_back($3);
-                $$->children.push_back($4);
-                $$->children.push_back($5);
-                $$->children.push_back($6);
-                JLang::frontend::NamespaceFoundReason::ptr found_std = return_data->namespace_context.namespace_lookup($4->value);
+                std::string namespace_name = $4->value;
+                std::string as_name = $5->get_using_name();
+                $$ = std::make_unique<JLang::frontend::alt_imp::FileStatementUsing>(
+                                                                                    std::move($1),
+                                                                                    std::move($2),
+                                                                                    std::move($3),
+                                                                                    std::move($4),
+                                                                                    std::move($5),
+                                                                                    std::move($6)
+                                                                                    );
+                JLang::frontend::NamespaceFoundReason::ptr found_std = return_data->namespace_context.namespace_lookup(namespace_name);
                 if (!found_std) {
-                  fprintf(stderr, "Error: no such namespace %s in using statement\n", $4->value.c_str());
+                  fprintf(stderr, "Error: no such namespace %s in using statement\n", namespace_name.c_str());
                   exit(1);
                 }
-                if ($5->children.size() == 2) {
-                  return_data->namespace_context.namespace_using($5->children.back()->value, found_std->location);
+                if (as_name.size() > 0) {
+                  return_data->namespace_context.namespace_using(as_name, found_std->location);
                 }
                 else {
                   return_data->namespace_context.namespace_using("", found_std->location);
@@ -600,15 +624,18 @@ file_statement_using
 
 class_decl_start
         : opt_access_modifier CLASS IDENTIFIER opt_class_argument_list {
-                $$ = std::make_shared<JLang::frontend::ASTNode>();
-                $$->type = Parser::symbol_kind_type::S_class_decl_start;
-                $$->typestr = std::string("class_decl_start");
-                $$->children.push_back($1);
-                $$->children.push_back($2);
-                $$->children.push_back($3);
-                $$->children.push_back($4);
-                return_data->namespace_context.namespace_new($3->value, JLang::frontend::Namespace::TYPE_CLASS, visibility_from_modifier($1));
+                std::string class_name = $3->value;
+                AccessModifier::AccessModifierType visibility_modifier = $1->get_type();
+                $$ = std::make_unique<JLang::frontend::alt_imp::ClassDeclStart>(
+                                                                         std::move($1),
+                                                                         std::move($2),
+                                                                         std::move($3),
+                                                                         std::move($4)
+                                                                         );
+                return_data->namespace_context.namespace_new($3->value, JLang::frontend::Namespace::TYPE_CLASS, visibility_from_modifier(visibility_modifier));
                 return_data->namespace_context.namespace_push($3->value);
+#if 0
+                // XXX TODO: This isn't handled correctly for the strongly-typed AST.
                 if ($4->children.size() > 0) {
                   for (auto child : $4->children) {
                     if (child->type == Parser::symbol_kind_type::S_class_argument_list) {
@@ -620,24 +647,19 @@ class_decl_start
                     }
                   }
                 }
+#endif
                 PRINT_NONTERMINALS($$);
         }
         ;
 
 opt_class_argument_list
         : /**/ {
-                $$ = std::make_shared<JLang::frontend::ASTNode>();
-                $$->type = Parser::symbol_kind_type::S_opt_class_argument_list;
-                $$->typestr = std::string("opt_class_argument_list");
+                $$ = std::make_unique<JLang::frontend::alt_impl::ClassArgumentList>();
                 PRINT_NONTERMINALS($$);
         }
         | PAREN_L class_argument_list PAREN_R {
-                $$ = std::make_shared<JLang::frontend::ASTNode>();
-                $$->type = Parser::symbol_kind_type::S_opt_class_argument_list;
-                $$->typestr = std::string("opt_class_argument_list");
-                $$->children.push_back($1);
-                $$->children.push_back($2);
-                $$->children.push_back($3);
+          $$ = std::move($2);
+          $$->add_parens(std::move($1), std::move($3));
                 PRINT_NONTERMINALS($$);
         }
         ;
@@ -648,30 +670,27 @@ opt_class_argument_list
 // types scoped private in the class.
 class_argument_list
         : IDENTIFIER {
-                $$ = std::make_shared<JLang::frontend::ASTNode>();
-                $$->type = Parser::symbol_kind_type::S_class_argument_list;
-                $$->typestr = std::string("class_argument_list");
-                $$->children.push_back($1);
+                $$ = std::make_unique<JLang::frontend::alt_imp::ClassArgumentList(
+                                                                                  std::move($1)
+                                                                                  );
                 PRINT_NONTERMINALS($$);
         }
         | class_argument_list COMMA IDENTIFIER {
                 $$ = std::move($1);
-                $$->children.push_back($2);
-                $$->children.push_back($3);
+                $$->add_argument(std::move($2), std::move($3));
                 PRINT_NONTERMINALS($$);
         }
         ;
 
 class_definition
         : class_decl_start BRACE_L opt_class_member_declaration_list BRACE_R SEMICOLON {
-                $$ = std::make_shared<JLang::frontend::ASTNode>();
-                $$->type = Parser::symbol_kind_type::S_class_definition;
-                $$->typestr = std::string("class_definition");
-                $$->children.push_back($1);
-                $$->children.push_back($2);
-                $$->children.push_back($3);
-                $$->children.push_back($4);
-                $$->children.push_back($5);
+                $$ = std::make_unique<JLang::frontend::alt_imp::ClassDefinition>(
+                                                                                 std::move($1),
+                                                                                 std::move($2),
+                                                                                 std::move($3),
+                                                                                 std::move($4),
+                                                                                 std::move($5)
+                                                                                 );
                 return_data->namespace_context.namespace_pop();
                 PRINT_NONTERMINALS($$);
         }
@@ -679,42 +698,33 @@ class_definition
 
 type_definition
         : opt_access_modifier TYPEDEF type_specifier IDENTIFIER SEMICOLON {
-                $$ = std::make_shared<JLang::frontend::ASTNode>();
-                $$->type = Parser::symbol_kind_type::S_type_definition;
-                $$->typestr = std::string("type_definition");
-                $$->children.push_back($1);
-                $$->children.push_back($2);
-                $$->children.push_back($3);
-                $$->children.push_back($4);
-                $$->children.push_back($5);
-                return_data->namespace_context.namespace_new($4->value, JLang::frontend::Namespace::TYPE_TYPEDEF, visibility_from_modifier($1));
+                AccessModifier::AccessModifierType visibility_modifier = $1->get_type();
+                std::string type_name = $4->value;
+                $$ = std::make_unique<JLang::frontend::alt_imp::TypeDefinition>(
+                                                                               std::move($1),
+                                                                               std::move($2),
+                                                                               std::move($3),
+                                                                               std::move($4),
+                                                                               std::move($5)
+                                                                               );
+                return_data->namespace_context.namespace_new(type_name, JLang::frontend::Namespace::TYPE_TYPEDEF, visibility_from_modifier(visibility_modifier));
                 PRINT_NONTERMINALS($$);
         }
         ;
 
 enum_definition
         : opt_access_modifier ENUM TYPE_NAME IDENTIFIER BRACE_L opt_enum_value_list BRACE_R SEMICOLON {
-                $$ = std::make_shared<JLang::frontend::ASTNode>();
-                $$->type = Parser::symbol_kind_type::S_enum_definition;
-                $$->typestr = std::string("enum_definition");
-                $$->children.push_back($1);
-                $$->children.push_back($2);
-                $$->children.push_back($3);
-                $$->children.push_back($4);
-                $$->children.push_back($5);
-                $$->children.push_back($6);
-                $$->children.push_back($7);
-                $$->children.push_back($8);
-                return_data->namespace_context.namespace_new($4->value, JLang::frontend::Namespace::TYPE_TYPEDEF, visibility_from_modifier($1));
+                AccessModifier::AccessModifierType visibility_modifier = $1->get_type();
+                std::string type_name = $4->value;
+                $$ = std::make_unique<JLang::frontend::alt_imp::EnumDefinition>();
+                return_data->namespace_context.namespace_new(type_name, JLang::frontend::Namespace::TYPE_TYPEDEF, visibility_from_modifier(visibility_modifier));
                 PRINT_NONTERMINALS($$);
         }
         ;
 
 opt_enum_value_list
         : /**/ {
-                $$ = std::make_shared<JLang::frontend::ASTNode>();
-                $$->type = Parser::symbol_kind_type::S_enum_value_list;
-                $$->typestr = std::string("enum_value_list");
+                $$ = std::make_unique<JLang::frontend::alt_imp::EnumDefinitionValueList>();
                 PRINT_NONTERMINALS($$);
         }
         | enum_value_list {
@@ -725,84 +735,75 @@ opt_enum_value_list
 
 enum_value_list
         : enum_value {
-                $$ = std::make_shared<JLang::frontend::ASTNode>();
-                $$->type = Parser::symbol_kind_type::S_enum_value_list;
-                $$->typestr = std::string("enum_value_list");
-                $$->children.push_back($1);
+                $$ = std::make_unique<JLang::frontend::alt_imp::EnumDefinitionValueList>();
+                $$->add_value(std::move($1));
                 PRINT_NONTERMINALS($$);
         }
         | enum_value_list enum_value {
                 $$ = std::move($1);
-                $$->children.push_back($2);
+                $$->add_value(std::move($2));
                 PRINT_NONTERMINALS($$);
         }
         ;
 
 enum_value
         : IDENTIFIER EQUALS expression_primary SEMICOLON {
-                $$ = std::make_shared<JLang::frontend::ASTNode>();
-                $$->type = Parser::symbol_kind_type::S_enum_value;
-                $$->typestr = std::string("enum_value");
-                $$->children.push_back($1);
-                $$->children.push_back($2);
-                $$->children.push_back($3);
-                $$->children.push_back($4);
+                $$ = std::make_unique<JLang::frontend::alt_imp::EnumDefinitionValue>(
+                                                                                    std::move($1),
+                                                                                    std::move($2),
+                                                                                    std::move($3),
+                                                                                    std::move($4)
+                                                                                    );
                 PRINT_NONTERMINALS($$);
         }
         ;
   
 opt_unsafe
         : /**/ {
-                $$ = std::make_shared<JLang::frontend::ASTNode>();
-                $$->type = Parser::symbol_kind_type::S_opt_unsafe;
-                $$->typestr = std::string("opt_unsafe");
+                $$ = std::make_unique<JLang::frontend::alt_imp::UnsafeModifier>();
                 PRINT_NONTERMINALS($$);
         }
         | UNSAFE {
-                $$ = std::move($1);
+                $$ = std::make_unique<JLang::frontend::alt_imp::UnsafeModifier>(std::move($1));
                 PRINT_NONTERMINALS($$);
         }
         ;
 
 file_statement_function_declaration
         : opt_access_modifier opt_unsafe type_specifier IDENTIFIER PAREN_L opt_function_definition_arg_list PAREN_R SEMICOLON {
-                $$ = std::make_shared<JLang::frontend::ASTNode>();
-                $$->type = Parser::symbol_kind_type::S_file_statement_function_declaration;
-                $$->typestr = std::string("file_statement_function_declaration");
-                $$->children.push_back($1);
-                $$->children.push_back($2);
-                $$->children.push_back($3);
-                $$->children.push_back($4);
-                $$->children.push_back($5);
-                $$->children.push_back($6);
-                $$->children.push_back($7);
-                $$->children.push_back($8);
+                $$ = std::make_unique<JLang::frontend::alt_imp::FileStatementFunctionDeclaration>(
+                                                                                                 std::move($1),
+                                                                                                 std::move($2),
+                                                                                                 std::move($3),
+                                                                                                 std::move($4),
+                                                                                                 std::move($5),
+                                                                                                 std::move($6),
+                                                                                                 std::move($7),
+                                                                                                 std::move($8)
+                                                                                                 );
                 PRINT_NONTERMINALS($$);
         }
         ;
 
 file_statement_function_definition
         : opt_access_modifier opt_unsafe type_specifier IDENTIFIER PAREN_L opt_function_definition_arg_list PAREN_R scope_body {
-                $$ = std::make_shared<JLang::frontend::ASTNode>();
-                $$->type = Parser::symbol_kind_type::S_file_statement_function_definition;
-                $$->typestr = std::string("file_statement_function_definition");
-                $$->children.push_back($1);
-                $$->children.push_back($2);
-                $$->children.push_back($3);
-                $$->children.push_back($4);
-                $$->children.push_back($5);
-                $$->children.push_back($6);
-                $$->children.push_back($7);
-                $$->children.push_back($8);
+                $$ = std::make_unique<JLang::frontend::alt_imp::FileStatementFunctionDefinition>(
+                                                                                                std::move($1),
+                                                                                                std::move($2),
+                                                                                                std::move($3),
+                                                                                                std::move($4),
+                                                                                                std::move($5),
+                                                                                                std::move($6),
+                                                                                                std::move($7),
+                                                                                                std::move($8)
+                                                                                                );
                 PRINT_NONTERMINALS($$);
         }
         ;
 
 opt_function_definition_arg_list
         : /**/ {
-                $$ = std::make_shared<JLang::frontend::ASTNode>();
-                $$->type = Parser::symbol_kind_type::S_function_definition_arg_list;
-                $$->typestr = std::string("function_definition_arg_list");
+                $$ = std::make_unique<JLang::frontend::alt_imp::FunctionDefinitionArgList>();
                 PRINT_NONTERMINALS($$);
         }
         | function_definition_arg_list {
@@ -813,308 +814,283 @@ opt_function_definition_arg_list
 
 function_definition_arg_list
         : function_definition_arg {
-                $$ = std::make_shared<JLang::frontend::ASTNode>();
-                $$->type = Parser::symbol_kind_type::S_function_definition_arg_list;
-                $$->typestr = std::string("function_definition_arg_list");
-                $$->children.push_back($1);
+                $$ = std::make_unique<JLang::frontend::alt_imp::FunctionDefinitionArgList>();
+                $$->add_argument(std::move($1));
                 PRINT_NONTERMINALS($$);
         }
         | function_definition_arg_list COMMA function_definition_arg {
                 $$ = std::move($1);
-                $$->children.push_back($2);
-                $$->children.push_back($3);
+                $$->add_comma(std::move($2));
+                $$->add_argument(std::move($3));
                 PRINT_NONTERMINALS($$);
         }
         ;
 function_definition_arg
         : type_specifier IDENTIFIER {
-                $$ = std::make_shared<JLang::frontend::ASTNode>();
-                $$->type = Parser::symbol_kind_type::S_function_definition_arg;
-                $$->typestr = std::string("function_definition_arg");
-                $$->children.push_back($1);
-                $$->children.push_back($2);
+                $$ = std::make_unique<JLang::frontend::alt_imp::FunctionDefinitionArg>(
+                                                                                       std::move($1),
+                                                                                       std::move($2)
+                                                                                       );
                 PRINT_NONTERMINALS($$);
         }
         ;
 
 scope_body
         : BRACE_L statement_list BRACE_R {
-                $$ = std::make_shared<JLang::frontend::ASTNode>();
-                $$->type = Parser::symbol_kind_type::S_scope_body;
-                $$->typestr = std::string("scope_body");
-                $$->children.push_back($1);
-                $$->children.push_back($2);
-                $$->children.push_back($3);
+                $$ = std::make_unique<JLang::frontend::alt_imp::ScopeBody>(
+                                                                           std::move($1),
+                                                                           std::move($2),
+                                                                           std::move($3)
+                                                                           );
                 PRINT_NONTERMINALS($$);
         }
         ;
 
 statement_list
         : /**/ {
-                $$ = std::make_shared<JLang::frontend::ASTNode>();
-                $$->type = Parser::symbol_kind_type::S_scope_body;
-                $$->typestr = std::string("statement_list");
+                $$ = std::make_unique<JLang::frontend::alt_imp::StatementList>();
                 PRINT_NONTERMINALS($$);
         }
         | statement_list statement {
                 $$ = std::move($1);
-                $$->children.push_back($2);
+                $$->add_statement(std::move($2));
                 PRINT_NONTERMINALS($$);
         }
         ;
 
 statement
         : statement_variable_declaration {
-                $$ = std::move($1);
+                $$ = std::make_unique<JLang::frontend::alt_imp::Statement>(std::move($1));
                 PRINT_NONTERMINALS($$);
         }
         | statement_expression {
-                $$ = std::move($1);
+                $$ = std::make_unique<JLang::frontend::alt_imp::Statement>(std::move($1));
                 PRINT_NONTERMINALS($$);
         }
         | statement_block {
-                $$ = std::move($1);
+                $$ = std::make_unique<JLang::frontend::alt_imp::Statement>(std::move($1));
                 PRINT_NONTERMINALS($$);
         }
         | statement_goto {
-                $$ = std::move($1);
+                $$ = std::make_unique<JLang::frontend::alt_imp::Statement>(std::move($1));
                 PRINT_NONTERMINALS($$);
         }
         | statement_ifelse {
-                $$ = std::move($1);
+                $$ = std::make_unique<JLang::frontend::alt_imp::Statement>(std::move($1));
                 PRINT_NONTERMINALS($$);
         }
         | statement_while {
-                $$ = std::move($1);
+                $$ = std::make_unique<JLang::frontend::alt_imp::Statement>(std::move($1));
                 PRINT_NONTERMINALS($$);
         }
         | statement_for {
-                $$ = std::move($1);
+                $$ = std::make_unique<JLang::frontend::alt_imp::Statement>(std::move($1));
                 PRINT_NONTERMINALS($$);
         }
         | statement_switch {
-                $$ = std::move($1);
+                $$ = std::make_unique<JLang::frontend::alt_imp::Statement>(std::move($1));
                 PRINT_NONTERMINALS($$);
         }
         | statement_return {
-                $$ = std::move($1);
+                $$ = std::make_unique<JLang::frontend::alt_imp::Statement>(std::move($1));
                 PRINT_NONTERMINALS($$);
         }
         | statement_continue {
-                $$ = std::move($1);
+                $$ = std::make_unique<JLang::frontend::alt_imp::Statement>(std::move($1));
                 PRINT_NONTERMINALS($$);
         }
         | statement_break {
-                $$ = std::move($1);
+                $$ = std::make_unique<JLang::frontend::alt_imp::Statement>(std::move($1));
                 PRINT_NONTERMINALS($$);
         }
         | statement_label {
-                $$ = std::move($1);
+                $$ = std::make_unique<JLang::frontend::alt_imp::Statement>(std::move($1));
                 PRINT_NONTERMINALS($$);
         }
         ;
 
 opt_array_length
         : /**/ {
-                $$ = std::make_shared<JLang::frontend::ASTNode>();
-                $$->type = Parser::symbol_kind_type::S_opt_array_length;
-                $$->typestr = std::string("opt_array_length");
+                $$ = std::make_unique<JLang::frontend::alt_imp::ArrayLength>();
                 PRINT_NONTERMINALS($$);
         }
         | BRACKET_L LITERAL_INT BRACKET_R {
-                $$ = std::make_shared<JLang::frontend::ASTNode>();
-                $$->type = Parser::symbol_kind_type::S_opt_array_length;
-                $$->typestr = std::string("opt_array_length");
-                $$->children.push_back($1);
-                $$->children.push_back($2);
-                $$->children.push_back($3);
+                $$ = std::make_unique<JLang::frontend::alt_imp::ArrayLength>(
+                                                                             std::move($1),
+                                                                             std::move($2),
+                                                                             std::move($3),
+                                                                             );
                 PRINT_NONTERMINALS($$);
         }
         ;
 
 statement_variable_declaration
         : type_specifier IDENTIFIER opt_array_length opt_global_initializer SEMICOLON {
-                $$ = std::make_shared<JLang::frontend::ASTNode>();
-                $$->type = Parser::symbol_kind_type::S_statement_variable_declaration;
-                $$->typestr = std::string("statement_variable_declaration");
-                $$->children.push_back($1);
-                $$->children.push_back($2);
-                $$->children.push_back($3);
-                $$->children.push_back($4);
-                $$->children.push_back($5);
+                $$ = std::make_unique<JLang::frontend::alt_imp::StatementVariableDeclaration>(
+                                                                                              std::move($1),
+                                                                                              std::move($2),
+                                                                                              std::move($3),
+                                                                                              std::move($4),
+                                                                                              std::move($5)
+                                                                                              );
                 PRINT_NONTERMINALS($$);
         }
         ;
 
 statement_block
         : opt_unsafe scope_body {
-                $$ = std::make_shared<JLang::frontend::ASTNode>();
-                $$->type = Parser::symbol_kind_type::S_statement_block;
-                $$->typestr = std::string("statement_block");
-                $$->children.push_back($1);
-                $$->children.push_back($2);
+                $$ = std::make_unique<JLang::frontend::alt_imp::StatementBlock>(
+                                                                                std::move($1),
+                                                                                std::move($2)
+                                                                                );
                 PRINT_NONTERMINALS($$);
         }
         ;
 
 statement_expression
         : expression SEMICOLON {
-                $$ = std::make_shared<JLang::frontend::ASTNode>();
-                $$->type = Parser::symbol_kind_type::S_statement_expression;
-                $$->typestr = std::string("statement_expression");
-                $$->children.push_back($1);
-                $$->children.push_back($2);
+                $$ = std::make_unique<JLang::frontend::alt_imp::StatementExpression>(
+                                                                                std::move($1),
+                                                                                std::move($2)
+                                                                                );
                 PRINT_NONTERMINALS($$);
         }
         ;
 statement_goto
         : GOTO IDENTIFIER SEMICOLON {
-                $$ = std::make_shared<JLang::frontend::ASTNode>();
-                $$->type = Parser::symbol_kind_type::S_statement_goto;
-                $$->typestr = std::string("statement_goto");
-                $$->children.push_back($1);
-                $$->children.push_back($2);
-                $$->children.push_back($3);
+                $$ = std::make_unique<JLang::frontend::alt_imp::StatementGoto>(
+                                                                               std::move($1),
+                                                                               std::move($2),
+                                                                               std::move($3)
+                                                                               );
                 PRINT_NONTERMINALS($$);
         }
         ;
 statement_break
         : BREAK SEMICOLON {
-                $$ = std::make_shared<JLang::frontend::ASTNode>();
-                $$->type = Parser::symbol_kind_type::S_statement_break;
-                 $$->typestr = std::string("statement_break");
-                $$->children.push_back($1);
-                $$->children.push_back($2);
+                $$ = std::make_unique<JLang::frontend::alt_imp::StatementBreak>(
+                                                                                std::move($1),
+                                                                                std::move($2)
+                                                                                );
                 PRINT_NONTERMINALS($$);
         }
         ;
 statement_continue
         : CONTINUE SEMICOLON {
-                $$ = std::make_shared<JLang::frontend::ASTNode>();
-                $$->type = Parser::symbol_kind_type::S_statement_continue;
-                $$->typestr = std::string("statement_continue");
-                $$->children.push_back($1);
-                $$->children.push_back($2);
+                $$ = std::make_unique<JLang::frontend::alt_imp::StatementContinue>(
+                                                                                std::move($1),
+                                                                                std::move($2)
+                                                                                );
                 PRINT_NONTERMINALS($$);
         }
         ;
 statement_label
         : LABEL IDENTIFIER COLON {
-                $$ = std::make_shared<JLang::frontend::ASTNode>();
-                $$->type = Parser::symbol_kind_type::S_statement_label;
-                $$->typestr = std::string("statement_label");
-                $$->children.push_back($1);
-                $$->children.push_back($2);
-                $$->children.push_back($3);
+                $$ = std::make_unique<JLang::frontend::alt_imp::StatementLabel>(
+                                                                                std::move($1),
+                                                                                std::move($2),
+                                                                                std::move($3)
+                                                                                );
                 PRINT_NONTERMINALS($$);
         }
         ;
 
 statement_return
         : RETURN expression SEMICOLON {
-                $$ = std::make_shared<JLang::frontend::ASTNode>();
-                $$->type = Parser::symbol_kind_type::S_statement_return;
-                $$->typestr = std::string("statement_return");
-                $$->children.push_back($1);
-                $$->children.push_back($2);
-                $$->children.push_back($3);
+                $$ = std::make_unique<JLang::frontend::alt_imp::StatementReturn>(
+                                                                                 std::move($1),
+                                                                                 std::move($2),
+                                                                                 std::move($3)
+                                                                                 );
                 PRINT_NONTERMINALS($$);
         }
         ; 
 
 statement_ifelse
         : IF PAREN_L expression PAREN_R scope_body {
-                $$ = std::make_shared<JLang::frontend::ASTNode>();
-                $$->type = Parser::symbol_kind_type::S_statement_ifelse;
-                $$->typestr = std::string("statement_ifelse");
-                $$->children.push_back($1);
-                $$->children.push_back($2);
-                $$->children.push_back($3);
-                $$->children.push_back($4);
-                $$->children.push_back($5);
+                $$ = std::make_unique<JLang::frontend::alt_imp::StatementIfElse>(
+                                                                                 std::move($1),
+                                                                                 std::move($2),
+                                                                                 std::move($3),
+                                                                                 std::move($4),
+                                                                                 std::move($5)
+                                                                                 );
                 PRINT_NONTERMINALS($$);
         }
         | IF PAREN_L expression PAREN_R scope_body ELSE statement_ifelse {
-                $$ = std::make_shared<JLang::frontend::ASTNode>();
-                $$->type = Parser::symbol_kind_type::S_statement_ifelse;
-                $$->typestr = std::string("statement_ifelse");
-                $$->children.push_back($1);
-                $$->children.push_back($2);
-                $$->children.push_back($3);
-                $$->children.push_back($4);
-                $$->children.push_back($5);
-                $$->children.push_back($6);
-                $$->children.push_back($7);
+                $$ = std::make_unique<JLang::frontend::alt_imp::StatementIfElse>(
+                                                                                 std::move($1),
+                                                                                 std::move($2),
+                                                                                 std::move($3),
+                                                                                 std::move($4),
+                                                                                 std::move($5),
+                                                                                 std::move($6),
+                                                                                 std::move($7)
+                                                                                 );
                 PRINT_NONTERMINALS($$);
         }
         | IF PAREN_L expression PAREN_R scope_body ELSE scope_body {
-                $$ = std::make_shared<JLang::frontend::ASTNode>();
-                $$->type = Parser::symbol_kind_type::S_statement_ifelse;
-                $$->typestr = std::string("statement_ifelse");
-                $$->children.push_back($1);
-                $$->children.push_back($2);
-                $$->children.push_back($3);
-                $$->children.push_back($4);
-                $$->children.push_back($5);
-                $$->children.push_back($6);
-                $$->children.push_back($7);
+                $$ = std::make_unique<JLang::frontend::alt_imp::StatementIfElse>(
+                                                                                 std::move($1),
+                                                                                 std::move($2),
+                                                                                 std::move($3),
+                                                                                 std::move($4),
+                                                                                 std::move($5),
+                                                                                 std::move($6),
+                                                                                 std::move($7)
+                                                                                 );
                 PRINT_NONTERMINALS($$);
         }
         ;
 
 statement_while
         : WHILE PAREN_L expression PAREN_R scope_body {
-                $$ = std::make_shared<JLang::frontend::ASTNode>();
-                $$->type = Parser::symbol_kind_type::S_statement_while;
-                $$->typestr = std::string("statement_while");
-                $$->children.push_back($1);
-                $$->children.push_back($2);
-                $$->children.push_back($3);
-                $$->children.push_back($4);
-                $$->children.push_back($5);
+                $$ = std::make_unique<JLang::frontend::alt_imp::StatementWhile>(
+                                                                                std::move($1),
+                                                                                std::move($2),
+                                                                                std::move($3),
+                                                                                std::move($4),
+                                                                                std::move($5)
+                                                                                );
                 PRINT_NONTERMINALS($$);
         }
         ;
 
 statement_for
         : FOR PAREN_L expression SEMICOLON expression SEMICOLON expression PAREN_R scope_body {
-                $$ = std::make_shared<JLang::frontend::ASTNode>();
-                $$->type = Parser::symbol_kind_type::S_statement_for;
-                $$->typestr = std::string("statement_for");
-                $$->children.push_back($1);
-                $$->children.push_back($2);
-                $$->children.push_back($3);
-                $$->children.push_back($4);
-                $$->children.push_back($5);
-                $$->children.push_back($6);
-                $$->children.push_back($7);
-                $$->children.push_back($8);
-                $$->children.push_back($9);
+                $$ = std::make_unique<JLang::frontend::alt_imp::StatementWhile>(
+                                                                                std::move($1),
+                                                                                std::move($2),
+                                                                                std::move($3),
+                                                                                std::move($4),
+                                                                                std::move($5),
+                                                                                std::move($6),
+                                                                                std::move($7),
+                                                                                std::move($8),
+                                                                                std::move($9)
+                                                                                );
                 PRINT_NONTERMINALS($$);
         }
         ;
 
 statement_switch
         : SWITCH PAREN_L expression PAREN_R BRACE_L opt_statement_switch_content BRACE_R {
-                $$ = std::make_shared<JLang::frontend::ASTNode>();
-                $$->type = Parser::symbol_kind_type::S_statement_switch;
-                $$->typestr = std::string("statement_switch");
-                $$->children.push_back($1);
-                $$->children.push_back($2);
-                $$->children.push_back($3);
-                $$->children.push_back($4);
-                $$->children.push_back($5);
-                $$->children.push_back($6);
-                $$->children.push_back($7);
+                $$ = std::make_unique<JLang::frontend::alt_imp::StatementSwitch>(
+                                                                                std::move($1),
+                                                                                std::move($2),
+                                                                                std::move($3),
+                                                                                std::move($4),
+                                                                                std::move($5),
+                                                                                std::move($6),
+                                                                                std::move($7)
+                                                                                );
                 PRINT_NONTERMINALS($$);
         }
         ;
 
 opt_statement_switch_content
         : /**/ {
-                $$ = std::make_shared<JLang::frontend::ASTNode>();
-                $$->type = Parser::symbol_kind_type::S_statement_switch_content;
-                $$->typestr = std::string("statement_switch_content");
+                $$ = std::make_unique<JLang::frontend::alt_imp::StatementSwitchContent>();
                 PRINT_NONTERMINALS($$);
         }
         | statement_switch_content {
@@ -1125,123 +1101,103 @@ opt_statement_switch_content
 
 statement_switch_content
         : statement_switch_block {
-                $$ = std::make_shared<JLang::frontend::ASTNode>();
-                $$->type = Parser::symbol_kind_type::S_statement_switch_content;
-                $$->typestr = std::string("statement_switch_content");
-                $$->children.push_back($1);
+                $$ = std::make_unique<JLang::frontend::alt_imp::StatementSwitchContent>();
+                $$->add_block(std::move($1));
                 PRINT_NONTERMINALS($$);
         }
         | statement_switch_content statement_switch_block {
                 $$ = std::move($1);
-                $$->children.push_back($2);
+                $$->add_block(std::move($2));
                 PRINT_NONTERMINALS($$);
         }
         ;
 
 statement_switch_block
         : DEFAULT COLON scope_body {
-                $$ = std::make_shared<JLang::frontend::ASTNode>();
-                $$->type = Parser::symbol_kind_type::S_statement_switch_block;
-                $$->typestr = std::string("statement_switch_block");
-                $$->children.push_back($1);
-                $$->children.push_back($2);
-                $$->children.push_back($3);
+                $$ = std::make_unique<JLang::frontend::alt_imp::StatementSwitchBlock>(
+                                                                                      std::move($1),
+                                                                                      std::move($2),
+                                                                                      std::move($3)
+                                                                                      );
                 PRINT_NONTERMINALS($$);
         }
         | CASE expression COLON scope_body {
-                $$ = std::make_shared<JLang::frontend::ASTNode>();
-                $$->type = Parser::symbol_kind_type::S_statement_switch_block;
-                $$->typestr = std::string("statement_switch_block");
-                $$->children.push_back($1);
-                $$->children.push_back($2);
-                $$->children.push_back($3);
-                $$->children.push_back($4);
+                $$ = std::make_unique<JLang::frontend::alt_imp::StatementSwitchBlock>(
+                                                                                      std::move($1),
+                                                                                      std::move($2),
+                                                                                      std::move($3),
+                                                                                      std::move($4)
+                                                                                      );
                 PRINT_NONTERMINALS($$);
         }
         ;
 
 expression_primary
-        : expression_primary_nested {
-                $$ = std::move($1);
+        : expression_primary_identifier {
+                $$ = std::make_unique<JLang::frontend::alt_imp::ExpressionPrimary>(std::move($1));
                 PRINT_NONTERMINALS($$);
         }
-        | expression_primary_identifier {
-                $$ = std::move($1);
+        | expression_primary_nested {
+                $$ = std::make_unique<JLang::frontend::alt_imp::ExpressionPrimary>(std::move($1));
                 PRINT_NONTERMINALS($$);
         }
         | expression_primary_literal_int {
-                $$ = std::move($1);
+                $$ = std::make_unique<JLang::frontend::alt_imp::ExpressionPrimary>(std::move($1));
                 PRINT_NONTERMINALS($$);
         }
         | expression_primary_literal_float {
-                $$ = std::move($1);
+                $$ = std::make_unique<JLang::frontend::alt_imp::ExpressionPrimary>(std::move($1));
                 PRINT_NONTERMINALS($$);
         }
         | expression_primary_literal_char {
-                $$ = std::move($1);
+                $$ = std::make_unique<JLang::frontend::alt_imp::ExpressionPrimary>(std::move($1));
                 PRINT_NONTERMINALS($$);
         }
         | expression_primary_literal_string {
-                $$ = std::move($1);
+                $$ = std::make_unique<JLang::frontend::alt_imp::ExpressionPrimary>(std::move($1));
                 PRINT_NONTERMINALS($$);
         }
         ;
 
 expression_primary_identifier
         : IDENTIFIER {
-                $$ = std::make_shared<JLang::frontend::ASTNode>();
-                $$->type = Parser::symbol_kind_type::S_expression_primary_identifier;
-                $$->typestr = std::string("expression_primary_identifier");
-                $$->children.push_back($1);
+                $$ = std::make_unique<JLang::frontend::alt_imp::ExpressionPrimaryIdentifier>(std::move($1));
                 PRINT_NONTERMINALS($$);
         }
         ;
 
 expression_primary_literal_int
         : LITERAL_INT {
-                $$ = std::make_shared<JLang::frontend::ASTNode>();
-                $$->type = Parser::symbol_kind_type::S_expression_primary_literal_int;
-                $$->typestr = std::string("expression_primary_literal_int");
-                $$->children.push_back($1);
+                $$ = std::make_unique<JLang::frontend::alt_imp::ExpressionPrimaryLiteralInt>(std::move($1));
                 PRINT_NONTERMINALS($$);
         }
         ;
 expression_primary_literal_float
         : LITERAL_FLOAT {
-                $$ = std::make_shared<JLang::frontend::ASTNode>();
-                $$->type = Parser::symbol_kind_type::S_expression_primary_literal_float;
-                $$->typestr = std::string("expression_primary_literal_float");
-                $$->children.push_back($1);
+                $$ = std::make_unique<JLang::frontend::alt_imp::ExpressionPrimaryLiteralFloat>(std::move($1));
                 PRINT_NONTERMINALS($$);
         }
         ;
 expression_primary_literal_char
         : LITERAL_CHAR {
-                $$ = std::make_shared<JLang::frontend::ASTNode>();
-                $$->type = Parser::symbol_kind_type::S_expression_primary_literal_char;
-                $$->typestr = std::string("expression_primary_literal_char");
-                $$->children.push_back($1);
+                $$ = std::make_unique<JLang::frontend::alt_imp::ExpressionPrimaryLiteralChar>(std::move($1));
                 PRINT_NONTERMINALS($$);
         }
         ;
 expression_primary_literal_string
         : LITERAL_STRING {
-                $$ = std::make_shared<JLang::frontend::ASTNode>();
-                $$->type = Parser::symbol_kind_type::S_expression_primary_literal_string;
-                $$->typestr = std::string("expression_primary_literal_string");
-                $$->children.push_back($1);
+                $$ = std::make_unique<JLang::frontend::alt_imp::ExpressionPrimaryLiteralString>(std::move($1));
                 PRINT_NONTERMINALS($$);
         }
         ;
 
 expression_primary_nested
         : PAREN_L expression PAREN_R {
-                $$ = std::make_shared<JLang::frontend::ASTNode>();
-                $$->type = Parser::symbol_kind_type::S_expression_primary_nested;
-                $$->typestr = std::string("expression_primary_literal_nested");
-                $$->children.push_back($1);
-                $$->children.push_back($2);
-                $$->children.push_back($3);
+                $$ = std::make_unique<JLang::frontend::alt_imp::ExpressionPrimaryNested>(
+                                                                                         std::move($1),
+                                                                                         std::move($2),
+                                                                                         std::move($3)
+                                                                                         );
                 PRINT_NONTERMINALS($$);
         }
 	;
@@ -1286,72 +1242,68 @@ expression_postfix_primary
 
 expression_postfix_arrayindex
         : expression_postfix BRACKET_L expression BRACKET_R {
-                $$ = std::make_shared<JLang::frontend::ASTNode>();
-                $$->type = Parser::symbol_kind_type::S_expression_postfix_arrayindex;
-                $$->typestr = std::string("expression_postfix_arrayindex");
-                $$->children.push_back($1);
-                $$->children.push_back($2);
-                $$->children.push_back($3);
-                $$->children.push_back($4);
+                $$ = std::make_unique<JLang::frontend::alt_imp::ExpressionPostfixArrayIndex>(
+                                                                                             std::move($1),
+                                                                                             std::move($2),
+                                                                                             std::move($3),
+                                                                                             std::move($4)
+                                                                                             );
                 PRINT_NONTERMINALS($$);
         }
         ;
 
 expression_postfix_function_call
         : expression_postfix PAREN_L opt_argument_expression_list PAREN_R {
-                $$ = std::make_shared<JLang::frontend::ASTNode>();
-                $$->type = Parser::symbol_kind_type::S_expression_postfix_function_call;
-                $$->typestr = std::string("expression_postfix_function_call");
-                $$->children.push_back($1);
-                $$->children.push_back($2);
-                $$->children.push_back($3);
-                $$->children.push_back($4);
+                $$ = std::make_unique<JLang::frontend::alt_imp::ExpressionPostfixFunctionCall>(
+                                                                                               std::move($1),
+                                                                                               std::move($2),
+                                                                                               std::move($3),
+                                                                                               std::move($4)
+                                                                                               );
                 PRINT_NONTERMINALS($$);
         }
         ;
 
 expression_postfix_dot
         : expression_postfix DOT IDENTIFIER {
-                $$ = std::make_shared<JLang::frontend::ASTNode>();
-                $$->type = Parser::symbol_kind_type::S_expression_postfix_dot;
-                $$->typestr = std::string("expression_postfix_dot");
-                $$->children.push_back($1);
-                $$->children.push_back($2);
-                $$->children.push_back($3);
+                $$ = std::make_unique<JLang::frontend::alt_imp::ExpressionPostfixDot>(
+                                                                                      std::move($1),
+                                                                                      std::move($2),
+                                                                                      std::move($3)
+                                                                                      );
                 PRINT_NONTERMINALS($$);
         }
         ;
 
 expression_postfix_arrow
         : expression_postfix PTR_OP IDENTIFIER {
-                $$ = std::make_shared<JLang::frontend::ASTNode>();
-                $$->type = Parser::symbol_kind_type::S_expression_postfix_arrow;
-                $$->typestr = std::string("expression_postfix_arrow");
-                $$->children.push_back($1);
-                $$->children.push_back($2);
-                $$->children.push_back($3);
+                $$ = std::make_unique<JLang::frontend::alt_imp::ExpressionPostfixArrow>(
+                                                                                        std::move($1),
+                                                                                        std::move($2),
+                                                                                        std::move($3)
+                                                                                        );
                 PRINT_NONTERMINALS($$);
         }
         ;
 
 expression_postfix_increment
         : expression_postfix INC_OP {
-                $$ = std::make_shared<JLang::frontend::ASTNode>();
-                $$->type = Parser::symbol_kind_type::S_expression_postfix_increment;
-                $$->typestr = std::string("expression_postfix_increment");
-                $$->children.push_back($1);
-                $$->children.push_back($2);
+                $$ = std::make_unique<JLang::frontend::alt_imp::ExpressionPostfixIncDec>(
+                                                                                         std::move($1),
+                                                                                         std::move($2),
+                                                                                         ExpressionPostfixIncDec::OperationType::INCREMENT
+                                                                                         );
                 PRINT_NONTERMINALS($$);
         }
         ;
 
 expression_postfix_decrement
         : expression_postfix DEC_OP {
-                $$ = std::make_shared<JLang::frontend::ASTNode>();
-                $$->type = Parser::symbol_kind_type::S_expression_postfix_decrement;
-                $$->typestr = std::string("expression_postfix_decrement");
-                $$->children.push_back($1);
-                $$->children.push_back($2);
+                $$ = std::make_unique<JLang::frontend::alt_imp::ExpressionPostfixIncDec>(
+                                                                                         std::move($1),
+                                                                                         std::move($2),
+                                                                                         ExpressionPostfixIncDec::OperationType::DECREMENT
+                                                                                         );
                 PRINT_NONTERMINALS($$);
         }
 	;
@@ -1381,43 +1333,39 @@ expression_unary
 
 expression_unary_increment
         : INC_OP expression_unary {
-                $$ = std::make_shared<JLang::frontend::ASTNode>();
-                $$->type = Parser::symbol_kind::S_expression_unary_increment;
-                $$->typestr = std::string("expression_unary_increment");
-                $$->children.push_back($1);
-                $$->children.push_back($2);
+                $$ = std::make_unique<JLang::frontend::alt_imp::ExpressionUnaryPrefix>(
+                                                                                       std::move($1),
+                                                                                       std::move($2)
+                                                                                       );
                 PRINT_NONTERMINALS($$);
         }
         ;
 expression_unary_decrement
         : DEC_OP expression_unary {
-                $$ = std::make_shared<JLang::frontend::ASTNode>();
-                $$->type = Parser::symbol_kind::S_expression_unary_decrement;
-                $$->typestr = std::string("expression_unary_decrement");
-                $$->children.push_back($1);
-                $$->children.push_back($2);
+                $$ = std::make_unique<JLang::frontend::alt_imp::ExpressionUnaryPrefix>(
+                                                                                       std::move($1),
+                                                                                       std::move($2)
+                                                                                       );
                 PRINT_NONTERMINALS($$);
         }
         ;
 expression_unary_prefix
         : operator_unary expression_cast {
-                $$ = std::make_shared<JLang::frontend::ASTNode>();
-                $$->type = Parser::symbol_kind::S_expression_unary_prefix;
-                $$->typestr = std::string("expression_unary_prefix");
-                $$->children.push_back($1);
-                $$->children.push_back($2);
+                $$ = std::make_unique<JLang::frontend::alt_imp::ExpressionUnaryPrefix>(
+                                                                                       std::move($1),
+                                                                                       std::move($2)
+                                                                                       );
                 PRINT_NONTERMINALS($$);
         }
         ;
 expression_unary_sizeof_type
         : SIZEOF PAREN_L type_specifier PAREN_R {
-                $$ = std::make_shared<JLang::frontend::ASTNode>();
-                $$->type = Parser::symbol_kind::S_expression_unary_sizeof_type;
-                $$->typestr = std::string("expression_unary_sizeof_type");
-                $$->children.push_back($1);
-                $$->children.push_back($2);
-                $$->children.push_back($3);
-                $$->children.push_back($4);
+                $$ = std::make_unique<JLang::frontend::alt_imp::ExpressionUnarySizeofType>(
+                                                                                       std::move($1),
+                                                                                       std::move($2),
+                                                                                       std::move($3),
+                                                                                       std::move($4)
+                                                                                       );
                 PRINT_NONTERMINALS($$);
         }
         ;
@@ -1426,45 +1374,27 @@ expression_unary_sizeof_type
 
 operator_unary
         : ANDPERSAND {
-                $$ = std::make_shared<JLang::frontend::ASTNode>();
-                $$->type = Parser::symbol_kind::S_operator_unary;
-                $$->typestr = std::string("operator_unary");
-                $$->children.push_back($1);
+                $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         }
         | STAR {
-                $$ = std::make_shared<JLang::frontend::ASTNode>();
-                $$->type = Parser::symbol_kind::S_operator_unary;
-                $$->typestr = std::string("operator_unary");
-                $$->children.push_back($1);
+                $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         }
         | PLUS {
-                $$ = std::make_shared<JLang::frontend::ASTNode>();
-                $$->type = Parser::symbol_kind::S_operator_unary;
-                $$->typestr = std::string("operator_unary");
-                $$->children.push_back($1);
+                $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         }
         | MINUS {
-                $$ = std::make_shared<JLang::frontend::ASTNode>();
-                $$->type = Parser::symbol_kind::S_operator_unary;
-                $$->typestr = std::string("operator_unary");
-                $$->children.push_back($1);
+                $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         }
         | TILDE {
-                $$ = std::make_shared<JLang::frontend::ASTNode>();
-                $$->type = Parser::symbol_kind::S_operator_unary;
-                $$->typestr = std::string("operator_unary");
-                $$->children.push_back($1);
+                $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         }
         | BANG {
-                $$ = std::make_shared<JLang::frontend::ASTNode>();
-                $$->type = Parser::symbol_kind::S_operator_unary;
-                $$->typestr = std::string("operator_unary");
-                $$->children.push_back($1);
+                $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         }
 	;
@@ -2138,24 +2068,18 @@ argument_expression_list
 
 %%
 
-int visibility_from_modifier(JLang::frontend::ASTNode::ptr node)
+int visibility_from_modifier(AccessModifier::AccessModifierType visibility_ast)
 {
-    int visibility = JLang::frontend::Namespace::VISIBILITY_PUBLIC;
-    if (node) {
-      if (node->children.size() == 0) {
-        visibility = JLang::frontend::Namespace::VISIBILITY_PUBLIC;
-      }
-      else if (node->children.back()->value == "public") {
-        visibility = JLang::frontend::Namespace::VISIBILITY_PUBLIC;
-      }
-      else if (node->children.back()->value == "protected") {
-        visibility = JLang::frontend::Namespace::VISIBILITY_PROTECTED;
-      }
-      else if (node->children.back()->value == "private") {
-        visibility = JLang::frontend::Namespace::VISIBILITY_PRIVATE;
-      }
+    switch (visibility_ast) {
+    case AccessModifier::AccessModifierType::PUBLIC:
+      return JLang::frontend::Namespace::VISIBILITY_PUBLIC;
+    case AccessModifier::AccessModifierType::PROTECTED:
+      return JLang::frontend::Namespace::VISIBILITY_PROTECTED;
+    case AccessModifier::AccessModifierType::PRIVATE:
+      return JLang::frontend::Namespace::VISIBILITY_PRIVATE;
+    default:
+      return JLang::frontend::Namespace::VISIBILITY_PUBLIC;
     }
-    return visibility;
 }
 
 void jlang::Parser::error(const std::string& msg) {
