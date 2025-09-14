@@ -67,17 +67,17 @@ namespace JLang::frontend {
       class StatementVariableDeclaration;
       class StatementBlock;
       class StatementExpression;
-      class StatementGoto;
       class StatementIfElse;
       class StatementWhile;
       class StatementFor;
           class StatementSwitchBlock;
         class StatementSwitchContent;
       class StatementSwitch;
-      class StatementReturn;
+      class StatementLabel;
+      class StatementGoto;
       class StatementContinue;
       class StatementBreak;
-      class StatementLabel;
+      class StatementReturn;
     class Statement;
   class StatementList;
     
@@ -96,9 +96,6 @@ namespace JLang::frontend {
           class GlobalInitializerStructInitializerList;
         class GlobalInitializer;
       class FileStatementGlobalDefinition;
-      class FileStatementClassDefinition;
-      class FileStatementEnumDefinition;
-      class FileStatementTypeDefinition;
     
         class NamespaceDeclaration;
       class FileStatementNamespace;
@@ -192,9 +189,6 @@ namespace JLang::frontend {
                 GlobalInitializerStructInitializerList*,
               GlobalInitializer*,
             FileStatementGlobalDefinition*,
-            FileStatementClassDefinition*,
-            FileStatementEnumDefinition*,
-            FileStatementTypeDefinition*,
               NamespaceDeclaration*,
             FileStatementNamespace*,
               UsingAs*,
@@ -212,6 +206,7 @@ namespace JLang::frontend {
       const std::vector<const SyntaxNode*> & get_children() const;
       const std::string & get_type() const;
       const SyntaxNode::specific_type_t &get_data() const;
+      const SyntaxNode* get_syntax_node() const;
       
     private:
       // This list does NOT own its children, so
@@ -308,13 +303,13 @@ namespace JLang::frontend {
         std::unique_ptr<FileStatementFunctionDefinition>,
         std::unique_ptr<FileStatementFunctionDeclaration>,
         std::unique_ptr<FileStatementGlobalDefinition>,
-        std::unique_ptr<FileStatementClassDefinition>,
-        std::unique_ptr<FileStatementEnumDefinition>,
-        std::unique_ptr<FileStatementTypeDefinition>,
+        std::unique_ptr<ClassDefinition>,
+        std::unique_ptr<EnumDefinition>,
+        std::unique_ptr<TypeDefinition>,
         std::unique_ptr<FileStatementNamespace>,
         std::unique_ptr<FileStatementUsing>> FileStatementType;
 
-      FileStatement(FileStatementType _statement, SyntaxNode *raw_ptr);
+      FileStatement(FileStatementType _statement, const SyntaxNode *_raw_ptr);
       ~FileStatement();
 
       const FileStatementType & get_statement() const;
@@ -403,33 +398,89 @@ namespace JLang::frontend {
 
     class TypeSpecifierSimple : public SyntaxNode, public PtrProtocol<TypeSpecifierSimple> {
     public:
-      TypeSpecifierSimple();
+      TypeSpecifierSimple(
+                          AccessQualifier::owned_ptr _access_qualifier,
+                          TypeName::owned_ptr _type_name
+                          );
       ~TypeSpecifierSimple();
+      const AccessQualifier & get_access_qualifier() const;
+      const TypeName & get_type_name() const;
     private:
+      AccessQualifier::owned_ptr access_qualifier;
+      TypeName::owned_ptr type_name;
     };
     class TypeSpecifierTemplate : public SyntaxNode, public PtrProtocol<TypeSpecifierTemplate> {
     public:
-      TypeSpecifierTemplate();
+      TypeSpecifierTemplate(
+                            std::unique_ptr<TypeSpecifier> _type_specifier,
+                            Terminal::owned_ptr _paren_l_token,
+                            std::unique_ptr<TypeSpecifierCallArgs> _type_specifier_call_args,
+                            Terminal::owned_ptr _paren_r_token
+                            );
       ~TypeSpecifierTemplate();
+      const TypeSpecifier & get_type() const;
+      const TypeSpecifierCallArgs & get_args() const;
     private:
+      std::unique_ptr<TypeSpecifier> type_specifier;
+      Terminal::owned_ptr paren_l_token;
+      std::unique_ptr<TypeSpecifierCallArgs> type_specifier_call_args;
+      Terminal::owned_ptr paren_r_token;
     };
     class TypeSpecifierFunctionPointer : public SyntaxNode, public PtrProtocol<TypeSpecifierFunctionPointer> {
     public:
-      TypeSpecifierFunctionPointer();
+      TypeSpecifierFunctionPointer(
+                                   std::unique_ptr<TypeSpecifier> _type_specifier,
+                                   Terminal::owned_ptr _paren_l1_token,
+                                   Terminal::owned_ptr _star_token,
+                                   Terminal::owned_ptr _identifier_token,
+                                   Terminal::owned_ptr _paren_r1_token,
+                                   Terminal::owned_ptr _paren_l2_token,
+                                   std::unique_ptr<FunctionDefinitionArgList> _function_definition_arg_list,
+                                   Terminal::owned_ptr _paren_r2_token
+                                   );
       ~TypeSpecifierFunctionPointer();
+      const TypeSpecifier & get_return_type() const;
+      const std::string & get_name() const;
+      const FunctionDefinitionArgList & get_args() const;
     private:
+      std::unique_ptr<TypeSpecifier> type_specifier;
+      Terminal::owned_ptr paren_l1_token;
+      Terminal::owned_ptr star_token;
+      Terminal::owned_ptr identifier_token;
+      Terminal::owned_ptr paren_r1_token;
+      Terminal::owned_ptr paren_l2_token;
+      std::unique_ptr<FunctionDefinitionArgList> function_definition_arg_list;
+      Terminal::owned_ptr paren_r2_token;
     };
     class TypeSpecifierPointerTo : public SyntaxNode, public PtrProtocol<TypeSpecifierPointerTo> {
     public:
-      TypeSpecifierPointerTo();
+      TypeSpecifierPointerTo(
+                             std::unique_ptr<TypeSpecifier> _type_specifier,
+                             Terminal::owned_ptr _star_token,
+                             AccessQualifier::owned_ptr _access_qualifier
+                             );
       ~TypeSpecifierPointerTo();
+      const TypeSpecifier & get_type_specifier() const;
+      const AccessQualifier & get_access_qualifier() const;
     private:
+      std::unique_ptr<TypeSpecifier> type_specifier;
+      Terminal::owned_ptr star_token;
+      AccessQualifier::owned_ptr access_qualifier;
     };
     class TypeSpecifierReferenceTo : public SyntaxNode, public PtrProtocol<TypeSpecifierReferenceTo> {
     public:
-      TypeSpecifierReferenceTo();
+      TypeSpecifierReferenceTo(
+                               std::unique_ptr<TypeSpecifier> _type_specifier,
+                               Terminal::owned_ptr _andpersand_token,
+                               AccessQualifier::owned_ptr _access_qualifier
+                               );
       ~TypeSpecifierReferenceTo();
+      const TypeSpecifier & get_type_specifier() const;
+      const AccessQualifier & get_access_qualifier() const;
     private:
+      std::unique_ptr<TypeSpecifier> type_specifier;
+      Terminal::owned_ptr andpersand_token;
+      AccessQualifier::owned_ptr access_qualifier;
     };
     
     class TypeSpecifier : public SyntaxNode, public PtrProtocol<TypeSpecifier> {
@@ -441,7 +492,7 @@ namespace JLang::frontend {
         TypeSpecifierPointerTo::owned_ptr,
         TypeSpecifierReferenceTo::owned_ptr
       > TypeSpecifierType;
-      TypeSpecifier(TypeSpecifier::TypeSpecifierType _type, SyntaxNode *node);
+      TypeSpecifier(TypeSpecifier::TypeSpecifierType _type, const SyntaxNode *_raw_ptr);
       ~TypeSpecifier();
       const TypeSpecifier::TypeSpecifierType & get_type() const;
     private:
@@ -549,20 +600,6 @@ namespace JLang::frontend {
       const Expression & get_expression() const;
     private:
       std::unique_ptr<Expression> expression;
-      Terminal::owned_ptr semicolon_token;
-    };
-    class StatementGoto : public SyntaxNode, public PtrProtocol<StatementGoto> {
-    public:
-      StatementGoto(
-                    Terminal::owned_ptr _goto_token,
-                    Terminal::owned_ptr _identifier_token,
-                    Terminal::owned_ptr _semicolon_token
-                    );
-      ~StatementGoto();
-      const std::string & get_label() const;
-    private:
-      Terminal::owned_ptr goto_token;
-      Terminal::owned_ptr identifier_token;
       Terminal::owned_ptr semicolon_token;
     };
     class StatementIfElse;
@@ -723,46 +760,86 @@ namespace JLang::frontend {
       StatementSwitchContent::owned_ptr switch_content;
       Terminal::owned_ptr brace_r_token;
     };
-    class StatementReturn : public SyntaxNode, public PtrProtocol<StatementReturn> {
+    class StatementLabel : public SyntaxNode, public PtrProtocol<StatementLabel> {
     public:
-      StatementReturn();
-      ~StatementReturn();
+      StatementLabel(
+                     Terminal::owned_ptr _label_token,
+                     Terminal::owned_ptr _identifier_token,
+                     Terminal::owned_ptr _colon_token
+                     );
+      ~StatementLabel();
+      const std::string & get_name() const;
     private:
+      Terminal::owned_ptr label_token;
+      Terminal::owned_ptr identifier_token;
+      Terminal::owned_ptr colon_token;
     };
-    class StatementContinue : public SyntaxNode, public PtrProtocol<StatementContinue> {
+    class StatementGoto : public SyntaxNode, public PtrProtocol<StatementGoto> {
     public:
-      StatementContinue();
-      ~StatementContinue();
+      StatementGoto(
+                    Terminal::owned_ptr _goto_token,
+                    Terminal::owned_ptr _identifier_token,
+                    Terminal::owned_ptr _semicolon_token
+                    );
+      ~StatementGoto();
+      const std::string & get_label() const;
     private:
+      Terminal::owned_ptr goto_token;
+      Terminal::owned_ptr identifier_token;
+      Terminal::owned_ptr semicolon_token;
     };
     class StatementBreak : public SyntaxNode, public PtrProtocol<StatementBreak> {
     public:
-      StatementBreak();
+      StatementBreak(
+                     Terminal::owned_ptr _break_token,
+                     Terminal::owned_ptr _semicolon_token
+                     );
       ~StatementBreak();
     private:
+      Terminal::owned_ptr break_token;
+      Terminal::owned_ptr semicolon_token;
     };
-    class StatementLabel : public SyntaxNode, public PtrProtocol<StatementLabel> {
+    class StatementContinue : public SyntaxNode, public PtrProtocol<StatementContinue> {
     public:
-      StatementLabel();
-      ~StatementLabel();
+      StatementContinue(
+                        Terminal::owned_ptr _continue_token,
+                        Terminal::owned_ptr _semicolon_token
+                        );
+      ~StatementContinue();
     private:
+      Terminal::owned_ptr continue_token;
+      Terminal::owned_ptr semicolon_token;
     };
-    
-    class Statement : public SyntaxNode, public PtrProtocol<StatementList> {
+    class StatementReturn : public SyntaxNode, public PtrProtocol<StatementReturn> {
+    public:
+      StatementReturn(
+                      Terminal::owned_ptr _return_token,
+                      std::unique_ptr<Expression> _expression,
+                      Terminal::owned_ptr _semicolon_token
+                      );
+      ~StatementReturn();
+      const Expression & get_expression() const;
+    private:
+      Terminal::owned_ptr return_token;
+      std::unique_ptr<Expression> expression;
+      Terminal::owned_ptr semicolon_token;
+    };
+
+    class Statement : public SyntaxNode, public PtrProtocol<Statement> {
     public:
       typedef std::variant<
+            StatementVariableDeclaration::owned_ptr,
             StatementBlock::owned_ptr,
+            StatementExpression::owned_ptr,
             StatementIfElse::owned_ptr,
             StatementWhile::owned_ptr,
             StatementFor::owned_ptr,
             StatementSwitch::owned_ptr,
-            StatementReturn::owned_ptr,
-            StatementContinue::owned_ptr,
+            StatementLabel::owned_ptr,
             StatementGoto::owned_ptr,
             StatementBreak::owned_ptr,
-            StatementLabel::owned_ptr,
-            StatementExpression::owned_ptr,
-            StatementVariableDeclaration::owned_ptr
+            StatementContinue::owned_ptr,
+            StatementReturn::owned_ptr
       > StatementType;
 
       Statement(StatementType _statement);
@@ -784,8 +861,17 @@ namespace JLang::frontend {
     
     class ScopeBody : public SyntaxNode, public PtrProtocol<ScopeBody> {
     public:
-      ScopeBody();
+      ScopeBody(
+                Terminal::owned_ptr brace_l_token,
+                StatementList::owned_ptr statement_list,
+                Terminal::owned_ptr brace_r_token
+                );
       ~ScopeBody();
+      const StatementList & get_statements() const;
+    private:
+      Terminal::owned_ptr brace_l_token;
+      StatementList::owned_ptr statement_list;
+      Terminal::owned_ptr brace_r_token;
     };
     
     class FileStatementFunctionDefinition : public SyntaxNode, public PtrProtocol<FileStatementFunctionDefinition> {
@@ -941,8 +1027,8 @@ namespace JLang::frontend {
     class ClassMemberDeclarationDestructor : public SyntaxNode, public PtrProtocol<ClassMemberDeclarationDestructor> {
     public:
       ClassMemberDeclarationDestructor(
-                                       Terminal::owned_ptr _tilde_token,
                                        AccessModifier::owned_ptr _access_modifier,
+                                       Terminal::owned_ptr _tilde_token,
                                        TypeSpecifier::owned_ptr _type_specifier,
                                        Terminal::owned_ptr _paren_l_token,
                                        FunctionDefinitionArgList::owned_ptr _function_definition_arg_list,
@@ -954,8 +1040,8 @@ namespace JLang::frontend {
       const TypeSpecifier & get_type_specifier() const;
       const FunctionDefinitionArgList & get_arguments() const;
     private:
-      Terminal::owned_ptr tilde_token;
       AccessModifier::owned_ptr access_modifier;
+      Terminal::owned_ptr tilde_token;
       TypeSpecifier::owned_ptr type_specifier;
       Terminal::owned_ptr paren_l_token;
       FunctionDefinitionArgList::owned_ptr function_definition_arg_list;
@@ -983,7 +1069,7 @@ namespace JLang::frontend {
       > MemberType;
       ClassMemberDeclaration(
                              MemberType _member,
-                             SyntaxNode *raw_ptr
+                             const SyntaxNode *_raw_ptr
                              );
       ~ClassMemberDeclaration();
       const ClassMemberDeclaration::MemberType & get_member();
@@ -1059,7 +1145,7 @@ namespace JLang::frontend {
       Terminal::owned_ptr identifier_token;
       Terminal::owned_ptr equals_token;
       std::unique_ptr<ExpressionPrimary> expression_primary;
-      Terminal::owned_ptr semicolon_token;
+      Terminal::owned_ptr semicolon_token;      
     };
     
     class EnumDefinitionValueList : public SyntaxNode, public PtrProtocol<EnumDefinitionValueList> {
@@ -1101,7 +1187,7 @@ namespace JLang::frontend {
       
     };
 
-    class ExpressionPrimaryIdentifier : public SyntaxNode, public PtrProtocol<ExpressionPrimary> {
+    class ExpressionPrimaryIdentifier : public SyntaxNode, public PtrProtocol<ExpressionPrimaryIdentifier> {
     public:
       ExpressionPrimaryIdentifier(Terminal::owned_ptr _identifier_token);
       ~ExpressionPrimaryIdentifier();
@@ -1109,7 +1195,7 @@ namespace JLang::frontend {
     private:
       Terminal::owned_ptr identifier_token;
     };
-    class ExpressionPrimaryNested : public SyntaxNode, public PtrProtocol<ExpressionPrimary> {
+    class ExpressionPrimaryNested : public SyntaxNode, public PtrProtocol<ExpressionPrimaryNested> {
     public:
       ExpressionPrimaryNested(
                               Terminal::owned_ptr _paren_l_token,
@@ -1124,29 +1210,45 @@ namespace JLang::frontend {
       Terminal::owned_ptr paren_r_token;
     };
 
+    class ExpressionPrimaryLiteralInt : public SyntaxNode, public PtrProtocol<ExpressionPrimaryLiteralInt> {
+    public:
+      ExpressionPrimaryLiteralInt(
+                                  Terminal::owned_ptr literal_token
+                                  );
+      ~ExpressionPrimaryLiteralInt();
+      const std::string & get_value() const;
+    private:
+      Terminal::owned_ptr literal_token;
+    };
     class ExpressionPrimaryLiteralChar : public SyntaxNode, public PtrProtocol<ExpressionPrimaryLiteralChar> {
     public:
-      ExpressionPrimaryLiteralChar();
+      ExpressionPrimaryLiteralChar(
+                                  Terminal::owned_ptr _literal_token
+                                  );
       ~ExpressionPrimaryLiteralChar();
+      const std::string & get_value() const;
     private:
+      Terminal::owned_ptr literal_token;
     };
     class ExpressionPrimaryLiteralString : public SyntaxNode, public PtrProtocol<ExpressionPrimaryLiteralString> {
     public:
-      ExpressionPrimaryLiteralString();
+      ExpressionPrimaryLiteralString(
+                                     Terminal::owned_ptr _literal_token
+                                     );
       ~ExpressionPrimaryLiteralString();
+      const std::string & get_value() const;
     private:
-    };
-    class ExpressionPrimaryLiteralInt : public SyntaxNode, public PtrProtocol<ExpressionPrimaryLiteralInt> {
-    public:
-      ExpressionPrimaryLiteralInt();
-      ~ExpressionPrimaryLiteralInt();
-    private:
+      Terminal::owned_ptr literal_token;
     };
     class ExpressionPrimaryLiteralFloat : public SyntaxNode, public PtrProtocol<ExpressionPrimaryLiteralFloat> {
     public:
-      ExpressionPrimaryLiteralFloat();
+      ExpressionPrimaryLiteralFloat(
+                                  Terminal::owned_ptr _literal_token
+                                  );
       ~ExpressionPrimaryLiteralFloat();
+      const std::string & get_value() const;
     private:
+      Terminal::owned_ptr literal_token;
     };
     
     class ExpressionPrimary : public SyntaxNode, public PtrProtocol<ExpressionPrimary> {
@@ -1183,7 +1285,7 @@ namespace JLang::frontend {
       Terminal::owned_ptr bracket_r_token;
     };
 
-    class ArgumentExpressionList : public SyntaxNode, public PtrProtocol<ExpressionPostfixFunctionCall> {
+    class ArgumentExpressionList : public SyntaxNode, public PtrProtocol<ArgumentExpressionList> {
     public:
       ArgumentExpressionList();
       ~ArgumentExpressionList();
@@ -1245,7 +1347,7 @@ namespace JLang::frontend {
       Terminal::owned_ptr identifier_token;
     };
 
-    class ExpressionPostfixIncDec : public SyntaxNode, public PtrProtocol<Expression> {
+    class ExpressionPostfixIncDec : public SyntaxNode, public PtrProtocol<ExpressionPostfixIncDec> {
     public:
       typedef enum {
         INCREMENT,
@@ -1253,8 +1355,7 @@ namespace JLang::frontend {
       } OperationType;
       ExpressionPostfixIncDec(
                               std::unique_ptr<Expression> _expression,
-                              Terminal::owned_ptr _operator_token,
-                              ExpressionPostfixIncDec::OperationType _type
+                              Terminal::owned_ptr _operator_token
                               );
       ~ExpressionPostfixIncDec();
       const ExpressionPostfixIncDec::OperationType & get_type();
@@ -1278,9 +1379,9 @@ namespace JLang::frontend {
         LOGICAL_NOT
       } OperationType;
       ExpressionUnaryPrefix(
-                              std::unique_ptr<Expression> _expression,
-                              Terminal::owned_ptr _operator_token
-                              );
+                            Terminal::owned_ptr _operator_token,
+                            std::unique_ptr<Expression> _expression
+                            );
       ~ExpressionUnaryPrefix();
       const ExpressionUnaryPrefix::OperationType & get_type();
       const Expression & get_expression();
@@ -1443,6 +1544,7 @@ namespace JLang::frontend {
 
     };
     class GlobalInitializerAddressofExpressionPrimary : public SyntaxNode, public PtrProtocol<GlobalInitializerAddressofExpressionPrimary> {
+    public:
       GlobalInitializerAddressofExpressionPrimary(
                                                   Terminal::owned_ptr _equals_token,
                                                   Terminal::owned_ptr _addressof_token,
@@ -1506,9 +1608,10 @@ namespace JLang::frontend {
       typedef std::variant<
         GlobalInitializerExpressionPrimary::owned_ptr,
         GlobalInitializerAddressofExpressionPrimary::owned_ptr,
-        GlobalInitializerStructInitializerList::owned_ptr> GlobalInitializerType;
+        GlobalInitializerStructInitializerList::owned_ptr,
+        nullptr_t> GlobalInitializerType;
       GlobalInitializer();
-      GlobalInitializer(GlobalInitializerType initializer, SyntaxNode *raw_ptr);
+      GlobalInitializer(GlobalInitializerType initializer, const SyntaxNode *_raw_ptr);
       ~GlobalInitializer();
       const GlobalInitializerType & get_initializer() const;
     private:
@@ -1543,18 +1646,6 @@ namespace JLang::frontend {
       Terminal::owned_ptr semicolon;
     };
     
-    class FileStatementClassDefinition : public SyntaxNode, public PtrProtocol<FileStatementClassDefinition> {
-    public:
-    private:
-    };
-    class FileStatementEnumDefinition : public SyntaxNode, public PtrProtocol<FileStatementEnumDefinition> {
-    public:
-    private:
-    };
-    class FileStatementTypeDefinition : public SyntaxNode, public PtrProtocol<FileStatementTypeDefinition> {
-    public:
-    private:
-    };
     class NamespaceDeclaration : public SyntaxNode, public PtrProtocol<NamespaceDeclaration> {
     public:
       NamespaceDeclaration(
