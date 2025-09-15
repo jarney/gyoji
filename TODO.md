@@ -15,11 +15,6 @@
   instead expose data through a 'visitor' so that the LLVM code generator
   can do its work.
 
-* The plan:
-  * Generate one "listener" method for each of the possible syntax elements
-    to build either a "strongly" or "weakly" typed representation
-    of the syntax tree.
-
 * Build a more appropriate intermediate semantic representation of the parsed
   file that is better suited to code generation.
 

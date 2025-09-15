@@ -101,8 +101,120 @@ The architecture of the compiler is as follows:
   although there is probably very little utility in doing that, it might
   be cool to try.
 
+# Plans/Projects
+
+The structure of the project is such that independent projects can be worked on and completed independently.
+This allows collaboration on the project in a way that brings us closer to the goals.  Each of
+the projects below are things that contribute to the long-term success of the project, so if you're
+interested in working on one of them, please raise an issue and help out.
+
+## Syntax Testing and verification
+
+### Purpose:
+The purpose of this project is to build a test-suite for the parser and syntax tree
+so that we have good confidence that the data in the parse tree accurately represents the
+source-code.
+
+### Resources: frontend/
+The goals of this project are to ensure that each possible production of the syntax is exercised.
+The result should be an executable and set of test cases such that after running the executable
+against the test cases, a report of all of the productions that were used in the test-cases
+is written.  Success is a verification that every possible production in the syntax BNF
+is hit at least once.
+
+## Doxygen
+
+### Purpose
+The purpose of this project is to set a good baseline of Doxygen
+hygene in the project in order to encourage collaboration.  The
+Doxygen should be built using the same CMake and tests/CI
+should depend on it so we ensure that we keep the level
+of document coverage high.  This is important to allow good
+collaboration on the project.
+
+## Website
+
+### Purpose
+The purpose of this project is to communicate about the project and its goals.
+Specifically:
+* High-quality compiler using C-like syntax.
+* Like a half-way point between C and C++.  Sort-of like C++ before people got carried away with it.
+* Borrow-checker of similar quality to Rust.
+* Not syntax-compatible with C, but should be very familiar to C and C++ developers.
+
+## Type System
+
+### Purpose:
+The purpose of this project is to produce a type system that is
+capable of expressing the important aspects of types, specifically
+composite types.  It should be able to answer several questions about
+the code.
+* What is the tree of types all the way down to primitive types (e.g. classes contain classes contain integers).
+* What types can be converted to one another (i.e. pointers and inheritances).
+* What visibility restrictions are placed on types and what rules can/should we impose on them.
+  Note that this does not imply actually enforcing those rules since the type system
+  should only be a representation of the type data, but should not actually
+  be concerned with implementing visibility rules.
+* What methods/constructors/destructors are associated with the types
+  so that code-generation can use this to insert them at scope end, for example.
+  Again, this should not perform that work, but should provide data to the
+  code generation layer so that it knows what to do.
+
+## Lowering and intermediate representations.
+
+### Dependencies: Type System
+
+### Purpose:
+The purpose of this project is to build an intermediate representation of the
+source file that is suitable for code-generation and borrow checking.  This
+representation should 'lower' the code from the syntax level to the semantic
+level by, for example, eliminating 'while', 'for', 'if' and using
+exclusively 'branch' and 'goto'.  All syntax at this level should be
+de-sugared so that it is close to an 'abstract' machine representation
+suitable for code generation.
+
+### Resources:
+This intermediate representation should already have the type
+system data available and should be "lowered" to the point that
+the only operations are on primitive types.
+
+## Borrow Checker
+
+### Dependencies: Type System, Intermediate Representation
+
+### Purpose
+The purpose of this project is to provide a Rust-like borrow-checker
+using the base logic outlined in the Polonius project.  The algorithm
+is sound, and can be implemented on this IR to provide safety guarantees
+in a manner similar to rust.
+
+## Code Generation : Primary
+
+### Dependencies: Type System, Intermediate Representation
+
+### Purpose:
+The purpose of this project is to generate code using the LLVM
+library so that we can support x86, arm, wasm, and a variety
+of other hardware architectures.
+
+## Code Generation : JS
+### Purpose:
+The purpose of this project is to provide a compiled output
+in JavaScript so that we can build a website that
+runs the code.
+
+## Bootstrapping
+
+### Purpose
+The purpose of this project is to build a minimal version of the
+compiler using the language itself.  Of course, this assumes
+that there is enough of the language working that we can
+express all of the complicated things it takes to build the
+language, so this is a pretty late-stage project.
 
 # Features
+
+
 
 Changes from C syntax:
 * Types can be qualified with namespaces
