@@ -58,16 +58,16 @@ void JBackendFormatTree::print_file_metadata(const TerminalNonSyntax & node)
 void JBackendFormatTree::print_non_syntax(const TerminalNonSyntax & node)
 {
   switch (node.get_type()) {
-  case TerminalNonSyntaxType::EXTRA_COMMENT_MULTI_LINE:
+  case TerminalNonSyntax::Type::EXTRA_COMMENT_MULTI_LINE:
     print_comment_multi_line(node);
     break;
-  case TerminalNonSyntaxType::EXTRA_COMMENT_SINGLE_LINE:
+  case TerminalNonSyntax::Type::EXTRA_COMMENT_SINGLE_LINE:
     print_comment_single_line(node);
     break;
-  case TerminalNonSyntaxType::EXTRA_WHITESPACE:
+  case TerminalNonSyntax::Type::EXTRA_WHITESPACE:
     print_whitespace(node);
     break;
-  case TerminalNonSyntaxType::EXTRA_FILE_METADATA:
+  case TerminalNonSyntax::Type::EXTRA_FILE_METADATA:
     print_file_metadata(node);
     break;
   }

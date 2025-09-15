@@ -8,13 +8,13 @@ Terminal::Terminal()
 {}
 Terminal::~Terminal()
 {}
-TerminalNonSyntax::TerminalNonSyntax(TerminalNonSyntaxType _type, std::string _data)
+TerminalNonSyntax::TerminalNonSyntax(TerminalNonSyntax::Type _type, std::string _data)
   : type(_type)
   , data(_data)
 {}
 TerminalNonSyntax::~TerminalNonSyntax()
 {}
-const TerminalNonSyntaxType &
+const TerminalNonSyntax::Type &
 TerminalNonSyntax::get_type() const
 {
   return type;
@@ -64,7 +64,7 @@ AccessQualifier::AccessQualifier(AccessQualifier::AccessQualifierType _type)
   , type(_type)
   , qualifier(nullptr)
 {}
-AccessQualifier::AccessQualifier(Terminal::owned_ptr _qualifier, AccessQualifierType _type)
+AccessQualifier::AccessQualifier(Terminal_owned_ptr _qualifier, AccessQualifierType _type)
   : SyntaxNode("access_qualifier", this)
   , type(_type)
   , qualifier(std::move(_qualifier))
@@ -78,7 +78,7 @@ AccessQualifier::get_type() const
 { return type; }
 
 ///////////////////////////////////////////////////
-AccessModifier::AccessModifier(Terminal::owned_ptr _modifier, AccessModifier::AccessModifierType _type)
+AccessModifier::AccessModifier(Terminal_owned_ptr _modifier, AccessModifier::AccessModifierType _type)
   : SyntaxNode("access_modifier", this)
   , modifier(std::move(_modifier))
   , type(_type)
@@ -104,7 +104,7 @@ UnsafeModifier::UnsafeModifier()
   : SyntaxNode("unsafe_modifier", this)
   , unsafe_token(nullptr)
 {}
-UnsafeModifier::UnsafeModifier(Terminal::owned_ptr _unsafe_token)
+UnsafeModifier::UnsafeModifier(Terminal_owned_ptr _unsafe_token)
   : SyntaxNode("unsafe_modifier", this)
   , unsafe_token(std::move(_unsafe_token))
 {
@@ -119,7 +119,7 @@ UnsafeModifier::is_unsafe() const
 }
 
 ///////////////////////////////////////////////////
-TypeName::TypeName(Terminal::owned_ptr _type_name)
+TypeName::TypeName(Terminal_owned_ptr _type_name)
   : SyntaxNode("type_name", this)
   , m_is_expression(false)
   , type_name(std::move(_type_name))
@@ -130,10 +130,10 @@ TypeName::TypeName(Terminal::owned_ptr _type_name)
 {
   add_child(*type_name);
 }
-TypeName::TypeName(Terminal::owned_ptr _typeof_token,
-               Terminal::owned_ptr _paren_l_token,
+TypeName::TypeName(Terminal_owned_ptr _typeof_token,
+               Terminal_owned_ptr _paren_l_token,
                std::unique_ptr<Expression> _expression,
-               Terminal::owned_ptr _paren_r_token
+               Terminal_owned_ptr _paren_r_token
                )
   : SyntaxNode("type_name", this)
   , m_is_expression(true)
@@ -175,7 +175,7 @@ TypeSpecifierCallArgs::add_argument(std::unique_ptr<TypeSpecifier> _argument)
   arguments.push_back(std::move(_argument));
 }
 void
-TypeSpecifierCallArgs::add_argument(Terminal::owned_ptr _comma_token, std::unique_ptr<TypeSpecifier> _argument)
+TypeSpecifierCallArgs::add_argument(Terminal_owned_ptr _comma_token, std::unique_ptr<TypeSpecifier> _argument)
 {
   add_child(*_comma_token);
   add_child(*_argument);
@@ -185,8 +185,8 @@ TypeSpecifierCallArgs::add_argument(Terminal::owned_ptr _comma_token, std::uniqu
 
 ///////////////////////////////////////////////////
 TypeSpecifierSimple::TypeSpecifierSimple(
-                                         AccessQualifier::owned_ptr _access_qualifier,
-                                         TypeName::owned_ptr _type_name
+                                         AccessQualifier_owned_ptr _access_qualifier,
+                                         TypeName_owned_ptr _type_name
                                          )
   : SyntaxNode("type_specifier_simple", this)
   , access_qualifier(std::move(_access_qualifier))
@@ -206,9 +206,9 @@ TypeSpecifierSimple::get_type_name() const
 ///////////////////////////////////////////////////
 TypeSpecifierTemplate::TypeSpecifierTemplate(
                                              std::unique_ptr<TypeSpecifier> _type_specifier,
-                                             Terminal::owned_ptr _paren_l_token,
+                                             Terminal_owned_ptr _paren_l_token,
                                              std::unique_ptr<TypeSpecifierCallArgs> _type_specifier_call_args,
-                                             Terminal::owned_ptr _paren_r_token
+                                             Terminal_owned_ptr _paren_r_token
                                              )
   : SyntaxNode("type_specifier_template", this)
   , type_specifier(std::move(_type_specifier))
@@ -232,13 +232,13 @@ TypeSpecifierTemplate::get_args() const
 ///////////////////////////////////////////////////
 TypeSpecifierFunctionPointer::TypeSpecifierFunctionPointer(
                                    std::unique_ptr<TypeSpecifier> _type_specifier,
-                                   Terminal::owned_ptr _paren_l1_token,
-                                   Terminal::owned_ptr _star_token,
-                                   Terminal::owned_ptr _identifier_token,
-                                   Terminal::owned_ptr _paren_r1_token,
-                                   Terminal::owned_ptr _paren_l2_token,
+                                   Terminal_owned_ptr _paren_l1_token,
+                                   Terminal_owned_ptr _star_token,
+                                   Terminal_owned_ptr _identifier_token,
+                                   Terminal_owned_ptr _paren_r1_token,
+                                   Terminal_owned_ptr _paren_l2_token,
                                    std::unique_ptr<FunctionDefinitionArgList> _function_definition_arg_list,
-                                   Terminal::owned_ptr _paren_r2_token
+                                   Terminal_owned_ptr _paren_r2_token
                                    )
   : SyntaxNode("type_specifier_function_pointer", this)
   , type_specifier(std::move(_type_specifier))
@@ -262,9 +262,9 @@ TypeSpecifierFunctionPointer::get_args() const
 { return *function_definition_arg_list; }
 ///////////////////////////////////////////////////
 TypeSpecifierPointerTo::TypeSpecifierPointerTo(
-                             TypeSpecifier::owned_ptr _type_specifier,
-                             Terminal::owned_ptr _star_token,
-                             AccessQualifier::owned_ptr _access_qualifier
+                             TypeSpecifier_owned_ptr _type_specifier,
+                             Terminal_owned_ptr _star_token,
+                             AccessQualifier_owned_ptr _access_qualifier
                              )
   : SyntaxNode("type_specifier_pointer_to", this)
   , type_specifier(std::move(_type_specifier))
@@ -285,9 +285,9 @@ TypeSpecifierPointerTo::get_access_qualifier() const
 { return *access_qualifier; }
 ///////////////////////////////////////////////////
 TypeSpecifierReferenceTo::TypeSpecifierReferenceTo(
-                                                   TypeSpecifier::owned_ptr _type_specifier,
-                                                   Terminal::owned_ptr _andpersand_token,
-                                                   AccessQualifier::owned_ptr _access_qualifier
+                                                   TypeSpecifier_owned_ptr _type_specifier,
+                                                   Terminal_owned_ptr _andpersand_token,
+                                                   AccessQualifier_owned_ptr _access_qualifier
                                                    )
   : SyntaxNode("type_specifier_reference_to", this)
   , type_specifier(std::move(_type_specifier))
@@ -320,8 +320,8 @@ TypeSpecifier::get_type() const
 { return type; }
 
 ///////////////////////////////////////////////////
-FunctionDefinitionArg::FunctionDefinitionArg(TypeSpecifier::owned_ptr _type_specifier,
-                                             Terminal::owned_ptr _identifier_token
+FunctionDefinitionArg::FunctionDefinitionArg(TypeSpecifier_owned_ptr _type_specifier,
+                                             Terminal_owned_ptr _identifier_token
                                              )
   : SyntaxNode("function_definition_arg", this)
   , type_specifier(std::move(_type_specifier))
@@ -345,17 +345,17 @@ FunctionDefinitionArgList::FunctionDefinitionArgList()
 {}
 FunctionDefinitionArgList::~FunctionDefinitionArgList()
 {}
-const std::vector<FunctionDefinitionArg::owned_ptr> &
+const std::vector<FunctionDefinitionArg_owned_ptr> &
 FunctionDefinitionArgList::get_arguments() const
 { return arguments; }
 void
-FunctionDefinitionArgList::add_argument(FunctionDefinitionArg::owned_ptr _argument)
+FunctionDefinitionArgList::add_argument(FunctionDefinitionArg_owned_ptr _argument)
 {
   add_child(*_argument);
   arguments.push_back(std::move(_argument));
 }
 void
-FunctionDefinitionArgList::add_comma(Terminal::owned_ptr _comma)
+FunctionDefinitionArgList::add_comma(Terminal_owned_ptr _comma)
 {
   add_child(*_comma);
   commas.push_back(std::move(_comma));
@@ -365,14 +365,14 @@ FunctionDefinitionArgList::add_comma(Terminal::owned_ptr _comma)
 ///////////////////////////////////////////////////
 
 FileStatementFunctionDeclaration::FileStatementFunctionDeclaration(
-    AccessModifier::owned_ptr _access_modifier,
-    UnsafeModifier::owned_ptr _unsafe_modifier,
-    TypeSpecifier::owned_ptr _type_specifier,
-    Terminal::owned_ptr _name,
-    Terminal::owned_ptr _paren_l,
-    FunctionDefinitionArgList::owned_ptr _arguments,
-    Terminal::owned_ptr _paren_r,
-    Terminal::owned_ptr _semicolon
+    AccessModifier_owned_ptr _access_modifier,
+    UnsafeModifier_owned_ptr _unsafe_modifier,
+    TypeSpecifier_owned_ptr _type_specifier,
+    Terminal_owned_ptr _name,
+    Terminal_owned_ptr _paren_l,
+    FunctionDefinitionArgList_owned_ptr _arguments,
+    Terminal_owned_ptr _paren_r,
+    Terminal_owned_ptr _semicolon
 )
   : SyntaxNode("file_statement_function_declaration", this)
   , access_modifier(std::move(_access_modifier))
@@ -421,10 +421,10 @@ FileStatementFunctionDeclaration::get_arguments() const
 ///////////////////////////////////////////////////
 StatementVariableDeclaration::StatementVariableDeclaration(
                                    std::unique_ptr<TypeSpecifier> _type_specifier,
-                                   Terminal::owned_ptr _identifier_token,
+                                   Terminal_owned_ptr _identifier_token,
                                    std::unique_ptr<ArrayLength> _array_length,
                                    std::unique_ptr<GlobalInitializer> _global_initializer,
-                                   Terminal::owned_ptr _semicolon_token
+                                   Terminal_owned_ptr _semicolon_token
 )
   : SyntaxNode("statement_variable_declaration", this)
   , type_specifier(std::move(_type_specifier))
@@ -455,8 +455,8 @@ StatementVariableDeclaration::get_initializer() const
 { return *global_initializer;}
 ///////////////////////////////////////////////////
 StatementBlock::StatementBlock(
-                     UnsafeModifier::owned_ptr _unsafe_modifier,
-                     ScopeBody::owned_ptr _scope_body
+                     UnsafeModifier_owned_ptr _unsafe_modifier,
+                     ScopeBody_owned_ptr _scope_body
                      )
   : SyntaxNode("statement_block", this)
   , unsafe_modifier(std::move(_unsafe_modifier))
@@ -476,7 +476,7 @@ StatementBlock::get_scope_body() const
 ///////////////////////////////////////////////////
 StatementExpression::StatementExpression(
                           std::unique_ptr<Expression> _expression,
-                          Terminal::owned_ptr _semicolon_token
+                          Terminal_owned_ptr _semicolon_token
                           )
   : SyntaxNode("statement_expression", this)
   , expression(std::move(_expression))
@@ -492,13 +492,13 @@ StatementExpression::get_expression() const
 { return *expression; }
 ///////////////////////////////////////////////////
 StatementIfElse::StatementIfElse(
-                      Terminal::owned_ptr _if_token,
-                      Terminal::owned_ptr _paren_l_token,
+                      Terminal_owned_ptr _if_token,
+                      Terminal_owned_ptr _paren_l_token,
                       std::unique_ptr<Expression> _expression,
-                      Terminal::owned_ptr _paren_r_token,
-                      ScopeBody::owned_ptr _if_scope_body,
-                      Terminal::owned_ptr _else_token,
-                      ScopeBody::owned_ptr _else_scope_body
+                      Terminal_owned_ptr _paren_r_token,
+                      ScopeBody_owned_ptr _if_scope_body,
+                      Terminal_owned_ptr _else_token,
+                      ScopeBody_owned_ptr _else_scope_body
                                  )                                 
   : SyntaxNode("statement_ifelse", this)
   , m_has_else(true)
@@ -520,13 +520,13 @@ StatementIfElse::StatementIfElse(
   add_child(*else_scope_body);
 }
 StatementIfElse::StatementIfElse(
-                      Terminal::owned_ptr _if_token,
-                      Terminal::owned_ptr _paren_l_token,
+                      Terminal_owned_ptr _if_token,
+                      Terminal_owned_ptr _paren_l_token,
                       std::unique_ptr<Expression> _expression,
-                      Terminal::owned_ptr _paren_r_token,
-                      ScopeBody::owned_ptr _if_scope_body,
-                      Terminal::owned_ptr _else_token,
-                      StatementIfElse::owned_ptr _else_if
+                      Terminal_owned_ptr _paren_r_token,
+                      ScopeBody_owned_ptr _if_scope_body,
+                      Terminal_owned_ptr _else_token,
+                      StatementIfElse_owned_ptr _else_if
                                  )
   : SyntaxNode("statement_ifelse", this)
   , m_has_else(false)
@@ -549,11 +549,11 @@ StatementIfElse::StatementIfElse(
   add_child(*else_if);
 }
 StatementIfElse::StatementIfElse(
-                      Terminal::owned_ptr _if_token,
-                      Terminal::owned_ptr _paren_l_token,
+                      Terminal_owned_ptr _if_token,
+                      Terminal_owned_ptr _paren_l_token,
                       std::unique_ptr<Expression> _expression,
-                      Terminal::owned_ptr _paren_r_token,
-                      ScopeBody::owned_ptr _if_scope_body
+                      Terminal_owned_ptr _paren_r_token,
+                      ScopeBody_owned_ptr _if_scope_body
                                  )
   : SyntaxNode("statement_ifelse", this)
   , m_has_else(false)
@@ -592,10 +592,10 @@ StatementIfElse::get_else_scope_body() const
 
 ///////////////////////////////////////////////////
 StatementWhile::StatementWhile(
-                     Terminal::owned_ptr _while_token,
-                     Terminal::owned_ptr _paren_l_token,
+                     Terminal_owned_ptr _while_token,
+                     Terminal_owned_ptr _paren_l_token,
                      std::unique_ptr<Expression> _expression,
-                     Terminal::owned_ptr _paren_r_token,
+                     Terminal_owned_ptr _paren_r_token,
                      std::unique_ptr<ScopeBody> _scope_body
                      )
   : SyntaxNode("statement_while", this)
@@ -621,14 +621,14 @@ StatementWhile::get_scope_body() const
 { return *scope_body; }
 ///////////////////////////////////////////////////
 StatementFor::StatementFor(
-                   Terminal::owned_ptr _for_token,
-                   Terminal::owned_ptr _paren_l_token,
+                   Terminal_owned_ptr _for_token,
+                   Terminal_owned_ptr _paren_l_token,
                    std::unique_ptr<Expression> _expression_initial,
-                   Terminal::owned_ptr _semicolon_initial,
+                   Terminal_owned_ptr _semicolon_initial,
                    std::unique_ptr<Expression> _expression_termination,
-                   Terminal::owned_ptr _semicolon_termination,
+                   Terminal_owned_ptr _semicolon_termination,
                    std::unique_ptr<Expression> _expression_increment,
-                   Terminal::owned_ptr _paren_r_token,
+                   Terminal_owned_ptr _paren_r_token,
                    std::unique_ptr<ScopeBody> _scope_body
   )
   : SyntaxNode("statement_for", this)
@@ -668,8 +668,8 @@ StatementFor::get_scope_body() const
 { return *scope_body; }
 ///////////////////////////////////////////////////
 StatementSwitchBlock::StatementSwitchBlock(
-                           Terminal::owned_ptr _default_token,
-                           Terminal::owned_ptr _colon_token,
+                           Terminal_owned_ptr _default_token,
+                           Terminal_owned_ptr _colon_token,
                            std::unique_ptr<ScopeBody> _scope_body
                            )
   : SyntaxNode("statement_switch_block", this)
@@ -683,9 +683,9 @@ StatementSwitchBlock::StatementSwitchBlock(
   add_child(*scope_body);
 }
 StatementSwitchBlock::StatementSwitchBlock(
-                           Terminal::owned_ptr _case_token,
+                           Terminal_owned_ptr _case_token,
                            std::unique_ptr<Expression> _expression,
-                           Terminal::owned_ptr _colon_token,
+                           Terminal_owned_ptr _colon_token,
                            std::unique_ptr<ScopeBody> _scope_body
                            )
   : SyntaxNode("statement_switch_block", this)
@@ -719,21 +719,21 @@ StatementSwitchContent::StatementSwitchContent()
 {}
 StatementSwitchContent::~StatementSwitchContent()
 {}
-const std::vector<StatementSwitchBlock::owned_ptr> &
+const std::vector<StatementSwitchBlock_owned_ptr> &
 StatementSwitchContent::get_blocks() const
 { return blocks; }
 void
-StatementSwitchContent::add_block(StatementSwitchBlock::owned_ptr _block)
+StatementSwitchContent::add_block(StatementSwitchBlock_owned_ptr _block)
 { blocks.push_back(std::move(_block)); }
 ///////////////////////////////////////////////////
 StatementSwitch::StatementSwitch(
-                      Terminal::owned_ptr _switch_token,
-                      Terminal::owned_ptr _paren_l_token,
+                      Terminal_owned_ptr _switch_token,
+                      Terminal_owned_ptr _paren_l_token,
                       std::unique_ptr<Expression> _expression,
-                      Terminal::owned_ptr _paren_r_token,
-                      Terminal::owned_ptr _brace_l_token,
-                      StatementSwitchContent::owned_ptr _switch_content,
-                      Terminal::owned_ptr _brace_r_token
+                      Terminal_owned_ptr _paren_r_token,
+                      Terminal_owned_ptr _brace_l_token,
+                      StatementSwitchContent_owned_ptr _switch_content,
+                      Terminal_owned_ptr _brace_r_token
                       )
   : SyntaxNode("statement_switch", this)
   , switch_token(std::move(_switch_token))
@@ -763,9 +763,9 @@ StatementSwitch::get_switch_content() const
 { return *switch_content; }
 ///////////////////////////////////////////////////
 StatementLabel::StatementLabel(
-                               Terminal::owned_ptr _label_token,
-                               Terminal::owned_ptr _identifier_token,
-                               Terminal::owned_ptr _colon_token
+                               Terminal_owned_ptr _label_token,
+                               Terminal_owned_ptr _identifier_token,
+                               Terminal_owned_ptr _colon_token
                                )
   : SyntaxNode("statement_label", this)
   , label_token(std::move(_label_token))
@@ -784,9 +784,9 @@ StatementLabel::get_name() const
 
 ///////////////////////////////////////////////////
 StatementGoto::StatementGoto(
-                    Terminal::owned_ptr _goto_token,
-                    Terminal::owned_ptr _identifier_token,
-                    Terminal::owned_ptr _semicolon_token
+                    Terminal_owned_ptr _goto_token,
+                    Terminal_owned_ptr _identifier_token,
+                    Terminal_owned_ptr _semicolon_token
                     )
   : SyntaxNode("statement_goto", this)
   , goto_token(std::move(_goto_token))
@@ -804,8 +804,8 @@ StatementGoto::get_label() const
 { return identifier_token->value; }
 ///////////////////////////////////////////////////
 StatementBreak::StatementBreak(
-                               Terminal::owned_ptr _break_token,
-                               Terminal::owned_ptr _semicolon_token
+                               Terminal_owned_ptr _break_token,
+                               Terminal_owned_ptr _semicolon_token
                                )
   : SyntaxNode("StatementBreak();", this)
   , break_token(std::move(_break_token))
@@ -818,8 +818,8 @@ StatementBreak::~StatementBreak()
 {}
 ///////////////////////////////////////////////////
 StatementContinue::StatementContinue(
-                                     Terminal::owned_ptr _continue_token,
-                                     Terminal::owned_ptr _semicolon_token
+                                     Terminal_owned_ptr _continue_token,
+                                     Terminal_owned_ptr _semicolon_token
                                      )
   : SyntaxNode("statement_continue", this)
   , continue_token(std::move(_continue_token))
@@ -832,9 +832,9 @@ StatementContinue::~StatementContinue()
 {}
 ///////////////////////////////////////////////////
 StatementReturn::StatementReturn(
-                                 Terminal::owned_ptr _return_token,
+                                 Terminal_owned_ptr _return_token,
                                  std::unique_ptr<Expression> _expression,
-                                 Terminal::owned_ptr _semicolon_token
+                                 Terminal_owned_ptr _semicolon_token
                                  )
   : SyntaxNode("statement_return", this)
   , return_token(std::move(_return_token))
@@ -868,20 +868,20 @@ StatementList::StatementList()
 StatementList::~StatementList()
 {}
 void
-StatementList::add_statement(Statement::owned_ptr _statement)
+StatementList::add_statement(Statement_owned_ptr _statement)
 {
   add_child(*_statement);
   statements.push_back(std::move(_statement));
 }
-const std::vector<Statement::owned_ptr> &
+const std::vector<Statement_owned_ptr> &
 StatementList::get_statements() const
 { return statements; }
 
 ///////////////////////////////////////////////////
 ScopeBody::ScopeBody(
-                     Terminal::owned_ptr _brace_l_token,
-                     StatementList::owned_ptr _statement_list,
-                     Terminal::owned_ptr _brace_r_token
+                     Terminal_owned_ptr _brace_l_token,
+                     StatementList_owned_ptr _statement_list,
+                     Terminal_owned_ptr _brace_r_token
                 )
   : SyntaxNode("scope_body", this)
   , brace_l_token(std::move(_brace_l_token))
@@ -899,14 +899,14 @@ ScopeBody::get_statements() const
 { return *statement_list; }
 ///////////////////////////////////////////////////
 FileStatementFunctionDefinition::FileStatementFunctionDefinition(
-    AccessModifier::owned_ptr _access_modifier,
-    UnsafeModifier::owned_ptr _unsafe_modifier,
-    TypeSpecifier::owned_ptr _type_specifier,
-    Terminal::owned_ptr _name,
-    Terminal::owned_ptr _paren_l,
-    FunctionDefinitionArgList::owned_ptr _arguments,
-    Terminal::owned_ptr _paren_r,
-    ScopeBody::owned_ptr _scope_body
+    AccessModifier_owned_ptr _access_modifier,
+    UnsafeModifier_owned_ptr _unsafe_modifier,
+    TypeSpecifier_owned_ptr _type_specifier,
+    Terminal_owned_ptr _name,
+    Terminal_owned_ptr _paren_l,
+    FunctionDefinitionArgList_owned_ptr _arguments,
+    Terminal_owned_ptr _paren_r,
+    ScopeBody_owned_ptr _scope_body
 )
   : SyntaxNode("file_statement_function_declaration", this)
   , access_modifier(std::move(_access_modifier))
@@ -965,9 +965,9 @@ ArrayLength::ArrayLength()
 {}
 
 ArrayLength::ArrayLength(
-                  Terminal::owned_ptr _bracket_l_token,
-                  Terminal::owned_ptr _literal_int_token,
-                  Terminal::owned_ptr _bracket_r_token
+                  Terminal_owned_ptr _bracket_l_token,
+                  Terminal_owned_ptr _literal_int_token,
+                  Terminal_owned_ptr _bracket_r_token
                   )
   : SyntaxNode("array_length", this)
   , bracket_l_token(std::move(_bracket_l_token))
@@ -991,9 +991,9 @@ ArrayLength::get_size() const
 
 ///////////////////////////////////////////////////
 ClassDeclStart::ClassDeclStart(
-                     AccessModifier::owned_ptr _access_modifier,
-                     Terminal::owned_ptr _class_token,
-                     Terminal::owned_ptr _identifier_token,
+                     AccessModifier_owned_ptr _access_modifier,
+                     Terminal_owned_ptr _class_token,
+                     Terminal_owned_ptr _identifier_token,
                      std::unique_ptr<ClassArgumentList> _class_argument_list
 )
   : SyntaxNode("class_decl_start", this)
@@ -1019,7 +1019,7 @@ const ClassArgumentList &
 ClassDeclStart::get_argument_list() const
 { return *class_argument_list; }
 ///////////////////////////////////////////////////
-ClassArgumentList::ClassArgumentList(Terminal::owned_ptr _argument)
+ClassArgumentList::ClassArgumentList(Terminal_owned_ptr _argument)
   : SyntaxNode("class_argument_list", this)
   , paren_l(nullptr)
   , paren_r(nullptr)
@@ -1036,7 +1036,7 @@ ClassArgumentList::ClassArgumentList()
 ClassArgumentList::~ClassArgumentList()
 {}
 void
-ClassArgumentList::add_parens(Terminal::owned_ptr _paren_l, Terminal::owned_ptr _paren_r)
+ClassArgumentList::add_parens(Terminal_owned_ptr _paren_l, Terminal_owned_ptr _paren_r)
 {
   paren_l = std::move(_paren_l);
   prepend_child(*paren_l);
@@ -1046,21 +1046,21 @@ ClassArgumentList::add_parens(Terminal::owned_ptr _paren_l, Terminal::owned_ptr 
 }
 
 void
-ClassArgumentList::add_argument(Terminal::owned_ptr _comma_token, Terminal::owned_ptr _argument)
+ClassArgumentList::add_argument(Terminal_owned_ptr _comma_token, Terminal_owned_ptr _argument)
 {
   comma_list.push_back(std::move(_comma_token));
   argument_list.push_back(std::move(_argument));
 }
-const std::vector<Terminal::owned_ptr> &
+const std::vector<Terminal_owned_ptr> &
 ClassArgumentList::get_arguments() const
 { return argument_list; }
 ///////////////////////////////////////////////////
 ClassMemberDeclarationVariable::ClassMemberDeclarationVariable(
-                                     AccessModifier::owned_ptr _access_modifier,
-                                     TypeSpecifier::owned_ptr _type_specifier,
-                                     Terminal::owned_ptr _identifier_token,
-                                     ArrayLength::owned_ptr _array_length,
-                                     Terminal::owned_ptr _semicolon_token
+                                     AccessModifier_owned_ptr _access_modifier,
+                                     TypeSpecifier_owned_ptr _type_specifier,
+                                     Terminal_owned_ptr _identifier_token,
+                                     ArrayLength_owned_ptr _array_length,
+                                     Terminal_owned_ptr _semicolon_token
                                      )
   : SyntaxNode("class_member_declaration_variable", this)
   , access_modifier(std::move(_access_modifier))
@@ -1091,13 +1091,13 @@ ClassMemberDeclarationVariable::get_array_length() const
 { return *array_length; }
 ///////////////////////////////////////////////////
 ClassMemberDeclarationMethod::ClassMemberDeclarationMethod(
-                                                           AccessModifier::owned_ptr _access_modifier,
-                                                           TypeSpecifier::owned_ptr _type_specifier,
-                                                           Terminal::owned_ptr _identifier_token,
-                                                           Terminal::owned_ptr _paren_l_token,
-                                                           FunctionDefinitionArgList::owned_ptr _function_definition_arg_list,
-                                                           Terminal::owned_ptr _paren_r_token,
-                                                           Terminal::owned_ptr _semicolon_token
+                                                           AccessModifier_owned_ptr _access_modifier,
+                                                           TypeSpecifier_owned_ptr _type_specifier,
+                                                           Terminal_owned_ptr _identifier_token,
+                                                           Terminal_owned_ptr _paren_l_token,
+                                                           FunctionDefinitionArgList_owned_ptr _function_definition_arg_list,
+                                                           Terminal_owned_ptr _paren_r_token,
+                                                           Terminal_owned_ptr _semicolon_token
                                                            )
  : SyntaxNode("class_member_declaration_method", this)
  , access_modifier(std::move(_access_modifier))
@@ -1132,12 +1132,12 @@ ClassMemberDeclarationMethod::get_arguments() const
 { return *function_definition_arg_list; }
 ///////////////////////////////////////////////////
 ClassMemberDeclarationConstructor::ClassMemberDeclarationConstructor(
-                                                           AccessModifier::owned_ptr _access_modifier,
-                                                           TypeSpecifier::owned_ptr _type_specifier,
-                                                           Terminal::owned_ptr _paren_l_token,
-                                                           FunctionDefinitionArgList::owned_ptr _function_definition_arg_list,
-                                                           Terminal::owned_ptr _paren_r_token,
-                                                           Terminal::owned_ptr _semicolon_token
+                                                           AccessModifier_owned_ptr _access_modifier,
+                                                           TypeSpecifier_owned_ptr _type_specifier,
+                                                           Terminal_owned_ptr _paren_l_token,
+                                                           FunctionDefinitionArgList_owned_ptr _function_definition_arg_list,
+                                                           Terminal_owned_ptr _paren_r_token,
+                                                           Terminal_owned_ptr _semicolon_token
                                                            )
  : SyntaxNode("class_member_declaration_method", this)
  , access_modifier(std::move(_access_modifier))
@@ -1167,13 +1167,13 @@ ClassMemberDeclarationConstructor::get_arguments() const
 { return *function_definition_arg_list; }
 ///////////////////////////////////////////////////
 ClassMemberDeclarationDestructor::ClassMemberDeclarationDestructor(
-                                                                   AccessModifier::owned_ptr _access_modifier,
-                                                                   Terminal::owned_ptr _tilde_token,
-                                                                   TypeSpecifier::owned_ptr _type_specifier,
-                                                                   Terminal::owned_ptr _paren_l_token,
-                                                                   FunctionDefinitionArgList::owned_ptr _function_definition_arg_list,
-                                                                   Terminal::owned_ptr _paren_r_token,
-                                                                   Terminal::owned_ptr _semicolon_token
+                                                                   AccessModifier_owned_ptr _access_modifier,
+                                                                   Terminal_owned_ptr _tilde_token,
+                                                                   TypeSpecifier_owned_ptr _type_specifier,
+                                                                   Terminal_owned_ptr _paren_l_token,
+                                                                   FunctionDefinitionArgList_owned_ptr _function_definition_arg_list,
+                                                                   Terminal_owned_ptr _paren_r_token,
+                                                                   Terminal_owned_ptr _semicolon_token
                                                            )
  : SyntaxNode("class_member_declaration_method", this)
  , access_modifier(std::move(_access_modifier))
@@ -1226,24 +1226,24 @@ ClassMemberDeclarationList::ClassMemberDeclarationList()
 {}
 ClassMemberDeclarationList::~ClassMemberDeclarationList()
 {}
-const std::vector<ClassMemberDeclaration::owned_ptr> &
+const std::vector<ClassMemberDeclaration_owned_ptr> &
 ClassMemberDeclarationList::get_members() const
 {
   return members;
 }
 void
-ClassMemberDeclarationList::add_member(ClassMemberDeclaration::owned_ptr _member)
+ClassMemberDeclarationList::add_member(ClassMemberDeclaration_owned_ptr _member)
 {
   add_child(*_member);
   members.push_back(std::move(_member));
 }
 ///////////////////////////////////////////////////
 ClassDefinition::ClassDefinition(
-                      ClassDeclStart::owned_ptr _class_decl_start,
-                      Terminal::owned_ptr _brace_l_token,
-                      ClassMemberDeclarationList::owned_ptr _class_member_declaration_list,
-                      Terminal::owned_ptr _brace_r_token,
-                      Terminal::owned_ptr _semicolon_token
+                      ClassDeclStart_owned_ptr _class_decl_start,
+                      Terminal_owned_ptr _brace_l_token,
+                      ClassMemberDeclarationList_owned_ptr _class_member_declaration_list,
+                      Terminal_owned_ptr _brace_r_token,
+                      Terminal_owned_ptr _semicolon_token
                       )
   : SyntaxNode("class_definition", this)
   , class_decl_start(std::move(_class_decl_start))
@@ -1281,11 +1281,11 @@ ClassDefinition::get_members() const
 
 ///////////////////////////////////////////////////
 TypeDefinition::TypeDefinition(
-                     AccessModifier::owned_ptr _access_modifier,
-                     Terminal::owned_ptr _typedef_token,
-                     TypeSpecifier::owned_ptr _type_specifier,
-                     Terminal::owned_ptr _identifier_token,
-                     Terminal::owned_ptr _semicolon_token
+                     AccessModifier_owned_ptr _access_modifier,
+                     Terminal_owned_ptr _typedef_token,
+                     TypeSpecifier_owned_ptr _type_specifier,
+                     Terminal_owned_ptr _identifier_token,
+                     Terminal_owned_ptr _semicolon_token
                                )
   : SyntaxNode("type_definition", this)
   , access_modifier(std::move(_access_modifier))
@@ -1314,10 +1314,10 @@ TypeDefinition::get_type_specifier() const
 
 ///////////////////////////////////////////////////
 EnumDefinitionValue::EnumDefinitionValue(
-                          Terminal::owned_ptr _identifier_token,
-                          Terminal::owned_ptr _equals_token,
+                          Terminal_owned_ptr _identifier_token,
+                          Terminal_owned_ptr _equals_token,
                           std::unique_ptr<ExpressionPrimary> _expression_primary,
-                          Terminal::owned_ptr _semicolon_token
+                          Terminal_owned_ptr _semicolon_token
                           )
   : SyntaxNode("enum_definition_value", this)
   , identifier_token(std::move(_identifier_token))
@@ -1348,25 +1348,25 @@ EnumDefinitionValueList::EnumDefinitionValueList()
 EnumDefinitionValueList::~EnumDefinitionValueList()
 {}
 void
-EnumDefinitionValueList::add_value(EnumDefinitionValue::owned_ptr _value)
+EnumDefinitionValueList::add_value(EnumDefinitionValue_owned_ptr _value)
 {
   add_child(*_value);
   values.push_back(std::move(_value));
 }
-const std::vector<EnumDefinitionValue::owned_ptr> &
+const std::vector<EnumDefinitionValue_owned_ptr> &
 EnumDefinitionValueList::get_values() const
 { return values; }
 
 ///////////////////////////////////////////////////
 EnumDefinition::EnumDefinition(
-                     AccessModifier::owned_ptr _access_modifier,
-                     Terminal::owned_ptr _enum_token,
-                     Terminal::owned_ptr _type_name_token,
-                     Terminal::owned_ptr _identifier_token,
-                     Terminal::owned_ptr _brace_l_token,
-                     EnumDefinitionValueList::owned_ptr _enum_value_list,
-                     Terminal::owned_ptr _brace_r_token,
-                     Terminal::owned_ptr _semicolon_token
+                     AccessModifier_owned_ptr _access_modifier,
+                     Terminal_owned_ptr _enum_token,
+                     Terminal_owned_ptr _type_name_token,
+                     Terminal_owned_ptr _identifier_token,
+                     Terminal_owned_ptr _brace_l_token,
+                     EnumDefinitionValueList_owned_ptr _enum_value_list,
+                     Terminal_owned_ptr _brace_r_token,
+                     Terminal_owned_ptr _semicolon_token
                                )
 : SyntaxNode("enum_definition", this)
 , access_modifier(std::move(_access_modifier))
@@ -1402,7 +1402,7 @@ const EnumDefinitionValueList &
 EnumDefinition::get_value_list() const
 { return *enum_value_list; }
 ///////////////////////////////////////////////////
-ExpressionPrimaryIdentifier::ExpressionPrimaryIdentifier(Terminal::owned_ptr _identifier_token)
+ExpressionPrimaryIdentifier::ExpressionPrimaryIdentifier(Terminal_owned_ptr _identifier_token)
   : SyntaxNode("expression_primary_identifier", this)
   , identifier_token(std::move(_identifier_token))
 {
@@ -1415,9 +1415,9 @@ ExpressionPrimaryIdentifier::get_identifier() const
 { return identifier_token->value; }
 ///////////////////////////////////////////////////
 ExpressionPrimaryNested::ExpressionPrimaryNested(
-                                                 Terminal::owned_ptr _paren_l_token,
+                                                 Terminal_owned_ptr _paren_l_token,
                                                  std::unique_ptr<Expression> _expression,
-                                                 Terminal::owned_ptr _paren_r_token
+                                                 Terminal_owned_ptr _paren_r_token
                                                  )
   : SyntaxNode("expression_primary_nested", this)
   , paren_l_token(std::move(_paren_l_token))
@@ -1436,7 +1436,7 @@ ExpressionPrimaryNested::get_expression() const
 
 ///////////////////////////////////////////////////
 ExpressionPrimaryLiteralInt::ExpressionPrimaryLiteralInt(
-                                                         Terminal::owned_ptr _literal_token
+                                                         Terminal_owned_ptr _literal_token
                                                          )
   : SyntaxNode("expression_primary_literal_int", this)
   , literal_token(std::move(_literal_token))
@@ -1450,7 +1450,7 @@ ExpressionPrimaryLiteralInt::get_value() const
 { return literal_token->value; }
 ///////////////////////////////////////////////////
 ExpressionPrimaryLiteralChar::ExpressionPrimaryLiteralChar(
-                                                         Terminal::owned_ptr _literal_token
+                                                         Terminal_owned_ptr _literal_token
                                                          )
   : SyntaxNode("expression_primary_literal_char", this)
   , literal_token(std::move(_literal_token))
@@ -1464,7 +1464,7 @@ ExpressionPrimaryLiteralChar::get_value() const
 { return literal_token->value; }
 ///////////////////////////////////////////////////
 ExpressionPrimaryLiteralString::ExpressionPrimaryLiteralString(
-                                                         Terminal::owned_ptr _literal_token
+                                                         Terminal_owned_ptr _literal_token
                                                          )
   : SyntaxNode("expression_primary_literal_string", this)
   , literal_token(std::move(_literal_token))
@@ -1478,7 +1478,7 @@ ExpressionPrimaryLiteralString::get_value() const
 { return literal_token->value; }
 ///////////////////////////////////////////////////
 ExpressionPrimaryLiteralFloat::ExpressionPrimaryLiteralFloat(
-                                                         Terminal::owned_ptr _literal_token
+                                                         Terminal_owned_ptr _literal_token
                                                          )
   : SyntaxNode("expression_primary_literal_float", this)
   , literal_token(std::move(_literal_token))
@@ -1505,9 +1505,9 @@ ExpressionPrimary::get_expression() const
 ///////////////////////////////////////////////////
 ExpressionPostfixArrayIndex::ExpressionPostfixArrayIndex(
                                   std::unique_ptr<Expression> _array_expression,
-                                  Terminal::owned_ptr _bracket_l_token,
+                                  Terminal_owned_ptr _bracket_l_token,
                                   std::unique_ptr<Expression> _index_expression,
-                                  Terminal::owned_ptr _bracket_r_token
+                                  Terminal_owned_ptr _bracket_r_token
                                   )
   : SyntaxNode("expression_postfix_array_index", this)
   , array_expression(std::move(_array_expression))
@@ -1544,7 +1544,7 @@ ArgumentExpressionList::add_argument(std::unique_ptr<Expression> _argument)
   arguments.push_back(std::move(_argument));
 }
 void
-ArgumentExpressionList::add_argument(Terminal::owned_ptr _comma_token, std::unique_ptr<Expression> _argument)
+ArgumentExpressionList::add_argument(Terminal_owned_ptr _comma_token, std::unique_ptr<Expression> _argument)
 {
   add_child(*_comma_token);
   add_child(*_argument);
@@ -1555,9 +1555,9 @@ ArgumentExpressionList::add_argument(Terminal::owned_ptr _comma_token, std::uniq
 ///////////////////////////////////////////////////
 ExpressionPostfixFunctionCall::ExpressionPostfixFunctionCall(
                                     std::unique_ptr<Expression> _function_expression,
-                                    Terminal::owned_ptr _paren_l_token,
+                                    Terminal_owned_ptr _paren_l_token,
                                     std::unique_ptr<ArgumentExpressionList> _arguments,
-                                    Terminal::owned_ptr _paren_r_token
+                                    Terminal_owned_ptr _paren_r_token
                                     )
   : SyntaxNode("expression_postfix_function_call", this)
   , function_expression(std::move(_function_expression))
@@ -1581,8 +1581,8 @@ ExpressionPostfixFunctionCall::get_arguments() const
 ///////////////////////////////////////////////////
 ExpressionPostfixDot::ExpressionPostfixDot(
                            std::unique_ptr<Expression> _expression,
-                           Terminal::owned_ptr _dot_token,
-                           Terminal::owned_ptr _identifier_token
+                           Terminal_owned_ptr _dot_token,
+                           Terminal_owned_ptr _identifier_token
                            )
   : SyntaxNode("expression_postfix_dot", this)
   , expression(std::move(_expression))
@@ -1605,8 +1605,8 @@ ExpressionPostfixDot::get_identifier() const
 ///////////////////////////////////////////////////
 ExpressionPostfixArrow::ExpressionPostfixArrow(
                            std::unique_ptr<Expression> _expression,
-                           Terminal::owned_ptr _arrow_token,
-                           Terminal::owned_ptr _identifier_token
+                           Terminal_owned_ptr _arrow_token,
+                           Terminal_owned_ptr _identifier_token
                            )
   : SyntaxNode("expression_postfix_arrow", this)
   , expression(std::move(_expression))
@@ -1629,7 +1629,7 @@ ExpressionPostfixArrow::get_identifier() const
 ///////////////////////////////////////////////////
 ExpressionPostfixIncDec::ExpressionPostfixIncDec(
                                                  std::unique_ptr<Expression> _expression,
-                                                 Terminal::owned_ptr _operator_token
+                                                 Terminal_owned_ptr _operator_token
                                                  )
   : SyntaxNode("expression_postfix_incdec", this)
   , expression(std::move(_expression))
@@ -1650,7 +1650,7 @@ ExpressionPostfixIncDec::get_expression()
 { return *expression; }
 ///////////////////////////////////////////////////
 ExpressionUnaryPrefix::ExpressionUnaryPrefix(
-                                             Terminal::owned_ptr _operator_token,
+                                             Terminal_owned_ptr _operator_token,
                                              std::unique_ptr<Expression> _expression
                                              )
   : SyntaxNode("expression_unary_prefix", this)
@@ -1673,10 +1673,10 @@ ExpressionUnaryPrefix::get_expression()
 { return *expression; }
 ///////////////////////////////////////////////////
 ExpressionUnarySizeofType::ExpressionUnarySizeofType(
-                                Terminal::owned_ptr _sizeof_token,
-                                Terminal::owned_ptr _paren_l_token,
-                                TypeSpecifier::owned_ptr _type_specifier,
-                                Terminal::owned_ptr _paren_r_token
+                                Terminal_owned_ptr _sizeof_token,
+                                Terminal_owned_ptr _paren_l_token,
+                                TypeSpecifier_owned_ptr _type_specifier,
+                                Terminal_owned_ptr _paren_r_token
                                 )
   : SyntaxNode("expression_unary_sizeof_type", this)
   , sizeof_token(std::move(_sizeof_token))
@@ -1696,12 +1696,12 @@ ExpressionUnarySizeofType::get_type_specifier() const
 { return *type_specifier; }
 ///////////////////////////////////////////////////
 ExpressionCast::ExpressionCast(
-                     Terminal::owned_ptr _cast_token,
-                     Terminal::owned_ptr _paren_l_token,
-                     TypeSpecifier::owned_ptr _type_specifier,
-                     Terminal::owned_ptr _comma_token,
+                     Terminal_owned_ptr _cast_token,
+                     Terminal_owned_ptr _paren_l_token,
+                     TypeSpecifier_owned_ptr _type_specifier,
+                     Terminal_owned_ptr _comma_token,
                      std::unique_ptr<Expression> _expression,
-                     Terminal::owned_ptr _paren_r_token
+                     Terminal_owned_ptr _paren_r_token
                      )
   : SyntaxNode("expression_cast", this)
   , cast_token(std::move(_cast_token))
@@ -1722,7 +1722,7 @@ ExpressionCast::get_expression() const
 ///////////////////////////////////////////////////
 ExpressionBinary::ExpressionBinary(
                        std::unique_ptr<Expression> _expression_a,
-                       Terminal::owned_ptr _operator_token,
+                       Terminal_owned_ptr _operator_token,
                        std::unique_ptr<Expression> _expression_b
                        )
   : SyntaxNode("expression_binary", this)
@@ -1749,9 +1749,9 @@ ExpressionBinary::get_b() const
 ///////////////////////////////////////////////////
 ExpressionTrinary::ExpressionTrinary(
                         std::unique_ptr<Expression> _condition,
-                        Terminal::owned_ptr _questionmark_token,
+                        Terminal_owned_ptr _questionmark_token,
                         std::unique_ptr<Expression> _if_expression,
-                        Terminal::owned_ptr _colon_token,
+                        Terminal_owned_ptr _colon_token,
                         std::unique_ptr<Expression> _else_expression
                         )
   : SyntaxNode("expression_trinary", this)
@@ -1791,8 +1791,8 @@ Expression::get_expression() const
 ///////////////////////////////////////////////////
 
 GlobalInitializerExpressionPrimary::GlobalInitializerExpressionPrimary(
-                                         Terminal::owned_ptr _equals_token,
-                                         ExpressionPrimary::owned_ptr _expression
+                                         Terminal_owned_ptr _equals_token,
+                                         ExpressionPrimary_owned_ptr _expression
                                          )
   : SyntaxNode("global_initializer_expression_primary", this)
   , equals_token(std::move(_equals_token))
@@ -1809,10 +1809,10 @@ GlobalInitializerExpressionPrimary::get_expression() const
 
 ///////////////////////////////////////////////////
 StructInitializer::StructInitializer(
-                        Terminal::owned_ptr _dot_token,
-                        Terminal::owned_ptr _identifier_token,
-                        GlobalInitializer::owned_ptr _global_initializer,
-                        Terminal::owned_ptr _semicolon_token
+                        Terminal_owned_ptr _dot_token,
+                        Terminal_owned_ptr _identifier_token,
+                        GlobalInitializer_owned_ptr _global_initializer,
+                        Terminal_owned_ptr _semicolon_token
                                      )
   : SyntaxNode("struct_initializer", this)
   , dot_token(std::move(_dot_token))
@@ -1838,12 +1838,12 @@ StructInitializerList::StructInitializerList()
 StructInitializerList::~StructInitializerList()
 {}
 void
-StructInitializerList::add_initializer(StructInitializer::owned_ptr initializer)
+StructInitializerList::add_initializer(StructInitializer_owned_ptr initializer)
 {
   add_child(*initializer);
   initializers.push_back(std::move(initializer));
 }
-const std::vector<StructInitializer::owned_ptr> &
+const std::vector<StructInitializer_owned_ptr> &
 StructInitializerList::get_initializers() const
 {
   return initializers;
@@ -1851,9 +1851,9 @@ StructInitializerList::get_initializers() const
 
 ///////////////////////////////////////////////////
 GlobalInitializerAddressofExpressionPrimary::GlobalInitializerAddressofExpressionPrimary(
-                                                                                         Terminal::owned_ptr _equals_token,
-                                                                                         Terminal::owned_ptr _addressof_token,
-                                                                                         ExpressionPrimary::owned_ptr _expression
+                                                                                         Terminal_owned_ptr _equals_token,
+                                                                                         Terminal_owned_ptr _addressof_token,
+                                                                                         ExpressionPrimary_owned_ptr _expression
                                                                                          )
   : SyntaxNode("global_initializer_addressof_expression_primary", this)
   , equals_token(std::move(_equals_token))
@@ -1873,10 +1873,10 @@ GlobalInitializerAddressofExpressionPrimary::get_expression() const
 
 ///////////////////////////////////////////////////
 GlobalInitializerStructInitializerList::GlobalInitializerStructInitializerList(
-                                             Terminal::owned_ptr _equals_token,
-                                             Terminal::owned_ptr _brace_l_token,
-                                             StructInitializerList::owned_ptr _struct_initializer,
-                                             Terminal::owned_ptr _brace_r_token
+                                             Terminal_owned_ptr _equals_token,
+                                             Terminal_owned_ptr _brace_l_token,
+                                             StructInitializerList_owned_ptr _struct_initializer,
+                                             Terminal_owned_ptr _brace_r_token
 )
   : SyntaxNode("global_initializer_struct_initializer_list", this)
   , equals_token(std::move(_equals_token))
@@ -1915,13 +1915,13 @@ GlobalInitializer::get_initializer() const
 
 ///////////////////////////////////////////////////
 FileStatementGlobalDefinition::FileStatementGlobalDefinition(
-                                                             AccessModifier::owned_ptr _access_modifier,
-                                                             UnsafeModifier::owned_ptr _unsafe_modifier,
-                                                             TypeSpecifier::owned_ptr _type_specifier,
-                                                             Terminal::owned_ptr _name,
-                                                             ArrayLength::owned_ptr _array_length,
-                                                             GlobalInitializer::owned_ptr _global_initializer,
-                                                             Terminal::owned_ptr _semicolon
+                                                             AccessModifier_owned_ptr _access_modifier,
+                                                             UnsafeModifier_owned_ptr _unsafe_modifier,
+                                                             TypeSpecifier_owned_ptr _type_specifier,
+                                                             Terminal_owned_ptr _name,
+                                                             ArrayLength_owned_ptr _array_length,
+                                                             GlobalInitializer_owned_ptr _global_initializer,
+                                                             Terminal_owned_ptr _semicolon
                                                              )
 : SyntaxNode("file_statement_global_definition", this)
 , access_modifier(std::move(_access_modifier))
@@ -1965,9 +1965,9 @@ FileStatementGlobalDefinition::get_global_initializer() const
 
 ///////////////////////////////////////////////////
 NamespaceDeclaration::NamespaceDeclaration(
-                           AccessModifier::owned_ptr _access_modifier,
-                           Terminal::owned_ptr _namespace_token,
-                           Terminal::owned_ptr _identifier_token
+                           AccessModifier_owned_ptr _access_modifier,
+                           Terminal_owned_ptr _namespace_token,
+                           Terminal_owned_ptr _identifier_token
                            )
   : SyntaxNode("namespace_declaration", this)
   , access_modifier(std::move(_access_modifier))
@@ -1989,11 +1989,11 @@ NamespaceDeclaration::get_name() const
 
 ///////////////////////////////////////////////////
 FileStatementNamespace::FileStatementNamespace(
-                                               NamespaceDeclaration::owned_ptr _namespace_declaration,
-                                               Terminal::owned_ptr _brace_l_token,
-                                               FileStatementList::owned_ptr _file_statement_list,
-                                               Terminal::owned_ptr _brace_r_token,
-                                               Terminal::owned_ptr _semicolon_token
+                                               NamespaceDeclaration_owned_ptr _namespace_declaration,
+                                               Terminal_owned_ptr _brace_l_token,
+                                               FileStatementList_owned_ptr _file_statement_list,
+                                               Terminal_owned_ptr _brace_r_token,
+                                               Terminal_owned_ptr _semicolon_token
                                                )
   : SyntaxNode("file_statement_namespace", this)
   , namespace_declaration(std::move(_namespace_declaration))
@@ -2019,8 +2019,8 @@ const FileStatementList & FileStatementNamespace::get_statement_list() const
 ///////////////////////////////////////////////////
 
 UsingAs::UsingAs(
-        Terminal::owned_ptr _as_token,
-        Terminal::owned_ptr _identifier_token
+        Terminal_owned_ptr _as_token,
+        Terminal_owned_ptr _identifier_token
         )
   : SyntaxNode("using_as", this)
   , as_token(std::move(_as_token))
@@ -2043,12 +2043,12 @@ const std::string &
 UsingAs::get_using_name() const
 { return using_name; }
 
-FileStatementUsing::FileStatementUsing(AccessModifier::owned_ptr _access_modifier,
-                             Terminal::owned_ptr _using,
-                             Terminal::owned_ptr _namespace,
-                             Terminal::owned_ptr _namespace_name,
-                             UsingAs::owned_ptr _using_as,
-                             Terminal::owned_ptr _semicolon)
+FileStatementUsing::FileStatementUsing(AccessModifier_owned_ptr _access_modifier,
+                             Terminal_owned_ptr _using,
+                             Terminal_owned_ptr _namespace,
+                             Terminal_owned_ptr _namespace_name,
+                             UsingAs_owned_ptr _using_as,
+                             Terminal_owned_ptr _semicolon)
   : SyntaxNode("file_statement_using", this)
   , using_token(std::move(_using))
   , namespace_token(std::move(_namespace))
@@ -2094,7 +2094,7 @@ FileStatementList::FileStatementList()
   : SyntaxNode("file_statement_list", this)
   , yyeof(nullptr)
 {}
-FileStatementList::FileStatementList(Terminal::owned_ptr _yyeof)
+FileStatementList::FileStatementList(Terminal_owned_ptr _yyeof)
   : SyntaxNode("file_statement_list", this)
   , yyeof(std::move(_yyeof))
 {
@@ -2102,19 +2102,19 @@ FileStatementList::FileStatementList(Terminal::owned_ptr _yyeof)
 }
 FileStatementList::~FileStatementList()
 {}
-const std::vector<FileStatement::owned_ptr> &
+const std::vector<FileStatement_owned_ptr> &
 FileStatementList::get_statements() const
 { return statements; }
 void
-FileStatementList::add_statement(FileStatement::owned_ptr statement)
+FileStatementList::add_statement(FileStatement_owned_ptr statement)
 {
   add_child(*statement);
   statements.push_back(std::move(statement));
 }
 
 TranslationUnit::TranslationUnit(
-                                 FileStatementList::owned_ptr _file_statement_list,
-                                 Terminal::owned_ptr _yyeof_token)
+                                 FileStatementList_owned_ptr _file_statement_list,
+                                 Terminal_owned_ptr _yyeof_token)
   : SyntaxNode("translation_unit", this)
   , file_statement_list(std::move(_file_statement_list))
   , yyeof_token(std::move(_yyeof_token))
