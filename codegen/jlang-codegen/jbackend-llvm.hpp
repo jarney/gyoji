@@ -23,9 +23,16 @@
 #include "llvm/Target/TargetOptions.h"
 #include "llvm/TargetParser/Host.h"
 
-namespace JLang {
-  namespace codegen {
-    namespace LLVM {
+/*!
+ *  \addtogroup Codegen
+ *  @{
+ */
+//! Headline News for the code generation.
+/*!
+ * The back-end is a set of functions
+ * that process the input.
+ */
+namespace JLang::codegen::LLVM {
 
       using namespace JLang::frontend;
       using namespace JLang::backend;
@@ -108,6 +115,5 @@ private:
 
 };
 
-    };
-  };
 };
+/*! @} End of Doxygen Groups*/

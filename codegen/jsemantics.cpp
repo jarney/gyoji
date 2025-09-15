@@ -185,11 +185,13 @@ TranslationUnit::register_builtin_types()
   
 }
 
-class JSyntaxListener {
+namespace JLang::codegen {
+  class JSyntaxListener {
 public:
   void eventFunctionDefinition(ASTNode::ptr node);
   void eventFunctionDeclaration(ASTNode::ptr node);
   void eventNamespace(ASTNode::ptr node);
+};
 };
 
 void

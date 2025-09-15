@@ -5,20 +5,38 @@
 #include <map>
 #include <jlang-frontend/ast.hpp>
 
-// Compute the semantic tree
-// from the given AST.  The purpose
-// of this layer is to determine the
-// semantic components of what's being represented
-// here.  We should represent
-// types, variables, and functions that operate on them.
-// We should also be able to
-//   * Derive what's needed to generate the LLVM output.
-//   * Derive what's needed to run the borrow checker
-//
-// This layer is the abstract layer and the 'concrete' layers
-// like the borrow checker and LLVM should be powered by the
-// same underlying representation.
+/*!
+ *  \addtogroup Codegen
+ *  @{
+ */
+//! This is the code generation layer.
+/*!
+ * <pre>
+ *   This is some diagram or something
+ *   |--------------------------------|
+ *   | Some thing that is interesting |
+ *   |--------------------------------|
+ * </pre>
+ */
+namespace JLang::codegen {
+};
+/*! @} End of Doxygen Groups*/
 
+/*!
+ *  \addtogroup Codegen
+ *  @{
+ */
+//! Headline News for the semantics layer.
+/*!
+ * The role of the semantics layer is
+ * to represent the output in an intermediate
+ * representation suitable for type checking,
+ * borrow-checking, and code generation.
+ * This namespace does not actually perform
+ * those functions, but is responsible for
+ * representing the program's data in a way
+ * that is suitable for those purposes.
+ */
 namespace JLang::codegen::semantics {
 
   using namespace JLang::frontend;
@@ -220,3 +238,4 @@ namespace JLang::codegen::semantics {
   
   TranslationUnit::ptr from_ast(ASTNode::ptr ast);
 };
+/*! @} End of Doxygen Groups*/

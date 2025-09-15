@@ -9,6 +9,14 @@
 
 #include "namespace.hpp"
 
+//! This is the toip-level namespace for the project.
+/*!
+ * All features belong in this namespace.
+ */
+namespace JLang {
+};
+/*! @} End of Doxygen Groups*/
+
 /*!
  *  \addtogroup Frontend
  *  @{
