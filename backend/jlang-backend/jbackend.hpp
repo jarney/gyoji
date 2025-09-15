@@ -8,6 +8,6 @@ namespace JLang::backend {
   public:
     JBackend();
     ~JBackend();
-    virtual int process(ASTNode::ptr file) = 0;
+    virtual int process(const SyntaxNode *file) = 0;
   };
 };

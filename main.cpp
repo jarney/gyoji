@@ -1,5 +1,4 @@
 #include <jlang-frontend/jsyntax.hpp>
-#include <jlang-frontend/ast.hpp>
 #include <jlang-frontend/namespace.hpp>
 #include <jlang.l.hpp>
 #include <jlang.y.hpp>
@@ -7,11 +6,11 @@
 #include <jlang-backend/jbackend.hpp>
 #include <jlang-backend/jbackend-format-identity.hpp>
 #include <jlang-backend/jbackend-format-tree.hpp>
-#include <jlang-backend/jbackend-format-pretty.hpp>
-
-#include <jlang-codegen/jbackend-llvm.hpp>
-
-using namespace JLang::Backend::LLVM;
+//#include <jlang-backend/jbackend-format-pretty.hpp>
+//#include <jlang-codegen/jbackend-llvm.hpp>
+//using namespace JLang::Backend::LLVM;
+using namespace JLang::frontend;
+using namespace JLang::backend;
 
 int main(int argc, char **argv)
 {
@@ -41,9 +40,9 @@ int main(int argc, char **argv)
     else if (std::string("format-tree") == std::string(argv[1])) {
         backend = std::make_shared<JBackendFormatTree>();
     }
-    else if (std::string("llvm") == std::string(argv[1])) {
-      backend = std::make_shared<JBackendLLVM>();
-    }
+    //    else if (std::string("llvm") == std::string(argv[1])) {
+    //      backend = std::make_shared<JBackendLLVM>();
+    //    }
     else {
       fprintf(stderr, "Invalid backend %s\n", argv[1]);
       return 1;
@@ -70,7 +69,7 @@ int main(int argc, char **argv)
       printf("Syntax error\n");
     }
     else {
-      rc = backend->process(data.translation_unit);
+      rc = backend->process(data.translation_unit->get_syntax_node());
     }
     yylex_destroy(scanner);
     fclose(input);

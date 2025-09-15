@@ -21,7 +21,7 @@ enable_testing()
 add_subdirectory(misc)
 add_subdirectory(frontend)
 add_subdirectory(backend)
-add_subdirectory(codegen)
+#add_subdirectory(codegen)
 
 add_executable(cparse main.cpp)
 
@@ -35,9 +35,9 @@ target_include_directories(cparse
 	/usr/include/llvm-c-18
 )
 
+#        jlang-codegen
 target_link_libraries(cparse
     PUBLIC
-        jlang-codegen
         jlang-backend
         jlang-frontend
         jlang-misc

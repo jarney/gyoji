@@ -8,7 +8,7 @@
 using namespace jlang;
 std::string override_file;
 size_t lineno = 1;
-std::vector<JLang::frontend::alt_imp::TerminalNonSyntax::owned_ptr> non_syntax_data;
+std::vector<JLang::frontend::TerminalNonSyntax::owned_ptr> non_syntax_data;
 
 #define DEBUG_TERMINALS 0
 #if DEBUG_TERMINALS
@@ -22,14 +22,14 @@ std::vector<JLang::frontend::alt_imp::TerminalNonSyntax::owned_ptr> non_syntax_d
 #endif
 
 #define START_NODE(nodetype)                 \
-    JLang::frontend::alt_imp::Terminal::owned_ptr node = std::make_unique<JLang::frontend::alt_imp::Terminal>(); \
+    JLang::frontend::Terminal::owned_ptr node = std::make_unique<JLang::frontend::Terminal>(); \
     node->type = Parser::symbol_kind_type::S_ ## nodetype; \
     node->typestr = std::string(#nodetype);  \
     node->value = std::string(yytext);       \
     node->lineno = lineno;                   \
     node->non_syntax = std::move(non_syntax_data);      \
     non_syntax_data.clear();                 \
-    yylval->emplace<JLang::frontend::alt_imp::Terminal::owned_ptr>(std::move(node));
+    yylval->emplace<JLang::frontend::Terminal::owned_ptr>(std::move(node));
 
 #define RETURN_NODE(nodetype)                \
     return Parser::token::nodetype;
@@ -177,8 +177,8 @@ unsafe {PROCESS_NODE(UNSAFE);}
 
 "/*"        {
   BEGIN(COMMENT);
-  JLang::frontend::alt_imp::TerminalNonSyntax::owned_ptr nsd = std::make_unique<JLang::frontend::alt_imp::TerminalNonSyntax>(
-        JLang::frontend::alt_imp::TerminalNonSyntaxType::EXTRA_COMMENT_MULTI_LINE,
+  JLang::frontend::TerminalNonSyntax::owned_ptr nsd = std::make_unique<JLang::frontend::TerminalNonSyntax>(
+        JLang::frontend::TerminalNonSyntaxType::EXTRA_COMMENT_MULTI_LINE,
         std::string()
         );
   non_syntax_data.push_back(std::move(nsd));
@@ -187,32 +187,32 @@ unsafe {PROCESS_NODE(UNSAFE);}
   BEGIN(INITIAL);
 }
 <COMMENT>[^*]* {
-  JLang::frontend::alt_imp::TerminalNonSyntax* current = non_syntax_data.back().get();
+  JLang::frontend::TerminalNonSyntax* current = non_syntax_data.back().get();
   current->append(std::string(yytext));
 }
 <COMMENT>\* {
-  JLang::frontend::alt_imp::TerminalNonSyntax *current = non_syntax_data.back().get();
+  JLang::frontend::TerminalNonSyntax *current = non_syntax_data.back().get();
   current->append(std::string(yytext));
 }
 
 \/\/.* {
 // Single-line comment:
-    JLang::frontend::alt_imp::TerminalNonSyntax::owned_ptr nsd = std::make_unique<JLang::frontend::alt_imp::TerminalNonSyntax>(
-        JLang::frontend::alt_imp::TerminalNonSyntaxType::EXTRA_COMMENT_SINGLE_LINE,
+    JLang::frontend::TerminalNonSyntax::owned_ptr nsd = std::make_unique<JLang::frontend::TerminalNonSyntax>(
+        JLang::frontend::TerminalNonSyntaxType::EXTRA_COMMENT_SINGLE_LINE,
         std::string(yytext+2)
     );
     non_syntax_data.push_back(std::move(nsd));
 }
 [ \t]+ {
-    JLang::frontend::alt_imp::TerminalNonSyntax::owned_ptr nsd = std::make_unique<JLang::frontend::alt_imp::TerminalNonSyntax>(
-        JLang::frontend::alt_imp::TerminalNonSyntaxType::EXTRA_WHITESPACE, 
+    JLang::frontend::TerminalNonSyntax::owned_ptr nsd = std::make_unique<JLang::frontend::TerminalNonSyntax>(
+        JLang::frontend::TerminalNonSyntaxType::EXTRA_WHITESPACE, 
         std::string(yytext)
     );
     non_syntax_data.push_back(std::move(nsd));
 }
 \n {
-    JLang::frontend::alt_imp::TerminalNonSyntax::owned_ptr nsd = std::make_unique<JLang::frontend::alt_imp::TerminalNonSyntax>(
-        JLang::frontend::alt_imp::TerminalNonSyntaxType::EXTRA_WHITESPACE, 
+    JLang::frontend::TerminalNonSyntax::owned_ptr nsd = std::make_unique<JLang::frontend::TerminalNonSyntax>(
+        JLang::frontend::TerminalNonSyntaxType::EXTRA_WHITESPACE, 
         std::string(yytext)
     );
     non_syntax_data.push_back(std::move(nsd));
@@ -220,8 +220,8 @@ unsafe {PROCESS_NODE(UNSAFE);}
 }
 \#[a-zA-Z]+\ [[:digit:]]+\ \".*\"\n {
     //printf("Preprocessor directive %s\n", yytext);
-    JLang::frontend::alt_imp::TerminalNonSyntax::owned_ptr nsd = std::make_unique<JLang::frontend::alt_imp::TerminalNonSyntax>(
-        JLang::frontend::alt_imp::TerminalNonSyntaxType::EXTRA_FILE_METADATA,
+    JLang::frontend::TerminalNonSyntax::owned_ptr nsd = std::make_unique<JLang::frontend::TerminalNonSyntax>(
+        JLang::frontend::TerminalNonSyntaxType::EXTRA_FILE_METADATA,
         std::string(yytext)
     );
     non_syntax_data.push_back(std::move(nsd));

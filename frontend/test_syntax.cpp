@@ -2,7 +2,7 @@
 #include "test_syntax_tree.hpp"
 #include <jlang-misc/test.hpp>
 
-using namespace JLang::frontend::alt_imp;
+using namespace JLang::frontend;
 
 int main(int argc, char **argv)
 {

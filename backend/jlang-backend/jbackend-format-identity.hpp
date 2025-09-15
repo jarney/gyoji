@@ -14,6 +14,6 @@ namespace JLang::backend {
   public:
     JBackendFormatIdentity();
     ~JBackendFormatIdentity();
-    virtual int process(ASTNode::ptr file);
+    virtual int process(const SyntaxNode * file);
   };
 };

@@ -1,15 +1,15 @@
+#        jlang-backend/jbackend-format-pretty.hpp
+#        jbackend-format-pretty.cpp
 
 set(BACKEND_PUBLIC_HEADERS
         jlang-backend/jbackend.hpp
         jlang-backend/jbackend-format-identity.hpp
-        jlang-backend/jbackend-format-pretty.hpp
         jlang-backend/jbackend-format-tree.hpp
 )
 
 set(BACKEND_SOURCES
         jbackend.cpp
         jbackend-format-identity.cpp
-        jbackend-format-pretty.cpp
         jbackend-format-tree.cpp
         ${BACKEND_PUBLIC_HEADERS}
 )
@@ -38,7 +38,7 @@ install(
 )
 
 set_source_files_properties(
-    jbackend-format-pretty.cpp
+    jbackend-format-tree.cpp
     PROPERTIES OBJECT_DEPENDS ${CMAKE_BINARY_DIR}/jlang-frontend-built.cpp
 )
 set_source_files_properties(

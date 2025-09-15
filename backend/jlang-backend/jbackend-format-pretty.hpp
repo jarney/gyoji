@@ -13,9 +13,9 @@ namespace JLang::backend {
   public:
     JBackendFormatPretty();
     ~JBackendFormatPretty();
-    virtual int process(ASTNode::ptr file);
+    virtual int process(const SyntaxNode * file);
     
-    std::string collect_comments(ASTNode::ptr node);
+    std::string collect_comments(const SyntaxNode * node);
     std::string break_multiline_comment(std::string str);
     
     void print_whitespace(ASTDataNonSyntax::ptr node);
@@ -25,13 +25,13 @@ namespace JLang::backend {
     void print_file_metadata(ASTDataNonSyntax::ptr node);
     void print_non_syntax(ASTDataNonSyntax::ptr node);
     
-    void print_node_generic(ASTNode::ptr node);
-    void print_node_plain(ASTNode::ptr node);
-    void print_node(ASTNode::ptr node);
-    void print_scope_body(ASTNode::ptr node);
+    void print_node_generic(const SyntaxNode * node);
+    void print_node_plain(const SyntaxNode * node);
+    void print_node(const SyntaxNode * node);
+    void print_scope_body(const SyntaxNode * node);
     void newline();
     
-    void print_node_function_def(ASTNode::ptr node);
+    void print_node_function_def(const SyntaxNode * node);
     
     int indent_level;
     int depth;

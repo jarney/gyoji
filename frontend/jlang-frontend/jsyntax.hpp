@@ -9,8 +9,6 @@
 #include "namespace.hpp"
 
 namespace JLang::frontend {
-  namespace alt_imp {
-  
   class Terminal;
 
   class AccessQualifier;
@@ -1759,10 +1757,8 @@ namespace JLang::frontend {
     };
     
     
-  };
-  
   typedef struct return_data_st {
-    alt_imp::TranslationUnit::owned_ptr translation_unit;
+    TranslationUnit::owned_ptr translation_unit;
     NamespaceContext namespace_context;
   } return_data_t;
 

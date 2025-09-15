@@ -27,7 +27,7 @@
 #define PRINT_NONTERMINALS(s) (0)
 #endif
 
-int visibility_from_modifier(JLang::frontend::alt_imp::AccessModifier::AccessModifierType visibility_ast);
+int visibility_from_modifier(JLang::frontend::AccessModifier::AccessModifierType visibility_ast);
   
 #define YY_DECL                                                         \
         int yylex(jlang::Parser::semantic_type *yylval, yyscan_t yyscanner)
@@ -35,253 +35,253 @@ int visibility_from_modifier(JLang::frontend::alt_imp::AccessModifier::AccessMod
 }
 
 %token INVALID_INPUT
-%token <JLang::frontend::alt_imp::Terminal::owned_ptr> YYEOF
-%token <JLang::frontend::alt_imp::Terminal::owned_ptr> IDENTIFIER
-%token <JLang::frontend::alt_imp::Terminal::owned_ptr> NAMESPACE_NAME
-%token <JLang::frontend::alt_imp::Terminal::owned_ptr> TYPE_NAME
-%token <JLang::frontend::alt_imp::Terminal::owned_ptr> CLASS
-%token <JLang::frontend::alt_imp::Terminal::owned_ptr> ENUM
+%token <JLang::frontend::Terminal::owned_ptr> YYEOF
+%token <JLang::frontend::Terminal::owned_ptr> IDENTIFIER
+%token <JLang::frontend::Terminal::owned_ptr> NAMESPACE_NAME
+%token <JLang::frontend::Terminal::owned_ptr> TYPE_NAME
+%token <JLang::frontend::Terminal::owned_ptr> CLASS
+%token <JLang::frontend::Terminal::owned_ptr> ENUM
 
-%token <JLang::frontend::alt_imp::Terminal::owned_ptr> NAMESPACE
-%token <JLang::frontend::alt_imp::Terminal::owned_ptr> AS
-%token <JLang::frontend::alt_imp::Terminal::owned_ptr> USING
-%token <JLang::frontend::alt_imp::Terminal::owned_ptr> TYPEDEF
-%token <JLang::frontend::alt_imp::Terminal::owned_ptr> STRUCT
-%token <JLang::frontend::alt_imp::Terminal::owned_ptr> UNION
-%token <JLang::frontend::alt_imp::Terminal::owned_ptr> SIZEOF
-%token <JLang::frontend::alt_imp::Terminal::owned_ptr> TYPEOF
-%token <JLang::frontend::alt_imp::Terminal::owned_ptr> CAST
-%token <JLang::frontend::alt_imp::Terminal::owned_ptr> UNSAFE
- //%token <JLang::frontend::alt_imp::Terminal::owned_ptr> VAR
-%token <JLang::frontend::alt_imp::Terminal::owned_ptr> CONST
-%token <JLang::frontend::alt_imp::Terminal::owned_ptr> VOLATILE
+%token <JLang::frontend::Terminal::owned_ptr> NAMESPACE
+%token <JLang::frontend::Terminal::owned_ptr> AS
+%token <JLang::frontend::Terminal::owned_ptr> USING
+%token <JLang::frontend::Terminal::owned_ptr> TYPEDEF
+%token <JLang::frontend::Terminal::owned_ptr> STRUCT
+%token <JLang::frontend::Terminal::owned_ptr> UNION
+%token <JLang::frontend::Terminal::owned_ptr> SIZEOF
+%token <JLang::frontend::Terminal::owned_ptr> TYPEOF
+%token <JLang::frontend::Terminal::owned_ptr> CAST
+%token <JLang::frontend::Terminal::owned_ptr> UNSAFE
+ //%token <JLang::frontend::Terminal::owned_ptr> VAR
+%token <JLang::frontend::Terminal::owned_ptr> CONST
+%token <JLang::frontend::Terminal::owned_ptr> VOLATILE
 
-%token <JLang::frontend::alt_imp::Terminal::owned_ptr> PUBLIC
-%token <JLang::frontend::alt_imp::Terminal::owned_ptr> PRIVATE
-%token <JLang::frontend::alt_imp::Terminal::owned_ptr> PROTECTED
+%token <JLang::frontend::Terminal::owned_ptr> PUBLIC
+%token <JLang::frontend::Terminal::owned_ptr> PRIVATE
+%token <JLang::frontend::Terminal::owned_ptr> PROTECTED
 
  /* Logical Operations */
-%token <JLang::frontend::alt_imp::Terminal::owned_ptr> LOGICAL_NOT
-%token <JLang::frontend::alt_imp::Terminal::owned_ptr> LOGICAL_AND
-%token <JLang::frontend::alt_imp::Terminal::owned_ptr>  LOGICAL_OR
+%token <JLang::frontend::Terminal::owned_ptr> LOGICAL_NOT
+%token <JLang::frontend::Terminal::owned_ptr> LOGICAL_AND
+%token <JLang::frontend::Terminal::owned_ptr>  LOGICAL_OR
 
  /* Control Flow */
-%token <JLang::frontend::alt_imp::Terminal::owned_ptr> RETURN
-%token <JLang::frontend::alt_imp::Terminal::owned_ptr> IF
-%token <JLang::frontend::alt_imp::Terminal::owned_ptr> ELSE
-%token <JLang::frontend::alt_imp::Terminal::owned_ptr> WHILE
-%token <JLang::frontend::alt_imp::Terminal::owned_ptr> FOR
-%token <JLang::frontend::alt_imp::Terminal::owned_ptr> CONTINUE
-%token <JLang::frontend::alt_imp::Terminal::owned_ptr> GOTO
-%token <JLang::frontend::alt_imp::Terminal::owned_ptr> LABEL
-%token <JLang::frontend::alt_imp::Terminal::owned_ptr> BREAK
-%token <JLang::frontend::alt_imp::Terminal::owned_ptr> SWITCH
-%token <JLang::frontend::alt_imp::Terminal::owned_ptr> CASE
-%token <JLang::frontend::alt_imp::Terminal::owned_ptr> DEFAULT
+%token <JLang::frontend::Terminal::owned_ptr> RETURN
+%token <JLang::frontend::Terminal::owned_ptr> IF
+%token <JLang::frontend::Terminal::owned_ptr> ELSE
+%token <JLang::frontend::Terminal::owned_ptr> WHILE
+%token <JLang::frontend::Terminal::owned_ptr> FOR
+%token <JLang::frontend::Terminal::owned_ptr> CONTINUE
+%token <JLang::frontend::Terminal::owned_ptr> GOTO
+%token <JLang::frontend::Terminal::owned_ptr> LABEL
+%token <JLang::frontend::Terminal::owned_ptr> BREAK
+%token <JLang::frontend::Terminal::owned_ptr> SWITCH
+%token <JLang::frontend::Terminal::owned_ptr> CASE
+%token <JLang::frontend::Terminal::owned_ptr> DEFAULT
 
  /* Binary operations */
-%token <JLang::frontend::alt_imp::Terminal::owned_ptr> PLUS
-%token <JLang::frontend::alt_imp::Terminal::owned_ptr> MINUS
-%token <JLang::frontend::alt_imp::Terminal::owned_ptr> SLASH
-%token <JLang::frontend::alt_imp::Terminal::owned_ptr> PERCENT
-%token <JLang::frontend::alt_imp::Terminal::owned_ptr> STAR
-%token <JLang::frontend::alt_imp::Terminal::owned_ptr> EQUALS
-%token <JLang::frontend::alt_imp::Terminal::owned_ptr> BANG
-%token <JLang::frontend::alt_imp::Terminal::owned_ptr> TILDE
-%token <JLang::frontend::alt_imp::Terminal::owned_ptr> ANDPERSAND
-%token <JLang::frontend::alt_imp::Terminal::owned_ptr> MUL_ASSIGN
-%token <JLang::frontend::alt_imp::Terminal::owned_ptr> DIV_ASSIGN
-%token <JLang::frontend::alt_imp::Terminal::owned_ptr> MOD_ASSIGN
-%token <JLang::frontend::alt_imp::Terminal::owned_ptr> ADD_ASSIGN
-%token <JLang::frontend::alt_imp::Terminal::owned_ptr> SUB_ASSIGN
-%token <JLang::frontend::alt_imp::Terminal::owned_ptr> LEFT_ASSIGN
-%token <JLang::frontend::alt_imp::Terminal::owned_ptr> RIGHT_ASSIGN
-%token <JLang::frontend::alt_imp::Terminal::owned_ptr> AND_ASSIGN
-%token <JLang::frontend::alt_imp::Terminal::owned_ptr> XOR_ASSIGN
-%token <JLang::frontend::alt_imp::Terminal::owned_ptr> OR_ASSIGN
+%token <JLang::frontend::Terminal::owned_ptr> PLUS
+%token <JLang::frontend::Terminal::owned_ptr> MINUS
+%token <JLang::frontend::Terminal::owned_ptr> SLASH
+%token <JLang::frontend::Terminal::owned_ptr> PERCENT
+%token <JLang::frontend::Terminal::owned_ptr> STAR
+%token <JLang::frontend::Terminal::owned_ptr> EQUALS
+%token <JLang::frontend::Terminal::owned_ptr> BANG
+%token <JLang::frontend::Terminal::owned_ptr> TILDE
+%token <JLang::frontend::Terminal::owned_ptr> ANDPERSAND
+%token <JLang::frontend::Terminal::owned_ptr> MUL_ASSIGN
+%token <JLang::frontend::Terminal::owned_ptr> DIV_ASSIGN
+%token <JLang::frontend::Terminal::owned_ptr> MOD_ASSIGN
+%token <JLang::frontend::Terminal::owned_ptr> ADD_ASSIGN
+%token <JLang::frontend::Terminal::owned_ptr> SUB_ASSIGN
+%token <JLang::frontend::Terminal::owned_ptr> LEFT_ASSIGN
+%token <JLang::frontend::Terminal::owned_ptr> RIGHT_ASSIGN
+%token <JLang::frontend::Terminal::owned_ptr> AND_ASSIGN
+%token <JLang::frontend::Terminal::owned_ptr> XOR_ASSIGN
+%token <JLang::frontend::Terminal::owned_ptr> OR_ASSIGN
 
-%token <JLang::frontend::alt_imp::Terminal::owned_ptr>  LITERAL_CHAR
-%token <JLang::frontend::alt_imp::Terminal::owned_ptr>  LITERAL_FLOAT
-%token <JLang::frontend::alt_imp::Terminal::owned_ptr>  LITERAL_INT
-%token <JLang::frontend::alt_imp::Terminal::owned_ptr>  LITERAL_STRING
+%token <JLang::frontend::Terminal::owned_ptr>  LITERAL_CHAR
+%token <JLang::frontend::Terminal::owned_ptr>  LITERAL_FLOAT
+%token <JLang::frontend::Terminal::owned_ptr>  LITERAL_INT
+%token <JLang::frontend::Terminal::owned_ptr>  LITERAL_STRING
 
 %token NST_COMMENT_MULTILINE
 %token NST_COMMENT_SINGLE_LINE
 %token NST_WHITESPACE
 %token NST_FILE_METADATA
 
-%token <JLang::frontend::alt_imp::Terminal::owned_ptr> LT_OP
-%token <JLang::frontend::alt_imp::Terminal::owned_ptr> GT_OP
-%token <JLang::frontend::alt_imp::Terminal::owned_ptr> LE_OP
-%token <JLang::frontend::alt_imp::Terminal::owned_ptr> GE_OP
-%token <JLang::frontend::alt_imp::Terminal::owned_ptr> NE_OP
-%token <JLang::frontend::alt_imp::Terminal::owned_ptr> EQ_OP
+%token <JLang::frontend::Terminal::owned_ptr> LT_OP
+%token <JLang::frontend::Terminal::owned_ptr> GT_OP
+%token <JLang::frontend::Terminal::owned_ptr> LE_OP
+%token <JLang::frontend::Terminal::owned_ptr> GE_OP
+%token <JLang::frontend::Terminal::owned_ptr> NE_OP
+%token <JLang::frontend::Terminal::owned_ptr> EQ_OP
 
-%token <JLang::frontend::alt_imp::Terminal::owned_ptr> XOR_OP
-%token <JLang::frontend::alt_imp::Terminal::owned_ptr> AND_OP
-%token <JLang::frontend::alt_imp::Terminal::owned_ptr> PIPE
-%token <JLang::frontend::alt_imp::Terminal::owned_ptr> OR_OP
-%token <JLang::frontend::alt_imp::Terminal::owned_ptr> LEFT_OP
-%token <JLang::frontend::alt_imp::Terminal::owned_ptr> RIGHT_OP
+%token <JLang::frontend::Terminal::owned_ptr> XOR_OP
+%token <JLang::frontend::Terminal::owned_ptr> AND_OP
+%token <JLang::frontend::Terminal::owned_ptr> PIPE
+%token <JLang::frontend::Terminal::owned_ptr> OR_OP
+%token <JLang::frontend::Terminal::owned_ptr> LEFT_OP
+%token <JLang::frontend::Terminal::owned_ptr> RIGHT_OP
 
 /* Common punctuation */
-%token <JLang::frontend::alt_imp::Terminal::owned_ptr> COMMA
-%token <JLang::frontend::alt_imp::Terminal::owned_ptr> INC_OP
-%token <JLang::frontend::alt_imp::Terminal::owned_ptr> DEC_OP
-%token <JLang::frontend::alt_imp::Terminal::owned_ptr> PTR_OP
-%token <JLang::frontend::alt_imp::Terminal::owned_ptr> DOT
-%token <JLang::frontend::alt_imp::Terminal::owned_ptr> PAREN_L
-%token <JLang::frontend::alt_imp::Terminal::owned_ptr> PAREN_R
-%token <JLang::frontend::alt_imp::Terminal::owned_ptr> BRACE_L
-%token <JLang::frontend::alt_imp::Terminal::owned_ptr> BRACKET_R
-%token <JLang::frontend::alt_imp::Terminal::owned_ptr> BRACKET_L
-%token <JLang::frontend::alt_imp::Terminal::owned_ptr> BRACE_R
-%token <JLang::frontend::alt_imp::Terminal::owned_ptr> SEMICOLON
-%token <JLang::frontend::alt_imp::Terminal::owned_ptr> COLON
-%token <JLang::frontend::alt_imp::Terminal::owned_ptr> QUESTIONMARK
+%token <JLang::frontend::Terminal::owned_ptr> COMMA
+%token <JLang::frontend::Terminal::owned_ptr> INC_OP
+%token <JLang::frontend::Terminal::owned_ptr> DEC_OP
+%token <JLang::frontend::Terminal::owned_ptr> PTR_OP
+%token <JLang::frontend::Terminal::owned_ptr> DOT
+%token <JLang::frontend::Terminal::owned_ptr> PAREN_L
+%token <JLang::frontend::Terminal::owned_ptr> PAREN_R
+%token <JLang::frontend::Terminal::owned_ptr> BRACE_L
+%token <JLang::frontend::Terminal::owned_ptr> BRACKET_R
+%token <JLang::frontend::Terminal::owned_ptr> BRACKET_L
+%token <JLang::frontend::Terminal::owned_ptr> BRACE_R
+%token <JLang::frontend::Terminal::owned_ptr> SEMICOLON
+%token <JLang::frontend::Terminal::owned_ptr> COLON
+%token <JLang::frontend::Terminal::owned_ptr> QUESTIONMARK
 
-%token <JLang::frontend::alt_imp::Terminal::owned_ptr> PREC_FIRST
-%token <JLang::frontend::alt_imp::Terminal::owned_ptr> PREC_SECOND
+%token <JLang::frontend::Terminal::owned_ptr> PREC_FIRST
+%token <JLang::frontend::Terminal::owned_ptr> PREC_SECOND
 
-%nterm <JLang::frontend::alt_imp::TranslationUnit::owned_ptr> translation_unit;
+%nterm <JLang::frontend::TranslationUnit::owned_ptr> translation_unit;
 
-%nterm <JLang::frontend::alt_imp::FileStatementList::owned_ptr> opt_file_statement_list;
-%nterm <JLang::frontend::alt_imp::FileStatementList::owned_ptr> file_statement_list;
-%nterm <JLang::frontend::alt_imp::FileStatement::owned_ptr> file_statement;
-%nterm <JLang::frontend::alt_imp::FileStatementFunctionDefinition::owned_ptr> file_statement_function_definition;
-%nterm <JLang::frontend::alt_imp::FileStatementFunctionDeclaration::owned_ptr> file_statement_function_declaration;
-%nterm <JLang::frontend::alt_imp::TypeDefinition::owned_ptr> type_definition;
-%nterm <JLang::frontend::alt_imp::ClassDefinition::owned_ptr> class_definition;
-%nterm <JLang::frontend::alt_imp::ClassDeclStart::owned_ptr> class_decl_start;
-%nterm <JLang::frontend::alt_imp::ClassArgumentList::owned_ptr> opt_class_argument_list;
-%nterm <JLang::frontend::alt_imp::ClassArgumentList::owned_ptr> class_argument_list;
+%nterm <JLang::frontend::FileStatementList::owned_ptr> opt_file_statement_list;
+%nterm <JLang::frontend::FileStatementList::owned_ptr> file_statement_list;
+%nterm <JLang::frontend::FileStatement::owned_ptr> file_statement;
+%nterm <JLang::frontend::FileStatementFunctionDefinition::owned_ptr> file_statement_function_definition;
+%nterm <JLang::frontend::FileStatementFunctionDeclaration::owned_ptr> file_statement_function_declaration;
+%nterm <JLang::frontend::TypeDefinition::owned_ptr> type_definition;
+%nterm <JLang::frontend::ClassDefinition::owned_ptr> class_definition;
+%nterm <JLang::frontend::ClassDeclStart::owned_ptr> class_decl_start;
+%nterm <JLang::frontend::ClassArgumentList::owned_ptr> opt_class_argument_list;
+%nterm <JLang::frontend::ClassArgumentList::owned_ptr> class_argument_list;
 
 
-%nterm <JLang::frontend::alt_imp::EnumDefinition::owned_ptr> enum_definition;
-%nterm <JLang::frontend::alt_imp::EnumDefinitionValueList::owned_ptr> opt_enum_value_list;
-%nterm <JLang::frontend::alt_imp::EnumDefinitionValueList::owned_ptr> enum_value_list;
-%nterm <JLang::frontend::alt_imp::EnumDefinitionValue::owned_ptr> enum_value;
+%nterm <JLang::frontend::EnumDefinition::owned_ptr> enum_definition;
+%nterm <JLang::frontend::EnumDefinitionValueList::owned_ptr> opt_enum_value_list;
+%nterm <JLang::frontend::EnumDefinitionValueList::owned_ptr> enum_value_list;
+%nterm <JLang::frontend::EnumDefinitionValue::owned_ptr> enum_value;
 
-%nterm <JLang::frontend::alt_imp::UnsafeModifier::owned_ptr> opt_unsafe
-%nterm <JLang::frontend::alt_imp::NamespaceDeclaration::owned_ptr> namespace_declaration;
-%nterm <JLang::frontend::alt_imp::FileStatementNamespace::owned_ptr> file_statement_namespace;
-%nterm <JLang::frontend::alt_imp::UsingAs::owned_ptr> opt_as;
-%nterm <JLang::frontend::alt_imp::FileStatementUsing::owned_ptr> file_statement_using;
-%nterm <JLang::frontend::alt_imp::FileStatementGlobalDefinition::owned_ptr> file_statement_global_definition;
-%nterm <JLang::frontend::alt_imp::GlobalInitializer::owned_ptr> opt_global_initializer;
+%nterm <JLang::frontend::UnsafeModifier::owned_ptr> opt_unsafe
+%nterm <JLang::frontend::NamespaceDeclaration::owned_ptr> namespace_declaration;
+%nterm <JLang::frontend::FileStatementNamespace::owned_ptr> file_statement_namespace;
+%nterm <JLang::frontend::UsingAs::owned_ptr> opt_as;
+%nterm <JLang::frontend::FileStatementUsing::owned_ptr> file_statement_using;
+%nterm <JLang::frontend::FileStatementGlobalDefinition::owned_ptr> file_statement_global_definition;
+%nterm <JLang::frontend::GlobalInitializer::owned_ptr> opt_global_initializer;
 
-%nterm <JLang::frontend::alt_imp::GlobalInitializerExpressionPrimary::owned_ptr> global_initializer_expression_primary;
-%nterm <JLang::frontend::alt_imp::GlobalInitializerAddressofExpressionPrimary::owned_ptr> global_initializer_addressof_expression_primary;
-%nterm <JLang::frontend::alt_imp::GlobalInitializerStructInitializerList::owned_ptr> global_initializer_struct_initializer_list;
-%nterm <JLang::frontend::alt_imp::GlobalInitializer::owned_ptr> global_initializer;
-%nterm <JLang::frontend::alt_imp::StructInitializerList::owned_ptr> opt_struct_initializer_list;
-%nterm <JLang::frontend::alt_imp::StructInitializerList::owned_ptr> struct_initializer_list;
-%nterm <JLang::frontend::alt_imp::StructInitializer::owned_ptr> struct_initializer;
+%nterm <JLang::frontend::GlobalInitializerExpressionPrimary::owned_ptr> global_initializer_expression_primary;
+%nterm <JLang::frontend::GlobalInitializerAddressofExpressionPrimary::owned_ptr> global_initializer_addressof_expression_primary;
+%nterm <JLang::frontend::GlobalInitializerStructInitializerList::owned_ptr> global_initializer_struct_initializer_list;
+%nterm <JLang::frontend::GlobalInitializer::owned_ptr> global_initializer;
+%nterm <JLang::frontend::StructInitializerList::owned_ptr> opt_struct_initializer_list;
+%nterm <JLang::frontend::StructInitializerList::owned_ptr> struct_initializer_list;
+%nterm <JLang::frontend::StructInitializer::owned_ptr> struct_initializer;
 
-%nterm <JLang::frontend::alt_imp::AccessModifier::owned_ptr> opt_access_modifier;
-%nterm <JLang::frontend::alt_imp::Terminal::owned_ptr> access_modifier;
+%nterm <JLang::frontend::AccessModifier::owned_ptr> opt_access_modifier;
+%nterm <JLang::frontend::Terminal::owned_ptr> access_modifier;
 
-%nterm <JLang::frontend::alt_imp::ScopeBody::owned_ptr> scope_body;
-%nterm <JLang::frontend::alt_imp::StatementList::owned_ptr> statement_list;
-%nterm <JLang::frontend::alt_imp::Statement::owned_ptr> statement;
-%nterm <JLang::frontend::alt_imp::StatementVariableDeclaration::owned_ptr> statement_variable_declaration;
-%nterm <JLang::frontend::alt_imp::StatementBlock::owned_ptr> statement_block;
-%nterm <JLang::frontend::alt_imp::StatementExpression::owned_ptr> statement_expression;
-%nterm <JLang::frontend::alt_imp::StatementIfElse::owned_ptr> statement_ifelse;
-%nterm <JLang::frontend::alt_imp::StatementWhile::owned_ptr> statement_while;
-%nterm <JLang::frontend::alt_imp::StatementFor::owned_ptr> statement_for;
-%nterm <JLang::frontend::alt_imp::StatementSwitch::owned_ptr> statement_switch;
-%nterm <JLang::frontend::alt_imp::StatementLabel::owned_ptr> statement_label;
-%nterm <JLang::frontend::alt_imp::StatementGoto::owned_ptr> statement_goto;
-%nterm <JLang::frontend::alt_imp::StatementBreak::owned_ptr> statement_break;
-%nterm <JLang::frontend::alt_imp::StatementContinue::owned_ptr> statement_continue;
-%nterm <JLang::frontend::alt_imp::StatementReturn::owned_ptr> statement_return;
+%nterm <JLang::frontend::ScopeBody::owned_ptr> scope_body;
+%nterm <JLang::frontend::StatementList::owned_ptr> statement_list;
+%nterm <JLang::frontend::Statement::owned_ptr> statement;
+%nterm <JLang::frontend::StatementVariableDeclaration::owned_ptr> statement_variable_declaration;
+%nterm <JLang::frontend::StatementBlock::owned_ptr> statement_block;
+%nterm <JLang::frontend::StatementExpression::owned_ptr> statement_expression;
+%nterm <JLang::frontend::StatementIfElse::owned_ptr> statement_ifelse;
+%nterm <JLang::frontend::StatementWhile::owned_ptr> statement_while;
+%nterm <JLang::frontend::StatementFor::owned_ptr> statement_for;
+%nterm <JLang::frontend::StatementSwitch::owned_ptr> statement_switch;
+%nterm <JLang::frontend::StatementLabel::owned_ptr> statement_label;
+%nterm <JLang::frontend::StatementGoto::owned_ptr> statement_goto;
+%nterm <JLang::frontend::StatementBreak::owned_ptr> statement_break;
+%nterm <JLang::frontend::StatementContinue::owned_ptr> statement_continue;
+%nterm <JLang::frontend::StatementReturn::owned_ptr> statement_return;
 
-%nterm <JLang::frontend::alt_imp::StatementSwitchBlock::owned_ptr> statement_switch_block;
-%nterm <JLang::frontend::alt_imp::StatementSwitchContent::owned_ptr> statement_switch_content;
-%nterm <JLang::frontend::alt_imp::StatementSwitchContent::owned_ptr> opt_statement_switch_content;
+%nterm <JLang::frontend::StatementSwitchBlock::owned_ptr> statement_switch_block;
+%nterm <JLang::frontend::StatementSwitchContent::owned_ptr> statement_switch_content;
+%nterm <JLang::frontend::StatementSwitchContent::owned_ptr> opt_statement_switch_content;
 
-%nterm <JLang::frontend::alt_imp::FunctionDefinitionArgList::owned_ptr> opt_function_definition_arg_list;
-%nterm <JLang::frontend::alt_imp::FunctionDefinitionArgList::owned_ptr> function_definition_arg_list;
-%nterm <JLang::frontend::alt_imp::FunctionDefinitionArg::owned_ptr> function_definition_arg
+%nterm <JLang::frontend::FunctionDefinitionArgList::owned_ptr> opt_function_definition_arg_list;
+%nterm <JLang::frontend::FunctionDefinitionArgList::owned_ptr> function_definition_arg_list;
+%nterm <JLang::frontend::FunctionDefinitionArg::owned_ptr> function_definition_arg
 
-%nterm <JLang::frontend::alt_imp::ExpressionPrimary::owned_ptr> expression_primary;
-%nterm <JLang::frontend::alt_imp::ExpressionPrimaryNested::owned_ptr> expression_primary_nested;
-%nterm <JLang::frontend::alt_imp::ExpressionPrimaryIdentifier::owned_ptr> expression_primary_identifier;
-%nterm <JLang::frontend::alt_imp::ExpressionPrimaryLiteralInt::owned_ptr> expression_primary_literal_int;
-%nterm <JLang::frontend::alt_imp::ExpressionPrimaryLiteralChar::owned_ptr> expression_primary_literal_char;
-%nterm <JLang::frontend::alt_imp::ExpressionPrimaryLiteralString::owned_ptr> expression_primary_literal_string;
-%nterm <JLang::frontend::alt_imp::ExpressionPrimaryLiteralFloat::owned_ptr> expression_primary_literal_float;
+%nterm <JLang::frontend::ExpressionPrimary::owned_ptr> expression_primary;
+%nterm <JLang::frontend::ExpressionPrimaryNested::owned_ptr> expression_primary_nested;
+%nterm <JLang::frontend::ExpressionPrimaryIdentifier::owned_ptr> expression_primary_identifier;
+%nterm <JLang::frontend::ExpressionPrimaryLiteralInt::owned_ptr> expression_primary_literal_int;
+%nterm <JLang::frontend::ExpressionPrimaryLiteralChar::owned_ptr> expression_primary_literal_char;
+%nterm <JLang::frontend::ExpressionPrimaryLiteralString::owned_ptr> expression_primary_literal_string;
+%nterm <JLang::frontend::ExpressionPrimaryLiteralFloat::owned_ptr> expression_primary_literal_float;
 
-%nterm <JLang::frontend::alt_imp::Expression::owned_ptr> expression_postfix;
-%nterm <JLang::frontend::alt_imp::Expression::owned_ptr> expression_postfix_primary;
-%nterm <JLang::frontend::alt_imp::Expression::owned_ptr> expression_postfix_arrayindex;
-%nterm <JLang::frontend::alt_imp::Expression::owned_ptr> expression_postfix_function_call;
-%nterm <JLang::frontend::alt_imp::Expression::owned_ptr> expression_postfix_dot;
-%nterm <JLang::frontend::alt_imp::Expression::owned_ptr> expression_postfix_arrow;
-%nterm <JLang::frontend::alt_imp::Expression::owned_ptr> expression_postfix_increment;
-%nterm <JLang::frontend::alt_imp::Expression::owned_ptr> expression_postfix_decrement;
+%nterm <JLang::frontend::Expression::owned_ptr> expression_postfix;
+%nterm <JLang::frontend::Expression::owned_ptr> expression_postfix_primary;
+%nterm <JLang::frontend::Expression::owned_ptr> expression_postfix_arrayindex;
+%nterm <JLang::frontend::Expression::owned_ptr> expression_postfix_function_call;
+%nterm <JLang::frontend::Expression::owned_ptr> expression_postfix_dot;
+%nterm <JLang::frontend::Expression::owned_ptr> expression_postfix_arrow;
+%nterm <JLang::frontend::Expression::owned_ptr> expression_postfix_increment;
+%nterm <JLang::frontend::Expression::owned_ptr> expression_postfix_decrement;
 
-%nterm <JLang::frontend::alt_imp::Expression::owned_ptr> expression_unary;
-%nterm <JLang::frontend::alt_imp::Expression::owned_ptr> expression_unary_increment;
-%nterm <JLang::frontend::alt_imp::Expression::owned_ptr> expression_unary_decrement;
-%nterm <JLang::frontend::alt_imp::Expression::owned_ptr> expression_unary_prefix;
-%nterm <JLang::frontend::alt_imp::Expression::owned_ptr> expression_unary_sizeof_type;
+%nterm <JLang::frontend::Expression::owned_ptr> expression_unary;
+%nterm <JLang::frontend::Expression::owned_ptr> expression_unary_increment;
+%nterm <JLang::frontend::Expression::owned_ptr> expression_unary_decrement;
+%nterm <JLang::frontend::Expression::owned_ptr> expression_unary_prefix;
+%nterm <JLang::frontend::Expression::owned_ptr> expression_unary_sizeof_type;
 
-%nterm <JLang::frontend::alt_imp::Expression::owned_ptr> expression_cast;
-%nterm <JLang::frontend::alt_imp::Expression::owned_ptr> expression_cast_unary;
-%nterm <JLang::frontend::alt_imp::Expression::owned_ptr> expression_cast_cast;
+%nterm <JLang::frontend::Expression::owned_ptr> expression_cast;
+%nterm <JLang::frontend::Expression::owned_ptr> expression_cast_unary;
+%nterm <JLang::frontend::Expression::owned_ptr> expression_cast_cast;
 
-%nterm <JLang::frontend::alt_imp::Expression::owned_ptr> expression_multiplicative;
-%nterm <JLang::frontend::alt_imp::Expression::owned_ptr> expression_multiplicative_cast;
-%nterm <JLang::frontend::alt_imp::Expression::owned_ptr> expression_multiplicative_multiply;
-%nterm <JLang::frontend::alt_imp::Expression::owned_ptr> expression_multiplicative_divide;
-%nterm <JLang::frontend::alt_imp::Expression::owned_ptr> expression_multiplicative_modulo;
+%nterm <JLang::frontend::Expression::owned_ptr> expression_multiplicative;
+%nterm <JLang::frontend::Expression::owned_ptr> expression_multiplicative_cast;
+%nterm <JLang::frontend::Expression::owned_ptr> expression_multiplicative_multiply;
+%nterm <JLang::frontend::Expression::owned_ptr> expression_multiplicative_divide;
+%nterm <JLang::frontend::Expression::owned_ptr> expression_multiplicative_modulo;
 
-%nterm <JLang::frontend::alt_imp::Expression::owned_ptr> expression_additive;
-%nterm <JLang::frontend::alt_imp::Expression::owned_ptr> expression_additive_multiplicative;
-%nterm <JLang::frontend::alt_imp::Expression::owned_ptr> expression_additive_plus;
-%nterm <JLang::frontend::alt_imp::Expression::owned_ptr> expression_additive_minus;
+%nterm <JLang::frontend::Expression::owned_ptr> expression_additive;
+%nterm <JLang::frontend::Expression::owned_ptr> expression_additive_multiplicative;
+%nterm <JLang::frontend::Expression::owned_ptr> expression_additive_plus;
+%nterm <JLang::frontend::Expression::owned_ptr> expression_additive_minus;
 
-%nterm <JLang::frontend::alt_imp::Expression::owned_ptr> expression_shift;
-%nterm <JLang::frontend::alt_imp::Expression::owned_ptr> expression_shift_additive;
-%nterm <JLang::frontend::alt_imp::Expression::owned_ptr> expression_shift_left;
-%nterm <JLang::frontend::alt_imp::Expression::owned_ptr> expression_shift_right;
+%nterm <JLang::frontend::Expression::owned_ptr> expression_shift;
+%nterm <JLang::frontend::Expression::owned_ptr> expression_shift_additive;
+%nterm <JLang::frontend::Expression::owned_ptr> expression_shift_left;
+%nterm <JLang::frontend::Expression::owned_ptr> expression_shift_right;
 
-%nterm <JLang::frontend::alt_imp::Expression::owned_ptr> expression_relational;
-%nterm <JLang::frontend::alt_imp::Expression::owned_ptr> expression_relational_shift;
-%nterm <JLang::frontend::alt_imp::Expression::owned_ptr> expression_relational_gt;
-%nterm <JLang::frontend::alt_imp::Expression::owned_ptr> expression_relational_lt;
-%nterm <JLang::frontend::alt_imp::Expression::owned_ptr> expression_relational_le;
-%nterm <JLang::frontend::alt_imp::Expression::owned_ptr> expression_relational_ge;
+%nterm <JLang::frontend::Expression::owned_ptr> expression_relational;
+%nterm <JLang::frontend::Expression::owned_ptr> expression_relational_shift;
+%nterm <JLang::frontend::Expression::owned_ptr> expression_relational_gt;
+%nterm <JLang::frontend::Expression::owned_ptr> expression_relational_lt;
+%nterm <JLang::frontend::Expression::owned_ptr> expression_relational_le;
+%nterm <JLang::frontend::Expression::owned_ptr> expression_relational_ge;
 
-%nterm <JLang::frontend::alt_imp::Expression::owned_ptr> expression_equality;
-%nterm <JLang::frontend::alt_imp::Expression::owned_ptr> expression_and;
-%nterm <JLang::frontend::alt_imp::Expression::owned_ptr> expression_exclusive_or;
-%nterm <JLang::frontend::alt_imp::Expression::owned_ptr> expression_inclusive_or;
-%nterm <JLang::frontend::alt_imp::Expression::owned_ptr> expression_logical_and;
-%nterm <JLang::frontend::alt_imp::Expression::owned_ptr> expression_logical_or;
+%nterm <JLang::frontend::Expression::owned_ptr> expression_equality;
+%nterm <JLang::frontend::Expression::owned_ptr> expression_and;
+%nterm <JLang::frontend::Expression::owned_ptr> expression_exclusive_or;
+%nterm <JLang::frontend::Expression::owned_ptr> expression_inclusive_or;
+%nterm <JLang::frontend::Expression::owned_ptr> expression_logical_and;
+%nterm <JLang::frontend::Expression::owned_ptr> expression_logical_or;
 
-%nterm <JLang::frontend::alt_imp::Expression::owned_ptr> expression_conditional;
-%nterm <JLang::frontend::alt_imp::Expression::owned_ptr> expression_assignment;
+%nterm <JLang::frontend::Expression::owned_ptr> expression_conditional;
+%nterm <JLang::frontend::Expression::owned_ptr> expression_assignment;
 
-%nterm <JLang::frontend::alt_imp::TypeSpecifier::owned_ptr> type_specifier;
-%nterm <JLang::frontend::alt_imp::TypeSpecifierCallArgs::owned_ptr> type_specifier_call_args;
-%nterm <JLang::frontend::alt_imp::TypeName::owned_ptr> type_name;
-%nterm <JLang::frontend::alt_imp::AccessQualifier::owned_ptr> type_access_qualifier;
-%nterm <JLang::frontend::alt_imp::ArrayLength::owned_ptr> opt_array_length;
+%nterm <JLang::frontend::TypeSpecifier::owned_ptr> type_specifier;
+%nterm <JLang::frontend::TypeSpecifierCallArgs::owned_ptr> type_specifier_call_args;
+%nterm <JLang::frontend::TypeName::owned_ptr> type_name;
+%nterm <JLang::frontend::AccessQualifier::owned_ptr> type_access_qualifier;
+%nterm <JLang::frontend::ArrayLength::owned_ptr> opt_array_length;
 
-%nterm <JLang::frontend::alt_imp::ClassMemberDeclarationList::owned_ptr> opt_class_member_declaration_list;
-%nterm <JLang::frontend::alt_imp::ClassMemberDeclarationList::owned_ptr> class_member_declaration_list;
-%nterm <JLang::frontend::alt_imp::ClassMemberDeclaration::owned_ptr> class_member_declaration;
+%nterm <JLang::frontend::ClassMemberDeclarationList::owned_ptr> opt_class_member_declaration_list;
+%nterm <JLang::frontend::ClassMemberDeclarationList::owned_ptr> class_member_declaration_list;
+%nterm <JLang::frontend::ClassMemberDeclaration::owned_ptr> class_member_declaration;
 
-%nterm <JLang::frontend::alt_imp::Terminal::owned_ptr> operator_unary;
-%nterm <JLang::frontend::alt_imp::Terminal::owned_ptr> operator_assignment;
+%nterm <JLang::frontend::Terminal::owned_ptr> operator_unary;
+%nterm <JLang::frontend::Terminal::owned_ptr> operator_assignment;
 
-%nterm <JLang::frontend::alt_imp::ArgumentExpressionList::owned_ptr> opt_argument_expression_list;
-%nterm <JLang::frontend::alt_imp::ArgumentExpressionList::owned_ptr> argument_expression_list;
+%nterm <JLang::frontend::ArgumentExpressionList::owned_ptr> opt_argument_expression_list;
+%nterm <JLang::frontend::ArgumentExpressionList::owned_ptr> argument_expression_list;
 
-%nterm <JLang::frontend::alt_imp::Expression::owned_ptr> expression;
+%nterm <JLang::frontend::Expression::owned_ptr> expression;
 
 %parse-param {JLang::frontend::return_data_t *return_data}
 
@@ -296,7 +296,7 @@ int visibility_from_modifier(JLang::frontend::alt_imp::AccessModifier::AccessMod
 /*** Rules Section ***/
 translation_unit
         : opt_file_statement_list YYEOF {
-          $$ = std::make_unique<JLang::frontend::alt_imp::TranslationUnit>(std::move($1), std::move($2));
+          $$ = std::make_unique<JLang::frontend::TranslationUnit>(std::move($1), std::move($2));
           PRINT_NONTERMINALS($$);
           return_data->translation_unit = std::move($$);
         }
@@ -304,7 +304,7 @@ translation_unit
 
 opt_file_statement_list 
         : /**/ YYEOF {
-          $$ = std::make_unique<JLang::frontend::alt_imp::FileStatementList>(std::move($1));
+          $$ = std::make_unique<JLang::frontend::FileStatementList>(std::move($1));
           PRINT_NONTERMINALS($$);
         }
         | file_statement_list {
@@ -315,7 +315,7 @@ opt_file_statement_list
 
 file_statement_list 
         : file_statement {
-          $$ = std::make_unique<JLang::frontend::alt_imp::FileStatementList>();
+          $$ = std::make_unique<JLang::frontend::FileStatementList>();
           $$->add_statement(std::move($1));
           PRINT_NONTERMINALS($$);
         }
@@ -329,7 +329,7 @@ file_statement_list
 file_statement
         : file_statement_function_definition {
                 auto sn = $1->get_syntax_node();
-                $$ = std::make_unique<JLang::frontend::alt_imp::FileStatement>(
+                $$ = std::make_unique<JLang::frontend::FileStatement>(
                                                                                std::move($1),
                                                                                sn
                                                                                );
@@ -337,7 +337,7 @@ file_statement
         }
         | file_statement_function_declaration {
                 auto sn = $1->get_syntax_node();
-                $$ = std::make_unique<JLang::frontend::alt_imp::FileStatement>(
+                $$ = std::make_unique<JLang::frontend::FileStatement>(
                                                                                std::move($1),
                                                                                sn
                                                                                );
@@ -345,7 +345,7 @@ file_statement
         }
         | file_statement_global_definition {
                 auto sn = $1->get_syntax_node();
-                $$ = std::make_unique<JLang::frontend::alt_imp::FileStatement>(
+                $$ = std::make_unique<JLang::frontend::FileStatement>(
                                                                                std::move($1),
                                                                                sn
                                                                                );
@@ -353,7 +353,7 @@ file_statement
         }
         | class_definition {
                 auto sn = $1->get_syntax_node();
-                $$ = std::make_unique<JLang::frontend::alt_imp::FileStatement>(
+                $$ = std::make_unique<JLang::frontend::FileStatement>(
                                                                                std::move($1),
                                                                                sn
                                                                                );
@@ -361,7 +361,7 @@ file_statement
         }
         | enum_definition {
                 auto sn = $1->get_syntax_node();
-                $$ = std::make_unique<JLang::frontend::alt_imp::FileStatement>(
+                $$ = std::make_unique<JLang::frontend::FileStatement>(
                                                                                std::move($1),
                                                                                sn
                                                                                );
@@ -369,7 +369,7 @@ file_statement
         }
         | type_definition {
                 auto sn = $1->get_syntax_node();
-                $$ = std::make_unique<JLang::frontend::alt_imp::FileStatement>(
+                $$ = std::make_unique<JLang::frontend::FileStatement>(
                                                                                std::move($1),
                                                                                sn
                                                                                );
@@ -377,7 +377,7 @@ file_statement
         }
         | file_statement_namespace {
                 auto sn = $1->get_syntax_node();
-                $$ = std::make_unique<JLang::frontend::alt_imp::FileStatement>(
+                $$ = std::make_unique<JLang::frontend::FileStatement>(
                                                                                std::move($1),
                                                                                sn
                                                                                );
@@ -385,7 +385,7 @@ file_statement
         }
         | file_statement_using {
                 auto sn = $1->get_syntax_node();
-                $$ = std::make_unique<JLang::frontend::alt_imp::FileStatement>(
+                $$ = std::make_unique<JLang::frontend::FileStatement>(
                                                                                std::move($1),
                                                                                sn
                                                                                );
@@ -395,7 +395,7 @@ file_statement
 
 file_statement_global_definition
         : opt_access_modifier opt_unsafe type_specifier IDENTIFIER opt_array_length opt_global_initializer SEMICOLON {
-          $$ = std::make_unique<JLang::frontend::alt_imp::FileStatementGlobalDefinition>(
+          $$ = std::make_unique<JLang::frontend::FileStatementGlobalDefinition>(
                                                                                          std::move($1),
                                                                                          std::move($2),
                                                                                          std::move($3),
@@ -410,7 +410,7 @@ file_statement_global_definition
 
 opt_global_initializer
         : /**/ {
-                $$ = std::make_unique<JLang::frontend::alt_imp::GlobalInitializer>();
+                $$ = std::make_unique<JLang::frontend::GlobalInitializer>();
                 PRINT_NONTERMINALS($$);
         }
         | global_initializer {
@@ -422,21 +422,21 @@ opt_global_initializer
 global_initializer
         : global_initializer_expression_primary {
                 auto sn = $1->get_syntax_node();
-                $$ = std::make_unique<JLang::frontend::alt_imp::GlobalInitializer>(std::move($1), sn);
+                $$ = std::make_unique<JLang::frontend::GlobalInitializer>(std::move($1), sn);
         }
         | global_initializer_addressof_expression_primary {
                 auto sn = $1->get_syntax_node();
-                $$ = std::make_unique<JLang::frontend::alt_imp::GlobalInitializer>(std::move($1), sn);
+                $$ = std::make_unique<JLang::frontend::GlobalInitializer>(std::move($1), sn);
         }
         | global_initializer_struct_initializer_list {
                 auto sn = $1->get_syntax_node();
-                $$ = std::make_unique<JLang::frontend::alt_imp::GlobalInitializer>(std::move($1), sn);
+                $$ = std::make_unique<JLang::frontend::GlobalInitializer>(std::move($1), sn);
         }
         ;
 
 global_initializer_expression_primary
         : EQUALS expression_primary {
-          $$ = std::make_unique<JLang::frontend::alt_imp::GlobalInitializerExpressionPrimary>(std::move($1),
+          $$ = std::make_unique<JLang::frontend::GlobalInitializerExpressionPrimary>(std::move($1),
                                                                                               std::move($2));
           PRINT_NONTERMINALS($$);
         }
@@ -444,7 +444,7 @@ global_initializer_expression_primary
 
 global_initializer_addressof_expression_primary
         : EQUALS ANDPERSAND expression_primary {
-          $$ = std::make_unique<JLang::frontend::alt_imp::GlobalInitializerAddressofExpressionPrimary>(std::move($1),
+          $$ = std::make_unique<JLang::frontend::GlobalInitializerAddressofExpressionPrimary>(std::move($1),
                                                                                                        std::move($2),
                                                                                                        std::move($3)
                                                                                                        );
@@ -454,7 +454,7 @@ global_initializer_addressof_expression_primary
 
 global_initializer_struct_initializer_list
         : EQUALS BRACE_L opt_struct_initializer_list BRACE_R {
-          $$ = std::make_unique<JLang::frontend::alt_imp::GlobalInitializerStructInitializerList>(std::move($1),
+          $$ = std::make_unique<JLang::frontend::GlobalInitializerStructInitializerList>(std::move($1),
                                                                                                   std::move($2),
                                                                                                   std::move($3),
                                                                                                   std::move($4)
@@ -466,7 +466,7 @@ global_initializer_struct_initializer_list
 
 opt_struct_initializer_list
         : /**/ {
-                $$ = std::make_unique<JLang::frontend::alt_imp::StructInitializerList>();
+                $$ = std::make_unique<JLang::frontend::StructInitializerList>();
                 PRINT_NONTERMINALS($$);
         }
         | struct_initializer_list {
@@ -477,7 +477,7 @@ opt_struct_initializer_list
 
 struct_initializer_list
         : struct_initializer {
-                $$ = std::make_unique<JLang::frontend::alt_imp::StructInitializerList>();
+                $$ = std::make_unique<JLang::frontend::StructInitializerList>();
                 $$->add_initializer(std::move($1));
                 PRINT_NONTERMINALS($$);
         }
@@ -490,7 +490,7 @@ struct_initializer_list
 
 struct_initializer
         : DOT IDENTIFIER global_initializer SEMICOLON {
-                $$ = std::make_unique<JLang::frontend::alt_imp::StructInitializer>(
+                $$ = std::make_unique<JLang::frontend::StructInitializer>(
                                                                                    std::move($1),
                                                                                    std::move($2),
                                                                                    std::move($3),
@@ -502,14 +502,14 @@ struct_initializer
 
 opt_access_modifier
         : /**/ {
-                $$ = std::make_unique<JLang::frontend::alt_imp::AccessModifier>(
-                                                                                JLang::frontend::alt_imp::AccessModifier::AccessModifierType::PUBLIC);
+                $$ = std::make_unique<JLang::frontend::AccessModifier>(
+                                                                                JLang::frontend::AccessModifier::AccessModifierType::PUBLIC);
                 PRINT_NONTERMINALS($$);
         }
         | access_modifier {
-                $$ = std::make_unique<JLang::frontend::alt_imp::AccessModifier>(
+                $$ = std::make_unique<JLang::frontend::AccessModifier>(
                                                                                 std::move($1),
-                                                                                JLang::frontend::alt_imp::AccessModifier::AccessModifierType::PUBLIC
+                                                                                JLang::frontend::AccessModifier::AccessModifierType::PUBLIC
                                                                                 );
                 PRINT_NONTERMINALS($$);
         }
@@ -532,9 +532,9 @@ access_modifier
 
 namespace_declaration
         : opt_access_modifier NAMESPACE IDENTIFIER {
-                JLang::frontend::alt_imp::AccessModifier::AccessModifierType access_modifier = $1->get_type();
+                JLang::frontend::AccessModifier::AccessModifierType access_modifier = $1->get_type();
                 std::string namespace_name = $3->value;
-                $$ = std::make_unique<JLang::frontend::alt_imp::NamespaceDeclaration>(
+                $$ = std::make_unique<JLang::frontend::NamespaceDeclaration>(
                                                                                       std::move($1),
                                                                                       std::move($2),
                                                                                       std::move($3)
@@ -547,7 +547,7 @@ namespace_declaration
 
 file_statement_namespace
         : namespace_declaration BRACE_L opt_file_statement_list BRACE_R SEMICOLON {
-                $$ = std::make_unique<JLang::frontend::alt_imp::FileStatementNamespace>(
+                $$ = std::make_unique<JLang::frontend::FileStatementNamespace>(
                                                                                         std::move($1),
                                                                                         std::move($2),
                                                                                         std::move($3),
@@ -561,11 +561,11 @@ file_statement_namespace
 
 opt_as
         : /**/ {
-                $$ = std::make_unique<JLang::frontend::alt_imp::UsingAs>();
+                $$ = std::make_unique<JLang::frontend::UsingAs>();
                 PRINT_NONTERMINALS($$);
         }
         | AS IDENTIFIER {
-                $$ = std::make_unique<JLang::frontend::alt_imp::UsingAs>(
+                $$ = std::make_unique<JLang::frontend::UsingAs>(
                                                                 std::move($1),
                                                                 std::move($2)
                                                                 );
@@ -577,7 +577,7 @@ file_statement_using
         : opt_access_modifier USING NAMESPACE NAMESPACE_NAME opt_as SEMICOLON {
                 std::string namespace_name = $4->value;
                 std::string as_name = $5->get_using_name();
-                $$ = std::make_unique<JLang::frontend::alt_imp::FileStatementUsing>(
+                $$ = std::make_unique<JLang::frontend::FileStatementUsing>(
                                                                                     std::move($1),
                                                                                     std::move($2),
                                                                                     std::move($3),
@@ -601,7 +601,7 @@ file_statement_using
         | opt_access_modifier USING NAMESPACE TYPE_NAME opt_as SEMICOLON {
                 std::string namespace_name = $4->value;
                 std::string as_name = $5->get_using_name();
-                $$ = std::make_unique<JLang::frontend::alt_imp::FileStatementUsing>(
+                $$ = std::make_unique<JLang::frontend::FileStatementUsing>(
                                                                                     std::move($1),
                                                                                     std::move($2),
                                                                                     std::move($3),
@@ -627,8 +627,8 @@ file_statement_using
 class_decl_start
         : opt_access_modifier CLASS IDENTIFIER opt_class_argument_list {
                 std::string class_name = $3->value;
-                JLang::frontend::alt_imp::AccessModifier::AccessModifierType visibility_modifier = $1->get_type();
-                $$ = std::make_unique<JLang::frontend::alt_imp::ClassDeclStart>(
+                JLang::frontend::AccessModifier::AccessModifierType visibility_modifier = $1->get_type();
+                $$ = std::make_unique<JLang::frontend::ClassDeclStart>(
                                                                          std::move($1),
                                                                          std::move($2),
                                                                          std::move($3),
@@ -656,7 +656,7 @@ class_decl_start
 
 opt_class_argument_list
         : /**/ {
-                $$ = std::make_unique<JLang::frontend::alt_imp::ClassArgumentList>();
+                $$ = std::make_unique<JLang::frontend::ClassArgumentList>();
                 PRINT_NONTERMINALS($$);
         }
         | PAREN_L class_argument_list PAREN_R {
@@ -672,7 +672,7 @@ opt_class_argument_list
 // types scoped private in the class.
 class_argument_list
         : IDENTIFIER {
-                $$ = std::make_unique<JLang::frontend::alt_imp::ClassArgumentList>(
+                $$ = std::make_unique<JLang::frontend::ClassArgumentList>(
                                                                                   std::move($1)
                                                                                   );
                 PRINT_NONTERMINALS($$);
@@ -686,7 +686,7 @@ class_argument_list
 
 class_definition
         : class_decl_start BRACE_L opt_class_member_declaration_list BRACE_R SEMICOLON {
-                $$ = std::make_unique<JLang::frontend::alt_imp::ClassDefinition>(
+                $$ = std::make_unique<JLang::frontend::ClassDefinition>(
                                                                                  std::move($1),
                                                                                  std::move($2),
                                                                                  std::move($3),
@@ -700,9 +700,9 @@ class_definition
 
 type_definition
         : opt_access_modifier TYPEDEF type_specifier IDENTIFIER SEMICOLON {
-                JLang::frontend::alt_imp::AccessModifier::AccessModifierType visibility_modifier = $1->get_type();
+                JLang::frontend::AccessModifier::AccessModifierType visibility_modifier = $1->get_type();
                 std::string type_name = $4->value;
-                $$ = std::make_unique<JLang::frontend::alt_imp::TypeDefinition>(
+                $$ = std::make_unique<JLang::frontend::TypeDefinition>(
                                                                                std::move($1),
                                                                                std::move($2),
                                                                                std::move($3),
@@ -716,9 +716,9 @@ type_definition
 
 enum_definition
         : opt_access_modifier ENUM TYPE_NAME IDENTIFIER BRACE_L opt_enum_value_list BRACE_R SEMICOLON {
-                JLang::frontend::alt_imp::AccessModifier::AccessModifierType visibility_modifier = $1->get_type();
+                JLang::frontend::AccessModifier::AccessModifierType visibility_modifier = $1->get_type();
                 std::string type_name = $4->value;
-                $$ = std::make_unique<JLang::frontend::alt_imp::EnumDefinition>(
+                $$ = std::make_unique<JLang::frontend::EnumDefinition>(
                                                                                 std::move($1),
                                                                                 std::move($2),
                                                                                 std::move($3),
@@ -735,7 +735,7 @@ enum_definition
 
 opt_enum_value_list
         : /**/ {
-                $$ = std::make_unique<JLang::frontend::alt_imp::EnumDefinitionValueList>();
+                $$ = std::make_unique<JLang::frontend::EnumDefinitionValueList>();
                 PRINT_NONTERMINALS($$);
         }
         | enum_value_list {
@@ -746,7 +746,7 @@ opt_enum_value_list
 
 enum_value_list
         : enum_value {
-                $$ = std::make_unique<JLang::frontend::alt_imp::EnumDefinitionValueList>();
+                $$ = std::make_unique<JLang::frontend::EnumDefinitionValueList>();
                 $$->add_value(std::move($1));
                 PRINT_NONTERMINALS($$);
         }
@@ -759,7 +759,7 @@ enum_value_list
 
 enum_value
         : IDENTIFIER EQUALS expression_primary SEMICOLON {
-                $$ = std::make_unique<JLang::frontend::alt_imp::EnumDefinitionValue>(
+                $$ = std::make_unique<JLang::frontend::EnumDefinitionValue>(
                                                                                     std::move($1),
                                                                                     std::move($2),
                                                                                     std::move($3),
@@ -771,18 +771,18 @@ enum_value
   
 opt_unsafe
         : /**/ {
-                $$ = std::make_unique<JLang::frontend::alt_imp::UnsafeModifier>();
+                $$ = std::make_unique<JLang::frontend::UnsafeModifier>();
                 PRINT_NONTERMINALS($$);
         }
         | UNSAFE {
-                $$ = std::make_unique<JLang::frontend::alt_imp::UnsafeModifier>(std::move($1));
+                $$ = std::make_unique<JLang::frontend::UnsafeModifier>(std::move($1));
                 PRINT_NONTERMINALS($$);
         }
         ;
 
 file_statement_function_declaration
         : opt_access_modifier opt_unsafe type_specifier IDENTIFIER PAREN_L opt_function_definition_arg_list PAREN_R SEMICOLON {
-                $$ = std::make_unique<JLang::frontend::alt_imp::FileStatementFunctionDeclaration>(
+                $$ = std::make_unique<JLang::frontend::FileStatementFunctionDeclaration>(
                                                                                                  std::move($1),
                                                                                                  std::move($2),
                                                                                                  std::move($3),
@@ -798,7 +798,7 @@ file_statement_function_declaration
 
 file_statement_function_definition
         : opt_access_modifier opt_unsafe type_specifier IDENTIFIER PAREN_L opt_function_definition_arg_list PAREN_R scope_body {
-                $$ = std::make_unique<JLang::frontend::alt_imp::FileStatementFunctionDefinition>(
+                $$ = std::make_unique<JLang::frontend::FileStatementFunctionDefinition>(
                                                                                                 std::move($1),
                                                                                                 std::move($2),
                                                                                                 std::move($3),
@@ -814,7 +814,7 @@ file_statement_function_definition
 
 opt_function_definition_arg_list
         : /**/ {
-                $$ = std::make_unique<JLang::frontend::alt_imp::FunctionDefinitionArgList>();
+                $$ = std::make_unique<JLang::frontend::FunctionDefinitionArgList>();
                 PRINT_NONTERMINALS($$);
         }
         | function_definition_arg_list {
@@ -825,7 +825,7 @@ opt_function_definition_arg_list
 
 function_definition_arg_list
         : function_definition_arg {
-                $$ = std::make_unique<JLang::frontend::alt_imp::FunctionDefinitionArgList>();
+                $$ = std::make_unique<JLang::frontend::FunctionDefinitionArgList>();
                 $$->add_argument(std::move($1));
                 PRINT_NONTERMINALS($$);
         }
@@ -838,7 +838,7 @@ function_definition_arg_list
         ;
 function_definition_arg
         : type_specifier IDENTIFIER {
-                $$ = std::make_unique<JLang::frontend::alt_imp::FunctionDefinitionArg>(
+                $$ = std::make_unique<JLang::frontend::FunctionDefinitionArg>(
                                                                                        std::move($1),
                                                                                        std::move($2)
                                                                                        );
@@ -848,7 +848,7 @@ function_definition_arg
 
 scope_body
         : BRACE_L statement_list BRACE_R {
-                $$ = std::make_unique<JLang::frontend::alt_imp::ScopeBody>(
+                $$ = std::make_unique<JLang::frontend::ScopeBody>(
                                                                            std::move($1),
                                                                            std::move($2),
                                                                            std::move($3)
@@ -859,7 +859,7 @@ scope_body
 
 statement_list
         : /**/ {
-                $$ = std::make_unique<JLang::frontend::alt_imp::StatementList>();
+                $$ = std::make_unique<JLang::frontend::StatementList>();
                 PRINT_NONTERMINALS($$);
         }
         | statement_list statement {
@@ -871,62 +871,62 @@ statement_list
 
 statement
         : statement_variable_declaration {
-                $$ = std::make_unique<JLang::frontend::alt_imp::Statement>(std::move($1));
+                $$ = std::make_unique<JLang::frontend::Statement>(std::move($1));
                 PRINT_NONTERMINALS($$);
         }
         | statement_block {
-                $$ = std::make_unique<JLang::frontend::alt_imp::Statement>(std::move($1));
+                $$ = std::make_unique<JLang::frontend::Statement>(std::move($1));
                 PRINT_NONTERMINALS($$);
         }
         | statement_expression {
-                $$ = std::make_unique<JLang::frontend::alt_imp::Statement>(std::move($1));
+                $$ = std::make_unique<JLang::frontend::Statement>(std::move($1));
                 PRINT_NONTERMINALS($$);
         }
         | statement_ifelse {
-                $$ = std::make_unique<JLang::frontend::alt_imp::Statement>(std::move($1));
+                $$ = std::make_unique<JLang::frontend::Statement>(std::move($1));
                 PRINT_NONTERMINALS($$);
         }
         | statement_while {
-                $$ = std::make_unique<JLang::frontend::alt_imp::Statement>(std::move($1));
+                $$ = std::make_unique<JLang::frontend::Statement>(std::move($1));
                 PRINT_NONTERMINALS($$);
         }
         | statement_for {
-                $$ = std::make_unique<JLang::frontend::alt_imp::Statement>(std::move($1));
+                $$ = std::make_unique<JLang::frontend::Statement>(std::move($1));
                 PRINT_NONTERMINALS($$);
         }
         | statement_switch {
-                $$ = std::make_unique<JLang::frontend::alt_imp::Statement>(std::move($1));
+                $$ = std::make_unique<JLang::frontend::Statement>(std::move($1));
                 PRINT_NONTERMINALS($$);
         }
         | statement_label {
-                $$ = std::make_unique<JLang::frontend::alt_imp::Statement>(std::move($1));
+                $$ = std::make_unique<JLang::frontend::Statement>(std::move($1));
                 PRINT_NONTERMINALS($$);
         }
         | statement_goto {
-                $$ = std::make_unique<JLang::frontend::alt_imp::Statement>(std::move($1));
+                $$ = std::make_unique<JLang::frontend::Statement>(std::move($1));
                 PRINT_NONTERMINALS($$);
         }
         | statement_break {
-                $$ = std::make_unique<JLang::frontend::alt_imp::Statement>(std::move($1));
+                $$ = std::make_unique<JLang::frontend::Statement>(std::move($1));
                 PRINT_NONTERMINALS($$);
         }
         | statement_continue {
-                $$ = std::make_unique<JLang::frontend::alt_imp::Statement>(std::move($1));
+                $$ = std::make_unique<JLang::frontend::Statement>(std::move($1));
                 PRINT_NONTERMINALS($$);
         }
         | statement_return {
-                $$ = std::make_unique<JLang::frontend::alt_imp::Statement>(std::move($1));
+                $$ = std::make_unique<JLang::frontend::Statement>(std::move($1));
                 PRINT_NONTERMINALS($$);
         }
         ;
 
 opt_array_length
         : /**/ {
-                $$ = std::make_unique<JLang::frontend::alt_imp::ArrayLength>();
+                $$ = std::make_unique<JLang::frontend::ArrayLength>();
                 PRINT_NONTERMINALS($$);
         }
         | BRACKET_L LITERAL_INT BRACKET_R {
-                $$ = std::make_unique<JLang::frontend::alt_imp::ArrayLength>(
+                $$ = std::make_unique<JLang::frontend::ArrayLength>(
                                                                              std::move($1),
                                                                              std::move($2),
                                                                              std::move($3)
@@ -937,7 +937,7 @@ opt_array_length
 
 statement_variable_declaration
         : type_specifier IDENTIFIER opt_array_length opt_global_initializer SEMICOLON {
-                $$ = std::make_unique<JLang::frontend::alt_imp::StatementVariableDeclaration>(
+                $$ = std::make_unique<JLang::frontend::StatementVariableDeclaration>(
                                                                                               std::move($1),
                                                                                               std::move($2),
                                                                                               std::move($3),
@@ -950,7 +950,7 @@ statement_variable_declaration
 
 statement_block
         : opt_unsafe scope_body {
-                $$ = std::make_unique<JLang::frontend::alt_imp::StatementBlock>(
+                $$ = std::make_unique<JLang::frontend::StatementBlock>(
                                                                                 std::move($1),
                                                                                 std::move($2)
                                                                                 );
@@ -960,7 +960,7 @@ statement_block
 
 statement_expression
         : expression SEMICOLON {
-                $$ = std::make_unique<JLang::frontend::alt_imp::StatementExpression>(
+                $$ = std::make_unique<JLang::frontend::StatementExpression>(
                                                                                 std::move($1),
                                                                                 std::move($2)
                                                                                 );
@@ -969,7 +969,7 @@ statement_expression
         ;
 statement_goto
         : GOTO IDENTIFIER SEMICOLON {
-                $$ = std::make_unique<JLang::frontend::alt_imp::StatementGoto>(
+                $$ = std::make_unique<JLang::frontend::StatementGoto>(
                                                                                std::move($1),
                                                                                std::move($2),
                                                                                std::move($3)
@@ -979,7 +979,7 @@ statement_goto
         ;
 statement_break
         : BREAK SEMICOLON {
-                $$ = std::make_unique<JLang::frontend::alt_imp::StatementBreak>(
+                $$ = std::make_unique<JLang::frontend::StatementBreak>(
                                                                                 std::move($1),
                                                                                 std::move($2)
                                                                                 );
@@ -988,7 +988,7 @@ statement_break
         ;
 statement_continue
         : CONTINUE SEMICOLON {
-                $$ = std::make_unique<JLang::frontend::alt_imp::StatementContinue>(
+                $$ = std::make_unique<JLang::frontend::StatementContinue>(
                                                                                 std::move($1),
                                                                                 std::move($2)
                                                                                 );
@@ -997,7 +997,7 @@ statement_continue
         ;
 statement_label
         : LABEL IDENTIFIER COLON {
-                $$ = std::make_unique<JLang::frontend::alt_imp::StatementLabel>(
+                $$ = std::make_unique<JLang::frontend::StatementLabel>(
                                                                                 std::move($1),
                                                                                 std::move($2),
                                                                                 std::move($3)
@@ -1008,7 +1008,7 @@ statement_label
 
 statement_return
         : RETURN expression SEMICOLON {
-                $$ = std::make_unique<JLang::frontend::alt_imp::StatementReturn>(
+                $$ = std::make_unique<JLang::frontend::StatementReturn>(
                                                                                  std::move($1),
                                                                                  std::move($2),
                                                                                  std::move($3)
@@ -1019,7 +1019,7 @@ statement_return
 
 statement_ifelse
         : IF PAREN_L expression PAREN_R scope_body {
-                $$ = std::make_unique<JLang::frontend::alt_imp::StatementIfElse>(
+                $$ = std::make_unique<JLang::frontend::StatementIfElse>(
                                                                                  std::move($1),
                                                                                  std::move($2),
                                                                                  std::move($3),
@@ -1029,7 +1029,7 @@ statement_ifelse
                 PRINT_NONTERMINALS($$);
         }
         | IF PAREN_L expression PAREN_R scope_body ELSE statement_ifelse {
-                $$ = std::make_unique<JLang::frontend::alt_imp::StatementIfElse>(
+                $$ = std::make_unique<JLang::frontend::StatementIfElse>(
                                                                                  std::move($1),
                                                                                  std::move($2),
                                                                                  std::move($3),
@@ -1041,7 +1041,7 @@ statement_ifelse
                 PRINT_NONTERMINALS($$);
         }
         | IF PAREN_L expression PAREN_R scope_body ELSE scope_body {
-                $$ = std::make_unique<JLang::frontend::alt_imp::StatementIfElse>(
+                $$ = std::make_unique<JLang::frontend::StatementIfElse>(
                                                                                  std::move($1),
                                                                                  std::move($2),
                                                                                  std::move($3),
@@ -1056,7 +1056,7 @@ statement_ifelse
 
 statement_while
         : WHILE PAREN_L expression PAREN_R scope_body {
-                $$ = std::make_unique<JLang::frontend::alt_imp::StatementWhile>(
+                $$ = std::make_unique<JLang::frontend::StatementWhile>(
                                                                                 std::move($1),
                                                                                 std::move($2),
                                                                                 std::move($3),
@@ -1069,7 +1069,7 @@ statement_while
 
 statement_for
         : FOR PAREN_L expression SEMICOLON expression SEMICOLON expression PAREN_R scope_body {
-                $$ = std::make_unique<JLang::frontend::alt_imp::StatementFor>(
+                $$ = std::make_unique<JLang::frontend::StatementFor>(
                                                                                 std::move($1),
                                                                                 std::move($2),
                                                                                 std::move($3),
@@ -1086,7 +1086,7 @@ statement_for
 
 statement_switch
         : SWITCH PAREN_L expression PAREN_R BRACE_L opt_statement_switch_content BRACE_R {
-                $$ = std::make_unique<JLang::frontend::alt_imp::StatementSwitch>(
+                $$ = std::make_unique<JLang::frontend::StatementSwitch>(
                                                                                 std::move($1),
                                                                                 std::move($2),
                                                                                 std::move($3),
@@ -1101,7 +1101,7 @@ statement_switch
 
 opt_statement_switch_content
         : /**/ {
-                $$ = std::make_unique<JLang::frontend::alt_imp::StatementSwitchContent>();
+                $$ = std::make_unique<JLang::frontend::StatementSwitchContent>();
                 PRINT_NONTERMINALS($$);
         }
         | statement_switch_content {
@@ -1112,7 +1112,7 @@ opt_statement_switch_content
 
 statement_switch_content
         : statement_switch_block {
-                $$ = std::make_unique<JLang::frontend::alt_imp::StatementSwitchContent>();
+                $$ = std::make_unique<JLang::frontend::StatementSwitchContent>();
                 $$->add_block(std::move($1));
                 PRINT_NONTERMINALS($$);
         }
@@ -1125,7 +1125,7 @@ statement_switch_content
 
 statement_switch_block
         : DEFAULT COLON scope_body {
-                $$ = std::make_unique<JLang::frontend::alt_imp::StatementSwitchBlock>(
+                $$ = std::make_unique<JLang::frontend::StatementSwitchBlock>(
                                                                                       std::move($1),
                                                                                       std::move($2),
                                                                                       std::move($3)
@@ -1133,7 +1133,7 @@ statement_switch_block
                 PRINT_NONTERMINALS($$);
         }
         | CASE expression COLON scope_body {
-                $$ = std::make_unique<JLang::frontend::alt_imp::StatementSwitchBlock>(
+                $$ = std::make_unique<JLang::frontend::StatementSwitchBlock>(
                                                                                       std::move($1),
                                                                                       std::move($2),
                                                                                       std::move($3),
@@ -1145,66 +1145,66 @@ statement_switch_block
 
 expression_primary
         : expression_primary_identifier {
-                $$ = std::make_unique<JLang::frontend::alt_imp::ExpressionPrimary>(std::move($1));
+                $$ = std::make_unique<JLang::frontend::ExpressionPrimary>(std::move($1));
                 PRINT_NONTERMINALS($$);
         }
         | expression_primary_nested {
-                $$ = std::make_unique<JLang::frontend::alt_imp::ExpressionPrimary>(std::move($1));
+                $$ = std::make_unique<JLang::frontend::ExpressionPrimary>(std::move($1));
                 PRINT_NONTERMINALS($$);
         }
         | expression_primary_literal_int {
-                $$ = std::make_unique<JLang::frontend::alt_imp::ExpressionPrimary>(std::move($1));
+                $$ = std::make_unique<JLang::frontend::ExpressionPrimary>(std::move($1));
                 PRINT_NONTERMINALS($$);
         }
         | expression_primary_literal_char {
-                $$ = std::make_unique<JLang::frontend::alt_imp::ExpressionPrimary>(std::move($1));
+                $$ = std::make_unique<JLang::frontend::ExpressionPrimary>(std::move($1));
                 PRINT_NONTERMINALS($$);
         }
         | expression_primary_literal_string {
-                $$ = std::make_unique<JLang::frontend::alt_imp::ExpressionPrimary>(std::move($1));
+                $$ = std::make_unique<JLang::frontend::ExpressionPrimary>(std::move($1));
                 PRINT_NONTERMINALS($$);
         }
         | expression_primary_literal_float {
-                $$ = std::make_unique<JLang::frontend::alt_imp::ExpressionPrimary>(std::move($1));
+                $$ = std::make_unique<JLang::frontend::ExpressionPrimary>(std::move($1));
                 PRINT_NONTERMINALS($$);
         }
         ;
 
 expression_primary_identifier
         : IDENTIFIER {
-                $$ = std::make_unique<JLang::frontend::alt_imp::ExpressionPrimaryIdentifier>(std::move($1));
+                $$ = std::make_unique<JLang::frontend::ExpressionPrimaryIdentifier>(std::move($1));
                 PRINT_NONTERMINALS($$);
         }
         ;
 
 expression_primary_literal_int
         : LITERAL_INT {
-                $$ = std::make_unique<JLang::frontend::alt_imp::ExpressionPrimaryLiteralInt>(std::move($1));
+                $$ = std::make_unique<JLang::frontend::ExpressionPrimaryLiteralInt>(std::move($1));
                 PRINT_NONTERMINALS($$);
         }
         ;
 expression_primary_literal_char
         : LITERAL_CHAR {
-                $$ = std::make_unique<JLang::frontend::alt_imp::ExpressionPrimaryLiteralChar>(std::move($1));
+                $$ = std::make_unique<JLang::frontend::ExpressionPrimaryLiteralChar>(std::move($1));
                 PRINT_NONTERMINALS($$);
         }
         ;
 expression_primary_literal_string
         : LITERAL_STRING {
-                $$ = std::make_unique<JLang::frontend::alt_imp::ExpressionPrimaryLiteralString>(std::move($1));
+                $$ = std::make_unique<JLang::frontend::ExpressionPrimaryLiteralString>(std::move($1));
                 PRINT_NONTERMINALS($$);
         }
         ;
 expression_primary_literal_float
         : LITERAL_FLOAT {
-                $$ = std::make_unique<JLang::frontend::alt_imp::ExpressionPrimaryLiteralFloat>(std::move($1));
+                $$ = std::make_unique<JLang::frontend::ExpressionPrimaryLiteralFloat>(std::move($1));
                 PRINT_NONTERMINALS($$);
         }
         ;
 
 expression_primary_nested
         : PAREN_L expression PAREN_R {
-                $$ = std::make_unique<JLang::frontend::alt_imp::ExpressionPrimaryNested>(
+                $$ = std::make_unique<JLang::frontend::ExpressionPrimaryNested>(
                                                                                          std::move($1),
                                                                                          std::move($2),
                                                                                          std::move($3)
@@ -1246,79 +1246,79 @@ expression_postfix
 
 expression_postfix_primary
         : expression_primary {
-                $$ = std::make_unique<JLang::frontend::alt_imp::Expression>(std::move($1));
+                $$ = std::make_unique<JLang::frontend::Expression>(std::move($1));
                 PRINT_NONTERMINALS($$);
         }
         ;
 
 expression_postfix_arrayindex
         : expression_postfix BRACKET_L expression BRACKET_R {
-                auto expr = std::make_unique<JLang::frontend::alt_imp::ExpressionPostfixArrayIndex>(
+                auto expr = std::make_unique<JLang::frontend::ExpressionPostfixArrayIndex>(
                                                                                              std::move($1),
                                                                                              std::move($2),
                                                                                              std::move($3),
                                                                                              std::move($4)
                                                                                              );
-                $$ = std::make_unique<JLang::frontend::alt_imp::Expression>(std::move(expr));
+                $$ = std::make_unique<JLang::frontend::Expression>(std::move(expr));
                 PRINT_NONTERMINALS($$);
         }
         ;
 
 expression_postfix_function_call
         : expression_postfix PAREN_L opt_argument_expression_list PAREN_R {
-                auto expr = std::make_unique<JLang::frontend::alt_imp::ExpressionPostfixFunctionCall>(
+                auto expr = std::make_unique<JLang::frontend::ExpressionPostfixFunctionCall>(
                                                                                                std::move($1),
                                                                                                std::move($2),
                                                                                                std::move($3),
                                                                                                std::move($4)
                                                                                                );
-                $$ = std::make_unique<JLang::frontend::alt_imp::Expression>(std::move(expr));
+                $$ = std::make_unique<JLang::frontend::Expression>(std::move(expr));
                 PRINT_NONTERMINALS($$);
         }
         ;
 
 expression_postfix_dot
         : expression_postfix DOT IDENTIFIER {
-                auto expr = std::make_unique<JLang::frontend::alt_imp::ExpressionPostfixDot>(
+                auto expr = std::make_unique<JLang::frontend::ExpressionPostfixDot>(
                                                                                       std::move($1),
                                                                                       std::move($2),
                                                                                       std::move($3)
                                                                                       );
-                $$ = std::make_unique<JLang::frontend::alt_imp::Expression>(std::move(expr));
+                $$ = std::make_unique<JLang::frontend::Expression>(std::move(expr));
                 PRINT_NONTERMINALS($$);
         }
         ;
 
 expression_postfix_arrow
         : expression_postfix PTR_OP IDENTIFIER {
-                auto expr = std::make_unique<JLang::frontend::alt_imp::ExpressionPostfixArrow>(
+                auto expr = std::make_unique<JLang::frontend::ExpressionPostfixArrow>(
                                                                                         std::move($1),
                                                                                         std::move($2),
                                                                                         std::move($3)
                                                                                         );
-                $$ = std::make_unique<JLang::frontend::alt_imp::Expression>(std::move(expr));
+                $$ = std::make_unique<JLang::frontend::Expression>(std::move(expr));
                 PRINT_NONTERMINALS($$);
         }
         ;
 
 expression_postfix_increment
         : expression_postfix INC_OP {
-                auto expr = std::make_unique<JLang::frontend::alt_imp::ExpressionPostfixIncDec>(
+                auto expr = std::make_unique<JLang::frontend::ExpressionPostfixIncDec>(
                                                                                          std::move($1),
                                                                                          std::move($2)
                                                                                          );
-                $$ = std::make_unique<JLang::frontend::alt_imp::Expression>(std::move(expr));
+                $$ = std::make_unique<JLang::frontend::Expression>(std::move(expr));
                 PRINT_NONTERMINALS($$);
         }
         ;
 
 expression_postfix_decrement
         : expression_postfix DEC_OP {
-                auto expr = std::make_unique<JLang::frontend::alt_imp::ExpressionPostfixIncDec>(
+                auto expr = std::make_unique<JLang::frontend::ExpressionPostfixIncDec>(
                                                                                          std::move($1),
                                                                                          std::move($2)
                                                                                          );
-                $$ = std::make_unique<JLang::frontend::alt_imp::Expression>(std::move(expr));
+                $$ = std::make_unique<JLang::frontend::Expression>(std::move(expr));
                 PRINT_NONTERMINALS($$);
         }
 	;
@@ -1348,43 +1348,43 @@ expression_unary
 
 expression_unary_increment
         : INC_OP expression_unary {
-                auto expr = std::make_unique<JLang::frontend::alt_imp::ExpressionUnaryPrefix>(
+                auto expr = std::make_unique<JLang::frontend::ExpressionUnaryPrefix>(
                                                                                        std::move($1),
                                                                                        std::move($2)
                                                                                        );
-                $$ = std::make_unique<JLang::frontend::alt_imp::Expression>(std::move(expr));
+                $$ = std::make_unique<JLang::frontend::Expression>(std::move(expr));
                 PRINT_NONTERMINALS($$);
         }
         ;
 expression_unary_decrement
         : DEC_OP expression_unary {
-                auto expr = std::make_unique<JLang::frontend::alt_imp::ExpressionUnaryPrefix>(
+                auto expr = std::make_unique<JLang::frontend::ExpressionUnaryPrefix>(
                                                                                        std::move($1),
                                                                                        std::move($2)
                                                                                        );
-                $$ = std::make_unique<JLang::frontend::alt_imp::Expression>(std::move(expr));
+                $$ = std::make_unique<JLang::frontend::Expression>(std::move(expr));
                 PRINT_NONTERMINALS($$);
         }
         ;
 expression_unary_prefix
         : operator_unary expression_cast {
-                auto expr = std::make_unique<JLang::frontend::alt_imp::ExpressionUnaryPrefix>(
+                auto expr = std::make_unique<JLang::frontend::ExpressionUnaryPrefix>(
                                                                                        std::move($1),
                                                                                        std::move($2)
                                                                                        );
-                $$ = std::make_unique<JLang::frontend::alt_imp::Expression>(std::move(expr));
+                $$ = std::make_unique<JLang::frontend::Expression>(std::move(expr));
                 PRINT_NONTERMINALS($$);
         }
         ;
 expression_unary_sizeof_type
         : SIZEOF PAREN_L type_specifier PAREN_R {
-                auto expr = std::make_unique<JLang::frontend::alt_imp::ExpressionUnarySizeofType>(
+                auto expr = std::make_unique<JLang::frontend::ExpressionUnarySizeofType>(
                                                                                        std::move($1),
                                                                                        std::move($2),
                                                                                        std::move($3),
                                                                                        std::move($4)
                                                                                        );
-                $$ = std::make_unique<JLang::frontend::alt_imp::Expression>(std::move(expr));
+                $$ = std::make_unique<JLang::frontend::Expression>(std::move(expr));
                 PRINT_NONTERMINALS($$);
         }
         ;
@@ -1438,7 +1438,7 @@ expression_cast_unary
 
 expression_cast_cast
         : CAST PAREN_L type_specifier COMMA expression PAREN_R {
-                auto expr = std::make_unique<JLang::frontend::alt_imp::ExpressionCast>(
+                auto expr = std::make_unique<JLang::frontend::ExpressionCast>(
                                                                                 std::move($1),
                                                                                 std::move($2),
                                                                                 std::move($3),
@@ -1446,7 +1446,7 @@ expression_cast_cast
                                                                                 std::move($5),
                                                                                 std::move($6)
                                                                                 );
-                $$ = std::make_unique<JLang::frontend::alt_imp::Expression>(std::move(expr));
+                $$ = std::make_unique<JLang::frontend::Expression>(std::move(expr));
                 PRINT_NONTERMINALS($$);
         }
 	;
@@ -1479,34 +1479,34 @@ expression_multiplicative_cast
         ;
 expression_multiplicative_multiply
         : expression_multiplicative STAR expression_cast {
-                auto expr = std::make_unique<JLang::frontend::alt_imp::ExpressionBinary>(
+                auto expr = std::make_unique<JLang::frontend::ExpressionBinary>(
                                                                                          std::move($1),
                                                                                          std::move($2),
                                                                                          std::move($3)
                                                                                          );
-                $$ = std::make_unique<JLang::frontend::alt_imp::Expression>(std::move(expr));
+                $$ = std::make_unique<JLang::frontend::Expression>(std::move(expr));
                 PRINT_NONTERMINALS($$);
         }
         ;
 expression_multiplicative_divide
         : expression_multiplicative SLASH expression_cast {
-                auto expr = std::make_unique<JLang::frontend::alt_imp::ExpressionBinary>(
+                auto expr = std::make_unique<JLang::frontend::ExpressionBinary>(
                                                                                          std::move($1),
                                                                                          std::move($2),
                                                                                          std::move($3)
                                                                                          );
-                $$ = std::make_unique<JLang::frontend::alt_imp::Expression>(std::move(expr));
+                $$ = std::make_unique<JLang::frontend::Expression>(std::move(expr));
                 PRINT_NONTERMINALS($$);
         }
         ;
 expression_multiplicative_modulo
         : expression_multiplicative PERCENT expression_cast {
-                auto expr = std::make_unique<JLang::frontend::alt_imp::ExpressionBinary>(
+                auto expr = std::make_unique<JLang::frontend::ExpressionBinary>(
                                                                                          std::move($1),
                                                                                          std::move($2),
                                                                                          std::move($3)
                                                                                          );
-                $$ = std::make_unique<JLang::frontend::alt_imp::Expression>(std::move(expr));
+                $$ = std::make_unique<JLang::frontend::Expression>(std::move(expr));
                 PRINT_NONTERMINALS($$);
         }
         ;
@@ -1533,23 +1533,23 @@ expression_additive_multiplicative
         ;
 expression_additive_plus
         : expression_additive PLUS expression_multiplicative {
-                auto expr = std::make_unique<JLang::frontend::alt_imp::ExpressionBinary>(
+                auto expr = std::make_unique<JLang::frontend::ExpressionBinary>(
                                                                                          std::move($1),
                                                                                          std::move($2),
                                                                                          std::move($3)
                                                                                          );
-                $$ = std::make_unique<JLang::frontend::alt_imp::Expression>(std::move(expr));
+                $$ = std::make_unique<JLang::frontend::Expression>(std::move(expr));
                 PRINT_NONTERMINALS($$);
         }
         ;
 expression_additive_minus
         : expression_additive MINUS expression_multiplicative {
-                auto expr = std::make_unique<JLang::frontend::alt_imp::ExpressionBinary>(
+                auto expr = std::make_unique<JLang::frontend::ExpressionBinary>(
                                                                                          std::move($1),
                                                                                          std::move($2),
                                                                                          std::move($3)
                                                                                          );
-                $$ = std::make_unique<JLang::frontend::alt_imp::Expression>(std::move(expr));
+                $$ = std::make_unique<JLang::frontend::Expression>(std::move(expr));
                 PRINT_NONTERMINALS($$);
         }
         ;
@@ -1577,23 +1577,23 @@ expression_shift_additive
         ;
 expression_shift_left
         : expression_shift LEFT_OP expression_additive {
-                auto expr = std::make_unique<JLang::frontend::alt_imp::ExpressionBinary>(
+                auto expr = std::make_unique<JLang::frontend::ExpressionBinary>(
                                                                                          std::move($1),
                                                                                          std::move($2),
                                                                                          std::move($3)
                                                                                          );
-                $$ = std::make_unique<JLang::frontend::alt_imp::Expression>(std::move(expr));
+                $$ = std::make_unique<JLang::frontend::Expression>(std::move(expr));
                 PRINT_NONTERMINALS($$);
         }
         ;
 expression_shift_right
         : expression_shift RIGHT_OP expression_additive {
-                auto expr = std::make_unique<JLang::frontend::alt_imp::ExpressionBinary>(
+                auto expr = std::make_unique<JLang::frontend::ExpressionBinary>(
                                                                                          std::move($1),
                                                                                          std::move($2),
                                                                                          std::move($3)
                                                                                          );
-                $$ = std::make_unique<JLang::frontend::alt_imp::Expression>(std::move(expr));
+                $$ = std::make_unique<JLang::frontend::Expression>(std::move(expr));
                 PRINT_NONTERMINALS($$);
         }
         ;
@@ -1630,45 +1630,45 @@ expression_relational_shift
         ;
 expression_relational_lt
         : expression_relational LT_OP expression_shift {
-                auto expr = std::make_unique<JLang::frontend::alt_imp::ExpressionBinary>(
+                auto expr = std::make_unique<JLang::frontend::ExpressionBinary>(
                                                                                          std::move($1),
                                                                                          std::move($2),
                                                                                          std::move($3)
                                                                                          );
-                $$ = std::make_unique<JLang::frontend::alt_imp::Expression>(std::move(expr));
+                $$ = std::make_unique<JLang::frontend::Expression>(std::move(expr));
                 PRINT_NONTERMINALS($$);
         }
         ;
 expression_relational_gt
         : expression_relational GT_OP expression_shift {
-                auto expr = std::make_unique<JLang::frontend::alt_imp::ExpressionBinary>(
+                auto expr = std::make_unique<JLang::frontend::ExpressionBinary>(
                                                                                          std::move($1),
                                                                                          std::move($2),
                                                                                          std::move($3)
                                                                                          );
-                $$ = std::make_unique<JLang::frontend::alt_imp::Expression>(std::move(expr));
+                $$ = std::make_unique<JLang::frontend::Expression>(std::move(expr));
                 PRINT_NONTERMINALS($$);
         }
         ;
 expression_relational_le
         : expression_relational LE_OP expression_shift {
-                auto expr = std::make_unique<JLang::frontend::alt_imp::ExpressionBinary>(
+                auto expr = std::make_unique<JLang::frontend::ExpressionBinary>(
                                                                                          std::move($1),
                                                                                          std::move($2),
                                                                                          std::move($3)
                                                                                          );
-                $$ = std::make_unique<JLang::frontend::alt_imp::Expression>(std::move(expr));
+                $$ = std::make_unique<JLang::frontend::Expression>(std::move(expr));
                 PRINT_NONTERMINALS($$);
         }
         ;
 expression_relational_ge
         : expression_relational GE_OP expression_shift {
-                auto expr = std::make_unique<JLang::frontend::alt_imp::ExpressionBinary>(
+                auto expr = std::make_unique<JLang::frontend::ExpressionBinary>(
                                                                                          std::move($1),
                                                                                          std::move($2),
                                                                                          std::move($3)
                                                                                          );
-                $$ = std::make_unique<JLang::frontend::alt_imp::Expression>(std::move(expr));
+                $$ = std::make_unique<JLang::frontend::Expression>(std::move(expr));
                 PRINT_NONTERMINALS($$);
         }
         ;
@@ -1679,21 +1679,21 @@ expression_equality
           PRINT_NONTERMINALS($$);
         }
         | expression_equality EQ_OP expression_relational {
-                auto expr = std::make_unique<JLang::frontend::alt_imp::ExpressionBinary>(
+                auto expr = std::make_unique<JLang::frontend::ExpressionBinary>(
                                                                                          std::move($1),
                                                                                          std::move($2),
                                                                                          std::move($3)
                                                                                          );
-                $$ = std::make_unique<JLang::frontend::alt_imp::Expression>(std::move(expr));
+                $$ = std::make_unique<JLang::frontend::Expression>(std::move(expr));
                 PRINT_NONTERMINALS($$);
         }
         | expression_equality NE_OP expression_relational {
-                auto expr = std::make_unique<JLang::frontend::alt_imp::ExpressionBinary>(
+                auto expr = std::make_unique<JLang::frontend::ExpressionBinary>(
                                                                                          std::move($1),
                                                                                          std::move($2),
                                                                                          std::move($3)
                                                                                          );
-                $$ = std::make_unique<JLang::frontend::alt_imp::Expression>(std::move(expr));
+                $$ = std::make_unique<JLang::frontend::Expression>(std::move(expr));
                 PRINT_NONTERMINALS($$);
         }
 	;
@@ -1704,12 +1704,12 @@ expression_and
                 PRINT_NONTERMINALS($$);
         }
         | expression_and ANDPERSAND expression_equality {
-                auto expr = std::make_unique<JLang::frontend::alt_imp::ExpressionBinary>(
+                auto expr = std::make_unique<JLang::frontend::ExpressionBinary>(
                                                                                          std::move($1),
                                                                                          std::move($2),
                                                                                          std::move($3)
                                                                                          );
-                $$ = std::make_unique<JLang::frontend::alt_imp::Expression>(std::move(expr));
+                $$ = std::make_unique<JLang::frontend::Expression>(std::move(expr));
                 PRINT_NONTERMINALS($$);
         }
 	;
@@ -1720,12 +1720,12 @@ expression_exclusive_or
           PRINT_NONTERMINALS($$);
         }
         | expression_exclusive_or XOR_OP expression_and {
-                auto expr = std::make_unique<JLang::frontend::alt_imp::ExpressionBinary>(
+                auto expr = std::make_unique<JLang::frontend::ExpressionBinary>(
                                                                                          std::move($1),
                                                                                          std::move($2),
                                                                                          std::move($3)
                                                                                          );
-                $$ = std::make_unique<JLang::frontend::alt_imp::Expression>(std::move(expr));
+                $$ = std::make_unique<JLang::frontend::Expression>(std::move(expr));
                 PRINT_NONTERMINALS($$);
         }
 	;
@@ -1736,12 +1736,12 @@ expression_inclusive_or
                 PRINT_NONTERMINALS($$);
         }
         | expression_inclusive_or PIPE expression_exclusive_or {
-                auto expr = std::make_unique<JLang::frontend::alt_imp::ExpressionBinary>(
+                auto expr = std::make_unique<JLang::frontend::ExpressionBinary>(
                                                                                          std::move($1),
                                                                                          std::move($2),
                                                                                          std::move($3)
                                                                                          );
-                $$ = std::make_unique<JLang::frontend::alt_imp::Expression>(std::move(expr));
+                $$ = std::make_unique<JLang::frontend::Expression>(std::move(expr));
                 PRINT_NONTERMINALS($$);
         }
 	;
@@ -1752,12 +1752,12 @@ expression_logical_and
                 PRINT_NONTERMINALS($$);
         }
         | expression_logical_and AND_OP expression_inclusive_or {
-                auto expr = std::make_unique<JLang::frontend::alt_imp::ExpressionBinary>(
+                auto expr = std::make_unique<JLang::frontend::ExpressionBinary>(
                                                                                          std::move($1),
                                                                                          std::move($2),
                                                                                          std::move($3)
                                                                                          );
-                $$ = std::make_unique<JLang::frontend::alt_imp::Expression>(std::move(expr));
+                $$ = std::make_unique<JLang::frontend::Expression>(std::move(expr));
                 PRINT_NONTERMINALS($$);
         }
 	;
@@ -1768,12 +1768,12 @@ expression_logical_or
                 PRINT_NONTERMINALS($$);
         }
         | expression_logical_or OR_OP expression_logical_and {
-                auto expr = std::make_unique<JLang::frontend::alt_imp::ExpressionBinary>(
+                auto expr = std::make_unique<JLang::frontend::ExpressionBinary>(
                                                                                          std::move($1),
                                                                                          std::move($2),
                                                                                          std::move($3)
                                                                                          );
-                $$ = std::make_unique<JLang::frontend::alt_imp::Expression>(std::move(expr));
+                $$ = std::make_unique<JLang::frontend::Expression>(std::move(expr));
                 PRINT_NONTERMINALS($$);
         }
 	;
@@ -1784,14 +1784,14 @@ expression_conditional
                 PRINT_NONTERMINALS($$);
         }
         | expression_logical_or QUESTIONMARK expression COLON expression_conditional {
-                auto expr = std::make_unique<JLang::frontend::alt_imp::ExpressionTrinary>(
+                auto expr = std::make_unique<JLang::frontend::ExpressionTrinary>(
                                                                                          std::move($1),
                                                                                          std::move($2),
                                                                                          std::move($3),
                                                                                          std::move($4),
                                                                                          std::move($5)
                                                                                          );
-                $$ = std::make_unique<JLang::frontend::alt_imp::Expression>(std::move(expr));
+                $$ = std::make_unique<JLang::frontend::Expression>(std::move(expr));
                 PRINT_NONTERMINALS($$);
         }
 	;
@@ -1802,12 +1802,12 @@ expression_assignment
                 PRINT_NONTERMINALS($$);
         }
         | expression_unary operator_assignment expression_assignment {
-                auto expr = std::make_unique<JLang::frontend::alt_imp::ExpressionBinary>(
+                auto expr = std::make_unique<JLang::frontend::ExpressionBinary>(
                                                                                          std::move($1),
                                                                                          std::move($2),
                                                                                          std::move($3)
                                                                                          );
-                $$ = std::make_unique<JLang::frontend::alt_imp::Expression>(std::move(expr));
+                $$ = std::make_unique<JLang::frontend::Expression>(std::move(expr));
                 PRINT_NONTERMINALS($$);
         }
 	;
@@ -1869,7 +1869,7 @@ expression
 
 type_name
         : TYPEOF PAREN_L expression PAREN_R {
-                $$ = std::make_unique<JLang::frontend::alt_imp::TypeName>(
+                $$ = std::make_unique<JLang::frontend::TypeName>(
                                                                           std::move($1),
                                                                           std::move($2),
                                                                           std::move($3),
@@ -1878,7 +1878,7 @@ type_name
                 PRINT_NONTERMINALS($$);
         }
         | TYPE_NAME {
-                $$ = std::make_unique<JLang::frontend::alt_imp::TypeName>(
+                $$ = std::make_unique<JLang::frontend::TypeName>(
                                                                           std::move($1)
                                                                           );
                 PRINT_NONTERMINALS($$);
@@ -1887,7 +1887,7 @@ type_name
 
 opt_class_member_declaration_list
         : /**/ {
-                $$ = std::make_unique<JLang::frontend::alt_imp::ClassMemberDeclarationList>();
+                $$ = std::make_unique<JLang::frontend::ClassMemberDeclarationList>();
                 PRINT_NONTERMINALS($$);
         }
         | class_member_declaration_list {
@@ -1898,7 +1898,7 @@ opt_class_member_declaration_list
 
 class_member_declaration_list
         : class_member_declaration {
-                $$ = std::make_unique<JLang::frontend::alt_imp::ClassMemberDeclarationList>();
+                $$ = std::make_unique<JLang::frontend::ClassMemberDeclarationList>();
                 $$->add_member(std::move($1));
                 PRINT_NONTERMINALS($$);
         }
@@ -1912,7 +1912,7 @@ class_member_declaration_list
 class_member_declaration
         : opt_access_modifier type_specifier IDENTIFIER opt_array_length SEMICOLON {
                 // Member Variable
-                auto expr = std::make_unique<JLang::frontend::alt_imp::ClassMemberDeclarationVariable>(
+                auto expr = std::make_unique<JLang::frontend::ClassMemberDeclarationVariable>(
                                                                                                        std::move($1),
                                                                                                        std::move($2),
                                                                                                        std::move($3),
@@ -1920,12 +1920,12 @@ class_member_declaration
                                                                                                        std::move($5)
                                                                                                        );
                 auto sn = expr->get_syntax_node();
-                $$ = std::make_unique<JLang::frontend::alt_imp::ClassMemberDeclaration>(std::move(expr), sn);
+                $$ = std::make_unique<JLang::frontend::ClassMemberDeclaration>(std::move(expr), sn);
                 PRINT_NONTERMINALS($$);
         }
         | opt_access_modifier type_specifier IDENTIFIER PAREN_L opt_function_definition_arg_list PAREN_R SEMICOLON {
                 // Method
-                auto expr = std::make_unique<JLang::frontend::alt_imp::ClassMemberDeclarationMethod>(
+                auto expr = std::make_unique<JLang::frontend::ClassMemberDeclarationMethod>(
                                                                                                      std::move($1),
                                                                                                      std::move($2),
                                                                                                      std::move($3),
@@ -1935,12 +1935,12 @@ class_member_declaration
                                                                                                      std::move($7)
                                                                                                      );
                 auto sn = expr->get_syntax_node();
-                $$ = std::make_unique<JLang::frontend::alt_imp::ClassMemberDeclaration>(std::move(expr), sn);
+                $$ = std::make_unique<JLang::frontend::ClassMemberDeclaration>(std::move(expr), sn);
                 PRINT_NONTERMINALS($$);
         }
         | opt_access_modifier type_specifier PAREN_L opt_function_definition_arg_list PAREN_R SEMICOLON {
                 // Constructor
-                auto expr = std::make_unique<JLang::frontend::alt_imp::ClassMemberDeclarationConstructor>(
+                auto expr = std::make_unique<JLang::frontend::ClassMemberDeclarationConstructor>(
                                                                                                      std::move($1),
                                                                                                      std::move($2),
                                                                                                      std::move($3),
@@ -1949,12 +1949,12 @@ class_member_declaration
                                                                                                      std::move($6)
                                                                                                      );
                 auto sn = expr->get_syntax_node();
-                $$ = std::make_unique<JLang::frontend::alt_imp::ClassMemberDeclaration>(std::move(expr), sn);
+                $$ = std::make_unique<JLang::frontend::ClassMemberDeclaration>(std::move(expr), sn);
                 PRINT_NONTERMINALS($$);
         }
         | opt_access_modifier TILDE type_specifier PAREN_L opt_function_definition_arg_list PAREN_R SEMICOLON {
                 // Destructor
-                auto expr = std::make_unique<JLang::frontend::alt_imp::ClassMemberDeclarationDestructor>(
+                auto expr = std::make_unique<JLang::frontend::ClassMemberDeclarationDestructor>(
                                                                                                          std::move($1),
                                                                                                          std::move($2),
                                                                                                          std::move($3),
@@ -1964,22 +1964,22 @@ class_member_declaration
                                                                                                          std::move($7)
                                                                                                          );
                 auto sn = expr->get_syntax_node();
-                $$ = std::make_unique<JLang::frontend::alt_imp::ClassMemberDeclaration>(std::move(expr), sn);
+                $$ = std::make_unique<JLang::frontend::ClassMemberDeclaration>(std::move(expr), sn);
                 PRINT_NONTERMINALS($$);
         }
         | class_definition {
                 auto sn = $1->get_syntax_node();
-                $$ = std::make_unique<JLang::frontend::alt_imp::ClassMemberDeclaration>(std::move($1), sn);
+                $$ = std::make_unique<JLang::frontend::ClassMemberDeclaration>(std::move($1), sn);
                 PRINT_NONTERMINALS($$);
         }
         | enum_definition {
                 auto sn = $1->get_syntax_node();
-                $$ = std::make_unique<JLang::frontend::alt_imp::ClassMemberDeclaration>(std::move($1), sn);
+                $$ = std::make_unique<JLang::frontend::ClassMemberDeclaration>(std::move($1), sn);
                 PRINT_NONTERMINALS($$);
         }
         | type_definition {
                 auto sn = $1->get_syntax_node();
-                $$ = std::make_unique<JLang::frontend::alt_imp::ClassMemberDeclaration>(std::move($1), sn);
+                $$ = std::make_unique<JLang::frontend::ClassMemberDeclaration>(std::move($1), sn);
                 PRINT_NONTERMINALS($$);
         }
         ;
@@ -1987,22 +1987,22 @@ class_member_declaration
 
 type_access_qualifier
         : /**/ {
-                $$ = std::make_unique<JLang::frontend::alt_imp::AccessQualifier>(
-                                                                                 JLang::frontend::alt_imp::AccessQualifier::AccessQualifierType::UNSPECIFIED
+                $$ = std::make_unique<JLang::frontend::AccessQualifier>(
+                                                                                 JLang::frontend::AccessQualifier::AccessQualifierType::UNSPECIFIED
                                                                                  );
                 PRINT_NONTERMINALS($$);
         }
         | CONST {
-                $$ = std::make_unique<JLang::frontend::alt_imp::AccessQualifier>(
+                $$ = std::make_unique<JLang::frontend::AccessQualifier>(
                                                                                  std::move($1),
-                                                                                 JLang::frontend::alt_imp::AccessQualifier::AccessQualifierType::CONST
+                                                                                 JLang::frontend::AccessQualifier::AccessQualifierType::CONST
                                                                                  );
                 PRINT_NONTERMINALS($$);
         }
         | VOLATILE {
-                $$ = std::make_unique<JLang::frontend::alt_imp::AccessQualifier>(
+                $$ = std::make_unique<JLang::frontend::AccessQualifier>(
                                                                                  std::move($1),
-                                                                                 JLang::frontend::alt_imp::AccessQualifier::AccessQualifierType::VOLATILE
+                                                                                 JLang::frontend::AccessQualifier::AccessQualifierType::VOLATILE
                                                                                  );
                 PRINT_NONTERMINALS($$);
         }
@@ -2010,7 +2010,7 @@ type_access_qualifier
 
 type_specifier_call_args
         : type_specifier {
-                $$ = std::make_unique<JLang::frontend::alt_imp::TypeSpecifierCallArgs>();
+                $$ = std::make_unique<JLang::frontend::TypeSpecifierCallArgs>();
                 $$->add_argument(std::move($1));
                 PRINT_NONTERMINALS($$);
         }
@@ -2023,27 +2023,27 @@ type_specifier_call_args
 
 type_specifier
         : type_access_qualifier type_name {
-                auto expr = std::make_unique<JLang::frontend::alt_imp::TypeSpecifierSimple>(
+                auto expr = std::make_unique<JLang::frontend::TypeSpecifierSimple>(
                                                                                       std::move($1),
                                                                                       std::move($2)
                                                                                       );
                 auto sn = expr->get_syntax_node();
-                $$ = std::make_unique<JLang::frontend::alt_imp::TypeSpecifier>(std::move(expr), sn);
+                $$ = std::make_unique<JLang::frontend::TypeSpecifier>(std::move(expr), sn);
                 PRINT_NONTERMINALS($$);
         }
         | type_specifier PAREN_L type_specifier_call_args PAREN_R {
-                auto expr = std::make_unique<JLang::frontend::alt_imp::TypeSpecifierTemplate>(
+                auto expr = std::make_unique<JLang::frontend::TypeSpecifierTemplate>(
                                                                                       std::move($1),
                                                                                       std::move($2),
                                                                                       std::move($3),
                                                                                       std::move($4)
                                                                                       );
                 auto sn = expr->get_syntax_node();
-                $$ = std::make_unique<JLang::frontend::alt_imp::TypeSpecifier>(std::move(expr), sn);
+                $$ = std::make_unique<JLang::frontend::TypeSpecifier>(std::move(expr), sn);
                 PRINT_NONTERMINALS($$);
         }
         | type_specifier PAREN_L STAR IDENTIFIER PAREN_R PAREN_L opt_function_definition_arg_list PAREN_R {
-                auto expr = std::make_unique<JLang::frontend::alt_imp::TypeSpecifierFunctionPointer>(
+                auto expr = std::make_unique<JLang::frontend::TypeSpecifierFunctionPointer>(
                                                                                       std::move($1),
                                                                                       std::move($2),
                                                                                       std::move($3),
@@ -2054,34 +2054,34 @@ type_specifier
                                                                                       std::move($8)
                                                                                       );
                 auto sn = expr->get_syntax_node();
-                $$ = std::make_unique<JLang::frontend::alt_imp::TypeSpecifier>(std::move(expr), sn);
+                $$ = std::make_unique<JLang::frontend::TypeSpecifier>(std::move(expr), sn);
                 PRINT_NONTERMINALS($$);
         }
         | type_specifier STAR type_access_qualifier {
-                auto expr = std::make_unique<JLang::frontend::alt_imp::TypeSpecifierPointerTo>(
+                auto expr = std::make_unique<JLang::frontend::TypeSpecifierPointerTo>(
                                                                                       std::move($1),
                                                                                       std::move($2),
                                                                                       std::move($3)
                                                                                       );
                 auto sn = expr->get_syntax_node();
-                $$ = std::make_unique<JLang::frontend::alt_imp::TypeSpecifier>(std::move(expr), sn);
+                $$ = std::make_unique<JLang::frontend::TypeSpecifier>(std::move(expr), sn);
                 PRINT_NONTERMINALS($$);
         }
         | type_specifier ANDPERSAND type_access_qualifier {
-                auto expr = std::make_unique<JLang::frontend::alt_imp::TypeSpecifierReferenceTo>(
+                auto expr = std::make_unique<JLang::frontend::TypeSpecifierReferenceTo>(
                                                                                       std::move($1),
                                                                                       std::move($2),
                                                                                       std::move($3)
                                                                                       );
                 auto sn = expr->get_syntax_node();
-                $$ = std::make_unique<JLang::frontend::alt_imp::TypeSpecifier>(std::move(expr), sn);
+                $$ = std::make_unique<JLang::frontend::TypeSpecifier>(std::move(expr), sn);
                 PRINT_NONTERMINALS($$);
         }
         ;
 
 opt_argument_expression_list
         : /**/ {
-                $$ = std::make_unique<JLang::frontend::alt_imp::ArgumentExpressionList>();
+                $$ = std::make_unique<JLang::frontend::ArgumentExpressionList>();
                 PRINT_NONTERMINALS($$);
         }
         | argument_expression_list {
@@ -2092,7 +2092,7 @@ opt_argument_expression_list
 
 argument_expression_list
         : expression {
-                $$ = std::make_unique<JLang::frontend::alt_imp::ArgumentExpressionList>();
+                $$ = std::make_unique<JLang::frontend::ArgumentExpressionList>();
                 $$->add_argument(std::move($1));
                 PRINT_NONTERMINALS($$);
         }
@@ -2105,14 +2105,14 @@ argument_expression_list
 
 %%
 
-int visibility_from_modifier(JLang::frontend::alt_imp::AccessModifier::AccessModifierType visibility_ast)
+int visibility_from_modifier(JLang::frontend::AccessModifier::AccessModifierType visibility_ast)
 {
     switch (visibility_ast) {
-    case JLang::frontend::alt_imp::AccessModifier::AccessModifierType::PUBLIC:
+    case JLang::frontend::AccessModifier::AccessModifierType::PUBLIC:
       return JLang::frontend::Namespace::VISIBILITY_PUBLIC;
-    case JLang::frontend::alt_imp::AccessModifier::AccessModifierType::PROTECTED:
+    case JLang::frontend::AccessModifier::AccessModifierType::PROTECTED:
       return JLang::frontend::Namespace::VISIBILITY_PROTECTED;
-    case JLang::frontend::alt_imp::AccessModifier::AccessModifierType::PRIVATE:
+    case JLang::frontend::AccessModifier::AccessModifierType::PRIVATE:
       return JLang::frontend::Namespace::VISIBILITY_PRIVATE;
     default:
       return JLang::frontend::Namespace::VISIBILITY_PUBLIC;

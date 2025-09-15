@@ -1,6 +1,6 @@
 #include <jlang-frontend/jsyntax.hpp>
 
-using namespace JLang::frontend::alt_imp;
+using namespace JLang::frontend;
 
 ///////////////////////////////////////////////////
 Terminal::Terminal()

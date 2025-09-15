@@ -3,7 +3,7 @@
 #include <jlang-misc/xml.hpp>
 
 using namespace JLang::misc;
-using namespace JLang::frontend::alt_imp;
+using namespace JLang::frontend;
 
 JBackendFormatTree::JBackendFormatTree()
   : indent(0)

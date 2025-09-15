@@ -19,92 +19,105 @@ void JBackendFormatTree::print_indent(void)
   }
 }
 
-void JBackendFormatTree::print_comment_multi_line(ASTDataNonSyntax::ptr node)
+void JBackendFormatTree::print_comment_multi_line(const TerminalNonSyntax::raw_ptr node)
 {
   print_indent();
   printf("<comment-multi-line>\n");
   indent++;
   print_indent();
-  printf("%s\n", xml_to_cdata(node->data).c_str());
+  printf("%s\n", xml_to_cdata(node->get_data()).c_str());
   indent--;
   print_indent();
   printf("</comment-multi-line>\n");
 }
 
-void JBackendFormatTree::print_comment_single_line(ASTDataNonSyntax::ptr node)
+void JBackendFormatTree::print_comment_single_line(const TerminalNonSyntax::raw_ptr node)
 {
   print_indent();
   printf("<comment-single-line>\n");
   indent++;
   print_indent();
-  printf("%s\n", xml_to_cdata(node->data).c_str());
+  printf("%s\n", xml_to_cdata(node->get_data()).c_str());
   indent--;
   print_indent();
   printf("</comment-single-line>\n");
 }
 
-void JBackendFormatTree::print_whitespace(ASTDataNonSyntax::ptr node)
+void JBackendFormatTree::print_whitespace(const TerminalNonSyntax::raw_ptr node)
 {
   print_indent();
-  printf("<whitespace>%s</whitespace>\n", xml_escape_whitespace(node->data).c_str());
+  printf("<whitespace>%s</whitespace>\n", xml_escape_whitespace(node->get_data()).c_str());
 }
 
-void JBackendFormatTree::print_file_metadata(ASTDataNonSyntax::ptr node)
+void JBackendFormatTree::print_file_metadata(const TerminalNonSyntax::raw_ptr node)
 {
-  printf("<metadata>%s</metadata>", xml_to_cdata(node->data).c_str());
+  printf("<metadata>%s</metadata>", xml_to_cdata(node->get_data()).c_str());
 }
 
 
-void JBackendFormatTree::print_non_syntax(ASTDataNonSyntax::ptr node)
+void JBackendFormatTree::print_non_syntax(const TerminalNonSyntax::raw_ptr node)
 {
-  switch (node->type) {
-  case ASTNonSyntaxType::NST_COMMENT_MULTI_LINE:
+  switch (node->get_type()) {
+  case TerminalNonSyntaxType::EXTRA_COMMENT_MULTI_LINE:
     print_comment_multi_line(node);
     break;
-  case ASTNonSyntaxType::NST_COMMENT_SINGLE_LINE:
+  case TerminalNonSyntaxType::EXTRA_COMMENT_SINGLE_LINE:
     print_comment_single_line(node);
     break;
-  case ASTNonSyntaxType::NST_WHITESPACE:
+  case TerminalNonSyntaxType::EXTRA_WHITESPACE:
     print_whitespace(node);
     break;
-  case ASTNonSyntaxType::NST_FILE_METADATA:
+  case TerminalNonSyntaxType::EXTRA_FILE_METADATA:
     print_file_metadata(node);
     break;
   }
 }
 
-int JBackendFormatTree::process(ASTNode::ptr node)
+int JBackendFormatTree::process(const SyntaxNode * node)
 {
   print_indent();
-  printf("<node type='%s'", xml_escape_attribute(node->typestr).c_str());
-  if (node->lineno > 0) {
-    printf(" lineno='%ld'", node->lineno);
-  }
-  if (node->value.length() != 0) {
-    if (node->typestr == std::string("IDENTIFIER") ||
-        node->typestr == std::string("TYPE_NAME") ||
-        node->typestr == std::string("NAMESPACE_NAME")
-        ) {
-      printf(" value='%s' fq='%s'",
-             xml_escape_attribute(node->value).c_str(),
-             xml_escape_attribute(node->fully_qualified_name).c_str()
-             );
+  printf("<node type='%s'", xml_escape_attribute(node->get_type()).c_str());
+  if (std::holds_alternative<Terminal*>(node->get_data())) {
+    Terminal *terminal = std::get<Terminal*>(node->get_data());
+    if (terminal->lineno > 0) {
+      printf(" lineno='%ld'", terminal->lineno);
     }
-    else {
-        printf(" value='%s'", xml_escape_attribute(node->value).c_str());
+    if (terminal->value.length() != 0) {
+      if (terminal->typestr == std::string("IDENTIFIER") ||
+          terminal->typestr == std::string("TYPE_NAME") ||
+          terminal->typestr == std::string("NAMESPACE_NAME")
+          ) {
+        printf(" value='%s' fq='%s'",
+               xml_escape_attribute(terminal->value).c_str(),
+               xml_escape_attribute(terminal->fully_qualified_name).c_str()
+               );
+      }
+      else {
+        printf(" value='%s'", xml_escape_attribute(terminal->value).c_str());
+      }
     }
   }
-  std::vector<ASTDataNonSyntax::ptr> non_syntax;
-  if (node->children.size() == 0 && node->non_syntax.size() == 0) {
+
+  Terminal *maybe_terminal = nullptr;
+  bool has_non_syntax_children = false;
+  if (std::holds_alternative<Terminal*>(node->get_data())) {
+    maybe_terminal = std::get<Terminal*>(node->get_data());
+    has_non_syntax_children = maybe_terminal->non_syntax.size() != 0;
+  }
+  
+  if (node->get_children().size() == 0 && !has_non_syntax_children) {
       printf("/>\n");
   }
   else {
       printf(">\n");
       indent++;
-      for (auto non_syntax : node->non_syntax) {
-        print_non_syntax(non_syntax);
+      if (std::holds_alternative<Terminal*>(node->get_data())) {
+        Terminal *terminal = std::get<Terminal*>(node->get_data());
+        for (const auto &non_syntax : terminal->non_syntax) {
+          print_non_syntax(non_syntax.get());
+        }
       }
-      for (auto child : node->children) {
+      for (auto child : node->get_children()) {
         process(child);
       }
       indent--;

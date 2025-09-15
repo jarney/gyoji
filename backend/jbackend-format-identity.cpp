@@ -9,54 +9,57 @@ JBackendFormatIdentity::JBackendFormatIdentity()
 JBackendFormatIdentity::~JBackendFormatIdentity()
 {}
 
-static void print_whitespace(ASTDataNonSyntax::ptr node)
+static void print_whitespace(const TerminalNonSyntax * node)
 {
-    printf("%s", node->data.c_str());
+  printf("%s", node->get_data().c_str());
 }
-static void print_comment_single_line(ASTDataNonSyntax::ptr node)
+static void print_comment_single_line(const TerminalNonSyntax * node)
 {
-  printf("//%s", node->data.c_str());
+  printf("//%s", node->get_data().c_str());
 }
-static void print_comment_multi_line(ASTDataNonSyntax::ptr node)
+static void print_comment_multi_line(const TerminalNonSyntax * node)
 {
-  printf("/*%s*/", node->data.c_str());
+  printf("/*%s*/", node->get_data().c_str());
 }
-static void print_file_metadata(ASTDataNonSyntax::ptr node)
+static void print_file_metadata(const TerminalNonSyntax * node)
 {
-  printf("%s", node->data.c_str());
+  printf("%s", node->get_data().c_str());
 }
 
 
-static void print_non_syntax(ASTDataNonSyntax::ptr node)
+static void print_non_syntax(const TerminalNonSyntax * node)
 {
-  switch (node->type) {
-  case ASTNonSyntaxType::NST_COMMENT_MULTI_LINE:
+  switch (node->get_type()) {
+  case TerminalNonSyntaxType::EXTRA_COMMENT_MULTI_LINE:
     print_comment_multi_line(node);
     break;
-  case ASTNonSyntaxType::NST_COMMENT_SINGLE_LINE:
+  case TerminalNonSyntaxType::EXTRA_COMMENT_SINGLE_LINE:
     print_comment_single_line(node);
     break;
-  case ASTNonSyntaxType::NST_WHITESPACE:
+  case TerminalNonSyntaxType::EXTRA_WHITESPACE:
     print_whitespace(node);
     break;
-  case ASTNonSyntaxType::NST_FILE_METADATA:
+  case TerminalNonSyntaxType::EXTRA_FILE_METADATA:
     print_file_metadata(node);
     break;
   }
 }
 
-static void print_node(ASTNode::ptr node)
+static void print_node(const SyntaxNode *node)
 {
-  for (auto non_syntax : node->non_syntax) {
-    print_non_syntax(non_syntax);
+  if (std::holds_alternative<Terminal*>(node->get_data())) {
+    Terminal::raw_ptr terminal = std::get<Terminal*>(node->get_data());
+    for (const auto &non_syntax : terminal->non_syntax) {
+      print_non_syntax(non_syntax.get());
+    }
+    printf("%s", terminal->value.c_str());
   }
-  printf("%s", node->value.c_str());
-  for (auto child : node->children) {
+  for (auto child : node->get_children()) {
     print_node(child);
   }
 }
 
-int JBackendFormatIdentity::process(ASTNode::ptr file)
+int JBackendFormatIdentity::process(const SyntaxNode *file)
 {
   print_node(file);
   return 0;
