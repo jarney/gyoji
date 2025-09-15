@@ -10,8 +10,6 @@
  
 %require "3.7.4"
 %language "C++"
- //%defines "target/jlang.y.hpp"
- //%output "target/jlang.y.cpp"
  
 %define api.parser.class {Parser}
 %define api.namespace {jlang}
@@ -22,7 +20,7 @@
 {
 #define DEBUG_NONTERMINALS 0
 #if DEBUG_NONTERMINALS
-#define PRINT_NONTERMINALS(s) printf("%s\n", s->typestr.c_str())
+#define PRINT_NONTERMINALS(s) printf("%s\n", s->get_syntax_node()->get_type().c_str())
 #else
 #define PRINT_NONTERMINALS(s) (0)
 #endif
@@ -547,6 +545,7 @@ namespace_declaration
 
 file_statement_namespace
         : namespace_declaration BRACE_L opt_file_statement_list BRACE_R SEMICOLON {
+          const auto p = $3.get();
                 $$ = std::make_unique<JLang::frontend::FileStatementNamespace>(
                                                                                         std::move($1),
                                                                                         std::move($2),

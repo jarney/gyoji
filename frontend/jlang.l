@@ -15,21 +15,32 @@ std::vector<JLang::frontend::TerminalNonSyntax::owned_ptr> non_syntax_data;
 #define PRINT_TERMINALS(s,t)                                                  \
     printf("%s : %s%s\n", s, t,                                               \
                           (node->fully_qualified_name.size() > 0) ?           \
-                          (std::string(" : ") + node->fully_qualified_name) : \
-                          std::string());
+                          (std::string(" : ") + node->fully_qualified_name).c_str() : \
+                          std::string().c_str());
 #else
 #define PRINT_TERMINALS(s,t) /**/
 #endif
 
+void move_array(
+                std::vector<JLang::frontend::TerminalNonSyntax::owned_ptr> & dst,
+                std::vector<JLang::frontend::TerminalNonSyntax::owned_ptr> & src
+                )
+{
+    dst.clear();
+    for (auto & srcitem : src) {
+        dst.push_back(std::move(srcitem));
+    }
+    src.clear();
+}
+
 #define START_NODE(nodetype)                 \
-    JLang::frontend::Terminal::owned_ptr node = std::make_unique<JLang::frontend::Terminal>(); \
+    JLang::frontend::Terminal* node = new JLang::frontend::Terminal(); \
     node->type = Parser::symbol_kind_type::S_ ## nodetype; \
     node->typestr = std::string(#nodetype);  \
     node->value = std::string(yytext);       \
     node->lineno = lineno;                   \
-    node->non_syntax = std::move(non_syntax_data);      \
-    non_syntax_data.clear();                 \
-    yylval->emplace<JLang::frontend::Terminal::owned_ptr>(std::move(node));
+    move_array(node->non_syntax, non_syntax_data);      \
+    yylval->emplace<JLang::frontend::Terminal::owned_ptr>(node);
 
 #define RETURN_NODE(nodetype)                \
     return Parser::token::nodetype;
@@ -45,7 +56,6 @@ std::vector<JLang::frontend::TerminalNonSyntax::owned_ptr> non_syntax_data;
     PRINT_TERMINALS(#nodetype, yytext)       \
     RETURN_NODE(nodetype);
 
-//outfile="target/jlang.l.cpp" header="target/jlang.l.hpp"
 %}
  
 %option reentrant interactive noyywrap noyylineno nodefault

@@ -878,6 +878,7 @@ StatementList::~StatementList()
 void
 StatementList::add_statement(Statement::owned_ptr _statement)
 {
+  add_child(_statement.get());
   statements.push_back(std::move(_statement));
 }
 const std::vector<Statement::owned_ptr> &
@@ -1241,6 +1242,7 @@ ClassMemberDeclarationList::get_members() const
 void
 ClassMemberDeclarationList::add_member(ClassMemberDeclaration::owned_ptr _member)
 {
+  add_child(_member.get());
   members.push_back(std::move(_member));
 }
 ///////////////////////////////////////////////////
@@ -1298,7 +1300,7 @@ TypeDefinition::TypeDefinition(
   , typedef_token(std::move(_typedef_token))
   , type_specifier(std::move(_type_specifier))
   , identifier_token(std::move(_identifier_token))
-  , semicolon_token(std::move(semicolon_token))
+  , semicolon_token(std::move(_semicolon_token))
 {
   add_child(access_modifier.get());
   add_child(typedef_token.get());
@@ -1846,6 +1848,7 @@ StructInitializerList::~StructInitializerList()
 void
 StructInitializerList::add_initializer(StructInitializer::owned_ptr initializer)
 {
+  add_child(initializer.get());
   initializers.push_back(std::move(initializer));
 }
 const std::vector<StructInitializer::owned_ptr> &
@@ -2003,7 +2006,7 @@ FileStatementNamespace::FileStatementNamespace(
   : SyntaxNode("file_statement_namespace", this)
   , namespace_declaration(std::move(_namespace_declaration))
   , brace_l_token(std::move(_brace_l_token))
-  , file_statement_list(std::move(file_statement_list))
+  , file_statement_list(std::move(_file_statement_list))
   , brace_r_token(std::move(_brace_r_token))
   , semicolon_token(std::move(_semicolon_token))
 {
@@ -2113,6 +2116,7 @@ FileStatementList::get_statements() const
 void
 FileStatementList::add_statement(FileStatement::owned_ptr statement)
 {
+  add_child(statement.get());
   statements.push_back(std::move(statement));
 }
 
