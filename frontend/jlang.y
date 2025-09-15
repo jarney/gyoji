@@ -326,7 +326,7 @@ file_statement_list
 
 file_statement
         : file_statement_function_definition {
-                auto sn = $1->get_syntax_node();
+                const JLang::frontend::SyntaxNode &sn = *($1);
                 $$ = std::make_unique<JLang::frontend::FileStatement>(
                                                                                std::move($1),
                                                                                sn
@@ -334,7 +334,7 @@ file_statement
                 PRINT_NONTERMINALS($$);
         }
         | file_statement_function_declaration {
-                auto sn = $1->get_syntax_node();
+                const JLang::frontend::SyntaxNode &sn = *($1);
                 $$ = std::make_unique<JLang::frontend::FileStatement>(
                                                                                std::move($1),
                                                                                sn
@@ -342,7 +342,7 @@ file_statement
                 PRINT_NONTERMINALS($$);
         }
         | file_statement_global_definition {
-                auto sn = $1->get_syntax_node();
+                const JLang::frontend::SyntaxNode &sn = *($1);
                 $$ = std::make_unique<JLang::frontend::FileStatement>(
                                                                                std::move($1),
                                                                                sn
@@ -350,7 +350,7 @@ file_statement
                 PRINT_NONTERMINALS($$);
         }
         | class_definition {
-                auto sn = $1->get_syntax_node();
+                const JLang::frontend::SyntaxNode &sn = *($1);
                 $$ = std::make_unique<JLang::frontend::FileStatement>(
                                                                                std::move($1),
                                                                                sn
@@ -358,7 +358,7 @@ file_statement
                 PRINT_NONTERMINALS($$);
         }
         | enum_definition {
-                auto sn = $1->get_syntax_node();
+                const JLang::frontend::SyntaxNode &sn = *($1);
                 $$ = std::make_unique<JLang::frontend::FileStatement>(
                                                                                std::move($1),
                                                                                sn
@@ -366,7 +366,7 @@ file_statement
                 PRINT_NONTERMINALS($$);
         }
         | type_definition {
-                auto sn = $1->get_syntax_node();
+                const JLang::frontend::SyntaxNode &sn = *($1);
                 $$ = std::make_unique<JLang::frontend::FileStatement>(
                                                                                std::move($1),
                                                                                sn
@@ -374,7 +374,7 @@ file_statement
                 PRINT_NONTERMINALS($$);
         }
         | file_statement_namespace {
-                auto sn = $1->get_syntax_node();
+                const JLang::frontend::SyntaxNode &sn = *($1);
                 $$ = std::make_unique<JLang::frontend::FileStatement>(
                                                                                std::move($1),
                                                                                sn
@@ -382,7 +382,7 @@ file_statement
                 PRINT_NONTERMINALS($$);
         }
         | file_statement_using {
-                auto sn = $1->get_syntax_node();
+                const JLang::frontend::SyntaxNode &sn = *($1);
                 $$ = std::make_unique<JLang::frontend::FileStatement>(
                                                                                std::move($1),
                                                                                sn
@@ -419,15 +419,15 @@ opt_global_initializer
 
 global_initializer
         : global_initializer_expression_primary {
-                auto sn = $1->get_syntax_node();
+                const JLang::frontend::SyntaxNode &sn = *($1);
                 $$ = std::make_unique<JLang::frontend::GlobalInitializer>(std::move($1), sn);
         }
         | global_initializer_addressof_expression_primary {
-                auto sn = $1->get_syntax_node();
+                const JLang::frontend::SyntaxNode &sn = *($1);
                 $$ = std::make_unique<JLang::frontend::GlobalInitializer>(std::move($1), sn);
         }
         | global_initializer_struct_initializer_list {
-                auto sn = $1->get_syntax_node();
+                const JLang::frontend::SyntaxNode &sn = *($1);
                 $$ = std::make_unique<JLang::frontend::GlobalInitializer>(std::move($1), sn);
         }
         ;
@@ -1918,7 +1918,7 @@ class_member_declaration
                                                                                                        std::move($4),
                                                                                                        std::move($5)
                                                                                                        );
-                auto sn = expr->get_syntax_node();
+                const JLang::frontend::SyntaxNode &sn = *(expr);
                 $$ = std::make_unique<JLang::frontend::ClassMemberDeclaration>(std::move(expr), sn);
                 PRINT_NONTERMINALS($$);
         }
@@ -1933,7 +1933,7 @@ class_member_declaration
                                                                                                      std::move($6),
                                                                                                      std::move($7)
                                                                                                      );
-                auto sn = expr->get_syntax_node();
+                const JLang::frontend::SyntaxNode &sn = *(expr);
                 $$ = std::make_unique<JLang::frontend::ClassMemberDeclaration>(std::move(expr), sn);
                 PRINT_NONTERMINALS($$);
         }
@@ -1947,7 +1947,7 @@ class_member_declaration
                                                                                                      std::move($5),
                                                                                                      std::move($6)
                                                                                                      );
-                auto sn = expr->get_syntax_node();
+                const JLang::frontend::SyntaxNode &sn = *(expr);
                 $$ = std::make_unique<JLang::frontend::ClassMemberDeclaration>(std::move(expr), sn);
                 PRINT_NONTERMINALS($$);
         }
@@ -1962,22 +1962,22 @@ class_member_declaration
                                                                                                          std::move($6),
                                                                                                          std::move($7)
                                                                                                          );
-                auto sn = expr->get_syntax_node();
+                const JLang::frontend::SyntaxNode &sn = *(expr);
                 $$ = std::make_unique<JLang::frontend::ClassMemberDeclaration>(std::move(expr), sn);
                 PRINT_NONTERMINALS($$);
         }
         | class_definition {
-                auto sn = $1->get_syntax_node();
+                const JLang::frontend::SyntaxNode &sn = *($1);
                 $$ = std::make_unique<JLang::frontend::ClassMemberDeclaration>(std::move($1), sn);
                 PRINT_NONTERMINALS($$);
         }
         | enum_definition {
-                auto sn = $1->get_syntax_node();
+                const JLang::frontend::SyntaxNode &sn = *($1);
                 $$ = std::make_unique<JLang::frontend::ClassMemberDeclaration>(std::move($1), sn);
                 PRINT_NONTERMINALS($$);
         }
         | type_definition {
-                auto sn = $1->get_syntax_node();
+                const JLang::frontend::SyntaxNode &sn = *($1);
                 $$ = std::make_unique<JLang::frontend::ClassMemberDeclaration>(std::move($1), sn);
                 PRINT_NONTERMINALS($$);
         }
@@ -2026,7 +2026,7 @@ type_specifier
                                                                                       std::move($1),
                                                                                       std::move($2)
                                                                                       );
-                auto sn = expr->get_syntax_node();
+                const JLang::frontend::SyntaxNode &sn = *(expr);
                 $$ = std::make_unique<JLang::frontend::TypeSpecifier>(std::move(expr), sn);
                 PRINT_NONTERMINALS($$);
         }
@@ -2037,7 +2037,7 @@ type_specifier
                                                                                       std::move($3),
                                                                                       std::move($4)
                                                                                       );
-                auto sn = expr->get_syntax_node();
+                const JLang::frontend::SyntaxNode &sn = *(expr);
                 $$ = std::make_unique<JLang::frontend::TypeSpecifier>(std::move(expr), sn);
                 PRINT_NONTERMINALS($$);
         }
@@ -2052,7 +2052,7 @@ type_specifier
                                                                                       std::move($7),
                                                                                       std::move($8)
                                                                                       );
-                auto sn = expr->get_syntax_node();
+                const JLang::frontend::SyntaxNode &sn = *(expr);
                 $$ = std::make_unique<JLang::frontend::TypeSpecifier>(std::move(expr), sn);
                 PRINT_NONTERMINALS($$);
         }
@@ -2062,7 +2062,7 @@ type_specifier
                                                                                       std::move($2),
                                                                                       std::move($3)
                                                                                       );
-                auto sn = expr->get_syntax_node();
+                const JLang::frontend::SyntaxNode &sn = *(expr);
                 $$ = std::make_unique<JLang::frontend::TypeSpecifier>(std::move(expr), sn);
                 PRINT_NONTERMINALS($$);
         }
@@ -2072,7 +2072,7 @@ type_specifier
                                                                                       std::move($2),
                                                                                       std::move($3)
                                                                                       );
-                auto sn = expr->get_syntax_node();
+                const JLang::frontend::SyntaxNode &sn = *(expr);
                 $$ = std::make_unique<JLang::frontend::TypeSpecifier>(std::move(expr), sn);
                 PRINT_NONTERMINALS($$);
         }

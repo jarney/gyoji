@@ -13,17 +13,17 @@ namespace JLang::backend {
   class JBackendFormatTree : public JBackend {
   private:
     int indent;
-    void print_non_syntax(const TerminalNonSyntax::raw_ptr non_syntax);
+    void print_non_syntax(const TerminalNonSyntax & non_syntax);
     void print_indent(void);
-    void print_comment_multi_line(const TerminalNonSyntax::raw_ptr node);
-    void print_comment_single_line(const TerminalNonSyntax::raw_ptr node);
-    void print_whitespace(const TerminalNonSyntax::raw_ptr node);
-    void print_file_metadata(const TerminalNonSyntax::raw_ptr node);
+    void print_comment_multi_line(const TerminalNonSyntax & node);
+    void print_comment_single_line(const TerminalNonSyntax & node);
+    void print_whitespace(const TerminalNonSyntax & node);
+    void print_file_metadata(const TerminalNonSyntax & node);
     
   public:
     JBackendFormatTree();
     ~JBackendFormatTree();
-    virtual int process(const SyntaxNode * file);
+    virtual int process(const SyntaxNode & file);
   };
 
 };

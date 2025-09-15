@@ -8,10 +8,6 @@ Terminal::Terminal()
 {}
 Terminal::~Terminal()
 {}
-std::vector<TerminalNonSyntax::raw_ptr> Terminal::get_whitespace()
-{
-  return std::vector<TerminalNonSyntax::raw_ptr>();
-}
 TerminalNonSyntax::TerminalNonSyntax(TerminalNonSyntaxType _type, std::string _data)
   : type(_type)
   , data(_data)
@@ -40,16 +36,16 @@ SyntaxNode::SyntaxNode(std::string _type, SyntaxNode::specific_type_t _data)
 SyntaxNode::~SyntaxNode()
 {}
 void
-SyntaxNode::add_child(const SyntaxNode* node)
+SyntaxNode::add_child(const SyntaxNode & node)
 {
   children.push_back(node);
 }
 void
-SyntaxNode::prepend_child(const SyntaxNode *node)
+SyntaxNode::prepend_child(const SyntaxNode & node)
 {
   children.insert(children.begin(), node);
 }
-const std::vector<const SyntaxNode*> &
+const std::vector<std::reference_wrapper<const SyntaxNode>> &
 SyntaxNode::get_children() const
 {
   return children;
@@ -58,13 +54,9 @@ const std::string & SyntaxNode::get_type() const
 {
   return type;
 }
-const SyntaxNode::specific_type_t &SyntaxNode::get_data() const
-{
-  return data;
-}
-const SyntaxNode *
+const SyntaxNode &
 SyntaxNode::get_syntax_node() const
-{ return this; }
+{ return *this; }
 
 ///////////////////////////////////////////////////
 AccessQualifier::AccessQualifier(AccessQualifier::AccessQualifierType _type)
@@ -77,7 +69,7 @@ AccessQualifier::AccessQualifier(Terminal::owned_ptr _qualifier, AccessQualifier
   , type(_type)
   , qualifier(std::move(_qualifier))
 {
-  add_child(qualifier.get());
+  add_child(*qualifier);
 }
 AccessQualifier::~AccessQualifier()
 {}
@@ -91,7 +83,7 @@ AccessModifier::AccessModifier(Terminal::owned_ptr _modifier, AccessModifier::Ac
   , modifier(std::move(_modifier))
   , type(_type)
 {
-  add_child(modifier.get());
+  add_child(*modifier);
 }
 AccessModifier::AccessModifier(AccessModifier::AccessModifierType _type)
   : SyntaxNode("access_modifier", this)
@@ -116,7 +108,7 @@ UnsafeModifier::UnsafeModifier(Terminal::owned_ptr _unsafe_token)
   : SyntaxNode("unsafe_modifier", this)
   , unsafe_token(std::move(_unsafe_token))
 {
-  add_child(unsafe_token.get());
+  add_child(*unsafe_token);
 }
 UnsafeModifier::~UnsafeModifier()
 {}
@@ -136,7 +128,7 @@ TypeName::TypeName(Terminal::owned_ptr _type_name)
   , expression(nullptr)
   , paren_r_token(nullptr)
 {
-  add_child(type_name.get());
+  add_child(*type_name);
 }
 TypeName::TypeName(Terminal::owned_ptr _typeof_token,
                Terminal::owned_ptr _paren_l_token,
@@ -151,10 +143,10 @@ TypeName::TypeName(Terminal::owned_ptr _typeof_token,
   , expression(std::move(_expression))
   , paren_r_token(std::move(_paren_r_token))
 {
-  add_child(typeof_token.get());
-  add_child(paren_l_token.get());
-  add_child(expression.get());
-  add_child(paren_r_token.get());
+  add_child(*typeof_token);
+  add_child(*paren_l_token);
+  add_child(*expression);
+  add_child(*paren_r_token);
 }
 TypeName::~TypeName()
 {}
@@ -179,14 +171,14 @@ TypeSpecifierCallArgs::get_arguments() const
 void
 TypeSpecifierCallArgs::add_argument(std::unique_ptr<TypeSpecifier> _argument)
 {
-  add_child(_argument.get());
+  add_child(*_argument);
   arguments.push_back(std::move(_argument));
 }
 void
 TypeSpecifierCallArgs::add_argument(Terminal::owned_ptr _comma_token, std::unique_ptr<TypeSpecifier> _argument)
 {
-  add_child(_comma_token.get());
-  add_child(_argument.get());
+  add_child(*_comma_token);
+  add_child(*_argument);
   comma_list.push_back(std::move(_comma_token));
   arguments.push_back(std::move(_argument));
 }
@@ -200,8 +192,8 @@ TypeSpecifierSimple::TypeSpecifierSimple(
   , access_qualifier(std::move(_access_qualifier))
   , type_name(std::move(_type_name))
 {
-  add_child(access_qualifier.get());
-  add_child(type_name.get());
+  add_child(*access_qualifier);
+  add_child(*type_name);
 }
 TypeSpecifierSimple::~TypeSpecifierSimple()
 {}
@@ -224,10 +216,10 @@ TypeSpecifierTemplate::TypeSpecifierTemplate(
   , type_specifier_call_args(std::move(_type_specifier_call_args))
   , paren_r_token(std::move(_paren_r_token))
 {
-  add_child(type_specifier.get());
-  add_child(paren_l_token.get());
-  add_child(type_specifier_call_args.get());
-  add_child(paren_r_token.get());
+  add_child(*type_specifier);
+  add_child(*paren_l_token);
+  add_child(*type_specifier_call_args);
+  add_child(*paren_r_token);
 }
 TypeSpecifierTemplate::~TypeSpecifierTemplate()
 {}
@@ -279,9 +271,9 @@ TypeSpecifierPointerTo::TypeSpecifierPointerTo(
   , star_token(std::move(_star_token))
   , access_qualifier(std::move(_access_qualifier))
 {
-  add_child(type_specifier.get());
-  add_child(star_token.get());
-  add_child(access_qualifier.get());
+  add_child(*type_specifier);
+  add_child(*star_token);
+  add_child(*access_qualifier);
 }
 TypeSpecifierPointerTo::~TypeSpecifierPointerTo()
 {}
@@ -302,9 +294,9 @@ TypeSpecifierReferenceTo::TypeSpecifierReferenceTo(
   , andpersand_token(std::move(_andpersand_token))
   , access_qualifier(std::move(_access_qualifier))
 {
-  add_child(type_specifier.get());
-  add_child(andpersand_token.get());
-  add_child(access_qualifier.get());
+  add_child(*type_specifier);
+  add_child(*andpersand_token);
+  add_child(*access_qualifier);
 }
 TypeSpecifierReferenceTo::~TypeSpecifierReferenceTo()
 {}
@@ -315,7 +307,7 @@ const AccessQualifier &
 TypeSpecifierReferenceTo::get_access_qualifier() const
 { return *access_qualifier; }
 ///////////////////////////////////////////////////
-TypeSpecifier::TypeSpecifier(TypeSpecifier::TypeSpecifierType _type, const SyntaxNode *_raw_ptr)
+TypeSpecifier::TypeSpecifier(TypeSpecifier::TypeSpecifierType _type, const SyntaxNode &_raw_ptr)
   : SyntaxNode("type_specifier", this)
   , type(std::move(_type))
 {
@@ -335,8 +327,8 @@ FunctionDefinitionArg::FunctionDefinitionArg(TypeSpecifier::owned_ptr _type_spec
   , type_specifier(std::move(_type_specifier))
   , identifier_token(std::move(_identifier_token))
 {
-  add_child(type_specifier.get());
-  add_child(identifier_token.get());
+  add_child(*type_specifier);
+  add_child(*identifier_token);
 }
 FunctionDefinitionArg::~FunctionDefinitionArg()
 {}
@@ -359,13 +351,13 @@ FunctionDefinitionArgList::get_arguments() const
 void
 FunctionDefinitionArgList::add_argument(FunctionDefinitionArg::owned_ptr _argument)
 {
-  add_child(_argument.get());
+  add_child(*_argument);
   arguments.push_back(std::move(_argument));
 }
 void
 FunctionDefinitionArgList::add_comma(Terminal::owned_ptr _comma)
 {
-  add_child(_comma.get());
+  add_child(*_comma);
   commas.push_back(std::move(_comma));
 }
 
@@ -392,14 +384,14 @@ FileStatementFunctionDeclaration::FileStatementFunctionDeclaration(
   , paren_r(std::move(_paren_r))
   , semicolon(std::move(_semicolon))
 {
-  add_child(access_modifier.get());
-  add_child(unsafe_modifier.get());
-  add_child(type_specifier.get());
-  add_child(name.get());
-  add_child(paren_l.get());
-  add_child(arguments.get());
-  add_child(paren_r.get());
-  add_child(semicolon.get());
+  add_child(*access_modifier);
+  add_child(*unsafe_modifier);
+  add_child(*type_specifier);
+  add_child(*name);
+  add_child(*paren_l);
+  add_child(*arguments);
+  add_child(*paren_r);
+  add_child(*semicolon);
 }
 FileStatementFunctionDeclaration::~FileStatementFunctionDeclaration()
 {}
@@ -441,11 +433,11 @@ StatementVariableDeclaration::StatementVariableDeclaration(
   , global_initializer(std::move(_global_initializer))
   , semicolon_token(std::move(_semicolon_token))
 {
-  add_child(type_specifier.get());
-  add_child(identifier_token.get());
-  add_child(array_length.get());
-  add_child(global_initializer.get());
-  add_child(semicolon_token.get());
+  //  add_child(*type_specifier);
+  //  add_child(*identifier_token);
+  //  add_child(*array_length);
+  //  add_child(*global_initializer);
+  //  add_child(*semicolon_token);
 }
 StatementVariableDeclaration::~StatementVariableDeclaration()
 {}
@@ -470,8 +462,8 @@ StatementBlock::StatementBlock(
   , unsafe_modifier(std::move(_unsafe_modifier))
   , scope_body(std::move(_scope_body))
 {
-  add_child(unsafe_modifier.get());
-  add_child(scope_body.get());
+  add_child(*unsafe_modifier);
+  add_child(*scope_body);
 }
 StatementBlock::~StatementBlock()
 {}
@@ -490,8 +482,8 @@ StatementExpression::StatementExpression(
   , expression(std::move(_expression))
   , semicolon_token(std::move(_semicolon_token))
 {
-  add_child(expression.get());
-  add_child(semicolon_token.get());
+  add_child(*expression);
+  add_child(*semicolon_token);
 }
 StatementExpression::~StatementExpression()
 {}
@@ -519,13 +511,13 @@ StatementIfElse::StatementIfElse(
   , else_token(std::move(_else_token))
   , else_scope_body(std::move(_else_scope_body))
 {
-  add_child(if_token.get());
-  add_child(paren_l_token.get());
-  add_child(expression.get());
-  add_child(paren_r_token.get());
-  add_child(if_scope_body.get());
-  add_child(else_token.get());
-  add_child(else_scope_body.get());
+  add_child(*if_token);
+  add_child(*paren_l_token);
+  add_child(*expression);
+  add_child(*paren_r_token);
+  add_child(*if_scope_body);
+  add_child(*else_token);
+  add_child(*else_scope_body);
 }
 StatementIfElse::StatementIfElse(
                       Terminal::owned_ptr _if_token,
@@ -548,13 +540,13 @@ StatementIfElse::StatementIfElse(
   , else_scope_body(nullptr)
   , else_if(std::move(_else_if))
 {
-  add_child(if_token.get());
-  add_child(paren_l_token.get());
-  add_child(expression.get());
-  add_child(paren_r_token.get());
-  add_child(if_scope_body.get());
-  add_child(else_token.get());
-  add_child(else_if.get());
+  add_child(*if_token);
+  add_child(*paren_l_token);
+  add_child(*expression);
+  add_child(*paren_r_token);
+  add_child(*if_scope_body);
+  add_child(*else_token);
+  add_child(*else_if);
 }
 StatementIfElse::StatementIfElse(
                       Terminal::owned_ptr _if_token,
@@ -574,11 +566,11 @@ StatementIfElse::StatementIfElse(
   , else_token(nullptr)
   , else_scope_body(nullptr)
 {
-  add_child(if_token.get());
-  add_child(paren_l_token.get());
-  add_child(expression.get());
-  add_child(paren_r_token.get());
-  add_child(if_scope_body.get());
+  add_child(*if_token);
+  add_child(*paren_l_token);
+  add_child(*expression);
+  add_child(*paren_r_token);
+  add_child(*if_scope_body);
 }  
 StatementIfElse::~StatementIfElse()
 {}
@@ -613,11 +605,11 @@ StatementWhile::StatementWhile(
   , paren_r_token(std::move(_paren_r_token))
   , scope_body(std::move(_scope_body))
 {
-  add_child(while_token.get());
-  add_child(paren_l_token.get());
-  add_child(expression.get());
-  add_child(paren_r_token.get());
-  add_child(scope_body.get());
+  add_child(*while_token);
+  add_child(*paren_l_token);
+  add_child(*expression);
+  add_child(*paren_r_token);
+  add_child(*scope_body);
 }
 StatementWhile::~StatementWhile()
 {}
@@ -650,15 +642,15 @@ StatementFor::StatementFor(
   , paren_r_token(std::move(_paren_r_token))
   , scope_body(std::move(_scope_body))
 {
-  add_child(for_token.get());
-  add_child(paren_l_token.get());
-  add_child(expression_initial.get());
-  add_child(semicolon_initial.get());
-  add_child(expression_termination.get());
-  add_child(semicolon_termination.get());
-  add_child(expression_increment.get());
-  add_child(paren_r_token.get());
-  add_child(scope_body.get());
+  add_child(*for_token);
+  add_child(*paren_l_token);
+  add_child(*expression_initial);
+  add_child(*semicolon_initial);
+  add_child(*expression_termination);
+  add_child(*semicolon_termination);
+  add_child(*expression_increment);
+  add_child(*paren_r_token);
+  add_child(*scope_body);
 }
 StatementFor::~StatementFor()
 {}
@@ -686,9 +678,9 @@ StatementSwitchBlock::StatementSwitchBlock(
   , colon_token(std::move(_colon_token))
   , scope_body(std::move(_scope_body))
 {
-  add_child(default_token.get());
-  add_child(colon_token.get());
-  add_child(scope_body.get());
+  add_child(*default_token);
+  add_child(*colon_token);
+  add_child(*scope_body);
 }
 StatementSwitchBlock::StatementSwitchBlock(
                            Terminal::owned_ptr _case_token,
@@ -703,10 +695,10 @@ StatementSwitchBlock::StatementSwitchBlock(
   , colon_token(std::move(_colon_token))
   , scope_body(std::move(_scope_body))
 {
-  add_child(case_token.get());
-  add_child(expression.get());
-  add_child(colon_token.get());
-  add_child(scope_body.get());
+  add_child(*case_token);
+  add_child(*expression);
+  add_child(*colon_token);
+  add_child(*scope_body);
 }
 StatementSwitchBlock::~StatementSwitchBlock()
 {}
@@ -752,14 +744,14 @@ StatementSwitch::StatementSwitch(
   , switch_content(std::move(_switch_content))
   , brace_r_token(std::move(_brace_r_token))
 {
-  add_child(switch_token.get());
-  add_child(expression.get());
-  add_child(paren_l_token.get());
-  add_child(expression.get());
-  add_child(paren_r_token.get());
-  add_child(brace_l_token.get());
-  add_child(switch_content.get());
-  add_child(brace_r_token.get());
+  add_child(*switch_token);
+  add_child(*expression);
+  add_child(*paren_l_token);
+  add_child(*expression);
+  add_child(*paren_r_token);
+  add_child(*brace_l_token);
+  add_child(*switch_content);
+  add_child(*brace_r_token);
 }
 StatementSwitch::~StatementSwitch()
 {}
@@ -780,9 +772,9 @@ StatementLabel::StatementLabel(
   , identifier_token(std::move(_identifier_token))
   , colon_token(std::move(_colon_token))
 {
-  add_child(label_token.get());
-  add_child(identifier_token.get());
-  add_child(colon_token.get());
+  add_child(*label_token);
+  add_child(*identifier_token);
+  add_child(*colon_token);
 }
 StatementLabel::~StatementLabel()
 {}
@@ -801,9 +793,9 @@ StatementGoto::StatementGoto(
   , identifier_token(std::move(_identifier_token))
   , semicolon_token(std::move(_semicolon_token))
 {
-  add_child(goto_token.get());
-  add_child(identifier_token.get());
-  add_child(semicolon_token.get());
+  add_child(*goto_token);
+  add_child(*identifier_token);
+  add_child(*semicolon_token);
 }
 StatementGoto::~StatementGoto()
 {}
@@ -819,8 +811,8 @@ StatementBreak::StatementBreak(
   , break_token(std::move(_break_token))
   , semicolon_token(std::move(_semicolon_token))
 {
-  add_child(break_token.get());
-  add_child(semicolon_token.get());
+  add_child(*break_token);
+  add_child(*semicolon_token);
 }
 StatementBreak::~StatementBreak()
 {}
@@ -833,8 +825,8 @@ StatementContinue::StatementContinue(
   , continue_token(std::move(_continue_token))
   , semicolon_token(std::move(_semicolon_token))
 {
-  add_child(continue_token.get());
-  add_child(semicolon_token.get());
+  add_child(*continue_token);
+  add_child(*semicolon_token);
 }
 StatementContinue::~StatementContinue()
 {}
@@ -849,9 +841,9 @@ StatementReturn::StatementReturn(
   , expression(std::move(_expression))
   , semicolon_token(std::move(_semicolon_token))
 {
-  add_child(return_token.get());
-  add_child(expression.get());
-  add_child(semicolon_token.get());
+  add_child(*return_token);
+  add_child(*expression);
+  add_child(*semicolon_token);
 }
 StatementReturn::~StatementReturn()
 {}
@@ -878,7 +870,7 @@ StatementList::~StatementList()
 void
 StatementList::add_statement(Statement::owned_ptr _statement)
 {
-  add_child(_statement.get());
+  add_child(*_statement);
   statements.push_back(std::move(_statement));
 }
 const std::vector<Statement::owned_ptr> &
@@ -896,9 +888,9 @@ ScopeBody::ScopeBody(
   , statement_list(std::move(_statement_list))
   , brace_r_token(std::move(_brace_r_token))
 {
-  add_child(brace_l_token.get());
-  add_child(statement_list.get());
-  add_child(brace_r_token.get());
+  add_child(*brace_l_token);
+  add_child(*statement_list);
+  add_child(*brace_r_token);
 }
 ScopeBody::~ScopeBody()
 {}
@@ -926,14 +918,14 @@ FileStatementFunctionDefinition::FileStatementFunctionDefinition(
   , paren_r(std::move(_paren_r))
   , scope_body(std::move(_scope_body))
 {
-  add_child(access_modifier.get());
-  add_child(unsafe_modifier.get());
-  add_child(type_specifier.get());
-  add_child(name.get());
-  add_child(paren_l.get());
-  add_child(arguments.get());
-  add_child(paren_r.get());
-  add_child(scope_body.get());
+  add_child(*access_modifier);
+  add_child(*unsafe_modifier);
+  add_child(*type_specifier);
+  add_child(*name);
+  add_child(*paren_l);
+  add_child(*arguments);
+  add_child(*paren_r);
+  add_child(*scope_body);
 }
 FileStatementFunctionDefinition::~FileStatementFunctionDefinition()
 {}
@@ -982,9 +974,9 @@ ArrayLength::ArrayLength(
   , literal_int_token(std::move(_literal_int_token))
   , bracket_r_token(std::move(_bracket_r_token))
 {
-  add_child(bracket_l_token.get());
-  add_child(literal_int_token.get());
-  add_child(bracket_r_token.get());
+  add_child(*bracket_l_token);
+  add_child(*literal_int_token);
+  add_child(*bracket_r_token);
 }
 ArrayLength::~ArrayLength()
 {}
@@ -1010,10 +1002,10 @@ ClassDeclStart::ClassDeclStart(
   , identifier_token(std::move(_identifier_token))
   , class_argument_list(std::move(_class_argument_list))
 {
-  add_child(access_modifier.get());
-  add_child(class_token.get());
-  add_child(identifier_token.get());
-  add_child(class_argument_list.get());
+  add_child(*access_modifier);
+  add_child(*class_token);
+  add_child(*identifier_token);
+  add_child(*class_argument_list);
 }
 ClassDeclStart::~ClassDeclStart()
 {}
@@ -1032,7 +1024,7 @@ ClassArgumentList::ClassArgumentList(Terminal::owned_ptr _argument)
   , paren_l(nullptr)
   , paren_r(nullptr)
 {
-  add_child(_argument.get());
+  add_child(*_argument);
   argument_list.push_back(std::move(_argument));
 }
 ClassArgumentList::ClassArgumentList()
@@ -1047,10 +1039,10 @@ void
 ClassArgumentList::add_parens(Terminal::owned_ptr _paren_l, Terminal::owned_ptr _paren_r)
 {
   paren_l = std::move(_paren_l);
-  prepend_child(paren_l.get());
+  prepend_child(*paren_l);
   
   paren_r = std::move(_paren_r);
-  add_child(paren_r.get());
+  add_child(*paren_r);
 }
 
 void
@@ -1077,11 +1069,11 @@ ClassMemberDeclarationVariable::ClassMemberDeclarationVariable(
   , array_length(std::move(_array_length))
   , semicolon_token(std::move(_semicolon_token))
 {
-  add_child(access_modifier.get());
-  add_child(type_specifier.get());
-  add_child(identifier_token.get());
-  add_child(array_length.get());
-  add_child(semicolon_token.get());
+  add_child(*access_modifier);
+  add_child(*type_specifier);
+  add_child(*identifier_token);
+  add_child(*array_length);
+  add_child(*semicolon_token);
 }
 ClassMemberDeclarationVariable::~ClassMemberDeclarationVariable()
 {}
@@ -1116,13 +1108,13 @@ ClassMemberDeclarationMethod::ClassMemberDeclarationMethod(
  , paren_r_token(std::move(_paren_r_token))
  , semicolon_token(std::move(_semicolon_token))
 {
-  add_child(access_modifier.get());
-  add_child(type_specifier.get());
-  add_child(identifier_token.get());
-  add_child(paren_l_token.get());
-  add_child(function_definition_arg_list.get());
-  add_child(paren_r_token.get());
-  add_child(semicolon_token.get());
+  add_child(*access_modifier);
+  add_child(*type_specifier);
+  add_child(*identifier_token);
+  add_child(*paren_l_token);
+  add_child(*function_definition_arg_list);
+  add_child(*paren_r_token);
+  add_child(*semicolon_token);
 }
 ClassMemberDeclarationMethod::~ClassMemberDeclarationMethod()
 {}
@@ -1155,12 +1147,12 @@ ClassMemberDeclarationConstructor::ClassMemberDeclarationConstructor(
  , paren_r_token(std::move(_paren_r_token))
  , semicolon_token(std::move(_semicolon_token))
 {
-  add_child(access_modifier.get());
-  add_child(type_specifier.get());
-  add_child(paren_l_token.get());
-  add_child(function_definition_arg_list.get());
-  add_child(paren_r_token.get());
-  add_child(semicolon_token.get());
+  add_child(*access_modifier);
+  add_child(*type_specifier);
+  add_child(*paren_l_token);
+  add_child(*function_definition_arg_list);
+  add_child(*paren_r_token);
+  add_child(*semicolon_token);
 }
 ClassMemberDeclarationConstructor::~ClassMemberDeclarationConstructor()
 {}
@@ -1192,13 +1184,13 @@ ClassMemberDeclarationDestructor::ClassMemberDeclarationDestructor(
  , paren_r_token(std::move(_paren_r_token))
  , semicolon_token(std::move(_semicolon_token))
 {
-  add_child(access_modifier.get());
-  add_child(tilde_token.get());
-  add_child(type_specifier.get());
-  add_child(paren_l_token.get());
-  add_child(function_definition_arg_list.get());
-  add_child(paren_r_token.get());
-  add_child(semicolon_token.get());
+  add_child(*access_modifier);
+  add_child(*tilde_token);
+  add_child(*type_specifier);
+  add_child(*paren_l_token);
+  add_child(*function_definition_arg_list);
+  add_child(*paren_r_token);
+  add_child(*semicolon_token);
 }
 ClassMemberDeclarationDestructor::~ClassMemberDeclarationDestructor()
 {}
@@ -1214,7 +1206,7 @@ ClassMemberDeclarationDestructor::get_arguments() const
 ///////////////////////////////////////////////////
 ClassMemberDeclaration::ClassMemberDeclaration(
                                                MemberType _member,
-                                               const SyntaxNode *_raw_ptr
+                                               const SyntaxNode &_raw_ptr
                                                )
   : SyntaxNode("class_member_declaration", this)
   , member(std::move(_member))
@@ -1242,7 +1234,7 @@ ClassMemberDeclarationList::get_members() const
 void
 ClassMemberDeclarationList::add_member(ClassMemberDeclaration::owned_ptr _member)
 {
-  add_child(_member.get());
+  add_child(*_member);
   members.push_back(std::move(_member));
 }
 ///////////////////////////////////////////////////
@@ -1260,11 +1252,11 @@ ClassDefinition::ClassDefinition(
   , brace_r_token(std::move(_brace_r_token))
   , semicolon_token(std::move(_semicolon_token))
 {
-  add_child(class_decl_start.get());
-  add_child(brace_l_token.get());
-  add_child(class_member_declaration_list.get());
-  add_child(brace_r_token.get());
-  add_child(semicolon_token.get());
+  add_child(*class_decl_start);
+  add_child(*brace_l_token);
+  add_child(*class_member_declaration_list);
+  add_child(*brace_r_token);
+  add_child(*semicolon_token);
 }
 ClassDefinition::~ClassDefinition()
 {}
@@ -1302,11 +1294,11 @@ TypeDefinition::TypeDefinition(
   , identifier_token(std::move(_identifier_token))
   , semicolon_token(std::move(_semicolon_token))
 {
-  add_child(access_modifier.get());
-  add_child(typedef_token.get());
-  add_child(type_specifier.get());
-  add_child(identifier_token.get());
-  add_child(semicolon_token.get());
+  add_child(*access_modifier);
+  add_child(*typedef_token);
+  add_child(*type_specifier);
+  add_child(*identifier_token);
+  add_child(*semicolon_token);
 }
 TypeDefinition::~TypeDefinition()
 {}
@@ -1333,10 +1325,10 @@ EnumDefinitionValue::EnumDefinitionValue(
   , expression_primary(std::move(_expression_primary))
   , semicolon_token(std::move(_semicolon_token))
 {
-  add_child(identifier_token.get());
-  add_child(equals_token.get());
-  add_child(expression_primary.get());
-  add_child(semicolon_token.get());
+  add_child(*identifier_token);
+  add_child(*equals_token);
+  add_child(*expression_primary);
+  add_child(*semicolon_token);
 }
 EnumDefinitionValue::~EnumDefinitionValue()
 {}
@@ -1358,7 +1350,7 @@ EnumDefinitionValueList::~EnumDefinitionValueList()
 void
 EnumDefinitionValueList::add_value(EnumDefinitionValue::owned_ptr _value)
 {
-  add_child(_value.get());
+  add_child(*_value);
   values.push_back(std::move(_value));
 }
 const std::vector<EnumDefinitionValue::owned_ptr> &
@@ -1386,14 +1378,14 @@ EnumDefinition::EnumDefinition(
 , brace_r_token(std::move(_brace_r_token))
 , semicolon_token(std::move(_semicolon_token))
 {
-  add_child(access_modifier.get());
-  add_child(enum_token.get());
-  add_child(type_name_token.get());
-  add_child(identifier_token.get());
-  add_child(brace_l_token.get());
-  add_child(enum_value_list.get());
-  add_child(brace_r_token.get());
-  add_child(semicolon_token.get());
+  add_child(*access_modifier);
+  add_child(*enum_token);
+  add_child(*type_name_token);
+  add_child(*identifier_token);
+  add_child(*brace_l_token);
+  add_child(*enum_value_list);
+  add_child(*brace_r_token);
+  add_child(*semicolon_token);
 }
 EnumDefinition::~EnumDefinition()
 {}
@@ -1414,7 +1406,7 @@ ExpressionPrimaryIdentifier::ExpressionPrimaryIdentifier(Terminal::owned_ptr _id
   : SyntaxNode("expression_primary_identifier", this)
   , identifier_token(std::move(_identifier_token))
 {
-  add_child(identifier_token.get());
+  add_child(*identifier_token);
 }
 ExpressionPrimaryIdentifier::~ExpressionPrimaryIdentifier()
 {}
@@ -1432,9 +1424,9 @@ ExpressionPrimaryNested::ExpressionPrimaryNested(
   , expression(std::move(_expression))
   , paren_r_token(std::move(_paren_r_token))
 {
-  add_child(paren_l_token.get());
-  add_child(expression.get());
-  add_child(paren_r_token.get());
+  add_child(*paren_l_token);
+  add_child(*expression);
+  add_child(*paren_r_token);
 }
 ExpressionPrimaryNested::~ExpressionPrimaryNested()
 {}
@@ -1449,7 +1441,7 @@ ExpressionPrimaryLiteralInt::ExpressionPrimaryLiteralInt(
   : SyntaxNode("expression_primary_literal_int", this)
   , literal_token(std::move(_literal_token))
 {
-  add_child(literal_token.get());
+  add_child(*literal_token);
 }
 ExpressionPrimaryLiteralInt::~ExpressionPrimaryLiteralInt()
 {}
@@ -1463,7 +1455,7 @@ ExpressionPrimaryLiteralChar::ExpressionPrimaryLiteralChar(
   : SyntaxNode("expression_primary_literal_char", this)
   , literal_token(std::move(_literal_token))
 {
-  add_child(literal_token.get());
+  add_child(*literal_token);
 }
 ExpressionPrimaryLiteralChar::~ExpressionPrimaryLiteralChar()
 {}
@@ -1477,7 +1469,7 @@ ExpressionPrimaryLiteralString::ExpressionPrimaryLiteralString(
   : SyntaxNode("expression_primary_literal_string", this)
   , literal_token(std::move(_literal_token))
 {
-  add_child(literal_token.get());
+  add_child(*literal_token);
 }
 ExpressionPrimaryLiteralString::~ExpressionPrimaryLiteralString()
 {}
@@ -1491,7 +1483,7 @@ ExpressionPrimaryLiteralFloat::ExpressionPrimaryLiteralFloat(
   : SyntaxNode("expression_primary_literal_float", this)
   , literal_token(std::move(_literal_token))
 {
-  add_child(literal_token.get());
+  add_child(*literal_token);
 }
 const std::string &
 ExpressionPrimaryLiteralFloat::get_value() const
@@ -1523,10 +1515,10 @@ ExpressionPostfixArrayIndex::ExpressionPostfixArrayIndex(
   , index_expression(std::move(_index_expression))
   , bracket_r_token(std::move(_bracket_r_token))
 {
-  add_child(array_expression.get());
-  add_child(bracket_l_token.get());
-  add_child(index_expression.get());
-  add_child(bracket_r_token.get());
+  add_child(*array_expression);
+  add_child(*bracket_l_token);
+  add_child(*index_expression);
+  add_child(*bracket_r_token);
 }
 ExpressionPostfixArrayIndex::~ExpressionPostfixArrayIndex()
 {}
@@ -1548,14 +1540,14 @@ ArgumentExpressionList::get_arguments() const
 void
 ArgumentExpressionList::add_argument(std::unique_ptr<Expression> _argument)
 {
-  add_child(_argument.get());
+  add_child(*_argument);
   arguments.push_back(std::move(_argument));
 }
 void
 ArgumentExpressionList::add_argument(Terminal::owned_ptr _comma_token, std::unique_ptr<Expression> _argument)
 {
-  add_child(_comma_token.get());
-  add_child(_argument.get());
+  add_child(*_comma_token);
+  add_child(*_argument);
   comma_list.push_back(std::move(_comma_token));
   arguments.push_back(std::move(_argument));
 }
@@ -1573,10 +1565,10 @@ ExpressionPostfixFunctionCall::ExpressionPostfixFunctionCall(
   , arguments(std::move(_arguments))
   , paren_r_token(std::move(_paren_r_token))
 {
-  add_child(function_expression.get());
-  add_child(paren_l_token.get());
-  add_child(arguments.get());
-  add_child(paren_r_token.get());
+  add_child(*function_expression);
+  add_child(*paren_l_token);
+  add_child(*arguments);
+  add_child(*paren_r_token);
 }
 ExpressionPostfixFunctionCall::~ExpressionPostfixFunctionCall()
 {}
@@ -1597,9 +1589,9 @@ ExpressionPostfixDot::ExpressionPostfixDot(
   , dot_token(std::move(_dot_token))
   , identifier_token(std::move(_identifier_token))
 {
-  add_child(expression.get());
-  add_child(dot_token.get());
-  add_child(identifier_token.get());
+  add_child(*expression);
+  add_child(*dot_token);
+  add_child(*identifier_token);
 }
 ExpressionPostfixDot::~ExpressionPostfixDot()
 {}
@@ -1621,9 +1613,9 @@ ExpressionPostfixArrow::ExpressionPostfixArrow(
   , arrow_token(std::move(_arrow_token))
   , identifier_token(std::move(_identifier_token))
 {
-  add_child(expression.get());
-  add_child(arrow_token.get());
-  add_child(identifier_token.get());
+  add_child(*expression);
+  add_child(*arrow_token);
+  add_child(*identifier_token);
 }
 ExpressionPostfixArrow::~ExpressionPostfixArrow()
 {}
@@ -1645,8 +1637,8 @@ ExpressionPostfixIncDec::ExpressionPostfixIncDec(
     // TODO XXX derive this from the operator.
   , type(ExpressionPostfixIncDec::OperationType::INCREMENT)
 {
-  add_child(expression.get());
-  add_child(operator_token.get());
+  add_child(*expression);
+  add_child(*operator_token);
 }
 ExpressionPostfixIncDec::~ExpressionPostfixIncDec()
 {}
@@ -1668,8 +1660,8 @@ ExpressionUnaryPrefix::ExpressionUnaryPrefix(
 {
   // TODO: Calculate this from the operator given.
   //type(ExpressionUnaryPrefix::OperationType::INCREMENT)
-  add_child(operator_token.get());
-  add_child(expression.get());
+  add_child(*operator_token);
+  add_child(*expression);
 }
 ExpressionUnaryPrefix::~ExpressionUnaryPrefix()
 {}
@@ -1692,10 +1684,10 @@ ExpressionUnarySizeofType::ExpressionUnarySizeofType(
   , type_specifier(std::move(_type_specifier))
   , paren_r_token(std::move(_paren_r_token))
 {
-  add_child(sizeof_token.get());
-  add_child(paren_l_token.get());
-  add_child(type_specifier.get());
-  add_child(paren_r_token.get());
+  add_child(*sizeof_token);
+  add_child(*paren_l_token);
+  add_child(*type_specifier);
+  add_child(*paren_r_token);
 }
 ExpressionUnarySizeofType::~ExpressionUnarySizeofType()
 {}
@@ -1738,9 +1730,9 @@ ExpressionBinary::ExpressionBinary(
   , operator_token(std::move(_operator_token))
   , expression_b(std::move(_expression_b))
 {
-  add_child(expression_a.get());
-  add_child(operator_token.get());
-  add_child(expression_b.get());
+  add_child(*expression_a);
+  add_child(*operator_token);
+  add_child(*expression_b);
   type = OperationType::LOGICAL_AND; // XXX TODO: get these from the tokens.
 }
 ExpressionBinary::~ExpressionBinary()
@@ -1769,11 +1761,11 @@ ExpressionTrinary::ExpressionTrinary(
   , colon_token(std::move(_colon_token))
   , else_expression(std::move(_else_expression))
 {
-  add_child(condition.get());
-  add_child(questionmark_token.get());
-  add_child(if_expression.get());
-  add_child(colon_token.get());
-  add_child(else_expression.get());
+  add_child(*condition);
+  add_child(*questionmark_token);
+  add_child(*if_expression);
+  add_child(*colon_token);
+  add_child(*else_expression);
 }
 ExpressionTrinary::~ExpressionTrinary()
 {}
@@ -1806,8 +1798,8 @@ GlobalInitializerExpressionPrimary::GlobalInitializerExpressionPrimary(
   , equals_token(std::move(_equals_token))
   , expression(std::move(_expression))
 {
-  add_child(equals_token.get());
-  add_child(expression.get());
+  add_child(*equals_token);
+  add_child(*expression);
 }
 GlobalInitializerExpressionPrimary::~GlobalInitializerExpressionPrimary()
 {}
@@ -1828,10 +1820,10 @@ StructInitializer::StructInitializer(
   , global_initializer(std::move(_global_initializer))
   , semicolon_token(std::move(_semicolon_token))
 {
-  add_child(dot_token.get());
-  add_child(identifier_token.get());
-  add_child(global_initializer.get());
-  add_child(semicolon_token.get());
+  add_child(*dot_token);
+  add_child(*identifier_token);
+  add_child(*global_initializer);
+  add_child(*semicolon_token);
 }
 StructInitializer::~StructInitializer()
 {}
@@ -1848,7 +1840,7 @@ StructInitializerList::~StructInitializerList()
 void
 StructInitializerList::add_initializer(StructInitializer::owned_ptr initializer)
 {
-  add_child(initializer.get());
+  add_child(*initializer);
   initializers.push_back(std::move(initializer));
 }
 const std::vector<StructInitializer::owned_ptr> &
@@ -1868,9 +1860,9 @@ GlobalInitializerAddressofExpressionPrimary::GlobalInitializerAddressofExpressio
   , addressof_token(std::move(_addressof_token))
   , expression(std::move(_expression))
 {
-  add_child(equals_token.get());
-  add_child(addressof_token.get());
-  add_child(expression.get());
+  add_child(*equals_token);
+  add_child(*addressof_token);
+  add_child(*expression);
 }
 GlobalInitializerAddressofExpressionPrimary::~GlobalInitializerAddressofExpressionPrimary()
 {}
@@ -1892,10 +1884,10 @@ GlobalInitializerStructInitializerList::GlobalInitializerStructInitializerList(
   , struct_initializer(std::move(_struct_initializer))
   , brace_r_token(std::move(_brace_r_token))
 {
-  add_child(equals_token.get());
-  add_child(brace_l_token.get());
-  add_child(struct_initializer.get());
-  add_child(brace_r_token.get());
+  add_child(*equals_token);
+  add_child(*brace_l_token);
+  add_child(*struct_initializer);
+  add_child(*brace_r_token);
 }
 GlobalInitializerStructInitializerList::~GlobalInitializerStructInitializerList()
 {}
@@ -1904,7 +1896,7 @@ GlobalInitializerStructInitializerList::get_struct_initializer() const
 { return *struct_initializer; }
 
 ///////////////////////////////////////////////////
-GlobalInitializer::GlobalInitializer(GlobalInitializer::GlobalInitializerType _initializer, const SyntaxNode *_raw_ptr)
+GlobalInitializer::GlobalInitializer(GlobalInitializer::GlobalInitializerType _initializer, const SyntaxNode &_raw_ptr)
   : SyntaxNode("global_initializer", this)
   , initializer(std::move(_initializer))
 {
@@ -1940,13 +1932,13 @@ FileStatementGlobalDefinition::FileStatementGlobalDefinition(
 , global_initializer(std::move(_global_initializer))
 , semicolon(std::move(_semicolon))
 {
-  add_child(access_modifier.get());
-  add_child(unsafe_modifier.get());
-  add_child(type_specifier.get());
-  add_child(name.get());
-  add_child(array_length.get());
-  add_child(global_initializer.get());
-  add_child(semicolon.get());
+  add_child(*access_modifier);
+  add_child(*unsafe_modifier);
+  add_child(*type_specifier);
+  add_child(*name);
+  add_child(*array_length);
+  add_child(*global_initializer);
+  add_child(*semicolon);
 }
 
 FileStatementGlobalDefinition::~FileStatementGlobalDefinition()
@@ -1982,9 +1974,9 @@ NamespaceDeclaration::NamespaceDeclaration(
   , namespace_token(std::move(_namespace_token))
   , identifier_token(std::move(_identifier_token))
 {
-  add_child(access_modifier.get());
-  add_child(namespace_token.get());
-  add_child(identifier_token.get());
+  add_child(*access_modifier);
+  add_child(*namespace_token);
+  add_child(*identifier_token);
 }
 NamespaceDeclaration::~NamespaceDeclaration()
 {}
@@ -2010,11 +2002,11 @@ FileStatementNamespace::FileStatementNamespace(
   , brace_r_token(std::move(_brace_r_token))
   , semicolon_token(std::move(_semicolon_token))
 {
-  add_child(namespace_declaration.get());
-  add_child(brace_l_token.get());
-  add_child(file_statement_list.get());
-  add_child(brace_r_token.get());
-  add_child(semicolon_token.get());
+  add_child(*namespace_declaration);
+  add_child(*brace_l_token);
+  add_child(*file_statement_list);
+  add_child(*brace_r_token);
+  add_child(*semicolon_token);
 }
 FileStatementNamespace::~FileStatementNamespace()
 {}
@@ -2035,8 +2027,8 @@ UsingAs::UsingAs(
   , identifier_token(std::move(_identifier_token))
 {
   using_name = identifier_token->value;
-  add_child(as_token.get());
-  add_child(identifier_token.get());
+  add_child(*as_token);
+  add_child(*identifier_token);
 }
 UsingAs::UsingAs()
   : SyntaxNode("using_as", this)
@@ -2064,11 +2056,11 @@ FileStatementUsing::FileStatementUsing(AccessModifier::owned_ptr _access_modifie
   , using_as(std::move(_using_as))
   , semicolon_token(std::move(_semicolon))
 {
-  add_child(using_token.get());
-  add_child(namespace_token.get());
-  add_child(namespace_name_token.get());
-  add_child(using_as.get());
-  add_child(semicolon_token.get());
+  add_child(*using_token);
+  add_child(*namespace_token);
+  add_child(*namespace_name_token);
+  add_child(*using_as);
+  add_child(*semicolon_token);
 }
 FileStatementUsing::~FileStatementUsing()
 {}
@@ -2083,7 +2075,7 @@ FileStatementUsing::get_using_as() const
 { return *using_as; }
 
 
-FileStatement::FileStatement(FileStatementType _statement, const SyntaxNode *_raw_ptr)
+FileStatement::FileStatement(FileStatementType _statement, const SyntaxNode &_raw_ptr)
   : SyntaxNode("file_statement", this)
   , statement(std::move(_statement))
 {
@@ -2106,7 +2098,7 @@ FileStatementList::FileStatementList(Terminal::owned_ptr _yyeof)
   : SyntaxNode("file_statement_list", this)
   , yyeof(std::move(_yyeof))
 {
-  add_child(yyeof.get());
+  add_child(*yyeof);
 }
 FileStatementList::~FileStatementList()
 {}
@@ -2116,7 +2108,7 @@ FileStatementList::get_statements() const
 void
 FileStatementList::add_statement(FileStatement::owned_ptr statement)
 {
-  add_child(statement.get());
+  add_child(*statement);
   statements.push_back(std::move(statement));
 }
 
@@ -2127,14 +2119,14 @@ TranslationUnit::TranslationUnit(
   , file_statement_list(std::move(_file_statement_list))
   , yyeof_token(std::move(_yyeof_token))
 {
-  add_child(file_statement_list.get());
-  add_child(yyeof_token.get());
+  add_child(*file_statement_list);
+  add_child(*yyeof_token);
 }
 TranslationUnit::~TranslationUnit()
 {}
 
-FileStatementList::raw_ptr
-TranslationUnit::get_statements()
+const FileStatementList& 
+TranslationUnit::get_statements() const
 {
-  return file_statement_list.get();
+  return *file_statement_list;
 }

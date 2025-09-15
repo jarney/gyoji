@@ -1,4 +1,3 @@
-
 public const f64 q;
 
 namespace std {

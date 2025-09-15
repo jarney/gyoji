@@ -1,5 +1,6 @@
 #pragma once
 
+#include <functional>
 #include <list>
 #include <map>
 #include <string>
@@ -200,31 +201,39 @@ namespace JLang::frontend {
       // Access to the child list should be
       // immutable because this is really
       // just a view over the list.
-      const std::vector<const SyntaxNode*> & get_children() const;
+      const std::vector<std::reference_wrapper<const SyntaxNode>> & get_children() const;
       const std::string & get_type() const;
-      const SyntaxNode::specific_type_t &get_data() const;
-      const SyntaxNode* get_syntax_node() const;
+      //const SyntaxNode::specific_type_t &get_data() const;
+      template <class T> bool has_data() const {
+        return std::holds_alternative<T*>(data);
+      }
+      template <class T> const T &get_data() const {
+        const T *d = std::get<T*>(data);
+        return *d;
+      }
+      const SyntaxNode & get_syntax_node() const;
       
     private:
       // This list does NOT own its children, so
       // the class deriving from this one must
       // agree to own the pointers separately.
-      std::vector<const SyntaxNode*> children; 
+      std::vector<std::reference_wrapper<const SyntaxNode>> children; 
       
     protected:
       // Children are owned by their parents, so this is
       // private and can only be called by the
       // deriving class.
-      void add_child(const SyntaxNode* node);
-      void prepend_child(const SyntaxNode* node);
+      void add_child(const SyntaxNode & node);
+      void prepend_child(const SyntaxNode & node);
       
       std::string type;
       specific_type_t data;
     };
-    
+
+    // TODO: forward declare the classes and pointers
+    // instead of inheriting from this hack.
     template <class T> class PtrProtocol {
     public:
-      typedef T *raw_ptr;
       typedef std::unique_ptr<T> owned_ptr;
     };
     
@@ -276,8 +285,6 @@ namespace JLang::frontend {
      */
     class Terminal : public SyntaxNode, public PtrProtocol<Terminal> {
     public:
-      //      typedef Terminal *raw_ptr;
-      //      typedef std::unique_ptr<Terminal> owned_ptr;
       Terminal();
       ~Terminal();
       int type;
@@ -286,7 +293,6 @@ namespace JLang::frontend {
       size_t lineno;
       size_t colno;
       std::string fully_qualified_name;
-      std::vector<TerminalNonSyntax::raw_ptr> get_whitespace();
       
       // The terminal "owns" uniquely all of the non-syntax data
       // in this vector.  It may be returned to access it,
@@ -308,7 +314,7 @@ namespace JLang::frontend {
         std::unique_ptr<FileStatementNamespace>,
         std::unique_ptr<FileStatementUsing>> FileStatementType;
 
-      FileStatement(FileStatementType _statement, const SyntaxNode *_raw_ptr);
+      FileStatement(FileStatementType _statement, const SyntaxNode &_raw_ptr);
       ~FileStatement();
 
       const FileStatementType & get_statement() const;
@@ -491,7 +497,7 @@ namespace JLang::frontend {
         TypeSpecifierPointerTo::owned_ptr,
         TypeSpecifierReferenceTo::owned_ptr
       > TypeSpecifierType;
-      TypeSpecifier(TypeSpecifier::TypeSpecifierType _type, const SyntaxNode *_raw_ptr);
+      TypeSpecifier(TypeSpecifier::TypeSpecifierType _type, const SyntaxNode &_raw_ptr);
       ~TypeSpecifier();
       const TypeSpecifier::TypeSpecifierType & get_type() const;
     private:
@@ -1068,7 +1074,7 @@ namespace JLang::frontend {
       > MemberType;
       ClassMemberDeclaration(
                              MemberType _member,
-                             const SyntaxNode *_raw_ptr
+                             const SyntaxNode &_raw_ptr
                              );
       ~ClassMemberDeclaration();
       const ClassMemberDeclaration::MemberType & get_member();
@@ -1610,7 +1616,7 @@ namespace JLang::frontend {
         GlobalInitializerStructInitializerList::owned_ptr,
         nullptr_t> GlobalInitializerType;
       GlobalInitializer();
-      GlobalInitializer(GlobalInitializerType initializer, const SyntaxNode *_raw_ptr);
+      GlobalInitializer(GlobalInitializerType initializer, const SyntaxNode &_raw_ptr);
       ~GlobalInitializer();
       const GlobalInitializerType & get_initializer() const;
     private:
@@ -1750,7 +1756,7 @@ namespace JLang::frontend {
                       Terminal::owned_ptr yyeof_token
                       );
       ~TranslationUnit();
-      FileStatementList::raw_ptr get_statements();
+      const FileStatementList&  get_statements() const;
     private:
       Terminal::owned_ptr yyeof_token;
       FileStatementList::owned_ptr file_statement_list;
