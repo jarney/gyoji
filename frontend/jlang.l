@@ -5,7 +5,7 @@
 #include <jlang-frontend/namespace.hpp>
 #include <jlang.y.hpp>
 
-using namespace jlang;
+using namespace JLang::frontend::yacc;
 std::string override_file;
 size_t lineno = 1;
 std::vector<JLang::frontend::TerminalNonSyntax::owned_ptr> non_syntax_data;

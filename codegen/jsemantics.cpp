@@ -1,6 +1,6 @@
 #include <jlang-codegen/jsemantics.hpp>
 
-using namespace JSemantics;
+using namespace JLang::codegen::semantics;
 
 TranslationUnit::TranslationUnit()
 {}
@@ -43,7 +43,7 @@ Type::get_size_bytes()
 }
 
 Type::ptr
-JSemantics::ast_to_type(TranslationUnit::ptr translation_unit, ASTNode::ptr node)
+semantics::ast_to_type(TranslationUnit::ptr translation_unit, ASTNode::ptr node)
 {
   // TODO: We really should be looking this up
   // from the translation unit and returning what
@@ -59,7 +59,7 @@ FunctionDeclaration::visit(Visitor<FunctionDeclaration> &visitor)
   visitor.visit(*this);
 }
 FunctionDeclaration::ptr
-JSemantics::ast_to_file_statement_function_declaration(TranslationUnit::ptr translation_unit, ASTNode::ptr node)
+semantics::ast_to_file_statement_function_declaration(TranslationUnit::ptr translation_unit, ASTNode::ptr node)
 {
   FunctionDeclaration::ptr ret = std::make_shared<FunctionDeclaration>();
   
@@ -71,7 +71,7 @@ FunctionDeclarationArg::FunctionDeclarationArg()
 FunctionDeclarationArg::~FunctionDeclarationArg()
 {}
 FunctionDeclarationArg::ptr
-JSemantics::ast_to_function_declaration_arg(TranslationUnit::ptr translation_unit, ASTNode::ptr node)
+semantics::ast_to_function_declaration_arg(TranslationUnit::ptr translation_unit, ASTNode::ptr node)
 {
   FunctionDeclarationArg::ptr ret = std::make_shared<FunctionDeclarationArg>();
 
@@ -91,7 +91,7 @@ FunctionDefinition::visit(Visitor<FunctionDefinition> &visitor)
   visitor.visit(*this);
 }
 FunctionDefinition::ptr
-JSemantics::ast_to_file_statement_function_definition(TranslationUnit::ptr translation_unit, ASTNode::ptr node)
+semantics::ast_to_file_statement_function_definition(TranslationUnit::ptr translation_unit, ASTNode::ptr node)
 {
   FunctionDefinition::ptr ret = std::make_shared<FunctionDefinition>();
   ret->function_declaration = std::make_shared<FunctionDeclaration>();
@@ -119,7 +119,7 @@ StatementVariableDeclaration::~StatementVariableDeclaration()
 {}
 
 Statement::ptr
-JSemantics::ast_to_statement(TranslationUnit::ptr translation_unit, ASTNode::ptr node)
+semantics::ast_to_statement(TranslationUnit::ptr translation_unit, ASTNode::ptr node)
 {
   StatementVariableDeclaration::ptr ret = std::make_shared<StatementVariableDeclaration>();
   return ret;
@@ -131,7 +131,7 @@ ScopeBody::~ScopeBody()
 {}
 
 ScopeBody::ptr
-JSemantics::ast_to_scope_body(TranslationUnit::ptr translation_unit, ASTNode::ptr node)
+semantics::ast_to_scope_body(TranslationUnit::ptr translation_unit, ASTNode::ptr node)
 {
   ScopeBody::ptr ret = std::make_shared<ScopeBody>();
 
@@ -156,7 +156,7 @@ GlobalVariableDefinition::visit(Visitor<GlobalVariableDefinition> &visitor)
 }
 
 GlobalVariableDefinition::ptr
-JSemantics::ast_to_file_global_definition(TranslationUnit::ptr translation_unit, ASTNode::ptr node)
+semantics::ast_to_file_global_definition(TranslationUnit::ptr translation_unit, ASTNode::ptr node)
 {
   GlobalVariableDefinition::ptr ret = std::make_shared<GlobalVariableDefinition>();
   ret->name = node->children.at(3)->value;
@@ -199,7 +199,7 @@ JSyntaxListener::eventFunctionDefinition(ASTNode::ptr node)
 }
 
 std::list<ASTNode::ptr>
-JSemantics::get_children_by_type(ASTNode::ptr node, std::string type)
+semantics::get_children_by_type(ASTNode::ptr node, std::string type)
 {
   std::list<ASTNode::ptr> found;
   for (ASTNode::ptr child : node->children) {
@@ -211,7 +211,7 @@ JSemantics::get_children_by_type(ASTNode::ptr node, std::string type)
 }
 
 int
-JSemantics::process_type_definition(TranslationUnit::ptr translation_unit, ASTNode::ptr ast_typedef)
+semantics::process_type_definition(TranslationUnit::ptr translation_unit, ASTNode::ptr ast_typedef)
 {
   Type::ptr type = ast_to_type(translation_unit, ast_typedef->children.at(2));
   std::string ns = ast_typedef->children.at(3)->fully_qualified_name;
@@ -221,7 +221,7 @@ JSemantics::process_type_definition(TranslationUnit::ptr translation_unit, ASTNo
 }
 
 int
-JSemantics::file_statement_process(TranslationUnit::ptr translation_unit, ASTNode::ptr ast_statement_list)
+semantics::file_statement_process(TranslationUnit::ptr translation_unit, ASTNode::ptr ast_statement_list)
 {
   for (auto statement : ast_statement_list->children) {
     fprintf(stderr, "Statement %s\n", statement->typestr.c_str());
@@ -263,7 +263,7 @@ JSemantics::file_statement_process(TranslationUnit::ptr translation_unit, ASTNod
 }
 
 TranslationUnit::ptr
-JSemantics::from_ast(ASTNode::ptr ast_translation_unit)
+semantics::from_ast(ASTNode::ptr ast_translation_unit)
 {
   if (ast_translation_unit->children.size() != 2) {
     fprintf(stderr, "Error: Translation unit does not have any statements\n");

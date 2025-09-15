@@ -1,8 +1,8 @@
 #include <jlang-codegen/jbackend-llvm-types.hpp>
 
 using namespace llvm::sys;
-using namespace JSemantics;
-using namespace JLang::Backend::LLVM;
+using namespace JLang::codegen::semantics;
+using namespace JLang::codegen::LLVM;
 
 LLVMType::LLVMType(llvm::LLVMContext & _context)
   : context(_context)

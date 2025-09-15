@@ -1,8 +1,8 @@
 #include <jlang-codegen/jbackend-llvm-operators.hpp>
 
 using namespace llvm::sys;
-using namespace JSemantics;
-using namespace JLang::Backend::LLVM;
+using namespace JLang::codegen::semantics;
+using namespace JLang::codegen::LLVM;
 
 LLVMBinaryOperator::ptr LLVMBinaryOperatorTable::find_operator(std::string name, std::string type_a, std::string type_b)
 {

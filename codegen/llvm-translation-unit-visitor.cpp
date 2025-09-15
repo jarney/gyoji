@@ -3,8 +3,8 @@
 #include <jlang-codegen/jbackend-llvm-operators.hpp>
 
 using namespace llvm::sys;
-using namespace JSemantics;
-using namespace JLang::Backend::LLVM;
+using namespace JLang::codegen::semantics;
+using namespace JLang::codegen::LLVM;
 
 LLVMTranslationUnitVisitor::LLVMTranslationUnitVisitor()
 {}
@@ -159,7 +159,7 @@ LLVMTranslationUnitVisitor::visit(FunctionDefinition &functiondef)
 }
 
 void
-LLVMTranslationUnitVisitor::visit(JSemantics::TranslationUnit &translation_unit)
+LLVMTranslationUnitVisitor::visit(semantics::TranslationUnit &translation_unit)
 {
   printf("Processing types\n");
   // Here, we process the types, making sure

@@ -12,7 +12,7 @@
 %language "C++"
  
 %define api.parser.class {Parser}
-%define api.namespace {jlang}
+%define api.namespace {JLang::frontend::yacc}
 %define api.value.type variant
 %param {yyscan_t scanner}
  
@@ -28,7 +28,7 @@
 int visibility_from_modifier(JLang::frontend::AccessModifier::AccessModifierType visibility_ast);
   
 #define YY_DECL                                                         \
-        int yylex(jlang::Parser::semantic_type *yylval, yyscan_t yyscanner)
+    int yylex(JLang::frontend::yacc::Parser::semantic_type *yylval, yyscan_t yyscanner)
     YY_DECL;
 }
 
@@ -2118,6 +2118,6 @@ int visibility_from_modifier(JLang::frontend::AccessModifier::AccessModifierType
     }
 }
 
-void jlang::Parser::error(const std::string& msg) {
+void JLang::frontend::yacc::Parser::error(const std::string& msg) {
     printf("Syntax error at line %d : %s\n", lineno, msg.c_str());
 }

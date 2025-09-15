@@ -9,6 +9,8 @@ llvm-18
 cmake
 bison
 flex
+doxygen
+graphviz
 ```
 
 In order to install these dependencies on an Ubuntu or Debian system, this should work:

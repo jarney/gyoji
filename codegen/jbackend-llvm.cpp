@@ -3,7 +3,7 @@
 
 using namespace llvm;
 using namespace llvm::sys;
-using namespace JSemantics;
+using namespace JLang::codegen::semantics;
 
 using namespace JLang::frontend;
 using namespace JLang::Backend::LLVM;
@@ -45,7 +45,7 @@ JBackendLLVM::~JBackendLLVM()
 int JBackendLLVM::process(ASTNode::ptr ast_translation_unit)
 {
   int rc = 0;
-  JSemantics::TranslationUnit::ptr translation_unit = from_ast(ast_translation_unit);
+  TranslationUnit::ptr translation_unit = from_ast(ast_translation_unit);
   
   // TODO: Resolve the types into fully-qualified namespaces.
 

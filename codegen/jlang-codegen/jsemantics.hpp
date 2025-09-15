@@ -19,7 +19,7 @@
 // like the borrow checker and LLVM should be powered by the
 // same underlying representation.
 
-namespace JSemantics {
+namespace JLang::codegen::semantics {
 
   using namespace JLang::frontend;
   

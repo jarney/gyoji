@@ -24,7 +24,7 @@
 #include "llvm/TargetParser/Host.h"
 
 namespace JLang {
-  namespace Backend {
+  namespace codegen {
     namespace LLVM {
 
       using namespace JLang::frontend;

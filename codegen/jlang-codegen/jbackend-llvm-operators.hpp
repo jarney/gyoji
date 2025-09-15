@@ -2,7 +2,7 @@
 #include "jbackend-llvm.hpp"
 
 namespace JLang {
-  namespace Backend {
+  namespace codegen {
     namespace LLVM {
 
 class LLVMBinaryOperatorAddDouble : public LLVMBinaryOperator {

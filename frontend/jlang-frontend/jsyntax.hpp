@@ -9,6 +9,17 @@
 
 #include "namespace.hpp"
 
+/*!
+ *  \addtogroup Frontend
+ *  @{
+ */
+//! Headline News for the front-end.
+/*!
+ * This is the language front-end.
+ * The purpose is to take an input
+ * byte-stream and assemble an immutable
+ * parse tree.
+ */
 namespace JLang::frontend {
   class Terminal;
 
@@ -1770,3 +1781,4 @@ namespace JLang::frontend {
 
 };
 
+/*! @} End of Doxygen Groups*/

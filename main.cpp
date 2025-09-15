@@ -10,6 +10,7 @@
 //#include <jlang-codegen/jbackend-llvm.hpp>
 //using namespace JLang::Backend::LLVM;
 using namespace JLang::frontend;
+using namespace JLang::frontend::yacc;
 using namespace JLang::backend;
 
 int main(int argc, char **argv)
@@ -63,7 +64,7 @@ int main(int argc, char **argv)
 
     data.namespace_context.namespace_new("void", Namespace::TYPE_TYPEDEF, Namespace::VISIBILITY_PUBLIC);
     
-    jlang::Parser parser{ scanner, &data };
+    Parser parser{ scanner, &data };
     int rc = parser.parse();
     if (rc != 0) {
       printf("Syntax error\n");
