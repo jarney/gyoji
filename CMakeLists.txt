@@ -41,6 +41,7 @@ find_package(FLEX)
 enable_testing()
 
 add_subdirectory(misc)
+add_subdirectory(errors)
 add_subdirectory(frontend)
 add_subdirectory(backend)
 #add_subdirectory(codegen)
@@ -50,6 +51,7 @@ add_executable(cparse main.cpp)
 target_include_directories(cparse
     PUBLIC
         misc
+        errors
         frontend
         backend
         codegen
@@ -62,6 +64,7 @@ target_link_libraries(cparse
     PUBLIC
         jlang-backend
         jlang-frontend
+        jlang-errors
         jlang-misc
 	-L/usr/lib/llvm-18/lib -lLLVM-18
 )
