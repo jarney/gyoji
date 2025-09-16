@@ -15,8 +15,7 @@ namespace JLang::frontend {
     ~Parser();
     int parse(InputSource & _input_source);
     
-    const JLang::frontend::tree::TranslationUnit & get_translation_unit() const;
-    const JLang::frontend::ast::SyntaxNode & get_syntax_node() const;
+    JLang::frontend::tree::TranslationUnit_owned_ptr get_translation_unit();
     const JLang::frontend::namespaces::NamespaceContext & get_namespace_context() const;
   private:
     JLang::frontend::yacc::YaccContext yacc_context;

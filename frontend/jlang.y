@@ -288,7 +288,6 @@ int visibility_from_modifier(JLang::frontend::tree::AccessModifier::AccessModifi
 %code
 {
 
-  extern int lineno;
 } // %code
 
 %%
@@ -2171,5 +2170,7 @@ int visibility_from_modifier(JLang::frontend::tree::AccessModifier::AccessModifi
 }
 
 void JLang::frontend::yacc::YaccParser::error(const std::string& msg) {
-    printf("Syntax error at line %d : %s\n", lineno, msg.c_str());
+    LexContext *lex_context = (LexContext*)yyget_extra(scanner);
+    // TODO: put error handling here instead of stderr.
+    printf("Syntax error at line %d : %s\n", lex_context->lineno, msg.c_str());
 }

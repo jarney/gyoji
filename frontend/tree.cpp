@@ -844,7 +844,6 @@ StatementList::~StatementList()
 void
 StatementList::add_statement(Statement_owned_ptr _statement)
 {
-  fprintf(stderr, "Adding a statement to the statement list\n");
   add_child(*_statement);
   statements.push_back(std::move(_statement));
 }
@@ -864,7 +863,6 @@ ScopeBody::ScopeBody(
   , brace_r_token(std::move(_brace_r_token))
 {
   add_child(*brace_l_token);
-  fprintf(stderr, "Adding a statement list to the scope body\n");
   add_child(*statement_list);
   add_child(*brace_r_token);
 }
@@ -901,7 +899,6 @@ FileStatementFunctionDefinition::FileStatementFunctionDefinition(
   add_child(*paren_l);
   add_child(*arguments);
   add_child(*paren_r);
-  fprintf(stderr, "Adding scope body to the function\n");
   add_child(*scope_body);
 }
 FileStatementFunctionDefinition::~FileStatementFunctionDefinition()
@@ -2106,8 +2103,8 @@ TranslationUnit::TranslationUnit(
 TranslationUnit::~TranslationUnit()
 {}
 
-const FileStatementList& 
+const std::vector<FileStatement_owned_ptr> &
 TranslationUnit::get_statements() const
 {
-  return *file_statement_list;
+  return file_statement_list->get_statements();
 }

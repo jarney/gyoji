@@ -166,7 +166,7 @@ unsafe {PROCESS_NODE(UNSAFE);}
 {float} {PROCESS_NODE(LITERAL_FLOAT);}
 {integer} { PROCESS_NODE(LITERAL_INT);}
 (::)*{identifier}({whitespace}*:{whitespace}*:{whitespace}*{identifier})* {
-LexContext *lex_context = (LexContext*)yyget_extra(yyscanner);
+    LexContext *lex_context = (LexContext*)yyget_extra(yyscanner);
     NamespaceContext & context = lex_context->namespace_context;
     NamespaceFoundReason::ptr found = context.namespace_lookup(std::string(yytext));
     if (found->reason == NamespaceFoundReason::REASON_FOUND) {
@@ -233,7 +233,8 @@ LexContext *lex_context = (LexContext*)yyget_extra(yyscanner);
         std::string(yytext)
     );
     non_syntax_data.push_back(std::move(nsd));
-    lineno++;
+    LexContext *lex_context = (LexContext*)yyget_extra(yyscanner);
+    lex_context->lineno++;
 }
 \#[a-zA-Z]+\ [[:digit:]]+\ \".*\"\n {
     //printf("Preprocessor directive %s\n", yytext);

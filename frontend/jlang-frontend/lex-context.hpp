@@ -12,5 +12,6 @@ namespace JLang::frontend::yacc {
     ~LexContext();
     JLang::frontend::namespaces::NamespaceContext& namespace_context;
     InputSource &input_source;
+    int lineno;
   };
 };

@@ -67,8 +67,8 @@ int main(int argc, char **argv)
       printf("Syntax error\n");
     }
     else {
-      const TranslationUnit & translation_unit = parser.get_translation_unit();
-      rc = backend->process(translation_unit.get_syntax_node());
+      TranslationUnit_owned_ptr translation_unit = parser.get_translation_unit();
+      rc = backend->process(translation_unit->get_syntax_node());
     }
     fclose(input);
     return rc;

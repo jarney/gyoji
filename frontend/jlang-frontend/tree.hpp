@@ -1527,10 +1527,12 @@ namespace JLang::frontend::tree {
                       Terminal_owned_ptr yyeof_token
                       );
       ~TranslationUnit();
-      const FileStatementList&  get_statements() const;
+      //const FileStatementList&  get_statements() const;
+      const std::vector<FileStatement_owned_ptr> & get_statements() const;
     private:
       Terminal_owned_ptr yyeof_token;
       FileStatementList_owned_ptr file_statement_list;
+      
     };
     
 };

@@ -37,17 +37,11 @@ Parser::parse(InputSource & _input_source)
   return 0;
 }
 
-const TranslationUnit &
-Parser::get_translation_unit() const
+TranslationUnit_owned_ptr
+Parser::get_translation_unit()
 {
   return yacc_context.get_translation_unit();
 }
-const SyntaxNode &
-Parser::get_syntax_node() const
-{
-  return yacc_context.get_translation_unit();
-}
-
 const NamespaceContext &
 Parser::get_namespace_context() const
 {

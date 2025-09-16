@@ -21,10 +21,10 @@ YaccContext::get_namespace_context() const
   return namespace_context;
 }
 
-const TranslationUnit &
-YaccContext::get_translation_unit() const
+TranslationUnit_owned_ptr
+YaccContext::get_translation_unit()
 {
-  return *translation_unit;
+  return std::move(translation_unit);
 }
 
 void
