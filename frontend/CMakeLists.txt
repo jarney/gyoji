@@ -5,17 +5,23 @@ set(FRONTEND_INCLUDES
 )
 
 set(FRONTEND_PUBLIC_HEADERS
-    jlang-frontend/jsyntax.hpp
-    jlang-frontend/namespace.hpp
+    jlang-frontend/frontend.hpp
     jlang-frontend/tree.hpp
-    jlang-frontend/forward.hpp
     jlang-frontend/syntax-node.hpp
+    jlang-frontend/namespace.hpp
+    jlang-frontend/yacc-context.hpp
+    jlang-frontend/lex-context.hpp
+    jlang-frontend/input-source.hpp
+    jlang-frontend/input-source-file.hpp
+    jlang-frontend/forward.hpp
+    jlang-frontend/parser.hpp
 )
 
 set(FRONTEND_SOURCES
     jlang.l
     jlang.y
-    jsyntax.cpp
+    tree.cpp
+    syntax-node.cpp
     namespace.cpp
     yacc-context.cpp
     lex-context.cpp

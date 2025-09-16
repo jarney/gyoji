@@ -1,4 +1,4 @@
-#include <jlang-frontend/jsyntax.hpp>
+#include <jlang-frontend/frontend.hpp>
 
 using namespace JLang::frontend;
 using namespace JLang::frontend::ast;
@@ -29,36 +29,6 @@ void TerminalNonSyntax::append(std::string _data)
 {
   data = data + _data;
 }
-
-///////////////////////////////////////////////////
-SyntaxNode::SyntaxNode(std::string _type, SyntaxNode::specific_type_t _data)
-  : type(_type)
-  , data(_data)
-{}
-SyntaxNode::~SyntaxNode()
-{}
-void
-SyntaxNode::add_child(const SyntaxNode & node)
-{
-  children.push_back(node);
-}
-void
-SyntaxNode::prepend_child(const SyntaxNode & node)
-{
-  children.insert(children.begin(), node);
-}
-const std::vector<std::reference_wrapper<const SyntaxNode>> &
-SyntaxNode::get_children() const
-{
-  return children;
-}
-const std::string & SyntaxNode::get_type() const
-{
-  return type;
-}
-const SyntaxNode &
-SyntaxNode::get_syntax_node() const
-{ return *this; }
 
 ///////////////////////////////////////////////////
 AccessQualifier::AccessQualifier(AccessQualifier::AccessQualifierType _type)

@@ -1,4 +1,4 @@
-#include <jlang-frontend/jsyntax.hpp>
+#include <jlang-frontend/frontend.hpp>
 
 #include <jlang.l.hpp>
 #include <jlang.y.hpp>

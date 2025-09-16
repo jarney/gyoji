@@ -1,6 +1,5 @@
 #pragma once
 
-#include <jlang-frontend/jsyntax.hpp>
 #include <jlang-backend/jbackend.hpp>
 
 namespace JLang::backend {

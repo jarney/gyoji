@@ -4,8 +4,7 @@
 #include <cmath>
 #include <memory>
 #include <jlang.l.hpp>
-#define _JLANG_INTERNAL_COMPILING
-#include <jlang-frontend/jsyntax.hpp>
+#include <jlang-frontend/frontend.hpp>
   
  using namespace JLang::frontend::namespaces;
   
