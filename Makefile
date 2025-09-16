@@ -1,14 +1,15 @@
 
-all: build/Makefile
+all:
 	cd build; $(MAKE)
 
-docs: build/Makefile
+docs:
+	echo "Checking?"
 	cd build; $(MAKE) docs
 
-test: build/Makefile
+test:
 	cd build; $(MAKE) all; $(MAKE) test
 
-clean: build/Makefile
+clean:
 	cd build; $(MAKE) clean
 	find . -name "*~" -exec rm -f {} \; -print
 
