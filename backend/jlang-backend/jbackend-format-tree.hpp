@@ -1,10 +1,11 @@
 #pragma once
 
+#include <jlang-frontend/jsyntax.hpp>
 #include <jlang-backend/jbackend.hpp>
 
 namespace JLang::backend {
-
-  using namespace JLang::frontend;
+  using namespace JLang::frontend::ast;
+  using namespace JLang::frontend::tree;
   /**
    * This is the identity transformation that should always
    * format the code exactly as it appeared in the input,

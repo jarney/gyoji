@@ -2,6 +2,9 @@
 all: build/Makefile
 	cd build; $(MAKE)
 
+docs: build/Makefile
+	cd build; $(MAKE) docs
+
 test: build/Makefile
 	cd build; $(MAKE) all; $(MAKE) test
 

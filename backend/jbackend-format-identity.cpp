@@ -1,7 +1,8 @@
 #include <jlang-backend/jbackend-format-identity.hpp>
 #include <iostream>
 
-using namespace JLang::frontend;
+using namespace JLang::frontend::ast;
+using namespace JLang::frontend::tree;
 using namespace JLang::backend;
 
 JBackendFormatIdentity::JBackendFormatIdentity()

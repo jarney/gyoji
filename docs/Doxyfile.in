@@ -948,6 +948,9 @@ INPUT                  = @CMAKE_CURRENT_SOURCE_DIR@/frontend \
                          @CMAKE_CURRENT_SOURCE_DIR@/backend \
                          @CMAKE_CURRENT_SOURCE_DIR@/codegen \
                          @CMAKE_CURRENT_SOURCE_DIR@/misc \
+                         @CMAKE_CURRENT_SOURCE_DIR@/INSTALL.md \
+                         @CMAKE_CURRENT_SOURCE_DIR@/README.md \
+                         @CMAKE_CURRENT_SOURCE_DIR@/TODO.md \
                          @CMAKE_CURRENT_SOURCE_DIR@/docs
 
 # This tag can be used to specify the character encoding of the source files

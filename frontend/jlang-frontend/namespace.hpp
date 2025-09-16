@@ -6,7 +6,15 @@
 #include <map>
 #include <vector>
 
-namespace JLang::frontend {
+/*!
+ *  \addtogroup Frontend
+ *  @{
+ */
+//! Namespace Management
+/*!
+ * This is intended to manage namespaces.
+ */
+namespace JLang::frontend::namespaces {
 
 /**
  * This is a namespace resolver used in the lexical
@@ -152,3 +160,4 @@ public:
 };
 
 };
+/*! @} End of Doxygen Groups*/

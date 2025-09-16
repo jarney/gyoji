@@ -1,7 +1,7 @@
 #include <jlang-frontend/namespace.hpp>
 #include <jlang-misc/test.hpp>
 
-using namespace JLang::frontend;
+using namespace JLang::frontend::namespaces;
 
 int main(int argc, char **argv)
 {

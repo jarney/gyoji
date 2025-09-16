@@ -2,7 +2,7 @@
 #include <jlang-misc/jstring.hpp>
 
 using namespace JLang::misc;
-using namespace JLang::frontend;
+using namespace JLang::frontend::namespaces;
 
 NamespaceFoundReason::NamespaceFoundReason(int _reason)
   : reason(_reason)

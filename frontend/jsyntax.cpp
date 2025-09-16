@@ -1,6 +1,8 @@
 #include <jlang-frontend/jsyntax.hpp>
 
 using namespace JLang::frontend;
+using namespace JLang::frontend::ast;
+using namespace JLang::frontend::tree;
 
 ///////////////////////////////////////////////////
 Terminal::Terminal()

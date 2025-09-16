@@ -1,6 +1,6 @@
-//#ifndef _JLANG_INTERNAL
-//#error "This header is intended to be used internally as a part of the JLang front-end.  Please include jsyntax.hpp instead."
-//#endif
+#ifndef _JLANG_INTERNAL
+#error "This header is intended to be used internally as a part of the JLang front-end.  Please include jsyntax.hpp instead."
+#endif
 #pragma once
 
 #include <memory>
@@ -27,7 +27,7 @@
 // there is some recursiveness in the definitions
 // and it's important that these forward declarations
 // resolve that circularity.
-namespace JLang::frontend {
+namespace JLang::frontend::tree {
 
 //----------------------------
 // Class forward declarations.
@@ -128,86 +128,86 @@ namespace JLang::frontend {
 // variant type.
 //----------------------------
 #define JLANG_SYNTAX_NODE_VARIANT_LIST               \
-        Terminal*,                                   \
-        AccessQualifier*,                            \
-        AccessModifier*,                             \
-        UnsafeModifier*,                             \
-        TypeSpecifier*,                              \
-          TypeName*,                                 \
-          TypeSpecifierCallArgs*,                    \
-          TypeSpecifierSimple*,                      \
-          TypeSpecifierTemplate*,                    \
-          TypeSpecifierFunctionPointer*,             \
-          TypeSpecifierPointerTo*,                   \
-          TypeSpecifierReferenceTo*,                 \
-        FunctionDefinitionArgList*,                  \
-          FunctionDefinitionArg*,                    \
-          ClassDeclStart*,                           \
-          ClassArgumentList*,                        \
-              ClassMemberDeclarationVariable*,       \
-              ClassMemberDeclarationMethod*,         \
-              ClassMemberDeclarationConstructor*,    \
-              ClassMemberDeclarationDestructor*,     \
-            ClassMemberDeclaration*,                 \
-          ClassMemberDeclarationList*,               \
-        ClassDefinition*,                            \
-        TypeDefinition*,                             \
-            EnumDefinitionValue*,                    \
-          EnumDefinitionValueList*,                  \
-        EnumDefinition*,                             \
-        Expression*,                                 \
-          ExpressionPrimary*,                        \
-            ExpressionPrimaryIdentifier*,            \
-            ExpressionPrimaryNested*,                \
-            ExpressionPrimaryLiteralChar*,           \
-            ExpressionPrimaryLiteralString*,         \
-            ExpressionPrimaryLiteralInt*,            \
-            ExpressionPrimaryLiteralFloat*,          \
-          ExpressionPostfixArrayIndex*,              \
-          ExpressionPostfixFunctionCall*,            \
-              ArgumentExpressionList*,               \
-          ExpressionPostfixDot*,                     \
-          ExpressionPostfixArrow*,                   \
-          ExpressionPostfixIncDec*,                  \
-          ExpressionUnaryPrefix*,                    \
-          ExpressionUnarySizeofType*,                \
-          ExpressionCast*,                           \
-          ExpressionBinary*,                         \
-          ExpressionTrinary*,                        \
-        StatementList*,                              \
-          Statement*,                                \
-            StatementVariableDeclaration*,           \
-            StatementBlock*,                         \
-            StatementExpression*,                    \
-            StatementGoto*,                          \
-            StatementIfElse*,                        \
-            StatementWhile*,                         \
-            StatementFor*,                           \
-            StatementSwitch*,                        \
-              StatementSwitchContent*,               \
-                StatementSwitchBlock*,               \
-            StatementReturn*,                        \
-            StatementContinue*,                      \
-            StatementBreak*,                         \
-            StatementLabel*,                         \
-        TranslationUnit*,                            \
-          FileStatementList*,                        \
-            FileStatement*,                          \
-              FileStatementFunctionDefinition*,        \
-                ScopeBody *,                           \
-              FileStatementFunctionDeclaration*,       \
-                ArrayLength*,                          \
-                GlobalInitializer*,                    \
-                  GlobalInitializerExpressionPrimary*, \
-                  GlobalInitializerAddressofExpressionPrimary*, \
-                  GlobalInitializerStructInitializerList*,      \
-                    StructInitializerList*,            \
-                      StructInitializer*,              \
-              FileStatementGlobalDefinition*,          \
-              FileStatementNamespace*,                 \
-                NamespaceDeclaration*,                 \
-              FileStatementUsing*,                     \
-                UsingAs*
+        JLang::frontend::tree::Terminal*,                                   \
+        JLang::frontend::tree::AccessQualifier*,                            \
+        JLang::frontend::tree::AccessModifier*,                             \
+        JLang::frontend::tree::UnsafeModifier*,                             \
+        JLang::frontend::tree::TypeSpecifier*,                              \
+        JLang::frontend::tree::  TypeName*,                                 \
+        JLang::frontend::tree::  TypeSpecifierCallArgs*,                    \
+        JLang::frontend::tree::  TypeSpecifierSimple*,                      \
+        JLang::frontend::tree::  TypeSpecifierTemplate*,                    \
+        JLang::frontend::tree::  TypeSpecifierFunctionPointer*,             \
+        JLang::frontend::tree::  TypeSpecifierPointerTo*,                   \
+        JLang::frontend::tree::  TypeSpecifierReferenceTo*,                 \
+        JLang::frontend::tree::FunctionDefinitionArgList*,                  \
+        JLang::frontend::tree::  FunctionDefinitionArg*,                    \
+        JLang::frontend::tree::  ClassDeclStart*,                           \
+        JLang::frontend::tree::  ClassArgumentList*,                        \
+        JLang::frontend::tree::      ClassMemberDeclarationVariable*,       \
+        JLang::frontend::tree::      ClassMemberDeclarationMethod*,         \
+        JLang::frontend::tree::      ClassMemberDeclarationConstructor*,    \
+        JLang::frontend::tree::      ClassMemberDeclarationDestructor*,     \
+        JLang::frontend::tree::    ClassMemberDeclaration*,                 \
+        JLang::frontend::tree::  ClassMemberDeclarationList*,               \
+        JLang::frontend::tree::ClassDefinition*,                            \
+        JLang::frontend::tree::TypeDefinition*,                             \
+        JLang::frontend::tree::    EnumDefinitionValue*,                    \
+        JLang::frontend::tree::  EnumDefinitionValueList*,                  \
+        JLang::frontend::tree::EnumDefinition*,                             \
+        JLang::frontend::tree::Expression*,                                 \
+        JLang::frontend::tree::  ExpressionPrimary*,                        \
+        JLang::frontend::tree::    ExpressionPrimaryIdentifier*,            \
+        JLang::frontend::tree::    ExpressionPrimaryNested*,                \
+        JLang::frontend::tree::    ExpressionPrimaryLiteralChar*,           \
+        JLang::frontend::tree::    ExpressionPrimaryLiteralString*,         \
+        JLang::frontend::tree::    ExpressionPrimaryLiteralInt*,            \
+        JLang::frontend::tree::    ExpressionPrimaryLiteralFloat*,          \
+        JLang::frontend::tree::  ExpressionPostfixArrayIndex*,              \
+        JLang::frontend::tree::  ExpressionPostfixFunctionCall*,            \
+        JLang::frontend::tree::      ArgumentExpressionList*,               \
+        JLang::frontend::tree::  ExpressionPostfixDot*,                     \
+        JLang::frontend::tree::  ExpressionPostfixArrow*,                   \
+        JLang::frontend::tree::  ExpressionPostfixIncDec*,                  \
+        JLang::frontend::tree::  ExpressionUnaryPrefix*,                    \
+        JLang::frontend::tree::  ExpressionUnarySizeofType*,                \
+        JLang::frontend::tree::  ExpressionCast*,                           \
+        JLang::frontend::tree::  ExpressionBinary*,                         \
+        JLang::frontend::tree::  ExpressionTrinary*,                        \
+        JLang::frontend::tree::StatementList*,                              \
+        JLang::frontend::tree::  Statement*,                                \
+        JLang::frontend::tree::    StatementVariableDeclaration*,           \
+        JLang::frontend::tree::    StatementBlock*,                         \
+        JLang::frontend::tree::    StatementExpression*,                    \
+        JLang::frontend::tree::    StatementGoto*,                          \
+        JLang::frontend::tree::    StatementIfElse*,                        \
+        JLang::frontend::tree::    StatementWhile*,                         \
+        JLang::frontend::tree::    StatementFor*,                           \
+        JLang::frontend::tree::    StatementSwitch*,                        \
+        JLang::frontend::tree::      StatementSwitchContent*,               \
+        JLang::frontend::tree::        StatementSwitchBlock*,               \
+        JLang::frontend::tree::    StatementReturn*,                        \
+        JLang::frontend::tree::    StatementContinue*,                      \
+        JLang::frontend::tree::    StatementBreak*,                         \
+        JLang::frontend::tree::    StatementLabel*,                         \
+        JLang::frontend::tree::TranslationUnit*,                            \
+        JLang::frontend::tree::  FileStatementList*,                        \
+        JLang::frontend::tree::    FileStatement*,                          \
+        JLang::frontend::tree::      FileStatementFunctionDefinition*,        \
+        JLang::frontend::tree::        ScopeBody *,                           \
+        JLang::frontend::tree::      FileStatementFunctionDeclaration*,       \
+        JLang::frontend::tree::        ArrayLength*,                          \
+        JLang::frontend::tree::        GlobalInitializer*,                    \
+        JLang::frontend::tree::          GlobalInitializerExpressionPrimary*, \
+        JLang::frontend::tree::          GlobalInitializerAddressofExpressionPrimary*, \
+        JLang::frontend::tree::          GlobalInitializerStructInitializerList*,      \
+        JLang::frontend::tree::            StructInitializerList*,            \
+        JLang::frontend::tree::              StructInitializer*,              \
+        JLang::frontend::tree::      FileStatementGlobalDefinition*,          \
+        JLang::frontend::tree::      FileStatementNamespace*,                 \
+        JLang::frontend::tree::        NamespaceDeclaration*,                 \
+        JLang::frontend::tree::      FileStatementUsing*,                     \
+        JLang::frontend::tree::        UsingAs*
 
 //----------------------------
 // Unique pointer types to

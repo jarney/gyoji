@@ -12,7 +12,7 @@
  * that process the input.
  */
 namespace JLang::backend {
-  using namespace JLang::frontend;
+  using namespace JLang::frontend::ast;
   
   class JBackend {
   public:

@@ -2,13 +2,15 @@
 #include <cstdlib>
 #include <memory>
 #include <jlang-frontend/jsyntax.hpp>
-#include <jlang-frontend/namespace.hpp>
 #include <jlang.y.hpp>
-
+using namespace JLang::frontend::tree;
+using namespace JLang::frontend::namespaces;
 using namespace JLang::frontend::yacc;
+
+
 std::string override_file;
 size_t lineno = 1;
-std::vector<JLang::frontend::TerminalNonSyntax_owned_ptr> non_syntax_data;
+std::vector<TerminalNonSyntax_owned_ptr> non_syntax_data;
 
 #define DEBUG_TERMINALS 0
 #if DEBUG_TERMINALS
@@ -22,8 +24,8 @@ std::vector<JLang::frontend::TerminalNonSyntax_owned_ptr> non_syntax_data;
 #endif
 
 void move_array(
-                std::vector<JLang::frontend::TerminalNonSyntax_owned_ptr> & dst,
-                std::vector<JLang::frontend::TerminalNonSyntax_owned_ptr> & src
+                std::vector<TerminalNonSyntax_owned_ptr> & dst,
+                std::vector<TerminalNonSyntax_owned_ptr> & src
                 )
 {
     dst.clear();
@@ -34,13 +36,13 @@ void move_array(
 }
 
 #define START_NODE(nodetype)                 \
-    JLang::frontend::Terminal* node = new JLang::frontend::Terminal(); \
+    Terminal* node = new Terminal(); \
     node->type = Parser::symbol_kind_type::S_ ## nodetype; \
     node->typestr = std::string(#nodetype);  \
     node->value = std::string(yytext);       \
     node->lineno = lineno;                   \
     move_array(node->non_syntax, non_syntax_data);      \
-    yylval->emplace<JLang::frontend::Terminal_owned_ptr>(node);
+    yylval->emplace<Terminal_owned_ptr>(node);
 
 #define RETURN_NODE(nodetype)                \
     return Parser::token::nodetype;
@@ -160,10 +162,10 @@ unsafe {PROCESS_NODE(UNSAFE);}
 {float} {PROCESS_NODE(LITERAL_FLOAT);}
 {integer} { PROCESS_NODE(LITERAL_INT);}
 (::)*{identifier}({whitespace}*:{whitespace}*:{whitespace}*{identifier})* {
-    JLang::frontend::NamespaceContext *context = (JLang::frontend::NamespaceContext*)yyget_extra(yyscanner);
-    JLang::frontend::NamespaceFoundReason::ptr found = context->namespace_lookup(std::string(yytext));
-    if (found->reason == JLang::frontend::NamespaceFoundReason::REASON_FOUND) {
-        if (found->location->type == JLang::frontend::Namespace::TYPE_NAMESPACE) {
+    NamespaceContext *context = (NamespaceContext*)yyget_extra(yyscanner);
+    NamespaceFoundReason::ptr found = context->namespace_lookup(std::string(yytext));
+    if (found->reason == NamespaceFoundReason::REASON_FOUND) {
+        if (found->location->type == Namespace::TYPE_NAMESPACE) {
             // When processing a namespace, the NAMESPACE_NAME
             // gives the fully-qualified name of the namespace.
             PROCESS_IDENTIFIER(NAMESPACE_NAME, found->location);
@@ -174,7 +176,7 @@ unsafe {PROCESS_NODE(UNSAFE);}
             PROCESS_IDENTIFIER(TYPE_NAME, found->location);
         }
     }
-    else if (found->reason == JLang::frontend::NamespaceFoundReason::REASON_NOT_FOUND) {
+    else if (found->reason == NamespaceFoundReason::REASON_NOT_FOUND) {
         // When declaring an identifier, the second
         // argument tells us what namespace the identifier
         // should go into.
@@ -187,8 +189,8 @@ unsafe {PROCESS_NODE(UNSAFE);}
 
 "/*"        {
   BEGIN(COMMENT);
-  JLang::frontend::TerminalNonSyntax_owned_ptr nsd = std::make_unique<JLang::frontend::TerminalNonSyntax>(
-        JLang::frontend::TerminalNonSyntax::TerminalNonSyntax::Type::EXTRA_COMMENT_MULTI_LINE,
+  TerminalNonSyntax_owned_ptr nsd = std::make_unique<TerminalNonSyntax>(
+        TerminalNonSyntax::TerminalNonSyntax::Type::EXTRA_COMMENT_MULTI_LINE,
         std::string()
         );
   non_syntax_data.push_back(std::move(nsd));
@@ -197,32 +199,32 @@ unsafe {PROCESS_NODE(UNSAFE);}
   BEGIN(INITIAL);
 }
 <COMMENT>[^*]* {
-  JLang::frontend::TerminalNonSyntax* current = non_syntax_data.back().get();
+  TerminalNonSyntax* current = non_syntax_data.back().get();
   current->append(std::string(yytext));
 }
 <COMMENT>\* {
-  JLang::frontend::TerminalNonSyntax *current = non_syntax_data.back().get();
+  TerminalNonSyntax *current = non_syntax_data.back().get();
   current->append(std::string(yytext));
 }
 
 \/\/.* {
 // Single-line comment:
-    JLang::frontend::TerminalNonSyntax_owned_ptr nsd = std::make_unique<JLang::frontend::TerminalNonSyntax>(
-        JLang::frontend::TerminalNonSyntax::Type::EXTRA_COMMENT_SINGLE_LINE,
+    TerminalNonSyntax_owned_ptr nsd = std::make_unique<TerminalNonSyntax>(
+        TerminalNonSyntax::Type::EXTRA_COMMENT_SINGLE_LINE,
         std::string(yytext+2)
     );
     non_syntax_data.push_back(std::move(nsd));
 }
 [ \t]+ {
-    JLang::frontend::TerminalNonSyntax_owned_ptr nsd = std::make_unique<JLang::frontend::TerminalNonSyntax>(
-        JLang::frontend::TerminalNonSyntax::Type::EXTRA_WHITESPACE, 
+    TerminalNonSyntax_owned_ptr nsd = std::make_unique<TerminalNonSyntax>(
+        TerminalNonSyntax::Type::EXTRA_WHITESPACE, 
         std::string(yytext)
     );
     non_syntax_data.push_back(std::move(nsd));
 }
 \n {
-    JLang::frontend::TerminalNonSyntax_owned_ptr nsd = std::make_unique<JLang::frontend::TerminalNonSyntax>(
-        JLang::frontend::TerminalNonSyntax::Type::EXTRA_WHITESPACE, 
+    TerminalNonSyntax_owned_ptr nsd = std::make_unique<TerminalNonSyntax>(
+        TerminalNonSyntax::Type::EXTRA_WHITESPACE, 
         std::string(yytext)
     );
     non_syntax_data.push_back(std::move(nsd));
@@ -230,8 +232,8 @@ unsafe {PROCESS_NODE(UNSAFE);}
 }
 \#[a-zA-Z]+\ [[:digit:]]+\ \".*\"\n {
     //printf("Preprocessor directive %s\n", yytext);
-    JLang::frontend::TerminalNonSyntax_owned_ptr nsd = std::make_unique<JLang::frontend::TerminalNonSyntax>(
-        JLang::frontend::TerminalNonSyntax::Type::EXTRA_FILE_METADATA,
+    TerminalNonSyntax_owned_ptr nsd = std::make_unique<TerminalNonSyntax>(
+        TerminalNonSyntax::Type::EXTRA_FILE_METADATA,
         std::string(yytext)
     );
     non_syntax_data.push_back(std::move(nsd));

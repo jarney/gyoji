@@ -3,7 +3,7 @@
 #include <jlang-misc/xml.hpp>
 
 using namespace JLang::misc;
-using namespace JLang::frontend;
+using namespace JLang::frontend::ast;
 using namespace JLang::backend;
 
 JBackendFormatTree::JBackendFormatTree()

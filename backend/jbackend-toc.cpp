@@ -1,6 +1,8 @@
 
 #include <jlang-backend/jbackend-toc.hpp>
 
+using namespace JLang::frontend::ast;
+
 // TODO: This should not be so tightly coupled.
 #include <jlang.l.hpp>
 #include <jlang.y.hpp>

@@ -1,5 +1,4 @@
 #include <jlang-frontend/jsyntax.hpp>
-#include <jlang-frontend/namespace.hpp>
 #include <jlang.l.hpp>
 #include <jlang.y.hpp>
 
@@ -9,9 +8,53 @@
 //#include <jlang-backend/jbackend-format-pretty.hpp>
 //#include <jlang-codegen/jbackend-llvm.hpp>
 //using namespace JLang::Backend::LLVM;
-using namespace JLang::frontend;
+using namespace JLang::frontend::ast;
+using namespace JLang::frontend::tree;
+using namespace JLang::frontend::namespaces;
 using namespace JLang::frontend::yacc;
 using namespace JLang::backend;
+
+#if 0
+// Last piece before we button up the
+// interface to the parser and document
+// the whole thing.
+class Parser {
+public:
+  Parser(FILE *f);
+  int parse();
+
+  const TranslationUnit & get_translation_unit() const;
+  const SyntaxNode & get_syntax_node() const;
+private:
+    TranslationUnit_owned_ptr translation_unit;
+    NamespaceContext namespace_context;
+private:
+};
+
+int
+Parser::parse()
+{
+  return_data_t data;
+  yacc::Parser parser{ scanner, &data };
+  int rc = parser.parse();
+ return rc;
+}
+
+const TranslationUnit &
+Parser::get_translation_unit() const
+{
+  return *translation_unit;
+}
+const SyntaxNode &
+Parser::get_syntax_node() const
+{
+  return *translation_unit;
+}
+const NamespaceContext & get_namespace_context() const
+{
+  return &namespace_context;
+}
+#endif
 
 int main(int argc, char **argv)
 {
@@ -27,6 +70,7 @@ int main(int argc, char **argv)
       fprintf(stderr, "Cannot open file %s\n", argv[2]);
       exit(1);
     }
+
     return_data_t data;
 
     yyscan_t scanner;

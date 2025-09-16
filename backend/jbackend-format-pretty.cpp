@@ -3,7 +3,7 @@
 #include <jlang.y.hpp>
 #include <iostream>
 
-using namespace JLang::frontend;
+using namespace JLang::frontend::ast;
 using namespace JLang::backend;
 
 JBackendFormatPretty::JBackendFormatPretty()

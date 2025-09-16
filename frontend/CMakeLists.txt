@@ -21,7 +21,7 @@ set(FRONTEND_SOURCES
 BISON_TARGET(jlang_y jlang.y ${CMAKE_BINARY_DIR}/jlang.y.cpp
              DEFINES_FILE ${CMAKE_BINARY_DIR}/jlang.y.hpp)
 FLEX_TARGET(jlang_l jlang.l ${CMAKE_BINARY_DIR}/jlang.l.cpp
-             DEFINES_FILE ${CMAKE_BINARY_DIR}/jlang.l.hpp)
+            DEFINES_FILE ${CMAKE_BINARY_DIR}/jlang.l.hpp)
 
 add_library(jlang-frontend ${FRONTEND_SOURCES} ${BISON_jlang_y_OUTPUTS} ${FLEX_jlang_l_OUTPUTS})
 target_include_directories(jlang-frontend

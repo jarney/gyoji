@@ -1,22 +1,20 @@
-//#ifndef _JLANG_INTERNAL
-//#error "This header is intended to be used internally as a part of the JLang front-end.  Please include jsyntax.hpp instead."
-//#endif
+#ifndef _JLANG_INTERNAL
+#error "This header is intended to be used internally as a part of the JLang front-end.  Please include jsyntax.hpp instead."
+#endif
 #pragma once
 
-/*! @} End of Doxygen Groups*/
 
 /*!
  *  \addtogroup Frontend
  *  @{
  */
-//! Headline News for the front-end.
+
+//! Parse Tree Data
 /*!
- * This is the language front-end.
- * The purpose is to take an input
- * byte-stream and assemble an immutable
- * parse tree.
+ * Strongly-typed representation of the parse tree
+ * resulting from reading and parsing an input file.
  */
-namespace JLang::frontend {
+namespace JLang::frontend::tree {
     /**
      * This class represents data obtained from the
      * lexical stage that did not affect the syntax.
@@ -63,7 +61,7 @@ namespace JLang::frontend {
      * They carry the token information as well as any
      * "Non-syntax" data like comments and whitespace.
      */
-    class Terminal : public SyntaxNode {
+    class Terminal : public JLang::frontend::ast::SyntaxNode {
     public:
       Terminal();
       ~Terminal();
@@ -82,7 +80,7 @@ namespace JLang::frontend {
     };
 
 
-    class FileStatement : public SyntaxNode {
+    class FileStatement : public JLang::frontend::ast::SyntaxNode {
     public:
       typedef std::variant<
         FileStatementFunctionDefinition_owned_ptr,
@@ -94,7 +92,7 @@ namespace JLang::frontend {
         FileStatementNamespace_owned_ptr,
         FileStatementUsing_owned_ptr> FileStatementType;
 
-      FileStatement(FileStatementType _statement, const SyntaxNode &_raw_ptr);
+      FileStatement(FileStatementType _statement, const JLang::frontend::ast::SyntaxNode &_raw_ptr);
       ~FileStatement();
 
       const FileStatementType & get_statement() const;
@@ -103,7 +101,7 @@ namespace JLang::frontend {
       FileStatementType statement;
     };
 
-    class AccessQualifier : public SyntaxNode {
+    class AccessQualifier : public JLang::frontend::ast::SyntaxNode {
     public:
       typedef enum {
         UNSPECIFIED,
@@ -119,7 +117,7 @@ namespace JLang::frontend {
       Terminal_owned_ptr qualifier;
     };
     
-    class AccessModifier : public SyntaxNode {
+    class AccessModifier : public JLang::frontend::ast::SyntaxNode {
     public:
       typedef enum {
         PUBLIC,
@@ -135,7 +133,7 @@ namespace JLang::frontend {
       Terminal_owned_ptr modifier;
     };
 
-    class UnsafeModifier : public SyntaxNode {
+    class UnsafeModifier : public JLang::frontend::ast::SyntaxNode {
     public:
       UnsafeModifier(Terminal_owned_ptr _unsafe_token);
       UnsafeModifier();
@@ -146,7 +144,7 @@ namespace JLang::frontend {
       
     };
 
-    class TypeName : public SyntaxNode {
+    class TypeName : public JLang::frontend::ast::SyntaxNode {
     public:
       TypeName(Terminal_owned_ptr _type_name);
       TypeName(Terminal_owned_ptr _typeof_token,
@@ -169,7 +167,7 @@ namespace JLang::frontend {
       Terminal_owned_ptr paren_r_token;
     };
     
-    class TypeSpecifierCallArgs : public SyntaxNode {
+    class TypeSpecifierCallArgs : public JLang::frontend::ast::SyntaxNode {
     public:
       TypeSpecifierCallArgs();
       ~TypeSpecifierCallArgs();
@@ -181,7 +179,7 @@ namespace JLang::frontend {
       std::vector<TypeSpecifier_owned_ptr> arguments;
     };
 
-    class TypeSpecifierSimple : public SyntaxNode {
+    class TypeSpecifierSimple : public JLang::frontend::ast::SyntaxNode {
     public:
       TypeSpecifierSimple(
                           AccessQualifier_owned_ptr _access_qualifier,
@@ -194,7 +192,7 @@ namespace JLang::frontend {
       AccessQualifier_owned_ptr access_qualifier;
       TypeName_owned_ptr type_name;
     };
-    class TypeSpecifierTemplate : public SyntaxNode {
+    class TypeSpecifierTemplate : public JLang::frontend::ast::SyntaxNode {
     public:
       TypeSpecifierTemplate(
                             TypeSpecifier_owned_ptr _type_specifier,
@@ -211,7 +209,7 @@ namespace JLang::frontend {
       TypeSpecifierCallArgs_owned_ptr type_specifier_call_args;
       Terminal_owned_ptr paren_r_token;
     };
-    class TypeSpecifierFunctionPointer : public SyntaxNode {
+    class TypeSpecifierFunctionPointer : public JLang::frontend::ast::SyntaxNode {
     public:
       TypeSpecifierFunctionPointer(
                                    TypeSpecifier_owned_ptr _type_specifier,
@@ -237,7 +235,7 @@ namespace JLang::frontend {
       FunctionDefinitionArgList_owned_ptr function_definition_arg_list;
       Terminal_owned_ptr paren_r2_token;
     };
-    class TypeSpecifierPointerTo : public SyntaxNode {
+    class TypeSpecifierPointerTo : public JLang::frontend::ast::SyntaxNode {
     public:
       TypeSpecifierPointerTo(
                              TypeSpecifier_owned_ptr _type_specifier,
@@ -252,7 +250,7 @@ namespace JLang::frontend {
       Terminal_owned_ptr star_token;
       AccessQualifier_owned_ptr access_qualifier;
     };
-    class TypeSpecifierReferenceTo : public SyntaxNode {
+    class TypeSpecifierReferenceTo : public JLang::frontend::ast::SyntaxNode {
     public:
       TypeSpecifierReferenceTo(
                                TypeSpecifier_owned_ptr _type_specifier,
@@ -268,7 +266,7 @@ namespace JLang::frontend {
       AccessQualifier_owned_ptr access_qualifier;
     };
     
-    class TypeSpecifier : public SyntaxNode {
+    class TypeSpecifier : public JLang::frontend::ast::SyntaxNode {
     public:
       typedef std::variant<
         TypeSpecifierSimple_owned_ptr,
@@ -277,14 +275,14 @@ namespace JLang::frontend {
         TypeSpecifierPointerTo_owned_ptr,
         TypeSpecifierReferenceTo_owned_ptr
       > TypeSpecifierType;
-      TypeSpecifier(TypeSpecifier::TypeSpecifierType _type, const SyntaxNode &_raw_ptr);
+      TypeSpecifier(TypeSpecifier::TypeSpecifierType _type, const JLang::frontend::ast::SyntaxNode &_raw_ptr);
       ~TypeSpecifier();
       const TypeSpecifier::TypeSpecifierType & get_type() const;
     private:
       TypeSpecifier::TypeSpecifierType type;
     };
 
-    class FunctionDefinitionArg : public SyntaxNode {
+    class FunctionDefinitionArg : public JLang::frontend::ast::SyntaxNode {
     public:
       FunctionDefinitionArg(TypeSpecifier_owned_ptr _type_specifier,
                             Terminal_owned_ptr _identifier_token
@@ -296,7 +294,7 @@ namespace JLang::frontend {
       TypeSpecifier_owned_ptr type_specifier;
       Terminal_owned_ptr identifier_token;
     };
-    class FunctionDefinitionArgList : public SyntaxNode {
+    class FunctionDefinitionArgList : public JLang::frontend::ast::SyntaxNode {
     public:
       FunctionDefinitionArgList();
       ~FunctionDefinitionArgList();
@@ -308,7 +306,7 @@ namespace JLang::frontend {
       std::vector<FunctionDefinitionArg_owned_ptr> arguments;
     };
 
-    class FileStatementFunctionDeclaration : public SyntaxNode {
+    class FileStatementFunctionDeclaration : public JLang::frontend::ast::SyntaxNode {
     public:
       FileStatementFunctionDeclaration(
                                       AccessModifier_owned_ptr _access_modifier,
@@ -339,7 +337,7 @@ namespace JLang::frontend {
     };
 
 
-    class StatementVariableDeclaration : public SyntaxNode {
+    class StatementVariableDeclaration : public JLang::frontend::ast::SyntaxNode {
     public:
       StatementVariableDeclaration(
                                    TypeSpecifier_owned_ptr _type_specifier,
@@ -361,7 +359,7 @@ namespace JLang::frontend {
       Terminal_owned_ptr semicolon_token;
     private:
     };
-    class StatementBlock : public SyntaxNode {
+    class StatementBlock : public JLang::frontend::ast::SyntaxNode {
     public:
       StatementBlock(
                      UnsafeModifier_owned_ptr _unsafe_modifier,
@@ -375,7 +373,7 @@ namespace JLang::frontend {
       ScopeBody_owned_ptr scope_body;
     private:
     };
-    class StatementExpression : public SyntaxNode {
+    class StatementExpression : public JLang::frontend::ast::SyntaxNode {
     public:
       StatementExpression(
                           Expression_owned_ptr _expression,
@@ -388,7 +386,7 @@ namespace JLang::frontend {
       Terminal_owned_ptr semicolon_token;
     };
     class StatementIfElse;
-    class StatementIfElse : public SyntaxNode {
+    class StatementIfElse : public JLang::frontend::ast::SyntaxNode {
     public:
       StatementIfElse(
                       Terminal_owned_ptr _if_token,
@@ -434,7 +432,7 @@ namespace JLang::frontend {
       ScopeBody_owned_ptr else_scope_body;
       StatementIfElse_owned_ptr else_if;
     };
-    class StatementWhile : public SyntaxNode {
+    class StatementWhile : public JLang::frontend::ast::SyntaxNode {
     public:
       StatementWhile(
                      Terminal_owned_ptr _while_token,
@@ -453,7 +451,7 @@ namespace JLang::frontend {
       Terminal_owned_ptr paren_r_token;
       ScopeBody_owned_ptr scope_body;
     };
-    class StatementFor : public SyntaxNode {
+    class StatementFor : public JLang::frontend::ast::SyntaxNode {
     public:
       StatementFor(
                    Terminal_owned_ptr _for_token,
@@ -483,7 +481,7 @@ namespace JLang::frontend {
       ScopeBody_owned_ptr scope_body;
     };
 
-    class StatementSwitchBlock : public SyntaxNode {
+    class StatementSwitchBlock : public JLang::frontend::ast::SyntaxNode {
     public:
       StatementSwitchBlock(
                            Terminal_owned_ptr _default_token,
@@ -512,7 +510,7 @@ namespace JLang::frontend {
       ScopeBody_owned_ptr scope_body;
     };
     
-    class StatementSwitchContent : public SyntaxNode {
+    class StatementSwitchContent : public JLang::frontend::ast::SyntaxNode {
     public:
       StatementSwitchContent();
       ~StatementSwitchContent();
@@ -522,7 +520,7 @@ namespace JLang::frontend {
       std::vector<StatementSwitchBlock_owned_ptr> blocks;
     };
     
-    class StatementSwitch : public SyntaxNode {
+    class StatementSwitch : public JLang::frontend::ast::SyntaxNode {
     public:
       StatementSwitch(
                       Terminal_owned_ptr _switch_token,
@@ -545,7 +543,7 @@ namespace JLang::frontend {
       StatementSwitchContent_owned_ptr switch_content;
       Terminal_owned_ptr brace_r_token;
     };
-    class StatementLabel : public SyntaxNode {
+    class StatementLabel : public JLang::frontend::ast::SyntaxNode {
     public:
       StatementLabel(
                      Terminal_owned_ptr _label_token,
@@ -559,7 +557,7 @@ namespace JLang::frontend {
       Terminal_owned_ptr identifier_token;
       Terminal_owned_ptr colon_token;
     };
-    class StatementGoto : public SyntaxNode {
+    class StatementGoto : public JLang::frontend::ast::SyntaxNode {
     public:
       StatementGoto(
                     Terminal_owned_ptr _goto_token,
@@ -573,7 +571,7 @@ namespace JLang::frontend {
       Terminal_owned_ptr identifier_token;
       Terminal_owned_ptr semicolon_token;
     };
-    class StatementBreak : public SyntaxNode {
+    class StatementBreak : public JLang::frontend::ast::SyntaxNode {
     public:
       StatementBreak(
                      Terminal_owned_ptr _break_token,
@@ -584,7 +582,7 @@ namespace JLang::frontend {
       Terminal_owned_ptr break_token;
       Terminal_owned_ptr semicolon_token;
     };
-    class StatementContinue : public SyntaxNode {
+    class StatementContinue : public JLang::frontend::ast::SyntaxNode {
     public:
       StatementContinue(
                         Terminal_owned_ptr _continue_token,
@@ -595,7 +593,7 @@ namespace JLang::frontend {
       Terminal_owned_ptr continue_token;
       Terminal_owned_ptr semicolon_token;
     };
-    class StatementReturn : public SyntaxNode {
+    class StatementReturn : public JLang::frontend::ast::SyntaxNode {
     public:
       StatementReturn(
                       Terminal_owned_ptr _return_token,
@@ -610,7 +608,7 @@ namespace JLang::frontend {
       Terminal_owned_ptr semicolon_token;
     };
 
-    class Statement : public SyntaxNode {
+    class Statement : public JLang::frontend::ast::SyntaxNode {
     public:
       typedef std::variant<
             StatementVariableDeclaration_owned_ptr,
@@ -634,7 +632,7 @@ namespace JLang::frontend {
       StatementType statement;
     };
     
-    class StatementList : public SyntaxNode {
+    class StatementList : public JLang::frontend::ast::SyntaxNode {
     public:
       StatementList();
       ~StatementList();
@@ -644,7 +642,7 @@ namespace JLang::frontend {
       std::vector<Statement_owned_ptr> statements;
     };
     
-    class ScopeBody : public SyntaxNode {
+    class ScopeBody : public JLang::frontend::ast::SyntaxNode {
     public:
       ScopeBody(
                 Terminal_owned_ptr brace_l_token,
@@ -659,7 +657,7 @@ namespace JLang::frontend {
       Terminal_owned_ptr brace_r_token;
     };
     
-    class FileStatementFunctionDefinition : public SyntaxNode {
+    class FileStatementFunctionDefinition : public JLang::frontend::ast::SyntaxNode {
     public:
       FileStatementFunctionDefinition(
                                       AccessModifier_owned_ptr _access_modifier,
@@ -690,7 +688,7 @@ namespace JLang::frontend {
       ScopeBody_owned_ptr scope_body; // argument list delimiter SEMICOLON
     };
 
-    class ArrayLength : public SyntaxNode {
+    class ArrayLength : public JLang::frontend::ast::SyntaxNode {
     public:
       ArrayLength();
       ArrayLength(
@@ -707,7 +705,7 @@ namespace JLang::frontend {
       Terminal_owned_ptr bracket_r_token;
     };
 
-    class ClassDeclStart : public SyntaxNode {
+    class ClassDeclStart : public JLang::frontend::ast::SyntaxNode {
     public:
       ClassDeclStart(
                      AccessModifier_owned_ptr _access_modifier,
@@ -726,7 +724,7 @@ namespace JLang::frontend {
       Terminal_owned_ptr identifier_token;
       ClassArgumentList_owned_ptr class_argument_list;
     };
-    class ClassArgumentList : public SyntaxNode {
+    class ClassArgumentList : public JLang::frontend::ast::SyntaxNode {
     public:
       ClassArgumentList();
       ClassArgumentList(Terminal_owned_ptr _argument);
@@ -741,7 +739,7 @@ namespace JLang::frontend {
       Terminal_owned_ptr paren_r;
     };
 
-    class ClassMemberDeclarationVariable : public SyntaxNode {
+    class ClassMemberDeclarationVariable : public JLang::frontend::ast::SyntaxNode {
     public:
       ClassMemberDeclarationVariable(
                                      AccessModifier_owned_ptr _access_modifier,
@@ -762,7 +760,7 @@ namespace JLang::frontend {
       ArrayLength_owned_ptr array_length;
       Terminal_owned_ptr semicolon_token;
     };    
-    class ClassMemberDeclarationMethod : public SyntaxNode {
+    class ClassMemberDeclarationMethod : public JLang::frontend::ast::SyntaxNode {
     public:
       ClassMemberDeclarationMethod(
                                      AccessModifier_owned_ptr _access_modifier,
@@ -787,7 +785,7 @@ namespace JLang::frontend {
       Terminal_owned_ptr paren_r_token;
       Terminal_owned_ptr semicolon_token;
     };
-    class ClassMemberDeclarationConstructor : public SyntaxNode {
+    class ClassMemberDeclarationConstructor : public JLang::frontend::ast::SyntaxNode {
     public:
       ClassMemberDeclarationConstructor(
                                         AccessModifier_owned_ptr _access_modifier,
@@ -809,7 +807,7 @@ namespace JLang::frontend {
       Terminal_owned_ptr paren_r_token;
       Terminal_owned_ptr semicolon_token;
     };
-    class ClassMemberDeclarationDestructor : public SyntaxNode {
+    class ClassMemberDeclarationDestructor : public JLang::frontend::ast::SyntaxNode {
     public:
       ClassMemberDeclarationDestructor(
                                        AccessModifier_owned_ptr _access_modifier,
@@ -834,7 +832,7 @@ namespace JLang::frontend {
       Terminal_owned_ptr semicolon_token;
     };
     
-    class ClassMemberDeclaration : public SyntaxNode {
+    class ClassMemberDeclaration : public JLang::frontend::ast::SyntaxNode {
     public:
       typedef std::variant<
         ClassMemberDeclarationVariable_owned_ptr,
@@ -847,7 +845,7 @@ namespace JLang::frontend {
       > MemberType;
       ClassMemberDeclaration(
                              MemberType _member,
-                             const SyntaxNode &_raw_ptr
+                             const JLang::frontend::ast::SyntaxNode &_raw_ptr
                              );
       ~ClassMemberDeclaration();
       const ClassMemberDeclaration::MemberType & get_member();
@@ -855,7 +853,7 @@ namespace JLang::frontend {
       MemberType member;
     };
     
-    class ClassMemberDeclarationList : public SyntaxNode {
+    class ClassMemberDeclarationList : public JLang::frontend::ast::SyntaxNode {
     public:
       ClassMemberDeclarationList();
       ~ClassMemberDeclarationList();
@@ -865,7 +863,7 @@ namespace JLang::frontend {
       std::vector<ClassMemberDeclaration_owned_ptr> members;
     };
           
-    class ClassDefinition : public SyntaxNode {
+    class ClassDefinition : public JLang::frontend::ast::SyntaxNode {
     public:
       ClassDefinition(
                       ClassDeclStart_owned_ptr _class_decl_start,
@@ -887,7 +885,7 @@ namespace JLang::frontend {
       Terminal_owned_ptr semicolon_token;
     };
 
-    class TypeDefinition : public SyntaxNode {
+    class TypeDefinition : public JLang::frontend::ast::SyntaxNode {
     public:
       TypeDefinition(
                      AccessModifier_owned_ptr _access_modifier,
@@ -908,7 +906,7 @@ namespace JLang::frontend {
       Terminal_owned_ptr semicolon_token;
     };
 
-    class EnumDefinitionValue : public SyntaxNode {
+    class EnumDefinitionValue : public JLang::frontend::ast::SyntaxNode {
     public:
       EnumDefinitionValue(
                           Terminal_owned_ptr _identifier_token,
@@ -926,7 +924,7 @@ namespace JLang::frontend {
       Terminal_owned_ptr semicolon_token;      
     };
     
-    class EnumDefinitionValueList : public SyntaxNode {
+    class EnumDefinitionValueList : public JLang::frontend::ast::SyntaxNode {
     public:
       EnumDefinitionValueList();
       ~EnumDefinitionValueList();
@@ -936,7 +934,7 @@ namespace JLang::frontend {
       std::vector<EnumDefinitionValue_owned_ptr> values;
     };
 
-    class EnumDefinition : public SyntaxNode {
+    class EnumDefinition : public JLang::frontend::ast::SyntaxNode {
     public:
       EnumDefinition(
                      AccessModifier_owned_ptr _access_modifier,
@@ -965,7 +963,7 @@ namespace JLang::frontend {
       
     };
 
-    class ExpressionPrimaryIdentifier : public SyntaxNode {
+    class ExpressionPrimaryIdentifier : public JLang::frontend::ast::SyntaxNode {
     public:
       ExpressionPrimaryIdentifier(Terminal_owned_ptr _identifier_token);
       ~ExpressionPrimaryIdentifier();
@@ -973,7 +971,7 @@ namespace JLang::frontend {
     private:
       Terminal_owned_ptr identifier_token;
     };
-    class ExpressionPrimaryNested : public SyntaxNode {
+    class ExpressionPrimaryNested : public JLang::frontend::ast::SyntaxNode {
     public:
       ExpressionPrimaryNested(
                               Terminal_owned_ptr _paren_l_token,
@@ -988,7 +986,7 @@ namespace JLang::frontend {
       Terminal_owned_ptr paren_r_token;
     };
 
-    class ExpressionPrimaryLiteralInt : public SyntaxNode {
+    class ExpressionPrimaryLiteralInt : public JLang::frontend::ast::SyntaxNode {
     public:
       ExpressionPrimaryLiteralInt(
                                   Terminal_owned_ptr literal_token
@@ -998,7 +996,7 @@ namespace JLang::frontend {
     private:
       Terminal_owned_ptr literal_token;
     };
-    class ExpressionPrimaryLiteralChar : public SyntaxNode {
+    class ExpressionPrimaryLiteralChar : public JLang::frontend::ast::SyntaxNode {
     public:
       ExpressionPrimaryLiteralChar(
                                   Terminal_owned_ptr _literal_token
@@ -1008,7 +1006,7 @@ namespace JLang::frontend {
     private:
       Terminal_owned_ptr literal_token;
     };
-    class ExpressionPrimaryLiteralString : public SyntaxNode {
+    class ExpressionPrimaryLiteralString : public JLang::frontend::ast::SyntaxNode {
     public:
       ExpressionPrimaryLiteralString(
                                      Terminal_owned_ptr _literal_token
@@ -1018,7 +1016,7 @@ namespace JLang::frontend {
     private:
       Terminal_owned_ptr literal_token;
     };
-    class ExpressionPrimaryLiteralFloat : public SyntaxNode {
+    class ExpressionPrimaryLiteralFloat : public JLang::frontend::ast::SyntaxNode {
     public:
       ExpressionPrimaryLiteralFloat(
                                   Terminal_owned_ptr _literal_token
@@ -1029,7 +1027,7 @@ namespace JLang::frontend {
       Terminal_owned_ptr literal_token;
     };
     
-    class ExpressionPrimary : public SyntaxNode {
+    class ExpressionPrimary : public JLang::frontend::ast::SyntaxNode {
     public:
       typedef std::variant<ExpressionPrimaryIdentifier_owned_ptr,
                            ExpressionPrimaryNested_owned_ptr,
@@ -1045,7 +1043,7 @@ namespace JLang::frontend {
       ExpressionPrimary::ExpressionType expression_type;
     };
 
-    class ExpressionPostfixArrayIndex : public SyntaxNode {
+    class ExpressionPostfixArrayIndex : public JLang::frontend::ast::SyntaxNode {
     public:
       ExpressionPostfixArrayIndex(
                                   Expression_owned_ptr _array_expression,
@@ -1063,7 +1061,7 @@ namespace JLang::frontend {
       Terminal_owned_ptr bracket_r_token;
     };
 
-    class ArgumentExpressionList : public SyntaxNode {
+    class ArgumentExpressionList : public JLang::frontend::ast::SyntaxNode {
     public:
       ArgumentExpressionList();
       ~ArgumentExpressionList();
@@ -1075,7 +1073,7 @@ namespace JLang::frontend {
       std::vector<Expression_owned_ptr> arguments;
     };
     
-    class ExpressionPostfixFunctionCall : public SyntaxNode {
+    class ExpressionPostfixFunctionCall : public JLang::frontend::ast::SyntaxNode {
     public:
       ExpressionPostfixFunctionCall(
                                     Expression_owned_ptr _function_expression,
@@ -1093,7 +1091,7 @@ namespace JLang::frontend {
       Terminal_owned_ptr paren_r_token;
     };
 
-    class ExpressionPostfixDot : public SyntaxNode {
+    class ExpressionPostfixDot : public JLang::frontend::ast::SyntaxNode {
     public:
       ExpressionPostfixDot(
                            Expression_owned_ptr _expression,
@@ -1109,7 +1107,7 @@ namespace JLang::frontend {
       Terminal_owned_ptr identifier_token;
     };
     
-    class ExpressionPostfixArrow : public SyntaxNode {
+    class ExpressionPostfixArrow : public JLang::frontend::ast::SyntaxNode {
     public:
       ExpressionPostfixArrow(
                              Expression_owned_ptr _expression,
@@ -1125,7 +1123,7 @@ namespace JLang::frontend {
       Terminal_owned_ptr identifier_token;
     };
 
-    class ExpressionPostfixIncDec : public SyntaxNode {
+    class ExpressionPostfixIncDec : public JLang::frontend::ast::SyntaxNode {
     public:
       typedef enum {
         INCREMENT,
@@ -1144,7 +1142,7 @@ namespace JLang::frontend {
       Expression_owned_ptr expression;
     };
 
-    class ExpressionUnaryPrefix : public SyntaxNode {
+    class ExpressionUnaryPrefix : public JLang::frontend::ast::SyntaxNode {
     public:
       typedef enum {
         INCREMENT,
@@ -1169,7 +1167,7 @@ namespace JLang::frontend {
       Expression_owned_ptr expression;
     };
 
-    class ExpressionUnarySizeofType : public SyntaxNode {
+    class ExpressionUnarySizeofType : public JLang::frontend::ast::SyntaxNode {
     public:
       ExpressionUnarySizeofType(
                                 Terminal_owned_ptr _sizeof_token,
@@ -1186,7 +1184,7 @@ namespace JLang::frontend {
       Terminal_owned_ptr paren_r_token;
     };
 
-    class ExpressionCast : public SyntaxNode {
+    class ExpressionCast : public JLang::frontend::ast::SyntaxNode {
     public:
       ExpressionCast(
                      Terminal_owned_ptr _cast_token,
@@ -1208,7 +1206,7 @@ namespace JLang::frontend {
       Terminal_owned_ptr paren_r_token;
     };
 
-    class ExpressionBinary : public SyntaxNode {
+    class ExpressionBinary : public JLang::frontend::ast::SyntaxNode {
     public:
       typedef enum {
         // Arithmetic
@@ -1267,7 +1265,7 @@ namespace JLang::frontend {
       Expression_owned_ptr expression_b;
     };
     
-    class ExpressionTrinary : public SyntaxNode {
+    class ExpressionTrinary : public JLang::frontend::ast::SyntaxNode {
     public:
       ExpressionTrinary(
                         Expression_owned_ptr _condition,
@@ -1288,7 +1286,7 @@ namespace JLang::frontend {
       Expression_owned_ptr else_expression;      
     };
     
-    class Expression : public SyntaxNode {
+    class Expression : public JLang::frontend::ast::SyntaxNode {
     public:
       typedef std::variant<ExpressionPrimary_owned_ptr,
                            ExpressionPostfixArrayIndex_owned_ptr,
@@ -1309,7 +1307,7 @@ namespace JLang::frontend {
       Expression::ExpressionType expression_type;
     };
     
-    class GlobalInitializerExpressionPrimary : public SyntaxNode {
+    class GlobalInitializerExpressionPrimary : public JLang::frontend::ast::SyntaxNode {
     public:
       GlobalInitializerExpressionPrimary(Terminal_owned_ptr _equals_token,
                                          ExpressionPrimary_owned_ptr _expression
@@ -1321,7 +1319,7 @@ namespace JLang::frontend {
       ExpressionPrimary_owned_ptr expression;
 
     };
-    class GlobalInitializerAddressofExpressionPrimary : public SyntaxNode {
+    class GlobalInitializerAddressofExpressionPrimary : public JLang::frontend::ast::SyntaxNode {
     public:
       GlobalInitializerAddressofExpressionPrimary(
                                                   Terminal_owned_ptr _equals_token,
@@ -1336,7 +1334,7 @@ namespace JLang::frontend {
       ExpressionPrimary_owned_ptr expression;
     };
 
-    class StructInitializer : public SyntaxNode {
+    class StructInitializer : public JLang::frontend::ast::SyntaxNode {
     public:
       StructInitializer(
                         Terminal_owned_ptr _dot_token,
@@ -1353,7 +1351,7 @@ namespace JLang::frontend {
       Terminal_owned_ptr semicolon_token;
     };
           
-    class StructInitializerList : public SyntaxNode {
+    class StructInitializerList : public JLang::frontend::ast::SyntaxNode {
     public:
       StructInitializerList();
       ~StructInitializerList();
@@ -1363,7 +1361,7 @@ namespace JLang::frontend {
       std::vector<StructInitializer_owned_ptr> initializers;
     };
           
-    class GlobalInitializerStructInitializerList : public SyntaxNode {
+    class GlobalInitializerStructInitializerList : public JLang::frontend::ast::SyntaxNode {
     public:
       GlobalInitializerStructInitializerList(
                                              Terminal_owned_ptr _equals_token,
@@ -1381,7 +1379,7 @@ namespace JLang::frontend {
       Terminal_owned_ptr brace_r_token;
     };
     
-    class GlobalInitializer : public SyntaxNode {
+    class GlobalInitializer : public JLang::frontend::ast::SyntaxNode {
     public:
       typedef std::variant<
         GlobalInitializerExpressionPrimary_owned_ptr,
@@ -1389,14 +1387,14 @@ namespace JLang::frontend {
         GlobalInitializerStructInitializerList_owned_ptr,
         nullptr_t> GlobalInitializerType;
       GlobalInitializer();
-      GlobalInitializer(GlobalInitializerType initializer, const SyntaxNode &_raw_ptr);
+      GlobalInitializer(GlobalInitializerType initializer, const JLang::frontend::ast::SyntaxNode &_raw_ptr);
       ~GlobalInitializer();
       const GlobalInitializerType & get_initializer() const;
     private:
       GlobalInitializerType initializer;
     };
     
-    class FileStatementGlobalDefinition : public SyntaxNode {
+    class FileStatementGlobalDefinition : public JLang::frontend::ast::SyntaxNode {
     public:
       FileStatementGlobalDefinition(
                                     AccessModifier_owned_ptr _access_modifier,
@@ -1424,7 +1422,7 @@ namespace JLang::frontend {
       Terminal_owned_ptr semicolon;
     };
     
-    class NamespaceDeclaration : public SyntaxNode {
+    class NamespaceDeclaration : public JLang::frontend::ast::SyntaxNode {
     public:
       NamespaceDeclaration(
                            AccessModifier_owned_ptr _access_modifier,
@@ -1440,7 +1438,7 @@ namespace JLang::frontend {
       Terminal_owned_ptr identifier_token;
     };
 
-    class FileStatementNamespace : public SyntaxNode {
+    class FileStatementNamespace : public JLang::frontend::ast::SyntaxNode {
     public:
       FileStatementNamespace(NamespaceDeclaration_owned_ptr _namespace_declaration,
                              Terminal_owned_ptr _brace_l_token,
@@ -1459,7 +1457,7 @@ namespace JLang::frontend {
       Terminal_owned_ptr semicolon_token;
     };
 
-    class UsingAs : public SyntaxNode {
+    class UsingAs : public JLang::frontend::ast::SyntaxNode {
     public:
       UsingAs(
               Terminal_owned_ptr _as_token,
@@ -1474,7 +1472,7 @@ namespace JLang::frontend {
       Terminal_owned_ptr identifier_token;
     };
     
-    class FileStatementUsing : public SyntaxNode {
+    class FileStatementUsing : public JLang::frontend::ast::SyntaxNode {
     public:
           FileStatementUsing(AccessModifier_owned_ptr _access_modifier,
                              Terminal_owned_ptr _using,
@@ -1503,7 +1501,7 @@ namespace JLang::frontend {
      * that appear at the top-level of the translation unit or
      * possibly nested inside namespaces at the translation unit level.
      */
-    class FileStatementList : public SyntaxNode {
+    class FileStatementList : public JLang::frontend::ast::SyntaxNode {
     public:
       FileStatementList();
       FileStatementList(Terminal_owned_ptr _yyeof);
@@ -1521,7 +1519,7 @@ namespace JLang::frontend {
      * about the file appears in a tree-like structure beneath
      * this node.
      */
-    class TranslationUnit : public SyntaxNode {
+    class TranslationUnit : public JLang::frontend::ast::SyntaxNode {
     public:
       
       TranslationUnit(
@@ -1535,12 +1533,6 @@ namespace JLang::frontend {
       FileStatementList_owned_ptr file_statement_list;
     };
     
-    
-  typedef struct return_data_st {
-    TranslationUnit_owned_ptr translation_unit;
-    NamespaceContext namespace_context;
-  } return_data_t;
-
 };
 
 /*! @} End of Doxygen Groups*/

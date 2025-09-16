@@ -1,9 +1,23 @@
-//#ifndef _JLANG_INTERNAL
-//#error "This header is intended to be used internally as a part of the JLang front-end.  Please include jsyntax.hpp instead."
-//#endif
+#ifndef _JLANG_INTERNAL
+#error "This header is intended to be used internally as a part of the JLang front-end.  Please include jsyntax.hpp instead."
+#endif
 #pragma once
 
-namespace JLang::frontend {
+/*!
+ *  \addtogroup Frontend
+ *  @{
+ */
+
+//! Abstract syntax tree
+/*!
+ * Weakly-typed representation of the parse tree
+ * resulting from reading and parsing an input file.
+ * While the interface to the data is weakly typed,
+ * the underlying data can be accessed through
+ * a variant that exposes all of the different
+ * types of production that the grammar can produce.
+ */
+namespace JLang::frontend::ast {
 
   class SyntaxNode {
     public:
@@ -45,3 +59,4 @@ namespace JLang::frontend {
     };
 
 };
+/*! @} End of Doxygen Groups*/
