@@ -92,7 +92,7 @@ namespace JLang::frontend::tree {
         FileStatementNamespace_owned_ptr,
         FileStatementUsing_owned_ptr> FileStatementType;
 
-      FileStatement(FileStatementType _statement, const JLang::frontend::ast::SyntaxNode &_raw_ptr);
+      FileStatement(FileStatementType _statement, const JLang::frontend::ast::SyntaxNode & _sn);
       ~FileStatement();
 
       const FileStatementType & get_statement() const;
@@ -275,7 +275,7 @@ namespace JLang::frontend::tree {
         TypeSpecifierPointerTo_owned_ptr,
         TypeSpecifierReferenceTo_owned_ptr
       > TypeSpecifierType;
-      TypeSpecifier(TypeSpecifier::TypeSpecifierType _type, const JLang::frontend::ast::SyntaxNode &_raw_ptr);
+      TypeSpecifier(TypeSpecifier::TypeSpecifierType _type, const JLang::frontend::ast::SyntaxNode & _sn);
       ~TypeSpecifier();
       const TypeSpecifier::TypeSpecifierType & get_type() const;
     private:
@@ -625,7 +625,7 @@ namespace JLang::frontend::tree {
             StatementReturn_owned_ptr
       > StatementType;
 
-      Statement(StatementType _statement);
+      Statement(StatementType _statement, const SyntaxNode & _sn);
       ~Statement();
       const StatementType & get_statement() const;
     private:
@@ -845,7 +845,7 @@ namespace JLang::frontend::tree {
       > MemberType;
       ClassMemberDeclaration(
                              MemberType _member,
-                             const JLang::frontend::ast::SyntaxNode &_raw_ptr
+                             const JLang::frontend::ast::SyntaxNode & _sn
                              );
       ~ClassMemberDeclaration();
       const ClassMemberDeclaration::MemberType & get_member();
@@ -1036,7 +1036,7 @@ namespace JLang::frontend::tree {
                            ExpressionPrimaryLiteralInt_owned_ptr,
                            ExpressionPrimaryLiteralFloat_owned_ptr
                            > ExpressionType;
-      ExpressionPrimary(ExpressionPrimary::ExpressionType _expression_type);
+      ExpressionPrimary(ExpressionPrimary::ExpressionType _expression_type, const SyntaxNode & _sn);
       ~ExpressionPrimary();
       const ExpressionPrimary::ExpressionType & get_expression() const;
     private:
@@ -1300,7 +1300,7 @@ namespace JLang::frontend::tree {
                            ExpressionTrinary_owned_ptr,
                            ExpressionCast_owned_ptr
                            > ExpressionType;
-      Expression(Expression::ExpressionType _expression_type);
+      Expression(Expression::ExpressionType _expression_type, const SyntaxNode & _sn);
       ~Expression();
       const Expression::ExpressionType & get_expression() const;
     private:
@@ -1387,7 +1387,7 @@ namespace JLang::frontend::tree {
         GlobalInitializerStructInitializerList_owned_ptr,
         nullptr_t> GlobalInitializerType;
       GlobalInitializer();
-      GlobalInitializer(GlobalInitializerType initializer, const JLang::frontend::ast::SyntaxNode &_raw_ptr);
+      GlobalInitializer(GlobalInitializerType initializer, const JLang::frontend::ast::SyntaxNode & _sn);
       ~GlobalInitializer();
       const GlobalInitializerType & get_initializer() const;
     private:

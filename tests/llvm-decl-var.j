@@ -13,6 +13,7 @@ using namespace std;
 float doit(f64 a, i32 b)
 {
         q = 10;
+        q = q + b;
         return a;
 }
 
