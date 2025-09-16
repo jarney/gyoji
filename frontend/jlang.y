@@ -2171,6 +2171,19 @@ int visibility_from_modifier(JLang::frontend::tree::AccessModifier::AccessModifi
 
 void JLang::frontend::yacc::YaccParser::error(const std::string& msg) {
     LexContext *lex_context = (LexContext*)yyget_extra(scanner);
+    int colno = yyget_column(scanner);
     // TODO: put error handling here instead of stderr.
-    printf("Syntax error at line %d : %s\n", lex_context->lineno, msg.c_str());
+    // What we really want here is enough context (from lineno)
+    // to recall the surrounding code so that it can be nicely
+    // formatted and we can report exactly where the error
+    // occurred and ----^ point to the exact spot where something
+    // bad happened.
+    // In the simplest case, suppose we have a map of line number to
+    // line of code.  Then we can simply do a lex_context->lines[lex_context->lineno]
+    // and use that to get the bad line of code.  Then if we also have
+    // a TERMINAL or some other syntax element, we can use that to identify
+    // the column inside that line to print the error line.
+    printf("Syntax error at line %d col %d : %s\n", lex_context->lineno,
+           colno,
+           msg.c_str());
 }

@@ -2,6 +2,7 @@
 
 #include <string>
 #include <vector>
+#include <memory>
 
 /*!
  * The errors namespace contains code related
@@ -18,13 +19,45 @@
  */
 namespace JLang::errors {
 
+
+  class ErrorMessage {
+  public:
+    ErrorMessage(std::vector<std::pair<int, std::string>> _context,
+                 int _lineno,
+                 int _colno,
+                 std::string _errormsg
+                 );
+    ~ErrorMessage();
+    void print();
+  private:
+    std::vector<std::pair<int, std::string>> context;
+    int lineno;
+    int colno;
+    std::string errormsg;
+  };
+  
+  class Error {
+  public:
+    Error(std::string _error_message);
+    ~Error();
+    void add_message(
+                     std::vector<std::pair<int, std::string>> context,
+                     int lineno,
+                     int colno,
+                     std::string errormsg);
+    void print();
+  private:
+    std::vector<std::unique_ptr<ErrorMessage>> messages;
+    std::string error_message;
+  };
+  
   class Errors {
   public:
     Errors();
     ~Errors();
-    void add_error(std::string errmsg);
+    void add_error(std::unique_ptr<Error> error);
   private:
-    std::vector<std::string> errors;
+    std::vector<std::unique_ptr<Error>> errors;
   };
   
 };
