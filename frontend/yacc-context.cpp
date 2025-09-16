@@ -1,4 +1,6 @@
 #include <jlang-frontend/jsyntax.hpp>
+#include <jlang.l.hpp>
+#include <jlang.y.hpp>
 
 using namespace JLang::frontend::yacc;
 using namespace JLang::frontend::namespaces;
@@ -7,22 +9,22 @@ using namespace JLang::frontend::tree;
 YaccContext::YaccContext(
                          NamespaceContext & _namespace_context
                          )
-  : namespace_context(namespace_context)
+  : namespace_context(_namespace_context)
   , translation_unit(nullptr)
 {}
 YaccContext::~YaccContext()
 {}
 
-NamespaceContext &
-YaccContext::get_namespace_context()
+const NamespaceContext &
+YaccContext::get_namespace_context() const
 {
   return namespace_context;
 }
 
-TranslationUnit_owned_ptr
-YaccContext::get_translation_unit()
+const TranslationUnit &
+YaccContext::get_translation_unit() const
 {
-  return std::move(translation_unit);
+  return *translation_unit;
 }
 
 void

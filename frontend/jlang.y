@@ -4,10 +4,9 @@
 #include <cmath>
 #include <memory>
 #include <jlang.l.hpp>
+#define _JLANG_INTERNAL_COMPILING
 #include <jlang-frontend/jsyntax.hpp>
   
-  // using namespace JLang::frontend::ast;
-  // using namespace JLang::frontend::tree;
  using namespace JLang::frontend::namespaces;
   
 %}
@@ -541,8 +540,8 @@ namespace_declaration
                                                                                       std::move($2),
                                                                                       std::move($3)
                                                                                       );
-                return_data.get_namespace_context().namespace_new(namespace_name, Namespace::TYPE_NAMESPACE, visibility_from_modifier(access_modifier));
-                return_data.get_namespace_context().namespace_push(namespace_name);
+                return_data.namespace_context.namespace_new(namespace_name, Namespace::TYPE_NAMESPACE, visibility_from_modifier(access_modifier));
+                return_data.namespace_context.namespace_push(namespace_name);
                 PRINT_NONTERMINALS($$);
         }
         ;
@@ -557,7 +556,7 @@ file_statement_namespace
                                                                                         std::move($4),
                                                                                         std::move($5)
                                                                                         );
-                return_data.get_namespace_context().namespace_pop();
+                return_data.namespace_context.namespace_pop();
                 PRINT_NONTERMINALS($$);
         }
         ;
@@ -588,16 +587,16 @@ file_statement_using
                                                                                     std::move($5),
                                                                                     std::move($6)
                                                                                     );
-                NamespaceFoundReason::ptr found_std = return_data.get_namespace_context().namespace_lookup(namespace_name);
+                NamespaceFoundReason::ptr found_std = return_data.namespace_context.namespace_lookup(namespace_name);
                 if (!found_std) {
                   fprintf(stderr, "Error: no such namespace %s in using statement\n", namespace_name.c_str());
                   exit(1);
                 }
                 if (as_name.size() > 0) {
-                  return_data.get_namespace_context().namespace_using(as_name, found_std->location);
+                  return_data.namespace_context.namespace_using(as_name, found_std->location);
                 }
                 else {
-                  return_data.get_namespace_context().namespace_using("", found_std->location);
+                  return_data.namespace_context.namespace_using("", found_std->location);
                 }
                 PRINT_NONTERMINALS($$);
         }
@@ -612,16 +611,16 @@ file_statement_using
                                                                                     std::move($5),
                                                                                     std::move($6)
                                                                                     );
-                NamespaceFoundReason::ptr found_std = return_data.get_namespace_context().namespace_lookup(namespace_name);
+                NamespaceFoundReason::ptr found_std = return_data.namespace_context.namespace_lookup(namespace_name);
                 if (!found_std) {
                   fprintf(stderr, "Error: no such namespace %s in using statement\n", namespace_name.c_str());
                   exit(1);
                 }
                 if (as_name.size() > 0) {
-                  return_data.get_namespace_context().namespace_using(as_name, found_std->location);
+                  return_data.namespace_context.namespace_using(as_name, found_std->location);
                 }
                 else {
-                  return_data.get_namespace_context().namespace_using("", found_std->location);
+                  return_data.namespace_context.namespace_using("", found_std->location);
                 }
                 PRINT_NONTERMINALS($$);
         }
@@ -637,8 +636,8 @@ class_decl_start
                                                                          std::move($3),
                                                                          std::move($4)
                                                                          );
-                return_data.get_namespace_context().namespace_new(class_name, Namespace::TYPE_CLASS, visibility_from_modifier(visibility_modifier));
-                return_data.get_namespace_context().namespace_push(class_name);
+                return_data.namespace_context.namespace_new(class_name, Namespace::TYPE_CLASS, visibility_from_modifier(visibility_modifier));
+                return_data.namespace_context.namespace_push(class_name);
 #if 0
                 // XXX TODO: This isn't handled correctly for the strongly-typed AST.
                 if ($4->children.size() > 0) {
@@ -646,7 +645,7 @@ class_decl_start
                     if (child->type == Parser::symbol_kind_type::S_class_argument_list) {
                       for (auto grandchild : child->children) {
                         if (grandchild->type == Parser::symbol_kind_type::S_IDENTIFIER) {
-                          return_data.get_namespace_context().namespace_new(grandchild->value, Namespace::TYPE_CLASS, Namespace::VISIBILITY_PRIVATE);
+                          return_data.namespace_context.namespace_new(grandchild->value, Namespace::TYPE_CLASS, Namespace::VISIBILITY_PRIVATE);
                         }
                       }
                     }
@@ -696,7 +695,7 @@ class_definition
                                                                                  std::move($4),
                                                                                  std::move($5)
                                                                                  );
-                return_data.get_namespace_context().namespace_pop();
+                return_data.namespace_context.namespace_pop();
                 PRINT_NONTERMINALS($$);
         }
         ;
@@ -712,7 +711,7 @@ type_definition
                                                                                std::move($4),
                                                                                std::move($5)
                                                                                );
-                return_data.get_namespace_context().namespace_new(type_name, Namespace::TYPE_TYPEDEF, visibility_from_modifier(visibility_modifier));
+                return_data.namespace_context.namespace_new(type_name, Namespace::TYPE_TYPEDEF, visibility_from_modifier(visibility_modifier));
                 PRINT_NONTERMINALS($$);
         }
         ;
@@ -731,7 +730,7 @@ enum_definition
                                                                                 std::move($7),
                                                                                 std::move($8)
                                                                                 );
-                return_data.get_namespace_context().namespace_new(type_name, Namespace::TYPE_TYPEDEF, visibility_from_modifier(visibility_modifier));
+                return_data.namespace_context.namespace_new(type_name, Namespace::TYPE_TYPEDEF, visibility_from_modifier(visibility_modifier));
                 PRINT_NONTERMINALS($$);
         }
         ;

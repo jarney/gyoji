@@ -1,60 +1,18 @@
 #include <jlang-frontend/jsyntax.hpp>
-#include <jlang.l.hpp>
-#include <jlang.y.hpp>
+#include <jlang-frontend/input-source-file.hpp>
 
 #include <jlang-backend/jbackend.hpp>
 #include <jlang-backend/jbackend-format-identity.hpp>
 #include <jlang-backend/jbackend-format-tree.hpp>
+
 //#include <jlang-backend/jbackend-format-pretty.hpp>
 //#include <jlang-codegen/jbackend-llvm.hpp>
 //using namespace JLang::Backend::LLVM;
+using namespace JLang::frontend;
 using namespace JLang::frontend::ast;
 using namespace JLang::frontend::tree;
 using namespace JLang::frontend::namespaces;
-using namespace JLang::frontend::yacc;
 using namespace JLang::backend;
-
-#if 0
-// Last piece before we button up the
-// interface to the parser and document
-// the whole thing.
-class Parser {
-public:
-  Parser(FILE *f);
-  int parse();
-
-  const TranslationUnit & get_translation_unit() const;
-  const SyntaxNode & get_syntax_node() const;
-private:
-    TranslationUnit_owned_ptr translation_unit;
-    NamespaceContext namespace_context;
-private:
-};
-
-int
-Parser::parse()
-{
-  return_data_t data;
-  yacc::YaccParser parser{ scanner, &data };
-  int rc = parser.parse();
- return rc;
-}
-
-const TranslationUnit &
-Parser::get_translation_unit() const
-{
-  return *translation_unit;
-}
-const SyntaxNode &
-Parser::get_syntax_node() const
-{
-  return *translation_unit;
-}
-const NamespaceContext & get_namespace_context() const
-{
-  return &namespace_context;
-}
-#endif
 
 int main(int argc, char **argv)
 {
@@ -87,12 +45,6 @@ int main(int argc, char **argv)
 
     namespace_context.namespace_new("void", Namespace::TYPE_TYPEDEF, Namespace::VISIBILITY_PUBLIC);
     
-    YaccContext data(namespace_context);
-
-    yyscan_t scanner;
-    yylex_init(&scanner);
-    yyset_in(input, scanner);
-    
     std::shared_ptr<JBackend> backend;
     if (std::string("format-identity") == std::string(argv[1])) {
         backend = std::make_shared<JBackendFormatIdentity>();
@@ -107,17 +59,17 @@ int main(int argc, char **argv)
       fprintf(stderr, "Invalid backend %s\n", argv[1]);
       return 1;
     }
+    InputSourceFile input_source(input);
 
-    YaccParser parser(scanner, data);
-    int rc = parser.parse();
+    Parser parser(namespace_context);
+    int rc = parser.parse(input_source);
     if (rc != 0) {
       printf("Syntax error\n");
     }
     else {
-      TranslationUnit_owned_ptr translation_unit = data.get_translation_unit();
-      rc = backend->process(translation_unit->get_syntax_node());
+      const TranslationUnit & translation_unit = parser.get_translation_unit();
+      rc = backend->process(translation_unit.get_syntax_node());
     }
-    yylex_destroy(scanner);
     fclose(input);
     return rc;
 }

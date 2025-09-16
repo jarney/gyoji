@@ -23,6 +23,10 @@ std::vector<TerminalNonSyntax_owned_ptr> non_syntax_data;
 #define PRINT_TERMINALS(s,t) /**/
 #endif
 
+#define YY_INPUT(buf,result,max_size)                                          \
+    ((LexContext*)yyget_extra(yyscanner))->input_source.yy_input(buf, result, max_size)
+
+
 void move_array(
                 std::vector<TerminalNonSyntax_owned_ptr> & dst,
                 std::vector<TerminalNonSyntax_owned_ptr> & src
@@ -162,8 +166,9 @@ unsafe {PROCESS_NODE(UNSAFE);}
 {float} {PROCESS_NODE(LITERAL_FLOAT);}
 {integer} { PROCESS_NODE(LITERAL_INT);}
 (::)*{identifier}({whitespace}*:{whitespace}*:{whitespace}*{identifier})* {
-    NamespaceContext *context = (NamespaceContext*)yyget_extra(yyscanner);
-    NamespaceFoundReason::ptr found = context->namespace_lookup(std::string(yytext));
+LexContext *lex_context = (LexContext*)yyget_extra(yyscanner);
+    NamespaceContext & context = lex_context->namespace_context;
+    NamespaceFoundReason::ptr found = context.namespace_lookup(std::string(yytext));
     if (found->reason == NamespaceFoundReason::REASON_FOUND) {
         if (found->location->type == Namespace::TYPE_NAMESPACE) {
             // When processing a namespace, the NAMESPACE_NAME
@@ -180,7 +185,7 @@ unsafe {PROCESS_NODE(UNSAFE);}
         // When declaring an identifier, the second
         // argument tells us what namespace the identifier
         // should go into.
-        PROCESS_IDENTIFIER(IDENTIFIER, context->current());
+        PROCESS_IDENTIFIER(IDENTIFIER, context.current());
     }
     else {
         PROCESS_NODE(YYEOF);

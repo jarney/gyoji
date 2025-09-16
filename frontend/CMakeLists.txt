@@ -18,6 +18,10 @@ set(FRONTEND_SOURCES
     jsyntax.cpp
     namespace.cpp
     yacc-context.cpp
+    lex-context.cpp
+    input-source.cpp
+    input-source-file.cpp
+    parser.cpp
     ${FRONTEND_PUBLIC_HEADERS}
 )
 
