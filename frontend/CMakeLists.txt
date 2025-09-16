@@ -7,6 +7,9 @@ set(FRONTEND_INCLUDES
 set(FRONTEND_PUBLIC_HEADERS
     jlang-frontend/jsyntax.hpp
     jlang-frontend/namespace.hpp
+    jlang-frontend/tree.hpp
+    jlang-frontend/forward.hpp
+    jlang-frontend/syntax-node.hpp
 )
 
 set(FRONTEND_SOURCES
@@ -14,6 +17,7 @@ set(FRONTEND_SOURCES
     jlang.y
     jsyntax.cpp
     namespace.cpp
+    yacc-context.cpp
     ${FRONTEND_PUBLIC_HEADERS}
 )
 

@@ -15,7 +15,7 @@
 %require "3.7.4"
 %language "C++"
  
-%define api.parser.class {Parser}
+%define api.parser.class {YaccParser}
 %define api.namespace {JLang::frontend::yacc}
 %define api.value.type variant
 %param {yyscan_t scanner}
@@ -32,7 +32,7 @@
 int visibility_from_modifier(JLang::frontend::tree::AccessModifier::AccessModifierType visibility_ast);
 
 #define YY_DECL                                                         \
-  int yylex(JLang::frontend::yacc::Parser::semantic_type *yylval, yyscan_t yyscanner)
+   int yylex(JLang::frontend::yacc::YaccParser::semantic_type *yylval, yyscan_t yyscanner)
     YY_DECL;
 }
 
@@ -285,7 +285,7 @@ int visibility_from_modifier(JLang::frontend::tree::AccessModifier::AccessModifi
 
 %nterm <JLang::frontend::tree::Expression_owned_ptr> expression;
 
-%parse-param {return_data_t *return_data}
+%parse-param {JLang::frontend::yacc::YaccContext & return_data}
 
 %code
 {
@@ -300,7 +300,7 @@ translation_unit
         : opt_file_statement_list YYEOF {
           $$ = std::make_unique<JLang::frontend::tree::TranslationUnit>(std::move($1), std::move($2));
           PRINT_NONTERMINALS($$);
-          return_data->translation_unit = std::move($$);
+          return_data.set_translation_unit(std::move($$));
         }
         ;
 
@@ -541,8 +541,8 @@ namespace_declaration
                                                                                       std::move($2),
                                                                                       std::move($3)
                                                                                       );
-                return_data->namespace_context.namespace_new(namespace_name, Namespace::TYPE_NAMESPACE, visibility_from_modifier(access_modifier));
-                return_data->namespace_context.namespace_push(namespace_name);
+                return_data.get_namespace_context().namespace_new(namespace_name, Namespace::TYPE_NAMESPACE, visibility_from_modifier(access_modifier));
+                return_data.get_namespace_context().namespace_push(namespace_name);
                 PRINT_NONTERMINALS($$);
         }
         ;
@@ -557,7 +557,7 @@ file_statement_namespace
                                                                                         std::move($4),
                                                                                         std::move($5)
                                                                                         );
-                return_data->namespace_context.namespace_pop();
+                return_data.get_namespace_context().namespace_pop();
                 PRINT_NONTERMINALS($$);
         }
         ;
@@ -588,16 +588,16 @@ file_statement_using
                                                                                     std::move($5),
                                                                                     std::move($6)
                                                                                     );
-                NamespaceFoundReason::ptr found_std = return_data->namespace_context.namespace_lookup(namespace_name);
+                NamespaceFoundReason::ptr found_std = return_data.get_namespace_context().namespace_lookup(namespace_name);
                 if (!found_std) {
                   fprintf(stderr, "Error: no such namespace %s in using statement\n", namespace_name.c_str());
                   exit(1);
                 }
                 if (as_name.size() > 0) {
-                  return_data->namespace_context.namespace_using(as_name, found_std->location);
+                  return_data.get_namespace_context().namespace_using(as_name, found_std->location);
                 }
                 else {
-                  return_data->namespace_context.namespace_using("", found_std->location);
+                  return_data.get_namespace_context().namespace_using("", found_std->location);
                 }
                 PRINT_NONTERMINALS($$);
         }
@@ -612,16 +612,16 @@ file_statement_using
                                                                                     std::move($5),
                                                                                     std::move($6)
                                                                                     );
-                NamespaceFoundReason::ptr found_std = return_data->namespace_context.namespace_lookup(namespace_name);
+                NamespaceFoundReason::ptr found_std = return_data.get_namespace_context().namespace_lookup(namespace_name);
                 if (!found_std) {
                   fprintf(stderr, "Error: no such namespace %s in using statement\n", namespace_name.c_str());
                   exit(1);
                 }
                 if (as_name.size() > 0) {
-                  return_data->namespace_context.namespace_using(as_name, found_std->location);
+                  return_data.get_namespace_context().namespace_using(as_name, found_std->location);
                 }
                 else {
-                  return_data->namespace_context.namespace_using("", found_std->location);
+                  return_data.get_namespace_context().namespace_using("", found_std->location);
                 }
                 PRINT_NONTERMINALS($$);
         }
@@ -637,8 +637,8 @@ class_decl_start
                                                                          std::move($3),
                                                                          std::move($4)
                                                                          );
-                return_data->namespace_context.namespace_new(class_name, Namespace::TYPE_CLASS, visibility_from_modifier(visibility_modifier));
-                return_data->namespace_context.namespace_push(class_name);
+                return_data.get_namespace_context().namespace_new(class_name, Namespace::TYPE_CLASS, visibility_from_modifier(visibility_modifier));
+                return_data.get_namespace_context().namespace_push(class_name);
 #if 0
                 // XXX TODO: This isn't handled correctly for the strongly-typed AST.
                 if ($4->children.size() > 0) {
@@ -646,7 +646,7 @@ class_decl_start
                     if (child->type == Parser::symbol_kind_type::S_class_argument_list) {
                       for (auto grandchild : child->children) {
                         if (grandchild->type == Parser::symbol_kind_type::S_IDENTIFIER) {
-                          return_data->namespace_context.namespace_new(grandchild->value, Namespace::TYPE_CLASS, Namespace::VISIBILITY_PRIVATE);
+                          return_data.get_namespace_context().namespace_new(grandchild->value, Namespace::TYPE_CLASS, Namespace::VISIBILITY_PRIVATE);
                         }
                       }
                     }
@@ -696,7 +696,7 @@ class_definition
                                                                                  std::move($4),
                                                                                  std::move($5)
                                                                                  );
-                return_data->namespace_context.namespace_pop();
+                return_data.get_namespace_context().namespace_pop();
                 PRINT_NONTERMINALS($$);
         }
         ;
@@ -712,7 +712,7 @@ type_definition
                                                                                std::move($4),
                                                                                std::move($5)
                                                                                );
-                return_data->namespace_context.namespace_new(type_name, Namespace::TYPE_TYPEDEF, visibility_from_modifier(visibility_modifier));
+                return_data.get_namespace_context().namespace_new(type_name, Namespace::TYPE_TYPEDEF, visibility_from_modifier(visibility_modifier));
                 PRINT_NONTERMINALS($$);
         }
         ;
@@ -731,7 +731,7 @@ enum_definition
                                                                                 std::move($7),
                                                                                 std::move($8)
                                                                                 );
-                return_data->namespace_context.namespace_new(type_name, Namespace::TYPE_TYPEDEF, visibility_from_modifier(visibility_modifier));
+                return_data.get_namespace_context().namespace_new(type_name, Namespace::TYPE_TYPEDEF, visibility_from_modifier(visibility_modifier));
                 PRINT_NONTERMINALS($$);
         }
         ;
@@ -2122,6 +2122,6 @@ int visibility_from_modifier(JLang::frontend::tree::AccessModifier::AccessModifi
     }
 }
 
-void JLang::frontend::yacc::Parser::error(const std::string& msg) {
+void JLang::frontend::yacc::YaccParser::error(const std::string& msg) {
     printf("Syntax error at line %d : %s\n", lineno, msg.c_str());
 }

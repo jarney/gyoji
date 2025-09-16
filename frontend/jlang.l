@@ -37,7 +37,7 @@ void move_array(
 
 #define START_NODE(nodetype)                 \
     Terminal* node = new Terminal(); \
-    node->type = Parser::symbol_kind_type::S_ ## nodetype; \
+    node->type = YaccParser::symbol_kind_type::S_ ## nodetype; \
     node->typestr = std::string(#nodetype);  \
     node->value = std::string(yytext);       \
     node->lineno = lineno;                   \
@@ -45,7 +45,7 @@ void move_array(
     yylval->emplace<Terminal_owned_ptr>(node);
 
 #define RETURN_NODE(nodetype)                \
-    return Parser::token::nodetype;
+    return YaccParser::token::nodetype;
 
 #define PROCESS_NODE(nodetype)               \
     START_NODE(nodetype)                     \
@@ -239,7 +239,7 @@ unsafe {PROCESS_NODE(UNSAFE);}
     non_syntax_data.push_back(std::move(nsd));
 }
 . {
-    return Parser::token::INVALID_INPUT;
+    return YaccParser::token::INVALID_INPUT;
 }
 <<EOF>> {PROCESS_NODE(YYEOF)}
 

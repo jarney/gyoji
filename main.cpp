@@ -35,7 +35,7 @@ int
 Parser::parse()
 {
   return_data_t data;
-  yacc::Parser parser{ scanner, &data };
+  yacc::YaccParser parser{ scanner, &data };
   int rc = parser.parse();
  return rc;
 }
@@ -71,11 +71,26 @@ int main(int argc, char **argv)
       exit(1);
     }
 
-    return_data_t data;
+    NamespaceContext namespace_context;
+    namespace_context.namespace_new("u8", Namespace::TYPE_TYPEDEF, Namespace::VISIBILITY_PUBLIC);
+    
+    namespace_context.namespace_new("i16", Namespace::TYPE_TYPEDEF, Namespace::VISIBILITY_PUBLIC);
+    namespace_context.namespace_new("i32", Namespace::TYPE_TYPEDEF, Namespace::VISIBILITY_PUBLIC);
+    namespace_context.namespace_new("i64", Namespace::TYPE_TYPEDEF, Namespace::VISIBILITY_PUBLIC);
+
+    namespace_context.namespace_new("u16", Namespace::TYPE_TYPEDEF, Namespace::VISIBILITY_PUBLIC);
+    namespace_context.namespace_new("u32", Namespace::TYPE_TYPEDEF, Namespace::VISIBILITY_PUBLIC);
+    namespace_context.namespace_new("u64", Namespace::TYPE_TYPEDEF, Namespace::VISIBILITY_PUBLIC);
+
+    namespace_context.namespace_new("f32", Namespace::TYPE_TYPEDEF, Namespace::VISIBILITY_PUBLIC);
+    namespace_context.namespace_new("f64", Namespace::TYPE_TYPEDEF, Namespace::VISIBILITY_PUBLIC);
+
+    namespace_context.namespace_new("void", Namespace::TYPE_TYPEDEF, Namespace::VISIBILITY_PUBLIC);
+    
+    YaccContext data(namespace_context);
 
     yyscan_t scanner;
     yylex_init(&scanner);
-    yyset_extra (&data.namespace_context, scanner);
     yyset_in(input, scanner);
     
     std::shared_ptr<JBackend> backend;
@@ -93,28 +108,14 @@ int main(int argc, char **argv)
       return 1;
     }
 
-    data.namespace_context.namespace_new("u8", Namespace::TYPE_TYPEDEF, Namespace::VISIBILITY_PUBLIC);
-    
-    data.namespace_context.namespace_new("i16", Namespace::TYPE_TYPEDEF, Namespace::VISIBILITY_PUBLIC);
-    data.namespace_context.namespace_new("i32", Namespace::TYPE_TYPEDEF, Namespace::VISIBILITY_PUBLIC);
-    data.namespace_context.namespace_new("i64", Namespace::TYPE_TYPEDEF, Namespace::VISIBILITY_PUBLIC);
-
-    data.namespace_context.namespace_new("u16", Namespace::TYPE_TYPEDEF, Namespace::VISIBILITY_PUBLIC);
-    data.namespace_context.namespace_new("u32", Namespace::TYPE_TYPEDEF, Namespace::VISIBILITY_PUBLIC);
-    data.namespace_context.namespace_new("u64", Namespace::TYPE_TYPEDEF, Namespace::VISIBILITY_PUBLIC);
-
-    data.namespace_context.namespace_new("f32", Namespace::TYPE_TYPEDEF, Namespace::VISIBILITY_PUBLIC);
-    data.namespace_context.namespace_new("f64", Namespace::TYPE_TYPEDEF, Namespace::VISIBILITY_PUBLIC);
-
-    data.namespace_context.namespace_new("void", Namespace::TYPE_TYPEDEF, Namespace::VISIBILITY_PUBLIC);
-    
-    Parser parser{ scanner, &data };
+    YaccParser parser(scanner, data);
     int rc = parser.parse();
     if (rc != 0) {
       printf("Syntax error\n");
     }
     else {
-      rc = backend->process(data.translation_unit->get_syntax_node());
+      TranslationUnit_owned_ptr translation_unit = data.get_translation_unit();
+      rc = backend->process(translation_unit->get_syntax_node());
     }
     yylex_destroy(scanner);
     fclose(input);

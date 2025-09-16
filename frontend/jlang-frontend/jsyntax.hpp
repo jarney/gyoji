@@ -12,6 +12,7 @@
 #include <jlang-frontend/namespace.hpp>
 #include <jlang-frontend/syntax-node.hpp>
 #include <jlang-frontend/tree.hpp>
+#include <jlang-frontend/yacc-context.hpp>
 #undef _JLANG_INTERNAL
 
 //! This is the top-level namespace for the project.
@@ -35,11 +36,6 @@ namespace JLang {
  */
 
 namespace JLang::frontend {
-  typedef struct return_data_st {
-    tree::TranslationUnit_owned_ptr translation_unit;
-    namespaces::NamespaceContext namespace_context;
-  } return_data_t;
-
 };
 
 /*! @} End of Doxygen Groups*/
