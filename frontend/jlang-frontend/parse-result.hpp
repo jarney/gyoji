@@ -16,12 +16,16 @@ namespace JLang::frontend {
   class ParseResult {
   public:
     ParseResult(
-                JLang::frontend::namespaces::NamespaceContext & _namespace_context
+                JLang::frontend::namespaces::NamespaceContext & _namespace_context,
+                JLang::errors::Errors & _errors
                 );
     ~ParseResult();
     const JLang::frontend::namespaces::NamespaceContext & get_namespace_context() const;
+
+    const JLang::errors::Errors & get_errors() const;
     
     const JLang::frontend::tree::TranslationUnit & get_translation_unit() const;
+    
     const JLang::frontend::TokenStream & get_token_stream() const;
     void set_translation_unit(JLang::frontend::tree::TranslationUnit_owned_ptr );
 
@@ -30,9 +34,14 @@ namespace JLang::frontend {
     friend JLang::frontend::Parser;
 
   private:
-    JLang::frontend::tree::TranslationUnit_owned_ptr translation_unit;
-    JLang::frontend::TokenStream_owned_ptr token_stream;
     JLang::frontend::namespaces::NamespaceContext& namespace_context;
+    
+    JLang::errors::Errors & errors;
+    
+    JLang::frontend::TokenStream_owned_ptr token_stream;
+    
+    JLang::frontend::tree::TranslationUnit_owned_ptr translation_unit;
+
   };
 
   typedef std::unique_ptr<ParseResult> ParseResult_owned_ptr;

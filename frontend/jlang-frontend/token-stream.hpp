@@ -32,13 +32,22 @@ namespace JLang::frontend {
     TokenStream();
     ~TokenStream();
     const std::vector<Token_owned_ptr> & get_tokens() const;
-    const std::vector<Token*> & get_tokens_by_lineno(size_t _line) const;
+    std::string get_line(size_t _line) const;
     const Token & add_token(std::string _typestr,
                             std::string _value,
                             size_t _line,
                             size_t _column
                             );
     void append_token(std::string _value);
+    
+    /**
+     * Provide the context of input lines
+     * starting with line_start and ending with line_end.
+     * Assumes that line_start < line_end and re-produces
+     * the input source from the token stream so that
+     * it can be used in error messages.
+     */
+    std::vector<std::pair<size_t, std::string>> context(size_t line_start, size_t line_end) const;
   private:
     std::vector<Token_owned_ptr> tokens;
     std::vector<Token*> empty_list;

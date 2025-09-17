@@ -7,9 +7,11 @@ using namespace JLang::frontend::namespaces;
 using namespace JLang::frontend::tree;
 
 ParseResult::ParseResult(
-                         NamespaceContext & _namespace_context
+                         NamespaceContext & _namespace_context,
+                         JLang::errors::Errors & _errors
                          )
   : namespace_context(_namespace_context)
+  , errors(_errors)
   , token_stream(std::make_unique<TokenStream>())
   , translation_unit(nullptr)
 {}

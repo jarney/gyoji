@@ -8,6 +8,7 @@
 //#include <jlang-backend/jbackend-format-pretty.hpp>
 //#include <jlang-codegen/jbackend-llvm.hpp>
 //using namespace JLang::Backend::LLVM;
+using namespace JLang::errors;
 using namespace JLang::frontend;
 using namespace JLang::frontend::ast;
 using namespace JLang::frontend::tree;
@@ -30,20 +31,6 @@ int main(int argc, char **argv)
     }
 
     NamespaceContext namespace_context;
-    namespace_context.namespace_new("u8", Namespace::TYPE_TYPEDEF, Namespace::VISIBILITY_PUBLIC);
-    
-    namespace_context.namespace_new("i16", Namespace::TYPE_TYPEDEF, Namespace::VISIBILITY_PUBLIC);
-    namespace_context.namespace_new("i32", Namespace::TYPE_TYPEDEF, Namespace::VISIBILITY_PUBLIC);
-    namespace_context.namespace_new("i64", Namespace::TYPE_TYPEDEF, Namespace::VISIBILITY_PUBLIC);
-
-    namespace_context.namespace_new("u16", Namespace::TYPE_TYPEDEF, Namespace::VISIBILITY_PUBLIC);
-    namespace_context.namespace_new("u32", Namespace::TYPE_TYPEDEF, Namespace::VISIBILITY_PUBLIC);
-    namespace_context.namespace_new("u64", Namespace::TYPE_TYPEDEF, Namespace::VISIBILITY_PUBLIC);
-
-    namespace_context.namespace_new("f32", Namespace::TYPE_TYPEDEF, Namespace::VISIBILITY_PUBLIC);
-    namespace_context.namespace_new("f64", Namespace::TYPE_TYPEDEF, Namespace::VISIBILITY_PUBLIC);
-
-    namespace_context.namespace_new("void", Namespace::TYPE_TYPEDEF, Namespace::VISIBILITY_PUBLIC);
     
     std::shared_ptr<JBackend> backend;
     if (std::string("format-identity") == std::string(argv[1])) {
@@ -60,8 +47,9 @@ int main(int argc, char **argv)
       return 1;
     }
     InputSourceFile input_source(input);
+    Errors errors;
 
-    Parser parser(namespace_context);
+    Parser parser(namespace_context, errors);
     int rc = parser.parse(input_source);
     if (rc != 0) {
       printf("Syntax error\n");

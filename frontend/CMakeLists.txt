@@ -1,5 +1,6 @@
 set(FRONTEND_INCLUDES
         ${PROJECT_SOURCE_DIR}/misc
+        ${PROJECT_SOURCE_DIR}/errors
         ${PROJECT_SOURCE_DIR}/frontend
         ${CMAKE_BINARY_DIR}
 )
@@ -69,6 +70,7 @@ add_executable(test_namespace test_namespace.cpp)
 target_include_directories(test_namespace PUBLIC ${FRONTEND_INCLUDES})
 target_link_libraries(test_namespace
     jlang-frontend
+    jlang-errors
     jlang-misc
 )
 add_test(NAME test_namespace COMMAND test_namespace)
@@ -77,6 +79,7 @@ add_executable(test_syntax test_syntax.cpp)
 target_include_directories(test_syntax PUBLIC ${FRONTEND_INCLUDES})
 target_link_libraries(test_syntax
     jlang-frontend
+    jlang-errors
     jlang-misc
 )
 add_test(NAME test_syntax COMMAND test_syntax ${CMAKE_SOURCE_DIR})
@@ -86,5 +89,6 @@ add_executable(test_token_stream test_token_stream.cpp)
 target_include_directories(test_token_stream PUBLIC ${FRONTEND_INCLUDES})
 target_link_libraries(test_token_stream
     jlang-frontend
+    jlang-errors
     jlang-misc
 )

@@ -22,17 +22,17 @@ namespace JLang::errors {
 
   class ErrorMessage {
   public:
-    ErrorMessage(std::vector<std::pair<int, std::string>> _context,
-                 int _lineno,
-                 int _colno,
+    ErrorMessage(std::vector<std::pair<size_t, std::string>> _context,
+                 size_t _lineno,
+                 size_t _colno,
                  std::string _errormsg
                  );
     ~ErrorMessage();
     void print();
   private:
-    std::vector<std::pair<int, std::string>> context;
-    int lineno;
-    int colno;
+    std::vector<std::pair<size_t, std::string>> context;
+    size_t lineno;
+    size_t colno;
     std::string errormsg;
   };
   
@@ -41,9 +41,9 @@ namespace JLang::errors {
     Error(std::string _error_message);
     ~Error();
     void add_message(
-                     std::vector<std::pair<int, std::string>> context,
-                     int lineno,
-                     int colno,
+                     std::vector<std::pair<size_t, std::string>> context,
+                     size_t lineno,
+                     size_t colno,
                      std::string errormsg);
     void print();
   private:
@@ -56,6 +56,7 @@ namespace JLang::errors {
     Errors();
     ~Errors();
     void add_error(std::unique_ptr<Error> error);
+    void print() const;
   private:
     std::vector<std::unique_ptr<Error>> errors;
   };

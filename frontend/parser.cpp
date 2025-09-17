@@ -6,15 +6,19 @@
 #include <jlang.l.hpp>
 #include <jlang.y.hpp>
 
+using namespace JLang::errors;
 using namespace JLang::frontend;
 using namespace JLang::frontend::ast;
 using namespace JLang::frontend::tree;
 using namespace JLang::frontend::namespaces;
 using namespace JLang::frontend::yacc;
 
-Parser::Parser(NamespaceContext & _namespace_context)
+Parser::Parser(
+               NamespaceContext & _namespace_context,
+               Errors & _errors
+               )
 {
-  yacc_context = std::make_unique<ParseResult>(_namespace_context);
+  yacc_context = std::make_unique<ParseResult>(_namespace_context, _errors);
 }
 Parser::~Parser()
 {

@@ -13,7 +13,9 @@ namespace JLang::frontend {
   class Parser {
   public:
     Parser(
-           JLang::frontend::namespaces::NamespaceContext & _namespace_context);
+           JLang::frontend::namespaces::NamespaceContext & _namespace_context,
+           JLang::errors::Errors & _errors
+           );
     ~Parser();
     int parse(InputSource & _input_source);
     

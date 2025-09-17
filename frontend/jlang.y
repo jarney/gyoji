@@ -2196,4 +2196,18 @@ void JLang::frontend::yacc::YaccParser::error(const std::string& msg) {
     printf("Syntax error at line %ld:%ld : %s\n", lex_context->line,
            lex_context->column,
            msg.c_str());
+
+    std::unique_ptr<JLang::errors::Error> error = std::make_unique<JLang::errors::Error>("Syntax Error");
+
+    // Generate context from token stream and line number.
+    // Context should be 3 lines, 2 before, and the line.
+    //    std::vector<std::pair<int, std::string>> context;
+    error->add_message(lex_context->token_stream.context(lex_context->line-2, lex_context->line),
+                       lex_context->line,
+                       lex_context->column,
+                       msg);
+    
+    return_data.errors.add_error(std::move(error));
+    return_data.errors.print();
+    
 }

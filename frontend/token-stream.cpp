@@ -1,4 +1,5 @@
 #include <jlang-frontend.hpp>
+#include <algorithm>
 
 using namespace JLang::frontend;
 
@@ -14,14 +15,33 @@ TokenStream::get_tokens() const
   return tokens;
 }
 
-const std::vector<Token*> &
-TokenStream::get_tokens_by_lineno(size_t _line) const
+std::string TokenStream::get_line(size_t _line) const
 {
-  auto it = tokens_by_lineno.find(_line);
-  if (it == tokens_by_lineno.end()) {
-    return empty_list;
+    std::string msg;
+    auto it = tokens_by_lineno.find(_line);
+    if (it == tokens_by_lineno.end()) {
+      return msg;
+    }
+    const std::vector<Token *> & tokens = it->second;
+    for (Token* token : tokens) {
+      msg += token->get_value();
+    }
+    return msg;
+}
+
+std::vector<std::pair<size_t, std::string>>
+TokenStream::context(size_t line_start, size_t line_end) const
+{
+  std::vector<std::pair<size_t, std::string>> ret;
+  line_start = std::max(line_start, (size_t)0);
+  if (line_end < line_start) {
+    return ret;
   }
-  return it->second;
+  for (size_t i = line_start; i <= line_end; i++) {
+    std::string msg(get_line(i));
+    ret.push_back(std::pair<size_t, std::string>((size_t)i, msg));
+  }
+  return ret;
 }
 
 const Token &

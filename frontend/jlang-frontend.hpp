@@ -7,6 +7,8 @@
 #include <memory>
 #include <variant>
 
+#include <jlang-errors/errors.hpp>
+
 #define _JLANG_INTERNAL
 #include <jlang-frontend/forward.hpp>
 #include <jlang-frontend/namespace.hpp>

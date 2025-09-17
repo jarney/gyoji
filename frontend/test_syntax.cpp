@@ -2,6 +2,7 @@
 #include <jlang-frontend/input-source-file.hpp>
 #include <jlang-misc/test.hpp>
 
+using namespace JLang::errors;
 using namespace JLang::frontend;
 using namespace JLang::frontend::tree;
 using namespace JLang::frontend::namespaces;
@@ -18,8 +19,9 @@ parse(std::string & path, std::string base_filename)
     return nullptr;
   }
   NamespaceContext namespace_context;
+  Errors errors;
   InputSourceFile input_source(input);
-  Parser parser(namespace_context);
+  Parser parser(namespace_context, errors);
   int rc = parser.parse(input_source);
   if (rc != 0) {
     fprintf(stderr, "Syntax error : %s\n", base_filename.c_str());

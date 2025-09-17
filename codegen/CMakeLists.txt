@@ -18,6 +18,7 @@ add_library(jlang-codegen ${CODEGEN_SOURCES})
 target_include_directories(jlang-codegen
     PUBLIC
         ${PROJECT_SOURCE_DIR}/misc
+        ${PROJECT_SOURCE_DIR}/errors
         ${PROJECT_SOURCE_DIR}/frontend
         ${PROJECT_SOURCE_DIR}/backend
         ${PROJECT_SOURCE_DIR}/codegen
