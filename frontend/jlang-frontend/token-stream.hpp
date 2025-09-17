@@ -31,9 +31,6 @@ namespace JLang::frontend {
   public:
     TokenStream();
     ~TokenStream();
-    void print_from_lex() const;
-    void print_from_yacc() const;
-    void print_from_main() const;
     const std::vector<Token_owned_ptr> & get_tokens() const;
     const std::vector<Token*> & get_tokens_by_lineno(size_t _line) const;
     const Token & add_token(std::string _typestr,

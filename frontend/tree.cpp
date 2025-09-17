@@ -5,11 +5,35 @@ using namespace JLang::frontend::ast;
 using namespace JLang::frontend::tree;
 
 ///////////////////////////////////////////////////
-Terminal::Terminal()
+Terminal::Terminal(const Token & _token)
   : SyntaxNode("terminal", this)
+  , token(_token)
 {}
 Terminal::~Terminal()
 {}
+const std::string &
+Terminal::get_type() const
+{ return token.get_type(); }
+const std::string &
+Terminal::get_value() const
+{ return token.get_value(); }
+const size_t
+Terminal::get_line() const
+{ return token.get_line(); }
+const size_t
+Terminal::get_column() const
+{ return token.get_column(); }
+
+const std::string &
+Terminal::get_fully_qualified_name() const
+{ return fully_qualified_name; }
+void
+Terminal::set_fully_qualified_name(std::string _name)
+{ fully_qualified_name = _name; }
+
+///////////////////////////////////////////////////
+
+
 TerminalNonSyntax::TerminalNonSyntax(TerminalNonSyntax::Type _type, std::string _data)
   : type(_type)
   , data(_data)
@@ -127,7 +151,7 @@ TypeName::is_expression() const
 { return m_is_expression; }
 const std::string &
 TypeName::get_name() const
-{ return type_name->fully_qualified_name; }
+{ return type_name->get_fully_qualified_name(); }
 const Expression &
 TypeName::get_expression() const
 { return *expression; }
@@ -228,7 +252,7 @@ const TypeSpecifier & TypeSpecifierFunctionPointer::get_return_type() const
 { return *type_specifier; }
 const std::string &
 TypeSpecifierFunctionPointer::get_name() const
-{ return identifier_token->value; }
+{ return identifier_token->get_value(); }
 const FunctionDefinitionArgList &
 TypeSpecifierFunctionPointer::get_args() const
 { return *function_definition_arg_list; }
@@ -309,7 +333,7 @@ FunctionDefinitionArg::get_type_specifier() const
 { return *type_specifier; }
 const std::string &
 FunctionDefinitionArg::get_name() const
-{ return identifier_token->value; }
+{ return identifier_token->get_value(); }
 
 ///////////////////////////////////////////////////
 FunctionDefinitionArgList::FunctionDefinitionArgList()
@@ -418,7 +442,7 @@ StatementVariableDeclaration::get_type_specifier() const
 { return *type_specifier;}
 const std::string &
 StatementVariableDeclaration::get_name() const
-{ return identifier_token->value; }
+{ return identifier_token->get_value(); }
 const ArrayLength &
 StatementVariableDeclaration::get_array_length() const
 { return *array_length; }
@@ -752,7 +776,7 @@ StatementLabel::~StatementLabel()
 {}
 const std::string &
 StatementLabel::get_name() const
-{ return identifier_token->value; }
+{ return identifier_token->get_value(); }
 
 ///////////////////////////////////////////////////
 StatementGoto::StatementGoto(
@@ -773,7 +797,7 @@ StatementGoto::~StatementGoto()
 {}
 const std::string &
 StatementGoto::get_label() const
-{ return identifier_token->value; }
+{ return identifier_token->get_value(); }
 ///////////////////////////////////////////////////
 StatementBreak::StatementBreak(
                                Terminal_owned_ptr _break_token,
@@ -961,7 +985,7 @@ ArrayLength::is_array() const
 }
 size_t
 ArrayLength::get_size() const
-{ return (size_t)atol(literal_int_token->value.c_str());}
+{ return (size_t)atol(literal_int_token->get_value().c_str());}
 
 ///////////////////////////////////////////////////
 ClassDeclStart::ClassDeclStart(
@@ -988,7 +1012,7 @@ ClassDeclStart::get_access_modifier() const
 { return *access_modifier; }
 const std::string &
 ClassDeclStart::get_name() const
-{ return identifier_token->value; }
+{ return identifier_token->get_value(); }
 const ClassArgumentList &
 ClassDeclStart::get_argument_list() const
 { return *class_argument_list; }
@@ -1059,7 +1083,7 @@ ClassMemberDeclarationVariable::get_type_specifier() const
 { return *type_specifier; }
 const std::string &
 ClassMemberDeclarationVariable::get_name() const
-{ return identifier_token->value; }
+{ return identifier_token->get_value(); }
 const ArrayLength &
 ClassMemberDeclarationVariable::get_array_length() const
 { return *array_length; }
@@ -1100,7 +1124,7 @@ ClassMemberDeclarationMethod::get_type_specifier() const
 { return *type_specifier; }
 const std::string &
 ClassMemberDeclarationMethod::get_name() const
-{ return identifier_token->value; }
+{ return identifier_token->get_value(); }
 const FunctionDefinitionArgList &
 ClassMemberDeclarationMethod::get_arguments() const
 { return *function_definition_arg_list; }
@@ -1281,7 +1305,7 @@ TypeDefinition::get_access_modifier() const
 { return *access_modifier; }
 const std::string &
 TypeDefinition::get_name() const
-{ return identifier_token->value; }
+{ return identifier_token->get_value(); }
 const TypeSpecifier &
 TypeDefinition::get_type_specifier() const
 { return *type_specifier; }
@@ -1308,7 +1332,7 @@ EnumDefinitionValue::~EnumDefinitionValue()
 {}
 const std::string &
 EnumDefinitionValue::get_name() const
-{ return identifier_token->value; }
+{ return identifier_token->get_value(); }
 
 const ExpressionPrimary &
 EnumDefinitionValue::get_expression() const
@@ -1368,10 +1392,10 @@ EnumDefinition::get_access_modifier() const
 { return *access_modifier; }
 const std::string &
 EnumDefinition::type_name() const
-{ return type_name_token->value; }
+{ return type_name_token->get_value(); }
 const std::string &
 EnumDefinition::enum_name() const
-{ return identifier_token->value; }
+{ return identifier_token->get_value(); }
 const EnumDefinitionValueList &
 EnumDefinition::get_value_list() const
 { return *enum_value_list; }
@@ -1386,7 +1410,7 @@ ExpressionPrimaryIdentifier::~ExpressionPrimaryIdentifier()
 {}
 const std::string &
 ExpressionPrimaryIdentifier::get_identifier() const
-{ return identifier_token->value; }
+{ return identifier_token->get_value(); }
 ///////////////////////////////////////////////////
 ExpressionPrimaryNested::ExpressionPrimaryNested(
                                                  Terminal_owned_ptr _paren_l_token,
@@ -1421,7 +1445,7 @@ ExpressionPrimaryLiteralInt::~ExpressionPrimaryLiteralInt()
 {}
 const std::string &
 ExpressionPrimaryLiteralInt::get_value() const
-{ return literal_token->value; }
+{ return literal_token->get_value(); }
 ///////////////////////////////////////////////////
 ExpressionPrimaryLiteralChar::ExpressionPrimaryLiteralChar(
                                                          Terminal_owned_ptr _literal_token
@@ -1435,7 +1459,7 @@ ExpressionPrimaryLiteralChar::~ExpressionPrimaryLiteralChar()
 {}
 const std::string &
 ExpressionPrimaryLiteralChar::get_value() const
-{ return literal_token->value; }
+{ return literal_token->get_value(); }
 ///////////////////////////////////////////////////
 ExpressionPrimaryLiteralString::ExpressionPrimaryLiteralString(
                                                          Terminal_owned_ptr _literal_token
@@ -1449,7 +1473,7 @@ ExpressionPrimaryLiteralString::~ExpressionPrimaryLiteralString()
 {}
 const std::string &
 ExpressionPrimaryLiteralString::get_value() const
-{ return literal_token->value; }
+{ return literal_token->get_value(); }
 ///////////////////////////////////////////////////
 ExpressionPrimaryLiteralFloat::ExpressionPrimaryLiteralFloat(
                                                          Terminal_owned_ptr _literal_token
@@ -1461,7 +1485,7 @@ ExpressionPrimaryLiteralFloat::ExpressionPrimaryLiteralFloat(
 }
 const std::string &
 ExpressionPrimaryLiteralFloat::get_value() const
-{ return literal_token->value; }
+{ return literal_token->get_value(); }
 ExpressionPrimaryLiteralFloat::~ExpressionPrimaryLiteralFloat()
 {}
 
@@ -1576,7 +1600,7 @@ ExpressionPostfixDot::get_expression() const
 { return *expression; }
 const std::string &
 ExpressionPostfixDot::get_identifier() const
-{ return identifier_token->value; }
+{ return identifier_token->get_value(); }
 
 ///////////////////////////////////////////////////
 ExpressionPostfixArrow::ExpressionPostfixArrow(
@@ -1600,7 +1624,7 @@ ExpressionPostfixArrow::get_expression() const
 { return *expression; }
 const std::string &
 ExpressionPostfixArrow::get_identifier() const
-{ return identifier_token->value; }
+{ return identifier_token->get_value(); }
 
 ///////////////////////////////////////////////////
 ExpressionPostfixIncDec::ExpressionPostfixIncDec(
@@ -2004,7 +2028,7 @@ UsingAs::UsingAs(
   , as_token(std::move(_as_token))
   , identifier_token(std::move(_identifier_token))
 {
-  using_name = identifier_token->value;
+  using_name = identifier_token->get_value();
   add_child(*as_token);
   add_child(*identifier_token);
 }
@@ -2045,9 +2069,9 @@ FileStatementUsing::~FileStatementUsing()
 const AccessModifier &
 FileStatementUsing::get_access_modifier() const
 { return *access_modifier; }
-std::string &
+const std::string &
 FileStatementUsing::get_namespace() const
-{ return namespace_name_token->fully_qualified_name; }
+{ return namespace_name_token->get_fully_qualified_name(); }
 const UsingAs &
 FileStatementUsing::get_using_as() const
 { return *using_as; }

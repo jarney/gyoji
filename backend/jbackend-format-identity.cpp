@@ -53,7 +53,7 @@ static void print_node(const SyntaxNode &node)
     for (const auto &non_syntax : terminal.non_syntax) {
       print_non_syntax(*non_syntax);
     }
-    printf("%s", terminal.value.c_str());
+    printf("%s", terminal.get_value().c_str());
   }
   for (auto child : node.get_children()) {
     print_node(child);

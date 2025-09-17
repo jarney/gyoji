@@ -79,21 +79,21 @@ int JBackendFormatTree::process(const SyntaxNode & node)
   printf("<node type='%s'", xml_escape_attribute(node.get_type()).c_str());
   if (node.has_data<Terminal>()) {
     const Terminal & terminal = node.get_data<Terminal>();
-    if (terminal.lineno > 0) {
-      printf(" lineno='%ld'", terminal.lineno);
+    if (terminal.get_line() > 0) {
+      printf(" line='%ld' column='%ld'", terminal.get_line(), terminal.get_column());
     }
-    if (terminal.value.length() != 0) {
-      if (terminal.typestr == std::string("IDENTIFIER") ||
-          terminal.typestr == std::string("TYPE_NAME") ||
-          terminal.typestr == std::string("NAMESPACE_NAME")
+    if (terminal.get_value().length() != 0) {
+      if (terminal.get_type() == std::string("IDENTIFIER") ||
+          terminal.get_type() == std::string("TYPE_NAME") ||
+          terminal.get_type() == std::string("NAMESPACE_NAME")
           ) {
         printf(" value='%s' fq='%s'",
-               xml_escape_attribute(terminal.value).c_str(),
-               xml_escape_attribute(terminal.fully_qualified_name).c_str()
+               xml_escape_attribute(terminal.get_value()).c_str(),
+               xml_escape_attribute(terminal.get_fully_qualified_name()).c_str()
                );
       }
       else {
-        printf(" value='%s'", xml_escape_attribute(terminal.value).c_str());
+        printf(" value='%s'", xml_escape_attribute(terminal.get_value()).c_str());
       }
     }
   }

@@ -4,58 +4,20 @@
 
 using namespace JLang::frontend;
 using namespace JLang::frontend::tree;
-using namespace JLang::frontend::yacc;
 using namespace JLang::frontend::namespaces;
 
-void initialize_namespace(NamespaceContext & namespace_context)
-{
-}
-
-class ParseTester {
-public:
-  ParseTester(std::string _path);
-  ~ParseTester();
-  ParseResult_owned_ptr parse(std::string _test_file);
-  void initialize_namespace(NamespaceContext & namespace_context) const;
-private:
-  std::string path;
-};
-
-ParseTester::ParseTester(std::string _path)
-  : path(_path)
-{}
-ParseTester::~ParseTester()
-{}
-void ParseTester::initialize_namespace(NamespaceContext & namespace_context) const
-{
-    namespace_context.namespace_new("u8", Namespace::TYPE_TYPEDEF, Namespace::VISIBILITY_PUBLIC);
-    
-    namespace_context.namespace_new("i16", Namespace::TYPE_TYPEDEF, Namespace::VISIBILITY_PUBLIC);
-    namespace_context.namespace_new("i32", Namespace::TYPE_TYPEDEF, Namespace::VISIBILITY_PUBLIC);
-    namespace_context.namespace_new("i64", Namespace::TYPE_TYPEDEF, Namespace::VISIBILITY_PUBLIC);
-
-    namespace_context.namespace_new("u16", Namespace::TYPE_TYPEDEF, Namespace::VISIBILITY_PUBLIC);
-    namespace_context.namespace_new("u32", Namespace::TYPE_TYPEDEF, Namespace::VISIBILITY_PUBLIC);
-    namespace_context.namespace_new("u64", Namespace::TYPE_TYPEDEF, Namespace::VISIBILITY_PUBLIC);
-
-    namespace_context.namespace_new("f32", Namespace::TYPE_TYPEDEF, Namespace::VISIBILITY_PUBLIC);
-    namespace_context.namespace_new("f64", Namespace::TYPE_TYPEDEF, Namespace::VISIBILITY_PUBLIC);
-
-    namespace_context.namespace_new("void", Namespace::TYPE_TYPEDEF, Namespace::VISIBILITY_PUBLIC);
-}
-
+static
 ParseResult_owned_ptr
-ParseTester::parse(std::string base_filename)
+parse(std::string & path, std::string base_filename)
 {
   std::string filename = path + std::string("/") + base_filename;
+  
   FILE *input = fopen(filename.c_str(), "rb");
   if (input == NULL) {
-    fprintf(stderr, "Cannot open file %s\n", filename.c_str());
+    fprintf(stderr, "Cannot open file %s\n", base_filename.c_str());
     return nullptr;
   }
-
   NamespaceContext namespace_context;
-  initialize_namespace(namespace_context);
   InputSourceFile input_source(input);
   Parser parser(namespace_context);
   int rc = parser.parse(input_source);
@@ -64,7 +26,6 @@ ParseTester::parse(std::string base_filename)
     return nullptr;
   }
   ParseResult_owned_ptr parse_result = parser.get_parse_result();
-  parse_result->get_token_stream().print_from_main();
   return std::move(parse_result);
 }
 
@@ -76,17 +37,15 @@ int main(int argc, char **argv)
   }
   std::string path(argv[1]);
 
-  ParseTester tester(path);
-
   // Check that we have the right number of statements in this file.
   {
-    auto tu = tester.parse("tests/llvm-decl-var.j");
+    auto tu = parse(path, "tests/llvm-decl-var.j");
     ASSERT_NOT_NULL(tu, "Parse of known-good thing should not be null");
     ASSERT_INT_EQUAL(tu->get_translation_unit().get_statements().size(), 6, "Wrong number of statements in file");
   }
 
   {
-    auto tu = tester.parse("tests/syntax-empty.j");
+    auto tu = parse(path, "tests/syntax-empty.j");
     ASSERT_NOT_NULL(tu, "Empty file should parse");
     ASSERT_INT_EQUAL(tu->get_translation_unit().get_statements().size(), 0, "Empty file should have no statements");
   }

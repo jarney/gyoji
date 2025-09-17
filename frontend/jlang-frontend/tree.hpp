@@ -63,19 +63,25 @@ namespace JLang::frontend::tree {
      */
     class Terminal : public JLang::frontend::ast::SyntaxNode {
     public:
-      Terminal();
+      Terminal(const Token & _token);
       ~Terminal();
-      std::string typestr;
-      std::string value;
-      size_t lineno;
-      size_t colno;
-      std::string fully_qualified_name;
-      
+
+      const std::string & get_type() const;
+      const std::string & get_value() const;
+      const size_t get_line() const;
+      const size_t get_column() const;
+
+      const std::string & get_fully_qualified_name() const;
+      void set_fully_qualified_name(std::string name);
+            
       // The terminal "owns" uniquely all of the non-syntax data
       // in this vector.  It may be returned to access it,
       // but these are owned pointers, so they must only
       // be de-referenced and never assigned to
       std::vector<TerminalNonSyntax_owned_ptr> non_syntax;
+    private:
+      const Token & token;
+      std::string fully_qualified_name;
     };
 
 
@@ -1482,7 +1488,7 @@ namespace JLang::frontend::tree {
       ~FileStatementUsing();
     private:
       const AccessModifier & get_access_modifier() const;
-      std::string & get_namespace() const;
+      const std::string & get_namespace() const;
       const UsingAs &get_using_as() const;
       
       AccessModifier_owned_ptr access_modifier;

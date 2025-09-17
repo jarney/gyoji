@@ -80,3 +80,11 @@ target_link_libraries(test_syntax
     jlang-misc
 )
 add_test(NAME test_syntax COMMAND test_syntax ${CMAKE_SOURCE_DIR})
+
+
+add_executable(test_token_stream test_token_stream.cpp)
+target_include_directories(test_token_stream PUBLIC ${FRONTEND_INCLUDES})
+target_link_libraries(test_token_stream
+    jlang-frontend
+    jlang-misc
+)

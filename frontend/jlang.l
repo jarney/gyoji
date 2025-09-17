@@ -7,6 +7,7 @@
 #include <lex-context.hpp>
 #undef _JLANG_INTERNAL
 
+using namespace JLang::frontend;
 using namespace JLang::frontend::tree;
 using namespace JLang::frontend::namespaces;
 using namespace JLang::frontend::yacc;
@@ -18,8 +19,8 @@ std::vector<TerminalNonSyntax_owned_ptr> non_syntax_data;
 #if DEBUG_TERMINALS
 #define PRINT_TERMINALS(s,t)                                                  \
     printf("%s : %s%s\n", s, t,                                               \
-                          (node->fully_qualified_name.size() > 0) ?           \
-                          (std::string(" : ") + node->fully_qualified_name).c_str() : \
+                          (node->get_fully_qualified_name().size() > 0) ?           \
+                          (std::string(" : ") + node->get_fully_qualified_name()).c_str() : \
                           std::string().c_str());
 #else
 #define PRINT_TERMINALS(s,t) /**/
@@ -48,23 +49,17 @@ void move_array(
 }
 
 #define TOKEN_ADD(nodetype)                                          \
-{                                                                    \
     LexContext *lc = (LexContext*)yyget_extra(yyscanner);            \
-    lc->token_stream.add_token(                                      \
+    const Token &tok = lc->token_stream.add_token(                   \
         std::string(#nodetype),                                      \
         std::string(yytext),                                         \
         lc->line,                                                    \
         lc->column);                                                 \
     lc->column += strlen(yytext);                                    \
-}
 
 #define START_NODE(nodetype)                                         \
     TOKEN_ADD(nodetype);                                             \
-    LexContext *lc = (LexContext*)yyget_extra(yyscanner);            \
-    Terminal* node = new Terminal();                                 \
-    node->typestr = std::string(#nodetype);                          \
-    node->value = std::string(yytext);                               \
-    node->lineno = lc->line;                                         \
+    Terminal* node = new Terminal(tok);                              \
     move_array(node->non_syntax, non_syntax_data);                   \
     yylval->emplace<Terminal_owned_ptr>(node);                       \
 
@@ -78,7 +73,7 @@ void move_array(
 
 #define PROCESS_IDENTIFIER(nodetype, ns_ptr)                         \
     START_NODE(nodetype)                                             \
-    node->fully_qualified_name = ns_ptr->fully_qualified();          \
+    node->set_fully_qualified_name(ns_ptr->fully_qualified());       \
     PRINT_TERMINALS(#nodetype, yytext)                               \
     RETURN_NODE(nodetype);
 
@@ -187,7 +182,6 @@ unsafe {PROCESS_NODE(UNSAFE);}
 {integer} { PROCESS_NODE(LITERAL_INT);}
 (::)*{identifier}({whitespace}*:{whitespace}*:{whitespace}*{identifier})* {
     LexContext *lex_context = (LexContext*)yyget_extra(yyscanner);
-    lex_context->token_stream.print_from_lex();
     NamespaceContext & context = lex_context->namespace_context;
     NamespaceFoundReason::ptr found = context.namespace_lookup(std::string(yytext));
     if (found->reason == NamespaceFoundReason::REASON_FOUND) {

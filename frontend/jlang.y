@@ -300,7 +300,6 @@ translation_unit
         : opt_file_statement_list YYEOF {
           $$ = std::make_unique<JLang::frontend::tree::TranslationUnit>(std::move($1), std::move($2));
           PRINT_NONTERMINALS($$);
-          return_data.token_stream->print_from_yacc();
           return_data.set_translation_unit(std::move($$));
         }
         ;
@@ -536,7 +535,7 @@ access_modifier
 namespace_declaration
         : opt_access_modifier NAMESPACE IDENTIFIER {
                 JLang::frontend::tree::AccessModifier::AccessModifierType access_modifier = $1->get_type();
-                std::string namespace_name = $3->value;
+                std::string namespace_name = $3->get_value();
                 $$ = std::make_unique<JLang::frontend::tree::NamespaceDeclaration>(
                                                                                       std::move($1),
                                                                                       std::move($2),
@@ -579,7 +578,7 @@ opt_as
 
 file_statement_using
         : opt_access_modifier USING NAMESPACE NAMESPACE_NAME opt_as SEMICOLON {
-                std::string namespace_name = $4->value;
+                std::string namespace_name = $4->get_value();
                 std::string as_name = $5->get_using_name();
                 $$ = std::make_unique<JLang::frontend::tree::FileStatementUsing>(
                                                                                     std::move($1),
@@ -603,7 +602,7 @@ file_statement_using
                 PRINT_NONTERMINALS($$);
         }
         | opt_access_modifier USING NAMESPACE TYPE_NAME opt_as SEMICOLON {
-                std::string namespace_name = $4->value;
+                std::string namespace_name = $4->get_value();
                 std::string as_name = $5->get_using_name();
                 $$ = std::make_unique<JLang::frontend::tree::FileStatementUsing>(
                                                                                     std::move($1),
@@ -630,7 +629,7 @@ file_statement_using
 
 class_decl_start
         : opt_access_modifier CLASS IDENTIFIER opt_class_argument_list {
-                std::string class_name = $3->value;
+                std::string class_name = $3->get_value();
                 JLang::frontend::tree::AccessModifier::AccessModifierType visibility_modifier = $1->get_type();
                 $$ = std::make_unique<JLang::frontend::tree::ClassDeclStart>(
                                                                          std::move($1),
@@ -647,7 +646,7 @@ class_decl_start
                     if (child->type == Parser::symbol_kind_type::S_class_argument_list) {
                       for (auto grandchild : child->children) {
                         if (grandchild->type == Parser::symbol_kind_type::S_IDENTIFIER) {
-                          return_data.namespace_context.namespace_new(grandchild->value, Namespace::TYPE_CLASS, Namespace::VISIBILITY_PRIVATE);
+                          return_data.namespace_context.namespace_new(grandchild->get_value(), Namespace::TYPE_CLASS, Namespace::VISIBILITY_PRIVATE);
                         }
                       }
                     }
@@ -705,7 +704,7 @@ class_definition
 type_definition
         : opt_access_modifier TYPEDEF type_specifier IDENTIFIER SEMICOLON {
                 JLang::frontend::tree::AccessModifier::AccessModifierType visibility_modifier = $1->get_type();
-                std::string type_name = $4->value;
+                std::string type_name = $4->get_value();
                 $$ = std::make_unique<JLang::frontend::tree::TypeDefinition>(
                                                                                std::move($1),
                                                                                std::move($2),
@@ -721,7 +720,7 @@ type_definition
 enum_definition
         : opt_access_modifier ENUM TYPE_NAME IDENTIFIER BRACE_L opt_enum_value_list BRACE_R SEMICOLON {
                 JLang::frontend::tree::AccessModifier::AccessModifierType visibility_modifier = $1->get_type();
-                std::string type_name = $4->value;
+                std::string type_name = $4->get_value();
                 $$ = std::make_unique<JLang::frontend::tree::EnumDefinition>(
                                                                                 std::move($1),
                                                                                 std::move($2),

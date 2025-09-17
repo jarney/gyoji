@@ -70,13 +70,6 @@ int main(int argc, char **argv)
       ParseResult_owned_ptr parse_result = std::move(parser.get_parse_result());
       const TranslationUnit & translation_unit = parse_result->get_translation_unit();
       rc = backend->process(translation_unit.get_syntax_node());
-
-      
-      const std::vector<Token_owned_ptr> & tokens = parse_result->get_token_stream().get_tokens();
-      for (const Token_owned_ptr & token : tokens) {
-        printf("Token: %ld:%ld : %s %s\n", token->get_line(), token->get_column(), token->get_type().c_str(), token->get_value().c_str());
-      }
-
     }
     fclose(input);
     return rc;

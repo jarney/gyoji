@@ -11,8 +11,8 @@
 #include <jlang-frontend/forward.hpp>
 #include <jlang-frontend/namespace.hpp>
 #include <jlang-frontend/syntax-node.hpp>
-#include <jlang-frontend/tree.hpp>
 #include <jlang-frontend/token-stream.hpp>
+#include <jlang-frontend/tree.hpp>
 #include <jlang-frontend/parse-result.hpp>
 #include <jlang-frontend/input-source.hpp>
 #include <jlang-frontend/parser.hpp>
