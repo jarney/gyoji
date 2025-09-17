@@ -13,7 +13,8 @@ LexContext::LexContext(JLang::frontend::namespaces::NamespaceContext &_namespace
   : namespace_context(_namespace_context)
   , token_stream(_token_stream)
   , input_source(_input_source)
-  , lineno(1)
+  , line(1)
+  , column(1)
 {}
 
 LexContext::~LexContext()

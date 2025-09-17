@@ -12,8 +12,6 @@ using namespace JLang::frontend::namespaces;
 using namespace JLang::frontend::yacc;
 
 
-std::string override_file;
-size_t lineno = 1;
 std::vector<TerminalNonSyntax_owned_ptr> non_syntax_data;
 
 #define DEBUG_TERMINALS 0
@@ -43,32 +41,50 @@ void move_array(
     src.clear();
 }
 
-#define START_NODE(nodetype)                 \
-    Terminal* node = new Terminal(); \
-    node->type = YaccParser::symbol_kind_type::S_ ## nodetype; \
-    node->typestr = std::string(#nodetype);  \
-    node->value = std::string(yytext);       \
-    node->lineno = lineno;                   \
-    move_array(node->non_syntax, non_syntax_data);      \
-    yylval->emplace<Terminal_owned_ptr>(node);
+#define TOKEN_APPEND()                                               \
+{                                                                    \
+    LexContext *lc = (LexContext*)yyget_extra(yyscanner);            \
+    lc->token_stream.append_token(std::string(yytext));              \
+}
 
-#define RETURN_NODE(nodetype)                \
+#define TOKEN_ADD(nodetype)                                          \
+{                                                                    \
+    LexContext *lc = (LexContext*)yyget_extra(yyscanner);            \
+    lc->token_stream.add_token(                                      \
+        std::string(#nodetype),                                      \
+        std::string(yytext),                                         \
+        lc->line,                                                    \
+        lc->column);                                                 \
+    lc->column += strlen(yytext);                                    \
+}
+
+#define START_NODE(nodetype)                                         \
+    TOKEN_ADD(nodetype);                                             \
+    LexContext *lc = (LexContext*)yyget_extra(yyscanner);            \
+    Terminal* node = new Terminal();                                 \
+    node->typestr = std::string(#nodetype);                          \
+    node->value = std::string(yytext);                               \
+    node->lineno = lc->line;                                         \
+    move_array(node->non_syntax, non_syntax_data);                   \
+    yylval->emplace<Terminal_owned_ptr>(node);                       \
+
+#define RETURN_NODE(nodetype)                                        \
     return YaccParser::token::nodetype;
 
-#define PROCESS_NODE(nodetype)               \
-    START_NODE(nodetype)                     \
-    PRINT_TERMINALS(#nodetype, yytext)       \
+#define PROCESS_NODE(nodetype)                                       \
+    START_NODE(nodetype)                                             \
+    PRINT_TERMINALS(#nodetype, yytext)                               \
     RETURN_NODE(nodetype);
 
-#define PROCESS_IDENTIFIER(nodetype, ns_ptr) \
-    START_NODE(nodetype)                     \
-    node->fully_qualified_name = ns_ptr->fully_qualified(); \
-    PRINT_TERMINALS(#nodetype, yytext)       \
+#define PROCESS_IDENTIFIER(nodetype, ns_ptr)                         \
+    START_NODE(nodetype)                                             \
+    node->fully_qualified_name = ns_ptr->fully_qualified();          \
+    PRINT_TERMINALS(#nodetype, yytext)                               \
     RETURN_NODE(nodetype);
 
 %}
  
-%option reentrant interactive noyywrap noyylineno nodefault
+%option reentrant interactive noyywrap nodefault
 
 %x COMMENT
 
@@ -204,17 +220,21 @@ unsafe {PROCESS_NODE(UNSAFE);}
         std::string()
         );
   non_syntax_data.push_back(std::move(nsd));
+  TOKEN_ADD(comment);
 }
 <COMMENT>"*/" {
+  TOKEN_APPEND()
   BEGIN(INITIAL);
 }
 <COMMENT>[^*]* {
   TerminalNonSyntax* current = non_syntax_data.back().get();
   current->append(std::string(yytext));
+  TOKEN_APPEND()
 }
 <COMMENT>\* {
   TerminalNonSyntax *current = non_syntax_data.back().get();
   current->append(std::string(yytext));
+  TOKEN_APPEND()
 }
 
 \/\/.* {
@@ -224,6 +244,7 @@ unsafe {PROCESS_NODE(UNSAFE);}
         std::string(yytext+2)
     );
     non_syntax_data.push_back(std::move(nsd));
+    TOKEN_ADD(single_line_comment);
 }
 [ \t]+ {
     TerminalNonSyntax_owned_ptr nsd = std::make_unique<TerminalNonSyntax>(
@@ -231,6 +252,7 @@ unsafe {PROCESS_NODE(UNSAFE);}
         std::string(yytext)
     );
     non_syntax_data.push_back(std::move(nsd));
+    TOKEN_ADD(whitespace);
 }
 \n {
     TerminalNonSyntax_owned_ptr nsd = std::make_unique<TerminalNonSyntax>(
@@ -238,16 +260,18 @@ unsafe {PROCESS_NODE(UNSAFE);}
         std::string(yytext)
     );
     non_syntax_data.push_back(std::move(nsd));
+    TOKEN_ADD(newline);
     LexContext *lex_context = (LexContext*)yyget_extra(yyscanner);
-    lex_context->lineno++;
+    lex_context->line++;
+    lex_context->column = 1;
 }
 \#[a-zA-Z]+\ [[:digit:]]+\ \".*\"\n {
-    //printf("Preprocessor directive %s\n", yytext);
     TerminalNonSyntax_owned_ptr nsd = std::make_unique<TerminalNonSyntax>(
         TerminalNonSyntax::Type::EXTRA_FILE_METADATA,
         std::string(yytext)
     );
     non_syntax_data.push_back(std::move(nsd));
+    TOKEN_ADD(file_metadata)
 }
 . {
     return YaccParser::token::INVALID_INPUT;

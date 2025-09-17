@@ -13,6 +13,7 @@ namespace JLang::frontend::yacc {
     JLang::frontend::namespaces::NamespaceContext& namespace_context;
     InputSource & input_source;
     JLang::frontend::TokenStream & token_stream;
-    int lineno;
+    size_t line;
+    size_t column;
   };
 };

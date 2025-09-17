@@ -65,7 +65,6 @@ namespace JLang::frontend::tree {
     public:
       Terminal();
       ~Terminal();
-      int type;
       std::string typestr;
       std::string value;
       size_t lineno;

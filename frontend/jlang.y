@@ -2175,7 +2175,6 @@ int visibility_from_modifier(JLang::frontend::tree::AccessModifier::AccessModifi
 
 void JLang::frontend::yacc::YaccParser::error(const std::string& msg) {
     LexContext *lex_context = (LexContext*)yyget_extra(scanner);
-    int colno = yyget_column(scanner);
 
     // What we want is a "token stream"
     // which is organized by lineno (i.e. lex_context->get_token_stream())
@@ -2195,7 +2194,7 @@ void JLang::frontend::yacc::YaccParser::error(const std::string& msg) {
     // and use that to get the bad line of code.  Then if we also have
     // a TERMINAL or some other syntax element, we can use that to identify
     // the column inside that line to print the error line.
-    printf("Syntax error at line %d col %d : %s\n", lex_context->lineno,
-           colno,
+    printf("Syntax error at line %ld:%ld : %s\n", lex_context->line,
+           lex_context->column,
            msg.c_str());
 }
