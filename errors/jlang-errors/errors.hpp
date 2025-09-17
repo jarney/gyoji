@@ -29,6 +29,10 @@ namespace JLang::errors {
                  );
     ~ErrorMessage();
     void print();
+    const std::vector<std::pair<size_t, std::string>> & get_context() const;
+    size_t get_line() const;
+    size_t get_column() const;
+    const std::string & get_message() const;
   private:
     std::vector<std::pair<size_t, std::string>> context;
     size_t lineno;

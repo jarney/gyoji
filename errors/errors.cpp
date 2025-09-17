@@ -66,6 +66,23 @@ ErrorMessage::ErrorMessage(std::vector<std::pair<size_t, std::string>> _context,
 ErrorMessage::~ErrorMessage()
 {}
 
+const std::vector<std::pair<size_t, std::string>> &
+ErrorMessage::get_context() const
+{ return context; }
+
+size_t
+ErrorMessage::get_line() const
+{ return lineno; }
+
+size_t
+ErrorMessage::get_column() const
+{ return colno; }
+
+const std::string &
+ErrorMessage::get_message() const
+{ return errormsg; }
+
+
 void
 ErrorMessage::print()
 {
