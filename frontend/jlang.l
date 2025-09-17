@@ -209,63 +209,59 @@ unsafe {PROCESS_NODE(UNSAFE);}
 
 "/*"        {
   BEGIN(COMMENT);
+  TOKEN_ADD(comment);
   TerminalNonSyntax_owned_ptr nsd = std::make_unique<TerminalNonSyntax>(
         TerminalNonSyntax::TerminalNonSyntax::Type::EXTRA_COMMENT_MULTI_LINE,
-        std::string()
+        tok
         );
   non_syntax_data.push_back(std::move(nsd));
-  TOKEN_ADD(comment);
 }
 <COMMENT>"*/" {
   TOKEN_APPEND()
   BEGIN(INITIAL);
 }
 <COMMENT>[^*]* {
-  TerminalNonSyntax* current = non_syntax_data.back().get();
-  current->append(std::string(yytext));
   TOKEN_APPEND()
 }
 <COMMENT>\* {
-  TerminalNonSyntax *current = non_syntax_data.back().get();
-  current->append(std::string(yytext));
   TOKEN_APPEND()
 }
 
 \/\/.* {
 // Single-line comment:
+    TOKEN_ADD(single_line_comment);
     TerminalNonSyntax_owned_ptr nsd = std::make_unique<TerminalNonSyntax>(
         TerminalNonSyntax::Type::EXTRA_COMMENT_SINGLE_LINE,
-        std::string(yytext+2)
+        tok
     );
     non_syntax_data.push_back(std::move(nsd));
-    TOKEN_ADD(single_line_comment);
 }
 [ \t]+ {
+    TOKEN_ADD(whitespace);
     TerminalNonSyntax_owned_ptr nsd = std::make_unique<TerminalNonSyntax>(
         TerminalNonSyntax::Type::EXTRA_WHITESPACE, 
-        std::string(yytext)
+        tok
     );
     non_syntax_data.push_back(std::move(nsd));
-    TOKEN_ADD(whitespace);
 }
 \n {
+    TOKEN_ADD(newline);
     TerminalNonSyntax_owned_ptr nsd = std::make_unique<TerminalNonSyntax>(
         TerminalNonSyntax::Type::EXTRA_WHITESPACE, 
-        std::string(yytext)
+        tok
     );
     non_syntax_data.push_back(std::move(nsd));
-    TOKEN_ADD(newline);
     LexContext *lex_context = (LexContext*)yyget_extra(yyscanner);
     lex_context->line++;
     lex_context->column = 1;
 }
 \#[a-zA-Z]+\ [[:digit:]]+\ \".*\"\n {
+    TOKEN_ADD(file_metadata)
     TerminalNonSyntax_owned_ptr nsd = std::make_unique<TerminalNonSyntax>(
         TerminalNonSyntax::Type::EXTRA_FILE_METADATA,
-        std::string(yytext)
+        tok
     );
     non_syntax_data.push_back(std::move(nsd));
-    TOKEN_ADD(file_metadata)
 }
 . {
     return YaccParser::token::INVALID_INPUT;

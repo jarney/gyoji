@@ -34,7 +34,7 @@ namespace JLang::frontend::tree {
           EXTRA_FILE_METADATA
       }  Type;
     
-      TerminalNonSyntax(Type _type, std::string _data);
+      TerminalNonSyntax(Type _type, const Token & _token);
       ~TerminalNonSyntax();
 
       /**
@@ -48,11 +48,9 @@ namespace JLang::frontend::tree {
        */
       const std::string & get_data() const;
 
-      void append(std::string _data);
-      
     private:
       Type type;
-      std::string data;
+      const Token & token;
     };
     typedef std::unique_ptr<TerminalNonSyntax> TerminalNonSyntax_owned_ptr;
 

@@ -34,9 +34,9 @@ Terminal::set_fully_qualified_name(std::string _name)
 ///////////////////////////////////////////////////
 
 
-TerminalNonSyntax::TerminalNonSyntax(TerminalNonSyntax::Type _type, std::string _data)
+TerminalNonSyntax::TerminalNonSyntax(TerminalNonSyntax::Type _type, const Token & _token)
   : type(_type)
-  , data(_data)
+  , token(_token)
 {}
 TerminalNonSyntax::~TerminalNonSyntax()
 {}
@@ -45,13 +45,10 @@ TerminalNonSyntax::get_type() const
 {
   return type;
 }
-const std::string & TerminalNonSyntax::get_data() const
+const std::string &
+TerminalNonSyntax::get_data() const
 {
-  return data;
-}
-void TerminalNonSyntax::append(std::string _data)
-{
-  data = data + _data;
+  return token.get_value();
 }
 
 ///////////////////////////////////////////////////
