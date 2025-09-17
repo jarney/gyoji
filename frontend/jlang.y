@@ -5,6 +5,9 @@
 #include <memory>
 #include <jlang.l.hpp>
 #include <jlang-frontend.hpp>
+#define _JLANG_INTERNAL
+#include <lex-context.hpp>
+#undef _JLANG_INTERNAL
   
  using namespace JLang::frontend::namespaces;
   

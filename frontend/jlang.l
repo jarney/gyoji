@@ -3,6 +3,10 @@
 #include <memory>
 #include <jlang-frontend.hpp>
 #include <jlang.y.hpp>
+#define _JLANG_INTERNAL
+#include <lex-context.hpp>
+#undef _JLANG_INTERNAL
+
 using namespace JLang::frontend::tree;
 using namespace JLang::frontend::namespaces;
 using namespace JLang::frontend::yacc;

@@ -3,8 +3,6 @@
 #endif
 #pragma once
 
-#include <jlang-frontend/input-source.hpp>
-
 namespace JLang::frontend::yacc {
   class LexContext {
   public:

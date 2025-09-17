@@ -4,14 +4,15 @@ set(FRONTEND_INCLUDES
         ${CMAKE_BINARY_DIR}
 )
 
-set(FRONTEND_PUBLIC_HEADERS
-    frontend.hpp
+set(FRONTEND_PUBLIC_HEADERS_TOP
+    jlang-frontend.hpp
+)
+set(FRONTEND_PUBLIC_HEADERS_BOTTOM
     jlang-frontend/tree.hpp
     jlang-frontend/syntax-node.hpp
     jlang-frontend/token-stream.hpp
     jlang-frontend/namespace.hpp
     jlang-frontend/parse-result.hpp
-    jlang-frontend/lex-context.hpp
     jlang-frontend/input-source.hpp
     jlang-frontend/input-source-file.hpp
     jlang-frontend/forward.hpp
@@ -26,11 +27,13 @@ set(FRONTEND_SOURCES
     syntax-node.cpp
     namespace.cpp
     parse-result.cpp
+    lex-context.hpp
     lex-context.cpp
     input-source.cpp
     input-source-file.cpp
     parser.cpp
-    ${FRONTEND_PUBLIC_HEADERS}
+    ${FRONTEND_PUBLIC_HEADERS_TOP}
+    ${FRONTEND_PUBLIC_HEADERS_BOTTOM}
 )
 
 
@@ -52,7 +55,12 @@ install(
 )
 install(
     FILES
-        ${FRONTEND_PUBLIC_HEADERS}
+        ${FRONTEND_PUBLIC_HEADERS_TOP}
+        DESTINATION include/
+)
+install(
+    FILES
+        ${FRONTEND_PUBLIC_HEADERS_BOTTOM}
         DESTINATION include/jlang-frontend
 )
 

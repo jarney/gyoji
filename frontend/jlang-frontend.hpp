@@ -14,7 +14,7 @@
 #include <jlang-frontend/tree.hpp>
 #include <jlang-frontend/token-stream.hpp>
 #include <jlang-frontend/parse-result.hpp>
-#include <jlang-frontend/lex-context.hpp>
+#include <jlang-frontend/input-source.hpp>
 #include <jlang-frontend/parser.hpp>
 #undef _JLANG_INTERNAL
 
