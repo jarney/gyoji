@@ -1,7 +1,7 @@
 %{
 #include <cstdlib>
 #include <memory>
-#include <jlang-frontend/frontend.hpp>
+#include <jlang-frontend.hpp>
 #include <jlang.y.hpp>
 using namespace JLang::frontend::tree;
 using namespace JLang::frontend::namespaces;

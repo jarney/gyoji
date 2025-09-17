@@ -1,4 +1,4 @@
-#include <jlang-frontend/frontend.hpp>
+#include <jlang-frontend.hpp>
 #include <jlang-frontend/input-source-file.hpp>
 #include <jlang-misc/test.hpp>
 

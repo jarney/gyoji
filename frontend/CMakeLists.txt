@@ -5,12 +5,12 @@ set(FRONTEND_INCLUDES
 )
 
 set(FRONTEND_PUBLIC_HEADERS
-    jlang-frontend/frontend.hpp
+    frontend.hpp
     jlang-frontend/tree.hpp
     jlang-frontend/syntax-node.hpp
     jlang-frontend/token-stream.hpp
     jlang-frontend/namespace.hpp
-    jlang-frontend/yacc-context.hpp
+    jlang-frontend/parse-result.hpp
     jlang-frontend/lex-context.hpp
     jlang-frontend/input-source.hpp
     jlang-frontend/input-source-file.hpp
@@ -25,7 +25,7 @@ set(FRONTEND_SOURCES
     token-stream.cpp
     syntax-node.cpp
     namespace.cpp
-    yacc-context.cpp
+    parse-result.cpp
     lex-context.cpp
     input-source.cpp
     input-source-file.cpp

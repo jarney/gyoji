@@ -4,7 +4,7 @@
 #include <cmath>
 #include <memory>
 #include <jlang.l.hpp>
-#include <jlang-frontend/frontend.hpp>
+#include <jlang-frontend.hpp>
   
  using namespace JLang::frontend::namespaces;
   

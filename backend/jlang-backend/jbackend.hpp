@@ -1,6 +1,6 @@
 #pragma once
 
-#include <jlang-frontend/frontend.hpp>
+#include <jlang-frontend.hpp>
 
 /*!
  *  \addtogroup Backend
