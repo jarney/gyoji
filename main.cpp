@@ -67,8 +67,9 @@ int main(int argc, char **argv)
       printf("Syntax error\n");
     }
     else {
-      TranslationUnit_owned_ptr translation_unit = parser.get_translation_unit();
-      rc = backend->process(translation_unit->get_syntax_node());
+      ParseResult_owned_ptr parse_result = std::move(parser.get_parse_result());
+      const TranslationUnit & translation_unit = parse_result->get_translation_unit();
+      rc = backend->process(translation_unit.get_syntax_node());
     }
     fclose(input);
     return rc;

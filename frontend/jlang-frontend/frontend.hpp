@@ -12,6 +12,7 @@
 #include <jlang-frontend/namespace.hpp>
 #include <jlang-frontend/syntax-node.hpp>
 #include <jlang-frontend/tree.hpp>
+#include <jlang-frontend/token-stream.hpp>
 #include <jlang-frontend/yacc-context.hpp>
 #include <jlang-frontend/lex-context.hpp>
 #include <jlang-frontend/parser.hpp>

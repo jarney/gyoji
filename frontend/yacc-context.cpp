@@ -2,33 +2,40 @@
 #include <jlang.l.hpp>
 #include <jlang.y.hpp>
 
-using namespace JLang::frontend::yacc;
+using namespace JLang::frontend;
 using namespace JLang::frontend::namespaces;
 using namespace JLang::frontend::tree;
 
-YaccContext::YaccContext(
+ParseResult::ParseResult(
                          NamespaceContext & _namespace_context
                          )
   : namespace_context(_namespace_context)
+  , token_stream(std::make_unique<TokenStream>())
   , translation_unit(nullptr)
 {}
-YaccContext::~YaccContext()
+ParseResult::~ParseResult()
 {}
 
 const NamespaceContext &
-YaccContext::get_namespace_context() const
+ParseResult::get_namespace_context() const
 {
   return namespace_context;
 }
 
-TranslationUnit_owned_ptr
-YaccContext::get_translation_unit()
+const TranslationUnit & 
+ParseResult::get_translation_unit() const
 {
-  return std::move(translation_unit);
+  return *translation_unit;
+}
+
+const TokenStream &
+ParseResult::get_token_stream() const
+{
+  return *token_stream;
 }
 
 void
-YaccContext::set_translation_unit(TranslationUnit_owned_ptr _translation_unit)
+ParseResult::set_translation_unit(TranslationUnit_owned_ptr _translation_unit)
 {
   translation_unit = std::move(_translation_unit);
 }

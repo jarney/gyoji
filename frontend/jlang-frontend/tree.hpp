@@ -15,7 +15,7 @@
  * resulting from reading and parsing an input file.
  */
 namespace JLang::frontend::tree {
-    /**
+  /**
      * This class represents data obtained from the
      * lexical stage that did not affect the syntax.
      * This data includes whitespace, comments, and

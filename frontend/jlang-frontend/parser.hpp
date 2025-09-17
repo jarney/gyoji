@@ -5,6 +5,8 @@
 
 namespace JLang::frontend {
   
+  typedef std::unique_ptr<TokenStream> TokenStream_owned_ptr;
+  
   // Last piece before we button up the
   // interface to the parser and document
   // the whole thing.
@@ -15,10 +17,8 @@ namespace JLang::frontend {
     ~Parser();
     int parse(InputSource & _input_source);
     
-    JLang::frontend::tree::TranslationUnit_owned_ptr get_translation_unit();
-    const JLang::frontend::namespaces::NamespaceContext & get_namespace_context() const;
+    ParseResult_owned_ptr get_parse_result();
   private:
-    JLang::frontend::yacc::YaccContext yacc_context;
+    ParseResult_owned_ptr yacc_context;
   };
-
 };

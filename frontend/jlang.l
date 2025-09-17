@@ -167,6 +167,7 @@ unsafe {PROCESS_NODE(UNSAFE);}
 {integer} { PROCESS_NODE(LITERAL_INT);}
 (::)*{identifier}({whitespace}*:{whitespace}*:{whitespace}*{identifier})* {
     LexContext *lex_context = (LexContext*)yyget_extra(yyscanner);
+    lex_context->token_stream.print_from_lex();
     NamespaceContext & context = lex_context->namespace_context;
     NamespaceFoundReason::ptr found = context.namespace_lookup(std::string(yytext));
     if (found->reason == NamespaceFoundReason::REASON_FOUND) {

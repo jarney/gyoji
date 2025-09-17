@@ -283,7 +283,7 @@ int visibility_from_modifier(JLang::frontend::tree::AccessModifier::AccessModifi
 
 %nterm <JLang::frontend::tree::Expression_owned_ptr> expression;
 
-%parse-param {JLang::frontend::yacc::YaccContext & return_data}
+%parse-param {JLang::frontend::ParseResult & return_data}
 
 %code
 {
@@ -297,6 +297,7 @@ translation_unit
         : opt_file_statement_list YYEOF {
           $$ = std::make_unique<JLang::frontend::tree::TranslationUnit>(std::move($1), std::move($2));
           PRINT_NONTERMINALS($$);
+          return_data.token_stream->print_from_yacc();
           return_data.set_translation_unit(std::move($$));
         }
         ;
@@ -2172,6 +2173,14 @@ int visibility_from_modifier(JLang::frontend::tree::AccessModifier::AccessModifi
 void JLang::frontend::yacc::YaccParser::error(const std::string& msg) {
     LexContext *lex_context = (LexContext*)yyget_extra(scanner);
     int colno = yyget_column(scanner);
+
+    // What we want is a "token stream"
+    // which is organized by lineno (i.e. lex_context->get_token_stream())
+    // where the token stream is just the list (and content) of all of the
+    // raw elements parsed.
+    // The 'Terminal' we return contains a reference to the token stream
+    // which must live longer than the syntax tree.
+    
     // TODO: put error handling here instead of stderr.
     // What we really want here is enough context (from lineno)
     // to recall the surrounding code so that it can be nicely

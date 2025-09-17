@@ -215,7 +215,9 @@ namespace JLang::frontend::tree {
 // single ownership of these classes
 // in the tree.
 //----------------------------
+  
 typedef std::unique_ptr<UsingAs> UsingAs_owned_ptr;
+  
   
   typedef std::unique_ptr<Terminal> Terminal_owned_ptr;
 

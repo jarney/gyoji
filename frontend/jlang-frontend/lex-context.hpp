@@ -8,10 +8,13 @@
 namespace JLang::frontend::yacc {
   class LexContext {
   public:
-    LexContext(JLang::frontend::namespaces::NamespaceContext &_namespace_context, InputSource &_input_source);
+    LexContext(JLang::frontend::namespaces::NamespaceContext &_namespace_context,
+               JLang::frontend::TokenStream &_token_stream,
+               InputSource &_input_source);
     ~LexContext();
     JLang::frontend::namespaces::NamespaceContext& namespace_context;
-    InputSource &input_source;
+    InputSource & input_source;
+    JLang::frontend::TokenStream & token_stream;
     int lineno;
   };
 };

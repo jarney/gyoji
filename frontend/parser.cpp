@@ -10,8 +10,8 @@ using namespace JLang::frontend::namespaces;
 using namespace JLang::frontend::yacc;
 
 Parser::Parser(NamespaceContext & _namespace_context)
-  : yacc_context(_namespace_context)
 {
+  yacc_context = std::make_unique<ParseResult>(_namespace_context);
 }
 Parser::~Parser()
 {
@@ -22,12 +22,15 @@ Parser::parse(InputSource & _input_source)
 {
   yyscan_t scanner;
   yylex_init(&scanner);
-  //  yyset_in(input, scanner);
 
-  LexContext lex_context(yacc_context.namespace_context, _input_source);
+  LexContext lex_context(
+                         yacc_context->namespace_context,
+                         *yacc_context->token_stream,
+                         _input_source);
   yyset_extra(&lex_context, scanner);
+
   
-  yacc::YaccParser parser { scanner, yacc_context };
+  yacc::YaccParser parser { scanner, *yacc_context };
   int rc = parser.parse();
   yylex_destroy(scanner);
   if (rc != 0) {
@@ -37,14 +40,9 @@ Parser::parse(InputSource & _input_source)
   return 0;
 }
 
-TranslationUnit_owned_ptr
-Parser::get_translation_unit()
+ParseResult_owned_ptr
+Parser::get_parse_result()
 {
-  return yacc_context.get_translation_unit();
-}
-const NamespaceContext &
-Parser::get_namespace_context() const
-{
-  return yacc_context.get_namespace_context();
+  return std::move(yacc_context);
 }
 

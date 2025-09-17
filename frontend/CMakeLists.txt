@@ -8,6 +8,7 @@ set(FRONTEND_PUBLIC_HEADERS
     jlang-frontend/frontend.hpp
     jlang-frontend/tree.hpp
     jlang-frontend/syntax-node.hpp
+    jlang-frontend/token-stream.hpp
     jlang-frontend/namespace.hpp
     jlang-frontend/yacc-context.hpp
     jlang-frontend/lex-context.hpp
@@ -21,6 +22,7 @@ set(FRONTEND_SOURCES
     jlang.l
     jlang.y
     tree.cpp
+    token-stream.cpp
     syntax-node.cpp
     namespace.cpp
     yacc-context.cpp
