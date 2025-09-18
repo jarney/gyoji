@@ -16,161 +16,345 @@
  */
 namespace JLang::frontend::tree {
   /**
-     * This class represents data obtained from the
-     * lexical stage that did not affect the syntax.
-     * This data includes whitespace, comments, and
-     * file metadata.  This data is useful to track because
-     * it may be used in code-formatters to faithfully
-     * reproduce the input and is also useful in providing
-     * meaningful error messaging with context surrounding
-     * the error.
-     */
-    class TerminalNonSyntax {
-    public:
-      typedef enum {
-          EXTRA_COMMENT_SINGLE_LINE,
-          EXTRA_COMMENT_MULTI_LINE,
-          EXTRA_WHITESPACE,
-          EXTRA_FILE_METADATA
-      }  Type;
-    
-      TerminalNonSyntax(Type _type, const Token & _token);
-      ~TerminalNonSyntax();
-
+   * This class represents data obtained from the
+   * lexical stage that did not affect the syntax.
+   * This data includes whitespace, comments, and
+   * file metadata.  This data is useful to track because
+   * it may be used in code-formatters to faithfully
+   * reproduce the input and is also useful in providing
+   * meaningful error messaging with context surrounding
+   * the error.
+   */
+  class TerminalNonSyntax {
+  public:
+    typedef enum {
       /**
-       * This method returns the type of data
-       * from the enum above.
+       * This token is a single-line double-slash (C++-style)
+       * comment.
        */
-      const Type &get_type() const;
+      EXTRA_COMMENT_SINGLE_LINE,
       /**
-       * This method provides access to the raw input
-       * for the type of non-syntax data available.
+       * This token is a multi-line slash-star (C-style)
+       * comment.
        */
-      const std::string & get_data() const;
-
-    private:
-      Type type;
-      const Token & token;
-    };
+      EXTRA_COMMENT_MULTI_LINE,
+      /**
+       * This token consists of whitespace between parsed
+       * tokens.
+       */
+      EXTRA_WHITESPACE,
+      /**
+       * This token consists of a file metadata token
+       * used in error reporting for generated files
+       * so that errors can be traced back to their origin
+       * source-files.
+       */
+      EXTRA_FILE_METADATA
+    }  Type;
 
     /**
-     * Terminals are the raw tokens received by the lexer.
-     * They carry the token information as well as any
-     * "Non-syntax" data like comments and whitespace.
+     * Constructs a non-syntax node corresponding to the
+     * given lexical token of the given token type.
      */
-    class Terminal : public JLang::frontend::ast::SyntaxNode {
-    public:
-      Terminal(const Token & _token);
-      ~Terminal();
+    TerminalNonSyntax(Type _type, const Token & _token);
+    /**
+     * Destructor, nothing special.
+     */
+    ~TerminalNonSyntax();
+    
+    /**
+     * This method returns the type of data
+     * from the enum above.
+     */
+    const Type &get_type() const;
+    /**
+     * This method provides access to the raw input
+     * for the type of non-syntax data available.
+     */
+    const std::string & get_data() const;
+    
+  private:
+    Type type;
+    const Token & token;
+  };
+  
+  /**
+   * Terminals are the raw tokens received by the lexer.
+   * They carry the token information as well as any
+   * "Non-syntax" data like comments and whitespace.
+   */
+  class Terminal : public JLang::frontend::ast::SyntaxNode {
+  public:
+    /**
+     * Construct a terminal from the corresponding
+     * lexer token.
+     */
+    Terminal(const Token & _token);
+    /**
+     * Destructor, nothing special.
+     */
+    ~Terminal();
 
-      const std::string & get_type() const;
-      const std::string & get_value() const;
-      const size_t get_line() const;
-      const size_t get_column() const;
+    /**
+     * Returns the type of the correspinding
+     * lexer token.
+     */
+    const std::string & get_type() const;
+    /**
+     * Returns the matched data from the input
+     * that matched the token.
+     */
+    const std::string & get_value() const;
+    /**
+     * Returns the source line number where the
+     * input token was found.
+     */
+    const size_t get_line() const;
+    /**
+     * Returns the source column number where
+     * the input token was found.
+     */
+    const size_t get_column() const;
 
-      const std::string & get_fully_qualified_name() const;
-      void set_fully_qualified_name(std::string name);
-            
-      // The terminal "owns" uniquely all of the non-syntax data
-      // in this vector.  It may be returned to access it,
-      // but these are owned pointers, so they must only
-      // be de-referenced and never assigned to
-      std::vector<::JLang::owned<TerminalNonSyntax>> non_syntax;
-    private:
-      const Token & token;
-      std::string fully_qualified_name;
-    };
-
+    /**
+     * For the case of identifier tokens, this returns
+     * the fully-qualified name of the type, namespace,
+     * or identifier once namespace resolution has
+     * identified it.
+     */
+    const std::string & get_fully_qualified_name() const;
+    /**
+     * Used by the lexer once the fully-qualified token name
+     * is resolved for identifier, type, and namespace tokens.
+     */
+    void set_fully_qualified_name(std::string name);
+    
+    // The terminal "owns" uniquely all of the non-syntax data
+    // in this vector.  It may be returned to access it,
+    // but these are owned pointers, so they must only
+    // be de-referenced and never assigned to
+    std::vector<::JLang::owned<TerminalNonSyntax>> non_syntax;
+  private:
+    const Token & token;
+    std::string fully_qualified_name;
+  };
+  
 
   /**
-   * A statement at the file level consists of ...
+   * A statement at the file level consists of one of the following types of
+   * statement.
+   * * Function Definition : Definition of a function along with the statements that make it up.
+   * * Function Declaration : Declaration of a function (a.k.a. a prototype).
+   * * Global Definition : Definition of a global variable.
+   * * Class Definition : Definition of a composite type with associated methods.
+   * * Enum Definition : Definition of an enumerated list of symbolic values.
+   * * Type Definition : Definition (usually an alias) for a primitive or class type.
+   * * Namespace : Definition of a namespace with other statements contained inside it.
+   * * Using Statement : Adds a namespace to the search path when resolving types or namespaces.
    */
-    class FileStatement : public JLang::frontend::ast::SyntaxNode {
-    public:
-      typedef std::variant<
-        ::JLang::owned<FileStatementFunctionDefinition>,
-        ::JLang::owned<FileStatementFunctionDeclaration>,
-        ::JLang::owned<FileStatementGlobalDefinition>,
-        ::JLang::owned<ClassDefinition>,
-        ::JLang::owned<EnumDefinition>,
-        ::JLang::owned<TypeDefinition>,
-        ::JLang::owned<FileStatementNamespace>,
-        ::JLang::owned<FileStatementUsing>> FileStatementType;
-
-      FileStatement(FileStatementType _statement, const JLang::frontend::ast::SyntaxNode & _sn);
-      ~FileStatement();
-
-      const FileStatementType & get_statement() const;
-
-    private:
-      FileStatementType statement;
-    };
-
-    class AccessQualifier : public JLang::frontend::ast::SyntaxNode {
-    public:
-      typedef enum {
-        UNSPECIFIED,
-        VOLATILE,
-        CONST
-      } AccessQualifierType;
-      AccessQualifier(AccessQualifier::AccessQualifierType _type);
-      AccessQualifier(::JLang::owned<Terminal> _qualifier, AccessQualifierType _type);
-      ~AccessQualifier();
-      const AccessQualifier::AccessQualifierType & get_type() const;
-    private:
-      AccessQualifier::AccessQualifierType type;
-      ::JLang::owned<Terminal> qualifier;
-    };
+  class FileStatement : public JLang::frontend::ast::SyntaxNode {
+  public:
+    typedef std::variant<
+            ::JLang::owned<FileStatementFunctionDefinition>,
+            ::JLang::owned<FileStatementFunctionDeclaration>,
+            ::JLang::owned<FileStatementGlobalDefinition>,
+            ::JLang::owned<ClassDefinition>,
+            ::JLang::owned<EnumDefinition>,
+            ::JLang::owned<TypeDefinition>,
+            ::JLang::owned<FileStatementNamespace>,
+            ::JLang::owned<FileStatementUsing>> FileStatementType;
     
-    class AccessModifier : public JLang::frontend::ast::SyntaxNode {
-    public:
-      typedef enum {
-        PUBLIC,
-        PROTECTED,
-        PRIVATE
-      } AccessModifierType;
-      AccessModifier(::JLang::owned<Terminal> _modifier, AccessModifierType _type);
-      AccessModifier(AccessModifier::AccessModifierType _type);
-      ~AccessModifier();
-      const AccessModifierType & get_type() const;
-    private:
-      AccessModifierType type;
-      ::JLang::owned<Terminal> modifier;
-    };
+    FileStatement(FileStatementType _statement, const JLang::frontend::ast::SyntaxNode & _sn);
+    ~FileStatement();
+    
+    /**
+     * Returns the details of a specific statement.
+     * The specific type of statement can be interrogated by
+     * determining if the variant "holds" the given type of data
+     * and then accessing the held statement.
+     *
+     * Example usage:
+     * <pre>
+     *   const auto & stmt = fs.get_statement();
+     *   if (std::holds_alternative<FileStatementFunctionDefinition>(stmt)) {
+     *       const auto & function_def = std::get<JLang::owned<FileStatementFunctionDefinition>>(stmt);
+     *   }
+     * </pre>
+     */
+    const FileStatementType & get_statement() const;
+    
+  private:
+    FileStatementType statement;
+  };
+  
+  /**
+   * Indicates what type of access is permitted for the
+   * value.  If it is marked as VOLATILE then read and write
+   * will be forced from memory rather than allowing them
+   * to be optimized out.  If it is marked as CONST then
+   * the value is read-only in this context.  If it is
+   * UNSPECIFIED then read/write access is un-restricted
+   */
+  class AccessQualifier : public JLang::frontend::ast::SyntaxNode {
+  public:
+    typedef enum {
+      /**
+       * If not specified, the access qualifier is unspecified
+       * indicating that the variable has read/write access
+       * and the optimizer is free to skip physical memory
+       * access in order to resolve the value using registers
+       * or other calculation techniques.
+       */
+      UNSPECIFIED,
+      /**
+       * Indicates that the value should be read and written
+       * to memory as specified and that the optimizer must not
+       * skip memory access.  This is mainly used when memory mapped
+       * I/O is used in order to ensure that the physical memory
+       * is written to so that devices on the memory bus may
+       * observe and interact with the values.
+       */
+      VOLATILE,
+      /**
+       * Indicates that write access should not be permitted
+       * in this context.  This is a way to communicate with
+       * other programmers what values they may and may not
+       * alter.
+       */
+      CONST
+    } AccessQualifierType;
+    /**
+     * Constructs an access qualifier from a parse token
+     * which will be either VOLATILE or CONST.
+     */
+    AccessQualifier(::JLang::owned<Terminal> _qualifier);
+    /**
+     * Constructs a default access qualifier (UNSPECIFIED)
+     * if no qualifier is specified in the source file.
+     */
+    AccessQualifier();
+    /**
+     * Destructor, nothing special.
+     */
+    ~AccessQualifier();
+    /**
+     * Returns the access qualification type.
+     */
+    const AccessQualifier::AccessQualifierType & get_type() const;
+  private:
+    AccessQualifier::AccessQualifierType type;
+    ::JLang::owned<Terminal> qualifier;
+  };
+  
+  /**
+   * An access modifier is a declaration of the visibility of
+   * an object.  If it is not specified, it is presumed to
+   * be public.  If it is specified, then the protection will
+   * be evaluated by the namespace system according to where
+   * it is referenced with respect to where it is declared.
+   */
+  class AccessModifier : public JLang::frontend::ast::SyntaxNode {
+  public:
+    typedef enum {
+      /**
+       * Indicates that this value can be accessed from anywhere.
+       */
+      PUBLIC,
+      /**
+       * Indicates that this value can be accessed from within
+       * the context of the parent class or namespace.
+       */
+      PROTECTED,
+      /**
+       * Indicates that this value can only be accessed from
+       * within the current class or namespace.
+       */
+      PRIVATE
+    } AccessModifierType;
+    /**
+     * Constructs an access modifier for the given
+     * terminal which will be either PUBLIC, PROTECTED, or PRIVATE.
+     */
+    AccessModifier(::JLang::owned<Terminal> _modifier);
+    /**
+     * This is the default constructor used when the
+     * access modifier is not explicitly specified in the
+     * source file (i.e. optional).
+     */
+    AccessModifier();
+    /**
+     * Destructor, nothing special.
+     */
+    ~AccessModifier();
+    /**
+     * Returns the type of modifier applied.
+     */
+    const AccessModifierType & get_type() const;
+  private:
+    AccessModifierType type;
+    ::JLang::owned<Terminal> modifier;
+  };
 
-    class UnsafeModifier : public JLang::frontend::ast::SyntaxNode {
-    public:
-      UnsafeModifier(::JLang::owned<Terminal> _unsafe_token);
-      UnsafeModifier();
-      ~UnsafeModifier();
-      bool is_unsafe() const;
-    private:
-      ::JLang::owned<Terminal> unsafe_token;
-      
-    };
+  /**
+   * This is used to mark a function or a scope block as making
+   * use of unsafe language features.  This is inspired by the Rust
+   * keyword of the same name.  The semantics are such that
+   * unsafe blocks may use unsafe language features such as
+   * access to raw pointers, but the programmer is expected
+   * to make sure that the access is safe in practice even if
+   * the compiler cannot prove this.  Functions declared as unsafe
+   * may also only be used inside unsafe blocks, so that the
+   * unsafe code may be contained to only specifically marked
+   * areas of the code.
+   */
+  class UnsafeModifier : public JLang::frontend::ast::SyntaxNode {
+  public:
+    /**
+     * Constructs an unsafe modifier from the parse token
+     * in the input.  This indicates that a block HAS been marked
+     * as unsafe.
+     */
+    UnsafeModifier(::JLang::owned<Terminal> _unsafe_token);
+    /**
+     * The default unsafe modifier (i.e. not specified) refers
+     * to a block that is NOT marked as unsafe.
+     */
+    UnsafeModifier();
+    /**
+     * Destructor, nothing special.
+     */
+    ~UnsafeModifier();
+    /**
+     * Returns true if the block or function has been marked
+     * as unsafe.
+     */
+    bool is_unsafe() const;
+  private:
+    ::JLang::owned<Terminal> unsafe_token;
+  };
 
-    class TypeName : public JLang::frontend::ast::SyntaxNode {
-    public:
-      TypeName(::JLang::owned<Terminal> _type_name);
-      TypeName(::JLang::owned<Terminal> _typeof_token,
-               ::JLang::owned<Terminal> _paren_l_token,
-               ::JLang::owned<Expression> _expression,
-               ::JLang::owned<Terminal> _paren_r_token
-               );
-      ~TypeName();
-      bool is_expression() const;
-      const std::string & get_name() const;
-      const Expression & get_expression() const;
-    private:
-      bool m_is_expression;
-      // For raw names
-      ::JLang::owned<Terminal> type_name;
-      // for typeof expressions
-      ::JLang::owned<Terminal> typeof_token;
-      ::JLang::owned<Terminal> paren_l_token;
-      ::JLang::owned<Expression> expression;
-      ::JLang::owned<Terminal> paren_r_token;
-    };
+  class TypeName : public JLang::frontend::ast::SyntaxNode {
+  public:
+    TypeName(::JLang::owned<Terminal> _type_name);
+    TypeName(::JLang::owned<Terminal> _typeof_token,
+             ::JLang::owned<Terminal> _paren_l_token,
+             ::JLang::owned<Expression> _expression,
+             ::JLang::owned<Terminal> _paren_r_token
+             );
+    ~TypeName();
+    bool is_expression() const;
+    const std::string & get_name() const;
+    const Expression & get_expression() const;
+  private:
+    bool m_is_expression;
+    // For raw names
+    ::JLang::owned<Terminal> type_name;
+    // for typeof expressions
+    ::JLang::owned<Terminal> typeof_token;
+    ::JLang::owned<Terminal> paren_l_token;
+    ::JLang::owned<Expression> expression;
+    ::JLang::owned<Terminal> paren_r_token;
+  };
     
     class TypeSpecifierCallArgs : public JLang::frontend::ast::SyntaxNode {
     public:

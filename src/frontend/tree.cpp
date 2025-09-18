@@ -5,6 +5,8 @@ using namespace JLang::frontend::ast;
 using namespace JLang::frontend::tree;
 
 ///////////////////////////////////////////////////
+// Terminal
+///////////////////////////////////////////////////
 Terminal::Terminal(const Token & _token)
   : SyntaxNode("terminal", this)
   , token(_token)
@@ -32,8 +34,8 @@ Terminal::set_fully_qualified_name(std::string _name)
 { fully_qualified_name = _name; }
 
 ///////////////////////////////////////////////////
-
-
+// TerminalNonSyntax
+///////////////////////////////////////////////////
 TerminalNonSyntax::TerminalNonSyntax(TerminalNonSyntax::Type _type, const Token & _token)
   : type(_type)
   , token(_token)
@@ -52,16 +54,26 @@ TerminalNonSyntax::get_data() const
 }
 
 ///////////////////////////////////////////////////
-AccessQualifier::AccessQualifier(AccessQualifier::AccessQualifierType _type)
+// AccessQualifier
+///////////////////////////////////////////////////
+AccessQualifier::AccessQualifier()
   : SyntaxNode("access_qualifier", this)
-  , type(_type)
+  , type(JLang::frontend::tree::AccessQualifier::AccessQualifierType::UNSPECIFIED)
   , qualifier(nullptr)
 {}
-AccessQualifier::AccessQualifier(::JLang::owned<Terminal> _qualifier, AccessQualifierType _type)
+AccessQualifier::AccessQualifier(::JLang::owned<Terminal> _qualifier)
   : SyntaxNode("access_qualifier", this)
-  , type(_type)
   , qualifier(std::move(_qualifier))
 {
+  if (qualifier->get_value() == "volatile") {
+    type = JLang::frontend::tree::AccessQualifier::AccessQualifierType::VOLATILE;
+  }
+  else if (qualifier->get_value() == "const") {
+    type = JLang::frontend::tree::AccessQualifier::AccessQualifierType::CONST;
+  }
+  else {
+    type = JLang::frontend::tree::AccessQualifier::AccessQualifierType::UNSPECIFIED;
+  }
   add_child(*qualifier);
 }
 AccessQualifier::~AccessQualifier()
@@ -71,17 +83,30 @@ AccessQualifier::get_type() const
 { return type; }
 
 ///////////////////////////////////////////////////
-AccessModifier::AccessModifier(::JLang::owned<Terminal> _modifier, AccessModifier::AccessModifierType _type)
+// AccessModifier
+///////////////////////////////////////////////////
+AccessModifier::AccessModifier(::JLang::owned<Terminal> _modifier)
   : SyntaxNode("access_modifier", this)
   , modifier(std::move(_modifier))
-  , type(_type)
 {
+  if (modifier->get_value() == "public") {
+    type = JLang::frontend::tree::AccessModifier::AccessModifierType::PUBLIC;
+  }
+  else if (modifier->get_value() == "protected") {
+    type = JLang::frontend::tree::AccessModifier::AccessModifierType::PROTECTED;
+  }
+  else if (modifier->get_value() == "private") {
+    type = JLang::frontend::tree::AccessModifier::AccessModifierType::PRIVATE;
+  }
+  else {
+    type = JLang::frontend::tree::AccessModifier::AccessModifierType::PUBLIC;
+  }
   add_child(*modifier);
 }
-AccessModifier::AccessModifier(AccessModifier::AccessModifierType _type)
+AccessModifier::AccessModifier()
   : SyntaxNode("access_modifier", this)
   , modifier(nullptr)
-  , type(_type)
+  , type(JLang::frontend::tree::AccessModifier::AccessModifierType::PUBLIC)
 {}
 AccessModifier::~AccessModifier()
 {}
@@ -91,8 +116,8 @@ AccessModifier::get_type() const
   return type;
 }
 ///////////////////////////////////////////////////
-
-
+// UnsafeModifier
+///////////////////////////////////////////////////
 UnsafeModifier::UnsafeModifier()
   : SyntaxNode("unsafe_modifier", this)
   , unsafe_token(nullptr)

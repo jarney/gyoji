@@ -61,13 +61,13 @@ int main(int argc, char **argv)
     ASSERT_INT_EQUAL(4, parse_result->get_errors().get(0).get(0).get_line(), "Error should appear on line 4");
   }
 
-  // A single typedef
+  // Check typedefs and associated modifiers.
   {
     auto parse_result = parse(path, "tests/syntax-typedef.j");
     ASSERT_NOT_NULL(parse_result, "File should parse correctly.");
     ASSERT_TRUE(parse_result->has_translation_unit(), "We should have a translation unit");
-    ASSERT_INT_EQUAL(1, parse_result->get_translation_unit().get_statements().size(), "This should have one typedef");
-    
+    ASSERT_INT_EQUAL(4, parse_result->get_translation_unit().get_statements().size(), "This should have 4 typedefs");
+    {    
     const auto & statement_type = parse_result->get_translation_unit().get_statements().at(0)->get_statement();
     ASSERT_TRUE(std::holds_alternative<::JLang::owned<TypeDefinition>>(statement_type), "This should be a typedef");
 
@@ -76,6 +76,37 @@ int main(int argc, char **argv)
 
     const auto & access_modifier = type_definition->get_access_modifier();
     ASSERT_INT_EQUAL(AccessModifier::PUBLIC, access_modifier.get_type(), "We expect this to be public by default");
+    }
+    {
+    const auto & statement_type = parse_result->get_translation_unit().get_statements().at(1)->get_statement();
+    ASSERT_TRUE(std::holds_alternative<::JLang::owned<TypeDefinition>>(statement_type), "This should be a typedef");
+
+    const auto & type_definition = std::get<::JLang::owned<TypeDefinition>>(statement_type);
+    ASSERT("public_char", type_definition->get_name(), "We expect that we are defining 'char'");
+
+    const auto & access_modifier = type_definition->get_access_modifier();
+    ASSERT_INT_EQUAL(AccessModifier::PUBLIC, access_modifier.get_type(), "We expect this to be public by default");
+    }
+    {
+    const auto & statement_type = parse_result->get_translation_unit().get_statements().at(2)->get_statement();
+    ASSERT_TRUE(std::holds_alternative<::JLang::owned<TypeDefinition>>(statement_type), "This should be a typedef");
+
+    const auto & type_definition = std::get<::JLang::owned<TypeDefinition>>(statement_type);
+    ASSERT("protected_char", type_definition->get_name(), "We expect that we are defining 'char'");
+
+    const auto & access_modifier = type_definition->get_access_modifier();
+    ASSERT_INT_EQUAL(AccessModifier::PROTECTED, access_modifier.get_type(), "We expect this to be protected.");
+    }
+    {
+    const auto & statement_type = parse_result->get_translation_unit().get_statements().at(3)->get_statement();
+    ASSERT_TRUE(std::holds_alternative<::JLang::owned<TypeDefinition>>(statement_type), "This should be a typedef");
+
+    const auto & type_definition = std::get<::JLang::owned<TypeDefinition>>(statement_type);
+    ASSERT("private_char", type_definition->get_name(), "We expect that we are defining 'char'");
+
+    const auto & access_modifier = type_definition->get_access_modifier();
+    ASSERT_INT_EQUAL(AccessModifier::PRIVATE, access_modifier.get_type(), "We expect this to be public by default");
+    }
   }
   
   printf("PASSED\n");

@@ -505,14 +505,13 @@ struct_initializer
 
 opt_access_modifier
         : /**/ {
-                $$ = std::make_unique<JLang::frontend::tree::AccessModifier>(
-                                                                             JLang::frontend::tree::AccessModifier::AccessModifierType::PUBLIC);
+                $$ = std::make_unique<JLang::frontend::tree::AccessModifier>();
+                                                                             
                 PRINT_NONTERMINALS($$);
         }
         | access_modifier {
                 $$ = std::make_unique<JLang::frontend::tree::AccessModifier>(
-                                                                             std::move($1),
-                                                                             JLang::frontend::tree::AccessModifier::AccessModifierType::PUBLIC
+                                                                             std::move($1)
                                                                              );
                 PRINT_NONTERMINALS($$);
         }
@@ -2041,22 +2040,18 @@ class_member_declaration
 
 type_access_qualifier
         : /**/ {
-                $$ = std::make_unique<JLang::frontend::tree::AccessQualifier>(
-                                                                              JLang::frontend::tree::AccessQualifier::AccessQualifierType::UNSPECIFIED
-                                                                              );
+                $$ = std::make_unique<JLang::frontend::tree::AccessQualifier>();
                 PRINT_NONTERMINALS($$);
         }
         | CONST {
                 $$ = std::make_unique<JLang::frontend::tree::AccessQualifier>(
-                                                                              std::move($1),
-                                                                              JLang::frontend::tree::AccessQualifier::AccessQualifierType::CONST
+                                                                              std::move($1)
                                                                               );
                 PRINT_NONTERMINALS($$);
         }
         | VOLATILE {
                 $$ = std::make_unique<JLang::frontend::tree::AccessQualifier>(
-                                                                                 std::move($1),
-                                                                                 JLang::frontend::tree::AccessQualifier::AccessQualifierType::VOLATILE
+                                                                                 std::move($1)
                                                                                  );
                 PRINT_NONTERMINALS($$);
         }
