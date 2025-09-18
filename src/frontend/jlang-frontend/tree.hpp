@@ -148,6 +148,7 @@ namespace JLang::frontend::tree {
    * * Function Definition : Definition of a function along with the statements that make it up.
    * * Function Declaration : Declaration of a function (a.k.a. a prototype).
    * * Global Definition : Definition of a global variable.
+   * * Class Declaration : Forward declaration of a class with an incomplete type.
    * * Class Definition : Definition of a composite type with associated methods.
    * * Enum Definition : Definition of an enumerated list of symbolic values.
    * * Type Definition : Definition (usually an alias) for a primitive or class type.
@@ -160,6 +161,7 @@ namespace JLang::frontend::tree {
             ::JLang::owned<FileStatementFunctionDefinition>,
             ::JLang::owned<FileStatementFunctionDeclaration>,
             ::JLang::owned<FileStatementGlobalDefinition>,
+            ::JLang::owned<ClassDeclaration>,
             ::JLang::owned<ClassDefinition>,
             ::JLang::owned<EnumDefinition>,
             ::JLang::owned<TypeDefinition>,
@@ -1706,7 +1708,29 @@ namespace JLang::frontend::tree {
     private:
       std::vector<::JLang::owned<ClassMemberDeclaration>> members;
     };
-          
+
+  /**
+   * This is a forward declaration of a class which declares the
+   * existence of a class, but does not specify the details of it.
+   */
+  class ClassDeclaration : public JLang::frontend::ast::SyntaxNode {
+  public:
+    ClassDeclaration(
+                     ::JLang::owned<ClassDeclStart> _class_decl_start,
+                     ::JLang::owned<Terminal> _semicolon_token
+                     );
+    /**
+     * Destructor, nothing special.
+     */
+    ~ClassDeclaration();
+    const AccessModifier & get_access_modifier() const;
+    const std::string & get_name() const;
+    const ClassArgumentList & get_argument_list() const;
+  private:
+    ::JLang::owned<ClassDeclStart> class_decl_start;
+    ::JLang::owned<Terminal> semicolon_token;
+  };
+  
     class ClassDefinition : public JLang::frontend::ast::SyntaxNode {
     public:
       ClassDefinition(

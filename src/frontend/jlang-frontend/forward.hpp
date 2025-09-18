@@ -58,6 +58,7 @@ namespace JLang::frontend::tree {
         class ClassMemberDeclarationConstructor;
         class ClassMemberDeclarationDestructor;
   class ClassDefinition;
+  class ClassDeclaration;
     
   class TypeDefinition;
 
@@ -151,6 +152,7 @@ namespace JLang::frontend::tree {
         JLang::frontend::tree::    ClassMemberDeclaration*,                 \
         JLang::frontend::tree::  ClassMemberDeclarationList*,               \
         JLang::frontend::tree::ClassDefinition*,                            \
+        JLang::frontend::tree::ClassDeclaration*,                           \
         JLang::frontend::tree::TypeDefinition*,                             \
         JLang::frontend::tree::    EnumDefinitionValue*,                    \
         JLang::frontend::tree::  EnumDefinitionValueList*,                  \

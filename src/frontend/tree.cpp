@@ -1262,6 +1262,36 @@ ClassMemberDeclarationList::add_member(::JLang::owned<ClassMemberDeclaration> _m
   members.push_back(std::move(_member));
 }
 ///////////////////////////////////////////////////
+ClassDeclaration::ClassDeclaration(
+                      ::JLang::owned<ClassDeclStart> _class_decl_start,
+                      ::JLang::owned<Terminal> _semicolon_token
+                      )
+  : SyntaxNode("class_declaration", this)
+  , class_decl_start(std::move(_class_decl_start))
+  , semicolon_token(std::move(_semicolon_token))
+{
+  add_child(*class_decl_start);
+  add_child(*semicolon_token);
+}
+ClassDeclaration::~ClassDeclaration()
+{}
+const AccessModifier &
+ClassDeclaration::get_access_modifier() const
+{
+  return class_decl_start->get_access_modifier();
+}
+const std::string &
+ClassDeclaration::get_name() const
+{
+  return class_decl_start->get_name();
+}
+const ClassArgumentList &
+ClassDeclaration::get_argument_list() const
+{
+  return class_decl_start->get_argument_list();
+}
+
+///////////////////////////////////////////////////
 ClassDefinition::ClassDefinition(
                       ::JLang::owned<ClassDeclStart> _class_decl_start,
                       ::JLang::owned<Terminal> _brace_l_token,

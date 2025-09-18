@@ -156,6 +156,7 @@ int visibility_from_modifier(JLang::frontend::tree::AccessModifier::AccessModifi
 %nterm <::JLang::owned<JLang::frontend::tree::FileStatementFunctionDeclaration>> file_statement_function_declaration;
 %nterm <::JLang::owned<JLang::frontend::tree::TypeDefinition>> type_definition;
 %nterm <::JLang::owned<JLang::frontend::tree::ClassDefinition>> class_definition;
+%nterm <::JLang::owned<JLang::frontend::tree::ClassDeclaration>> class_declaration;
 %nterm <::JLang::owned<JLang::frontend::tree::ClassDeclStart>> class_decl_start;
 %nterm <::JLang::owned<JLang::frontend::tree::ClassArgumentList>> opt_class_argument_list;
 %nterm <::JLang::owned<JLang::frontend::tree::ClassArgumentList>> class_argument_list;
@@ -352,6 +353,14 @@ file_statement
                                                                                std::move($1),
                                                                                sn
                                                                                );
+                PRINT_NONTERMINALS($$);
+        }
+        | class_declaration {
+                const JLang::frontend::ast::SyntaxNode &sn = *($1);
+                $$ = std::make_unique<JLang::frontend::tree::FileStatement>(
+                                                                            std::move($1),
+                                                                            sn
+                                                                            );
                 PRINT_NONTERMINALS($$);
         }
         | class_definition {
@@ -627,6 +636,10 @@ file_statement_using
         }
         ;
 
+// If this is the first time we see the declaration,
+// it will be an identifier.  Once the class has been
+// seen before (forward-declared), it will then become
+// a type instead of an identifier.
 class_decl_start
         : opt_access_modifier CLASS IDENTIFIER opt_class_argument_list {
                 std::string class_name = $3->get_value();
@@ -654,6 +667,18 @@ class_decl_start
                 }
 #endif
                 PRINT_NONTERMINALS($$);
+        }
+        | opt_access_modifier CLASS TYPE_NAME opt_class_argument_list {
+                std::string class_name = $3->get_value();
+                JLang::frontend::tree::AccessModifier::AccessModifierType visibility_modifier = $1->get_type();
+                $$ = std::make_unique<JLang::frontend::tree::ClassDeclStart>(
+                                                                         std::move($1),
+                                                                         std::move($2),
+                                                                         std::move($3),
+                                                                         std::move($4)
+                                                                         );
+                return_data.namespace_context->namespace_new(class_name, Namespace::TYPE_CLASS, visibility_from_modifier(visibility_modifier));
+                return_data.namespace_context->namespace_push(class_name);
         }
         ;
 
@@ -683,6 +708,17 @@ class_argument_list
         | class_argument_list COMMA IDENTIFIER {
                 $$ = std::move($1);
                 $$->add_argument(std::move($2), std::move($3));
+                PRINT_NONTERMINALS($$);
+        }
+        ;
+
+// Forwar-declaration of a class.
+class_declaration
+        : class_decl_start SEMICOLON {
+                $$ = std::make_unique<JLang::frontend::tree::ClassDeclaration>(std::move($1),
+                                                                         std::move($2)
+                                                                         );
+                return_data.namespace_context->namespace_pop();
                 PRINT_NONTERMINALS($$);
         }
         ;
