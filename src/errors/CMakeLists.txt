@@ -10,8 +10,8 @@ set(JLANG_ERRORS_SOURCES
 add_library(jlang-errors ${JLANG_ERRORS_SOURCES})
 target_include_directories(jlang-errors
     PUBLIC
-            ${PROJECT_SOURCE_DIR}/errors
-            ${PROJECT_SOURCE_DIR}/misc
+            ${PROJECT_SOURCE_DIR}/src/errors
+            ${PROJECT_SOURCE_DIR}/src/misc
 )
 install(
     TARGETS

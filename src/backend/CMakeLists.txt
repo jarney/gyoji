@@ -21,10 +21,10 @@ add_library(jlang-backend ${BACKEND_SOURCES})
 
 target_include_directories(jlang-backend
     PUBLIC
-            ${PROJECT_SOURCE_DIR}/misc
-            ${PROJECT_SOURCE_DIR}/errors
-            ${PROJECT_SOURCE_DIR}/frontend
-            ${PROJECT_SOURCE_DIR}/backend
+            ${PROJECT_SOURCE_DIR}/src/misc
+            ${PROJECT_SOURCE_DIR}/src/errors
+            ${PROJECT_SOURCE_DIR}/src/frontend
+            ${PROJECT_SOURCE_DIR}/src/backend
             ${CMAKE_BINARY_DIR}
     )
 install(

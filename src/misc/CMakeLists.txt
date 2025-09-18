@@ -13,7 +13,7 @@ set(MISC_SOURCES
 add_library(jlang-misc ${MISC_SOURCES})
 target_include_directories(jlang-misc
     PUBLIC
-            ${PROJECT_SOURCE_DIR}/misc
+            ${PROJECT_SOURCE_DIR}/src/misc
 )
 install(
     TARGETS

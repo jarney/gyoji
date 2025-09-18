@@ -1,20 +1,22 @@
 
-all:
+all: build/Makefile
 	cd build; $(MAKE)
 
-docs:
+docs: build/Makefile
 	echo "Checking?"
 	cd build; $(MAKE) docs
 
-test:
+test: build/Makefile
 	cd build; $(MAKE) all; $(MAKE) test
 
-clean:
+clean: build/Makefile
 	cd build; $(MAKE) clean
 	find . -name "*~" -exec rm -f {} \; -print
 
+install: build/Makefile
+	cd build; $(MAKE) install
 
-build/Makefile:
+build/Makefile: CMakeLists.txt
 	mkdir -p build
 	mkdir -p install
 	cmake \

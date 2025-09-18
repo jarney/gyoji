@@ -1,7 +1,7 @@
 set(FRONTEND_INCLUDES
-        ${PROJECT_SOURCE_DIR}/misc
-        ${PROJECT_SOURCE_DIR}/errors
-        ${PROJECT_SOURCE_DIR}/frontend
+        ${PROJECT_SOURCE_DIR}/src/misc
+        ${PROJECT_SOURCE_DIR}/src/errors
+        ${PROJECT_SOURCE_DIR}/src/frontend
         ${CMAKE_BINARY_DIR}
 )
 

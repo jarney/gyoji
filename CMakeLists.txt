@@ -33,47 +33,27 @@ else (DOXYGEN_FOUND)
 endif (DOXYGEN_FOUND)
 
 
-# We need flex and bison
-# in order to build the parser.
+# 
+# We need bison to build the grammar/yacc file.
+#
 find_package(BISON)
+if (BISON_FOUND)
+  message("Bison was found...")
+else (BISON_FOUND)
+  message("Bison is needed to build the grammar.")
+endif (BISON_FOUND)
+
+#
+# We need flex to build the lexer.
+#
 find_package(FLEX)
+if (FLEX_FOUND)
+  message("Flex found...")
+else (FLEX_FOUND)
+  message("Flex is needed to build the token lexer.")
+endif (FLEX_FOUND)
 
 enable_testing()
 
-add_subdirectory(misc)
-add_subdirectory(errors)
-add_subdirectory(frontend)
-add_subdirectory(backend)
-#add_subdirectory(codegen)
-
-add_executable(cparse main.cpp)
-
-target_include_directories(cparse
-    PUBLIC
-        misc
-        errors
-        frontend
-        backend
-        codegen
-	/usr/include/llvm-18
-	/usr/include/llvm-c-18
-)
-
-#        jlang-codegen
-target_link_libraries(cparse
-    PUBLIC
-        jlang-backend
-        jlang-frontend
-        jlang-errors
-        jlang-misc
-	-L/usr/lib/llvm-18/lib -lLLVM-18
-)
-
-add_test(NAME test-syntax COMMAND ${CMAKE_SOURCE_DIR}/test-syntax.sh ${CMAKE_BINARY_DIR} ${CMAKE_SOURCE_DIR})
-
-install(
-    TARGETS
-        cparse
-        RUNTIME DESTINATION bin
-)
+add_subdirectory(src)
 
