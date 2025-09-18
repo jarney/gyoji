@@ -6,6 +6,7 @@
 #include <map>
 #include <vector>
 
+#include <jlang-misc/pointers.hpp>
 /*!
  *  \addtogroup Frontend
  *  @{
@@ -78,18 +79,48 @@ namespace JLang::frontend::namespaces {
     static constexpr int VISIBILITY_PROTECTED = 1;       // Visible inside the same namespace.
     static constexpr int VISIBILITY_PRIVATE = 2;         // Visible inside the same class.
 
+    /**
+     * Returns the type of the namespace.  This will be one of:
+     *             * TYPE_NAMESPACE : A nested namespace.
+     *             * TYPE_TYPEDEF : Aliases for other types.
+     *             * TYPE_CLASS : Composite types.
+     */
     int get_type() const;
+    /**
+     * Returns the visibility of the namespace.  This will be
+     * one of:
+     *             * VISIBILITY_PUBLIC : Visible to anyone.
+     *             * VISIBILITY_PROTECTED : Visible inside the parent's namespace.
+     *             * VISIBILITY_PRIVATE : Visible inside the same namespace only.
+     *
+     */
     int get_visibility() const;
     
-    // include when resolving from within the context of this namespace.
+    /**
+     * Returns the fully-qualified namespace of the
+     * parent namespace.
+     */
     std::string fully_qualified_ns(void);            // Fully qualified namespace of our parent.
+    /**
+     * Returns the fully qualified namespace
+     * of this namespace node, type, or class.
+     */
     std::string fully_qualified(void);               // Fully qualified namespace of ourself.
-    
+
+    /**
+     *
+     * This returns the effective visibility
+     * of the current namespace by taking into
+     * account the visibility of all of our parents.
+     * In other words, if one of our parents is private
+     * then we are also private because in theory,
+     * the entirety of our parent lineage is marked private.
+     *
+     */
     int effective_visibility(void);                  // Walk up to the root and look for the 'minimum' visibility among all parents.
-    typedef std::shared_ptr<Namespace> ptr;
 
     Namespace(std::string _name, int _type, int _visibility);
-    Namespace(std::string _name, int _type, int _visibility, Namespace::ptr _parent);
+    Namespace(std::string _name, int _type, int _visibility, Namespace* _parent);
     ~Namespace();
     
     friend JLang::frontend::namespaces::NamespaceContext;
@@ -105,7 +136,7 @@ namespace JLang::frontend::namespaces {
     // to tell us what the 'true' name of the
     // type is. MAYBE WE DON'T NEED!!!!
     /////////////////////////////
-    Namespace::ptr parent;                           // Parent, == NULL for root.
+    Namespace* parent;                           // Parent, == NULL for root.
     
     int type;
 
@@ -113,9 +144,9 @@ namespace JLang::frontend::namespaces {
 
     std::string name;                                // Name of the namespace.
     
-    std::map<std::string, Namespace::ptr> children;  // This is the list of child namespaces.
+    std::map<std::string, JLang::owned<Namespace>> children;  // This is the list of child namespaces.
     
-    std::map<std::string, Namespace::ptr> aliases;   // This is a list of other namespaces to
+    std::map<std::string, Namespace*> aliases;   // This is a list of other namespaces to
   };
   
   /**
@@ -133,9 +164,9 @@ namespace JLang::frontend::namespaces {
     static constexpr int REASON_NOT_FOUND = 3;           // Not found anywhere.
     
     int reason;
-    Namespace::ptr location;
+    Namespace* location;
     NamespaceFoundReason(int _reason);
-    NamespaceFoundReason(int _reason, Namespace::ptr _location);
+    NamespaceFoundReason(int _reason, Namespace* _location);
     ~NamespaceFoundReason();
   };
   
@@ -193,7 +224,7 @@ namespace JLang::frontend::namespaces {
      *             * VISIBILITY_PROTECTED : Visible inside the parent's namespace.
      *             * VISIBILITY_PRIVATE : Visible inside the same namespace only.
      */
-    Namespace::ptr namespace_new(std::string name, int type, int visibility);
+    Namespace* namespace_new(std::string name, int type, int visibility);
     
     /**
      * Moves the resolution context into the given
@@ -215,6 +246,15 @@ namespace JLang::frontend::namespaces {
     void namespace_pop();
     
     /**
+     * Returns a pointer to the namespace
+     * that is current as of where the parse
+     * is during the resolution.
+     * For example, after "namespace foo { namespace bar",
+     * this will return a pointer to the 'bar' namespace.
+     */
+    Namespace* current();
+
+    /**
      * When we define a 'using', we're really just
      * defining an alias to another namespace.
      * This 'using' will be added in the current namespace's context.
@@ -224,7 +264,7 @@ namespace JLang::frontend::namespaces {
      * any namespaces in the 'using' list will be searched
      * as well.
      */
-    void namespace_using(std::string name, Namespace::ptr alias);
+    void namespace_using(std::string name, Namespace* alias);
     
     /**
      * This returns the type resolved by the
@@ -260,15 +300,6 @@ namespace JLang::frontend::namespaces {
     std::string namespace_fully_qualified();
 
     /**
-     * Returns a pointer to the namespace
-     * that is current as of where the parse
-     * is during the resolution.
-     * For example, after "namespace foo { namespace bar",
-     * this will return a pointer to the 'bar' namespace.
-     */
-    Namespace::ptr current();
-
-    /**
      * This is used for debugging namespace
      * resolution by dumping the entire
      * namespace tree to stdout.
@@ -280,7 +311,7 @@ namespace JLang::frontend::namespaces {
      * resolution by dumping the given namespace
      * tree to stdout.
      */
-    void namespace_dump_node(Namespace::ptr parent);
+    void namespace_dump_node(Namespace* parent);
     
     /**
      * This is used internally to search for namespace matches
@@ -290,17 +321,17 @@ namespace JLang::frontend::namespaces {
      * matched namespace or may return nullptr if no match
      * is found.
      */
-    Namespace::ptr namespace_lookup_qualified(std::vector<std::string> name_qualified, Namespace::ptr root);
+    Namespace* namespace_lookup_qualified(std::vector<std::string> name_qualified, Namespace* root);
 
     /**
      * This is used internally by namespace_lookup to search the various
      * possible places where a namespace can be found and
      * evaluating the matches against the visibility rules.
      */
-    NamespaceFoundReason::ptr namespace_lookup_visibility(std::string search_context, Namespace::ptr resolved_name);
+    NamespaceFoundReason::ptr namespace_lookup_visibility(std::string search_context, Namespace* resolved_name);
     
-    Namespace::ptr root;
-    std::list<Namespace::ptr> stack;
+    JLang::owned<Namespace> root;
+    std::list<Namespace*> stack;
 
     
   };

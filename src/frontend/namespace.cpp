@@ -9,7 +9,7 @@ NamespaceFoundReason::NamespaceFoundReason(int _reason)
   , location(nullptr)
 {}
 
-NamespaceFoundReason::NamespaceFoundReason(int _reason, Namespace::ptr _location)
+NamespaceFoundReason::NamespaceFoundReason(int _reason, Namespace* _location)
   : reason(_reason)
   , location(_location)
 {}
@@ -23,7 +23,7 @@ Namespace::Namespace(std::string _name, int _type, int _visibility)
   , visibility(_visibility)
   , parent(nullptr)
 {}
-Namespace::Namespace(std::string _name, int _type, int _visibility, Namespace::ptr _parent)
+Namespace::Namespace(std::string _name, int _type, int _visibility, Namespace* _parent)
   : name(_name)
   , type(_type)
   , visibility(_visibility)
@@ -37,7 +37,7 @@ Namespace::~Namespace()
 int Namespace::effective_visibility(void)
 {
   int current_visibility = visibility;
-  Namespace::ptr current = parent;
+  Namespace* current = parent;
   while (current) {
     if (current->visibility > current_visibility) {
       current_visibility = current->visibility;
@@ -54,7 +54,7 @@ std::string Namespace::fully_qualified_ns(void)
   if (parent == nullptr) {
     return std::string("");
   }
-  Namespace::ptr current = parent;
+  Namespace* current = parent;
   while (current) {
     if (current->name.size() > 0) {
       ret = "::" + current->name + ret;
@@ -81,8 +81,8 @@ Namespace::get_visibility() const
 NamespaceContext::NamespaceContext()
 {
   // This is the root namespace.
-  root = std::make_shared<Namespace>("", Namespace::TYPE_NAMESPACE, Namespace::VISIBILITY_PUBLIC);
-  stack.push_back(root);
+  root = std::make_unique<Namespace>("", Namespace::TYPE_NAMESPACE, Namespace::VISIBILITY_PUBLIC);
+  stack.push_back(root.get());
 
   // XXX Definitely not the place to do this, but
   // it's a good enough place for now that I don't care
@@ -106,23 +106,23 @@ NamespaceContext::NamespaceContext()
 NamespaceContext::~NamespaceContext()
 {}
 
-Namespace::ptr NamespaceContext::namespace_new(std::string name, int type, int visibility)
+Namespace* NamespaceContext::namespace_new(std::string name, int type, int visibility)
 {
-  Namespace::ptr current = stack.back();
-  Namespace::ptr new_namespace = std::make_shared<Namespace>(name, type, visibility, current);
-  current->children[name] = new_namespace;
-  return current;
+  Namespace* current = stack.back();
+  JLang::owned<Namespace> new_namespace = std::make_unique<Namespace>(name, type, visibility, current);
+  current->children.insert(std::pair(name, std::move(new_namespace)));
+  return new_namespace.get();
 }
 
 void NamespaceContext::namespace_push(std::string ns)
 {
-  Namespace::ptr current = stack.back();
+  Namespace* current = stack.back();
   auto it = current->children.find(ns);
   if (it == current->children.end()) {
     fprintf(stderr, "Error, trying to push non-existent namespace\n");
     return;
   }
-  stack.push_back(it->second);
+  stack.push_back(it->second.get());
 }
 
 void NamespaceContext::namespace_pop()
@@ -130,15 +130,15 @@ void NamespaceContext::namespace_pop()
   stack.pop_back();
 }
 
-void NamespaceContext::namespace_using(std::string name, Namespace::ptr alias)
+void NamespaceContext::namespace_using(std::string name, Namespace* alias)
 {
-  Namespace::ptr current = stack.back();
+  Namespace* current = stack.back();
   current->aliases[name] = alias;
 }
 
-Namespace::ptr NamespaceContext::namespace_lookup_qualified(std::vector<std::string> name_qualified, Namespace::ptr root)
+Namespace* NamespaceContext::namespace_lookup_qualified(std::vector<std::string> name_qualified, Namespace* root)
 {
-  Namespace::ptr current = root;
+  Namespace* current = root;
   auto it = name_qualified.begin();
   while (it != name_qualified.end()) {
     // Try to find it in the
@@ -147,14 +147,14 @@ Namespace::ptr NamespaceContext::namespace_lookup_qualified(std::vector<std::str
     if (found_child == current->children.end()) {
       return nullptr;
     }
-    current = found_child->second;
+    current = found_child->second.get();
     ++it;
   }
   return current;
 }
 
 NamespaceFoundReason::ptr
-NamespaceContext::namespace_lookup_visibility(std::string search_context, Namespace::ptr found)
+NamespaceContext::namespace_lookup_visibility(std::string search_context, Namespace* found)
 {
   if (!found) {
     return std::make_shared<NamespaceFoundReason>(NamespaceFoundReason::REASON_NOT_FOUND);
@@ -167,7 +167,7 @@ NamespaceContext::namespace_lookup_visibility(std::string search_context, Namesp
   }
 
   if (effective_visibility == Namespace::VISIBILITY_PROTECTED) {
-    Namespace::ptr found_parent = found->parent;
+    Namespace* found_parent = found->parent;
     std::string found_context = found_parent->fully_qualified_ns();
     // If it's protected, we need to make sure that the full path
     // of what's found is a parent of our current location.
@@ -215,7 +215,7 @@ NamespaceFoundReason::ptr NamespaceContext::namespace_lookup(std::string name)
   // from the root without any 'using' qualifiers.
   if (name_qualified.begin()->size() == 0) {
     name_qualified.erase(name_qualified.begin());
-    Namespace::ptr found = namespace_lookup_qualified(name_qualified, root);
+    Namespace* found = namespace_lookup_qualified(name_qualified, root.get());
     if (!found) {
       return std::make_shared<NamespaceFoundReason>(NamespaceFoundReason::REASON_NOT_FOUND);
     }
@@ -225,7 +225,7 @@ NamespaceFoundReason::ptr NamespaceContext::namespace_lookup(std::string name)
   // Otherwise, we start with the current namespace
   // and look for it there.  If we find it,
   // it's allowed to be resolved no matter the visibility.
-  Namespace::ptr current = nullptr;
+  Namespace* current = nullptr;
   
   // Finally, try looking for it in the children of each
   // of the aliases, starting with the current and walking
@@ -233,13 +233,13 @@ NamespaceFoundReason::ptr NamespaceContext::namespace_lookup(std::string name)
   // at the aliases of each parent.
   for (auto it = stack.rbegin(); it != stack.rend(); ++it) {
     current = *it;
-    Namespace::ptr found = namespace_lookup_qualified(name_qualified, current);
+    Namespace* found = namespace_lookup_qualified(name_qualified, current);
     if (found) {
       return namespace_lookup_visibility(namespace_lookup_context, found);
     }
   
     for (auto alias_ns_it : current->aliases) {
-      Namespace::ptr alias_ns = alias_ns_it.second;
+      Namespace* alias_ns = alias_ns_it.second;
       
       std::string new_name = string_replace_start(name, alias_ns_it.first + std::string("::"), std::string());
       std::vector<std::string> new_name_qualified = string_split(new_name, std::string("::"));
@@ -257,7 +257,7 @@ NamespaceFoundReason::ptr NamespaceContext::namespace_lookup(std::string name)
   
 }
 
-Namespace::ptr NamespaceContext::current()
+Namespace* NamespaceContext::current()
 {
   return stack.back();
 }
@@ -280,13 +280,13 @@ static void print_indent(void)
     printf(" ");
   }
 }
-void NamespaceContext::namespace_dump_node(Namespace::ptr parent)
+void NamespaceContext::namespace_dump_node(Namespace* parent)
 {
   print_indent();
   printf("<namespace name='%s'>\n", parent->name.c_str());
   indent++;
-  for (auto ns : parent->children) {
-    namespace_dump_node(ns.second);
+  for (const auto & ns : parent->children) {
+    namespace_dump_node(ns.second.get());
   }
   for (auto alias : parent->aliases) {
     print_indent();
@@ -303,6 +303,6 @@ void NamespaceContext::namespace_dump()
     printf("!!! root was null\n");
     return;
   }
-  namespace_dump_node(root);
+  namespace_dump_node(root.get());
 }
 
