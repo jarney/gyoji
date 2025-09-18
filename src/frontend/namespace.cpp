@@ -70,6 +70,14 @@ std::string Namespace::fully_qualified(void)
   return fully_qualified_ns() + std::string("::") + name;
 }
 
+int
+Namespace::get_type() const
+{ return type; }
+
+int
+Namespace::get_visibility() const
+{ return visibility; }
+
 NamespaceContext::NamespaceContext()
 {
   // This is the root namespace.

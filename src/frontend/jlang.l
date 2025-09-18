@@ -185,7 +185,7 @@ unsafe {PROCESS_NODE(UNSAFE);}
     NamespaceContext & context = lex_context->namespace_context;
     NamespaceFoundReason::ptr found = context.namespace_lookup(std::string(yytext));
     if (found->reason == NamespaceFoundReason::REASON_FOUND) {
-        if (found->location->type == Namespace::TYPE_NAMESPACE) {
+        if (found->location->get_type() == Namespace::TYPE_NAMESPACE) {
             // When processing a namespace, the NAMESPACE_NAME
             // gives the fully-qualified name of the namespace.
             PROCESS_IDENTIFIER(NAMESPACE_NAME, found->location);

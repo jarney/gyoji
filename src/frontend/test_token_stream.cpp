@@ -28,13 +28,14 @@ parse(std::string & filename)
   }
   ::JLang::owned<NamespaceContext> namespace_context = std::make_unique<NamespaceContext>();
   InputSourceFile input_source(input);
-  Parser parser(std::move(namespace_context));
-  int rc = parser.parse(input_source);
-  if (rc != 0) {
-    fprintf(stderr, "Syntax error : %s\n", filename.c_str());
+  ::JLang::owned<ParseResult> parse_result = 
+      Parser::parse(std::move(namespace_context),
+                    input_source);
+  if (parse_result->has_errors()) {
+    parse_result->get_errors().print();
     return nullptr;
   }
-  ::JLang::owned<ParseResult> parse_result = parser.get_parse_result();
+
   return std::move(parse_result);
 }
 

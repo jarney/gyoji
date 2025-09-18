@@ -207,32 +207,5 @@ namespace JLang::frontend::tree {
         JLang::frontend::tree::      FileStatementNamespace*,                 \
         JLang::frontend::tree::        NamespaceDeclaration*,                 \
         JLang::frontend::tree::      FileStatementUsing*,                     \
-        JLang::frontend::tree::        UsingAs*
-
-//----------------------------
-// Unique pointer types to
-// be used internally to enforce
-// single ownership of these classes
-// in the tree.
-//----------------------------
-  
-  
-  
-
-  
-
-    
-
-
-  
-
-
-  /**
-   * Convenience definition
-   */
-  /**
-   * Convenience definition
-   */
-    
-  
+        JLang::frontend::tree::        UsingAs*  
 };

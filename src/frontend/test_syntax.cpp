@@ -22,9 +22,11 @@ parse(std::string & path, std::string base_filename)
   ::JLang::owned<NamespaceContext> namespace_context = std::make_unique<NamespaceContext>();
   
   InputSourceFile input_source(input);
-  Parser parser(std::move(namespace_context));
-  int rc = parser.parse(input_source);
-  ::JLang::owned<ParseResult> parse_result = parser.get_parse_result();
+  ::JLang::owned<ParseResult> parse_result =
+      Parser::parse(std::move(namespace_context),
+                   input_source
+                   );
+
   return std::move(parse_result);
 }
 

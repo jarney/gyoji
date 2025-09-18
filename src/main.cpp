@@ -48,15 +48,20 @@ int main(int argc, char **argv)
     }
     InputSourceFile input_source(input);
 
-    Parser parser(std::move(namespace_context));
-    int rc = parser.parse(input_source);
-    if (rc != 0) {
-      printf("Syntax error\n");
+    ::JLang::owned<ParseResult> parse_result = 
+        Parser::parse(
+                      std::move(namespace_context),
+                      input_source
+                      );
+    int rc = 0;
+    if (parse_result->has_errors()) {
+      parse_result->get_errors().print();
+      rc = -1;
     }
     else {
-      ::JLang::owned<ParseResult> parse_result = std::move(parser.get_parse_result());
       const TranslationUnit & translation_unit = parse_result->get_translation_unit();
-      rc = backend->process(translation_unit.get_syntax_node());
+      backend->process(translation_unit.get_syntax_node());
+      rc = 0;
     }
     fclose(input);
     return rc;

@@ -23,9 +23,10 @@
 
 
 
-//! This is the top-level namespace for the project.
+//! All aspects of the JLang language belong in this namespace. 
 /*!
- * All features belong in this namespace.
+ * The JLang namespace contains the main components of the
+ * compiler.
  */
 namespace JLang {
     
@@ -35,7 +36,7 @@ namespace JLang {
  *  \addtogroup Frontend
  *  @{
  */
-//! Headline News for the front-end.
+//! This is the front-end to the JLang parser.
 /*!
  * This is the language front-end.
  * The purpose is to take an input
