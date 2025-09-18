@@ -108,20 +108,6 @@ This allows collaboration on the project in a way that brings us closer to the g
 the projects below are things that contribute to the long-term success of the project, so if you're
 interested in working on one of them, please raise an issue and help out.
 
-## Interface to parsing system
-### Purpose
-The purpose of this project is to clean up the interface to the parsing system
-by providing a "Parser" class with a clean interface.  The interface should be
-capable of reading from an arbitrary source (like FILE* or string buffer) and
-should provide the results in terms of strongly typed and weakly typed
-syntax trees.  It should also hold the 'yacc' stuff private (or mark it as private)
-to that the public interface to the parser is simply in terms of input and output
-without exposing the YACC nature of the parser so that we can change it later.
-
-The syntax itself (YACC and LEX) should be factored out into an abstract XML
-file so that we can pre-process it into a document/readme about the syntax
-and document the productions in HTML or whatever.
-
 ## Syntax Testing and verification
 
 ### Purpose:
@@ -145,6 +131,15 @@ Doxygen should be built using the same CMake and tests/CI
 should depend on it so we ensure that we keep the level
 of document coverage high.  This is important to allow good
 collaboration on the project.
+
+## Unicode support
+
+### Purpose:
+The goal of this project is to support UTF-8 in the syntax, specifically,
+identifiers, string literals, and comments should support UTF-8 cleanly
+along with unit-tests to verify compliance.
+
+### Resources: frontend/
 
 ## Website
 

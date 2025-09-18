@@ -13,7 +13,7 @@ using namespace JLang::frontend::tree;
 using namespace JLang::frontend::namespaces;
 using namespace JLang::frontend::yacc;
 
-Parser::Parser(NamespaceContext_owned_ptr _namespace_context)
+Parser::Parser(::JLang::owned<NamespaceContext> _namespace_context)
   : yacc_context(std::make_unique<ParseResult>(std::move(_namespace_context)))
 {}
 
@@ -40,7 +40,7 @@ Parser::parse(InputSource & _input_source)
   return rc;
 }
 
-ParseResult_owned_ptr
+::JLang::owned<ParseResult>
 Parser::get_parse_result()
 {
   return std::move(yacc_context);

@@ -30,7 +30,7 @@ int main(int argc, char **argv)
       exit(1);
     }
 
-    NamespaceContext_owned_ptr namespace_context = std::make_unique<NamespaceContext>();
+    ::JLang::owned<NamespaceContext> namespace_context = std::make_unique<NamespaceContext>();
     
     std::shared_ptr<JBackend> backend;
     if (std::string("format-identity") == std::string(argv[1])) {
@@ -54,7 +54,7 @@ int main(int argc, char **argv)
       printf("Syntax error\n");
     }
     else {
-      ParseResult_owned_ptr parse_result = std::move(parser.get_parse_result());
+      ::JLang::owned<ParseResult> parse_result = std::move(parser.get_parse_result());
       const TranslationUnit & translation_unit = parse_result->get_translation_unit();
       rc = backend->process(translation_unit.get_syntax_node());
     }

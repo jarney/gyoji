@@ -4,6 +4,7 @@
 #include <vector>
 #include <memory>
 
+#include <jlang-misc/pointers.hpp>
 /*!
  * The errors namespace contains code related
  * to reporting errors about the source code.
@@ -23,9 +24,6 @@ namespace JLang::errors {
   class Error;
   class ErrorMessage;
   
-  typedef std::unique_ptr<Errors> Errors_owned_ptr;
-  typedef std::unique_ptr<Error> Error_owned_ptr;
-  typedef std::unique_ptr<ErrorMessage> ErrorMessage_owned_ptr;
 
   class ErrorMessage {
   public:
@@ -60,7 +58,7 @@ namespace JLang::errors {
     size_t size() const;
     const ErrorMessage & get(size_t n) const;
   private:
-    std::vector<ErrorMessage_owned_ptr> messages;
+    std::vector<::JLang::owned<ErrorMessage>> messages;
     std::string error_message;
   };
   
@@ -68,12 +66,12 @@ namespace JLang::errors {
   public:
     Errors();
     ~Errors();
-    void add_error(Error_owned_ptr error);
+    void add_error(::JLang::owned<Error> error);
     void print() const;
     size_t size() const;
     const Error & get(size_t n) const;
   private:
-    std::vector<Error_owned_ptr> errors;
+    std::vector<::JLang::owned<Error>> errors;
   };
   
 };

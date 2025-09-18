@@ -39,253 +39,253 @@ int visibility_from_modifier(JLang::frontend::tree::AccessModifier::AccessModifi
 }
 
 %token INVALID_INPUT
-%token <JLang::frontend::tree::Terminal_owned_ptr> YYEOF
-%token <JLang::frontend::tree::Terminal_owned_ptr> IDENTIFIER
-%token <JLang::frontend::tree::Terminal_owned_ptr> NAMESPACE_NAME
-%token <JLang::frontend::tree::Terminal_owned_ptr> TYPE_NAME
-%token <JLang::frontend::tree::Terminal_owned_ptr> CLASS
-%token <JLang::frontend::tree::Terminal_owned_ptr> ENUM
+%token <::JLang::owned<JLang::frontend::tree::Terminal>> YYEOF
+%token <::JLang::owned<JLang::frontend::tree::Terminal>> IDENTIFIER
+%token <::JLang::owned<JLang::frontend::tree::Terminal>> NAMESPACE_NAME
+%token <::JLang::owned<JLang::frontend::tree::Terminal>> TYPE_NAME
+%token <::JLang::owned<JLang::frontend::tree::Terminal>> CLASS
+%token <::JLang::owned<JLang::frontend::tree::Terminal>> ENUM
 
-%token <JLang::frontend::tree::Terminal_owned_ptr> NAMESPACE
-%token <JLang::frontend::tree::Terminal_owned_ptr> AS
-%token <JLang::frontend::tree::Terminal_owned_ptr> USING
-%token <JLang::frontend::tree::Terminal_owned_ptr> TYPEDEF
-%token <JLang::frontend::tree::Terminal_owned_ptr> STRUCT
-%token <JLang::frontend::tree::Terminal_owned_ptr> UNION
-%token <JLang::frontend::tree::Terminal_owned_ptr> SIZEOF
-%token <JLang::frontend::tree::Terminal_owned_ptr> TYPEOF
-%token <JLang::frontend::tree::Terminal_owned_ptr> CAST
-%token <JLang::frontend::tree::Terminal_owned_ptr> UNSAFE
- //%token <JLang::frontend::tree::Terminal_owned_ptr> VAR
-%token <JLang::frontend::tree::Terminal_owned_ptr> CONST
-%token <JLang::frontend::tree::Terminal_owned_ptr> VOLATILE
+%token <::JLang::owned<JLang::frontend::tree::Terminal>> NAMESPACE
+%token <::JLang::owned<JLang::frontend::tree::Terminal>> AS
+%token <::JLang::owned<JLang::frontend::tree::Terminal>> USING
+%token <::JLang::owned<JLang::frontend::tree::Terminal>> TYPEDEF
+%token <::JLang::owned<JLang::frontend::tree::Terminal>> STRUCT
+%token <::JLang::owned<JLang::frontend::tree::Terminal>> UNION
+%token <::JLang::owned<JLang::frontend::tree::Terminal>> SIZEOF
+%token <::JLang::owned<JLang::frontend::tree::Terminal>> TYPEOF
+%token <::JLang::owned<JLang::frontend::tree::Terminal>> CAST
+%token <::JLang::owned<JLang::frontend::tree::Terminal>> UNSAFE
+ //%token <::JLang::owned<JLang::frontend::tree::Terminal>> VAR
+%token <::JLang::owned<JLang::frontend::tree::Terminal>> CONST
+%token <::JLang::owned<JLang::frontend::tree::Terminal>> VOLATILE
 
-%token <JLang::frontend::tree::Terminal_owned_ptr> PUBLIC
-%token <JLang::frontend::tree::Terminal_owned_ptr> PRIVATE
-%token <JLang::frontend::tree::Terminal_owned_ptr> PROTECTED
+%token <::JLang::owned<JLang::frontend::tree::Terminal>> PUBLIC
+%token <::JLang::owned<JLang::frontend::tree::Terminal>> PRIVATE
+%token <::JLang::owned<JLang::frontend::tree::Terminal>> PROTECTED
 
  /* Logical Operations */
-%token <JLang::frontend::tree::Terminal_owned_ptr> LOGICAL_NOT
-%token <JLang::frontend::tree::Terminal_owned_ptr> LOGICAL_AND
-%token <JLang::frontend::tree::Terminal_owned_ptr>  LOGICAL_OR
+%token <::JLang::owned<JLang::frontend::tree::Terminal>> LOGICAL_NOT
+%token <::JLang::owned<JLang::frontend::tree::Terminal>> LOGICAL_AND
+%token <::JLang::owned<JLang::frontend::tree::Terminal>>  LOGICAL_OR
 
  /* Control Flow */
-%token <JLang::frontend::tree::Terminal_owned_ptr> RETURN
-%token <JLang::frontend::tree::Terminal_owned_ptr> IF
-%token <JLang::frontend::tree::Terminal_owned_ptr> ELSE
-%token <JLang::frontend::tree::Terminal_owned_ptr> WHILE
-%token <JLang::frontend::tree::Terminal_owned_ptr> FOR
-%token <JLang::frontend::tree::Terminal_owned_ptr> CONTINUE
-%token <JLang::frontend::tree::Terminal_owned_ptr> GOTO
-%token <JLang::frontend::tree::Terminal_owned_ptr> LABEL
-%token <JLang::frontend::tree::Terminal_owned_ptr> BREAK
-%token <JLang::frontend::tree::Terminal_owned_ptr> SWITCH
-%token <JLang::frontend::tree::Terminal_owned_ptr> CASE
-%token <JLang::frontend::tree::Terminal_owned_ptr> DEFAULT
+%token <::JLang::owned<JLang::frontend::tree::Terminal>> RETURN
+%token <::JLang::owned<JLang::frontend::tree::Terminal>> IF
+%token <::JLang::owned<JLang::frontend::tree::Terminal>> ELSE
+%token <::JLang::owned<JLang::frontend::tree::Terminal>> WHILE
+%token <::JLang::owned<JLang::frontend::tree::Terminal>> FOR
+%token <::JLang::owned<JLang::frontend::tree::Terminal>> CONTINUE
+%token <::JLang::owned<JLang::frontend::tree::Terminal>> GOTO
+%token <::JLang::owned<JLang::frontend::tree::Terminal>> LABEL
+%token <::JLang::owned<JLang::frontend::tree::Terminal>> BREAK
+%token <::JLang::owned<JLang::frontend::tree::Terminal>> SWITCH
+%token <::JLang::owned<JLang::frontend::tree::Terminal>> CASE
+%token <::JLang::owned<JLang::frontend::tree::Terminal>> DEFAULT
 
  /* Binary operations */
-%token <JLang::frontend::tree::Terminal_owned_ptr> PLUS
-%token <JLang::frontend::tree::Terminal_owned_ptr> MINUS
-%token <JLang::frontend::tree::Terminal_owned_ptr> SLASH
-%token <JLang::frontend::tree::Terminal_owned_ptr> PERCENT
-%token <JLang::frontend::tree::Terminal_owned_ptr> STAR
-%token <JLang::frontend::tree::Terminal_owned_ptr> EQUALS
-%token <JLang::frontend::tree::Terminal_owned_ptr> BANG
-%token <JLang::frontend::tree::Terminal_owned_ptr> TILDE
-%token <JLang::frontend::tree::Terminal_owned_ptr> ANDPERSAND
-%token <JLang::frontend::tree::Terminal_owned_ptr> MUL_ASSIGN
-%token <JLang::frontend::tree::Terminal_owned_ptr> DIV_ASSIGN
-%token <JLang::frontend::tree::Terminal_owned_ptr> MOD_ASSIGN
-%token <JLang::frontend::tree::Terminal_owned_ptr> ADD_ASSIGN
-%token <JLang::frontend::tree::Terminal_owned_ptr> SUB_ASSIGN
-%token <JLang::frontend::tree::Terminal_owned_ptr> LEFT_ASSIGN
-%token <JLang::frontend::tree::Terminal_owned_ptr> RIGHT_ASSIGN
-%token <JLang::frontend::tree::Terminal_owned_ptr> AND_ASSIGN
-%token <JLang::frontend::tree::Terminal_owned_ptr> XOR_ASSIGN
-%token <JLang::frontend::tree::Terminal_owned_ptr> OR_ASSIGN
+%token <::JLang::owned<JLang::frontend::tree::Terminal>> PLUS
+%token <::JLang::owned<JLang::frontend::tree::Terminal>> MINUS
+%token <::JLang::owned<JLang::frontend::tree::Terminal>> SLASH
+%token <::JLang::owned<JLang::frontend::tree::Terminal>> PERCENT
+%token <::JLang::owned<JLang::frontend::tree::Terminal>> STAR
+%token <::JLang::owned<JLang::frontend::tree::Terminal>> EQUALS
+%token <::JLang::owned<JLang::frontend::tree::Terminal>> BANG
+%token <::JLang::owned<JLang::frontend::tree::Terminal>> TILDE
+%token <::JLang::owned<JLang::frontend::tree::Terminal>> ANDPERSAND
+%token <::JLang::owned<JLang::frontend::tree::Terminal>> MUL_ASSIGN
+%token <::JLang::owned<JLang::frontend::tree::Terminal>> DIV_ASSIGN
+%token <::JLang::owned<JLang::frontend::tree::Terminal>> MOD_ASSIGN
+%token <::JLang::owned<JLang::frontend::tree::Terminal>> ADD_ASSIGN
+%token <::JLang::owned<JLang::frontend::tree::Terminal>> SUB_ASSIGN
+%token <::JLang::owned<JLang::frontend::tree::Terminal>> LEFT_ASSIGN
+%token <::JLang::owned<JLang::frontend::tree::Terminal>> RIGHT_ASSIGN
+%token <::JLang::owned<JLang::frontend::tree::Terminal>> AND_ASSIGN
+%token <::JLang::owned<JLang::frontend::tree::Terminal>> XOR_ASSIGN
+%token <::JLang::owned<JLang::frontend::tree::Terminal>> OR_ASSIGN
 
-%token <JLang::frontend::tree::Terminal_owned_ptr>  LITERAL_CHAR
-%token <JLang::frontend::tree::Terminal_owned_ptr>  LITERAL_FLOAT
-%token <JLang::frontend::tree::Terminal_owned_ptr>  LITERAL_INT
-%token <JLang::frontend::tree::Terminal_owned_ptr>  LITERAL_STRING
+%token <::JLang::owned<JLang::frontend::tree::Terminal>>  LITERAL_CHAR
+%token <::JLang::owned<JLang::frontend::tree::Terminal>>  LITERAL_FLOAT
+%token <::JLang::owned<JLang::frontend::tree::Terminal>>  LITERAL_INT
+%token <::JLang::owned<JLang::frontend::tree::Terminal>>  LITERAL_STRING
 
 %token NST_COMMENT_MULTILINE
 %token NST_COMMENT_SINGLE_LINE
 %token NST_WHITESPACE
 %token NST_FILE_METADATA
 
-%token <JLang::frontend::tree::Terminal_owned_ptr> LT_OP
-%token <JLang::frontend::tree::Terminal_owned_ptr> GT_OP
-%token <JLang::frontend::tree::Terminal_owned_ptr> LE_OP
-%token <JLang::frontend::tree::Terminal_owned_ptr> GE_OP
-%token <JLang::frontend::tree::Terminal_owned_ptr> NE_OP
-%token <JLang::frontend::tree::Terminal_owned_ptr> EQ_OP
+%token <::JLang::owned<JLang::frontend::tree::Terminal>> LT_OP
+%token <::JLang::owned<JLang::frontend::tree::Terminal>> GT_OP
+%token <::JLang::owned<JLang::frontend::tree::Terminal>> LE_OP
+%token <::JLang::owned<JLang::frontend::tree::Terminal>> GE_OP
+%token <::JLang::owned<JLang::frontend::tree::Terminal>> NE_OP
+%token <::JLang::owned<JLang::frontend::tree::Terminal>> EQ_OP
 
-%token <JLang::frontend::tree::Terminal_owned_ptr> XOR_OP
-%token <JLang::frontend::tree::Terminal_owned_ptr> AND_OP
-%token <JLang::frontend::tree::Terminal_owned_ptr> PIPE
-%token <JLang::frontend::tree::Terminal_owned_ptr> OR_OP
-%token <JLang::frontend::tree::Terminal_owned_ptr> LEFT_OP
-%token <JLang::frontend::tree::Terminal_owned_ptr> RIGHT_OP
+%token <::JLang::owned<JLang::frontend::tree::Terminal>> XOR_OP
+%token <::JLang::owned<JLang::frontend::tree::Terminal>> AND_OP
+%token <::JLang::owned<JLang::frontend::tree::Terminal>> PIPE
+%token <::JLang::owned<JLang::frontend::tree::Terminal>> OR_OP
+%token <::JLang::owned<JLang::frontend::tree::Terminal>> LEFT_OP
+%token <::JLang::owned<JLang::frontend::tree::Terminal>> RIGHT_OP
 
 /* Common punctuation */
-%token <JLang::frontend::tree::Terminal_owned_ptr> COMMA
-%token <JLang::frontend::tree::Terminal_owned_ptr> INC_OP
-%token <JLang::frontend::tree::Terminal_owned_ptr> DEC_OP
-%token <JLang::frontend::tree::Terminal_owned_ptr> PTR_OP
-%token <JLang::frontend::tree::Terminal_owned_ptr> DOT
-%token <JLang::frontend::tree::Terminal_owned_ptr> PAREN_L
-%token <JLang::frontend::tree::Terminal_owned_ptr> PAREN_R
-%token <JLang::frontend::tree::Terminal_owned_ptr> BRACE_L
-%token <JLang::frontend::tree::Terminal_owned_ptr> BRACKET_R
-%token <JLang::frontend::tree::Terminal_owned_ptr> BRACKET_L
-%token <JLang::frontend::tree::Terminal_owned_ptr> BRACE_R
-%token <JLang::frontend::tree::Terminal_owned_ptr> SEMICOLON
-%token <JLang::frontend::tree::Terminal_owned_ptr> COLON
-%token <JLang::frontend::tree::Terminal_owned_ptr> QUESTIONMARK
+%token <::JLang::owned<JLang::frontend::tree::Terminal>> COMMA
+%token <::JLang::owned<JLang::frontend::tree::Terminal>> INC_OP
+%token <::JLang::owned<JLang::frontend::tree::Terminal>> DEC_OP
+%token <::JLang::owned<JLang::frontend::tree::Terminal>> PTR_OP
+%token <::JLang::owned<JLang::frontend::tree::Terminal>> DOT
+%token <::JLang::owned<JLang::frontend::tree::Terminal>> PAREN_L
+%token <::JLang::owned<JLang::frontend::tree::Terminal>> PAREN_R
+%token <::JLang::owned<JLang::frontend::tree::Terminal>> BRACE_L
+%token <::JLang::owned<JLang::frontend::tree::Terminal>> BRACKET_R
+%token <::JLang::owned<JLang::frontend::tree::Terminal>> BRACKET_L
+%token <::JLang::owned<JLang::frontend::tree::Terminal>> BRACE_R
+%token <::JLang::owned<JLang::frontend::tree::Terminal>> SEMICOLON
+%token <::JLang::owned<JLang::frontend::tree::Terminal>> COLON
+%token <::JLang::owned<JLang::frontend::tree::Terminal>> QUESTIONMARK
 
-%token <JLang::frontend::tree::Terminal_owned_ptr> PREC_FIRST
-%token <JLang::frontend::tree::Terminal_owned_ptr> PREC_SECOND
+%token <::JLang::owned<JLang::frontend::tree::Terminal>> PREC_FIRST
+%token <::JLang::owned<JLang::frontend::tree::Terminal>> PREC_SECOND
 
-%nterm <JLang::frontend::tree::TranslationUnit_owned_ptr> translation_unit;
+%nterm <::JLang::owned<JLang::frontend::tree::TranslationUnit>> translation_unit;
 
-%nterm <JLang::frontend::tree::FileStatementList_owned_ptr> opt_file_statement_list;
-%nterm <JLang::frontend::tree::FileStatementList_owned_ptr> file_statement_list;
-%nterm <JLang::frontend::tree::FileStatement_owned_ptr> file_statement;
-%nterm <JLang::frontend::tree::FileStatementFunctionDefinition_owned_ptr> file_statement_function_definition;
-%nterm <JLang::frontend::tree::FileStatementFunctionDeclaration_owned_ptr> file_statement_function_declaration;
-%nterm <JLang::frontend::tree::TypeDefinition_owned_ptr> type_definition;
-%nterm <JLang::frontend::tree::ClassDefinition_owned_ptr> class_definition;
-%nterm <JLang::frontend::tree::ClassDeclStart_owned_ptr> class_decl_start;
-%nterm <JLang::frontend::tree::ClassArgumentList_owned_ptr> opt_class_argument_list;
-%nterm <JLang::frontend::tree::ClassArgumentList_owned_ptr> class_argument_list;
+%nterm <::JLang::owned<JLang::frontend::tree::FileStatementList>> opt_file_statement_list;
+%nterm <::JLang::owned<JLang::frontend::tree::FileStatementList>> file_statement_list;
+%nterm <::JLang::owned<JLang::frontend::tree::FileStatement>> file_statement;
+%nterm <::JLang::owned<JLang::frontend::tree::FileStatementFunctionDefinition>> file_statement_function_definition;
+%nterm <::JLang::owned<JLang::frontend::tree::FileStatementFunctionDeclaration>> file_statement_function_declaration;
+%nterm <::JLang::owned<JLang::frontend::tree::TypeDefinition>> type_definition;
+%nterm <::JLang::owned<JLang::frontend::tree::ClassDefinition>> class_definition;
+%nterm <::JLang::owned<JLang::frontend::tree::ClassDeclStart>> class_decl_start;
+%nterm <::JLang::owned<JLang::frontend::tree::ClassArgumentList>> opt_class_argument_list;
+%nterm <::JLang::owned<JLang::frontend::tree::ClassArgumentList>> class_argument_list;
 
 
-%nterm <JLang::frontend::tree::EnumDefinition_owned_ptr> enum_definition;
-%nterm <JLang::frontend::tree::EnumDefinitionValueList_owned_ptr> opt_enum_value_list;
-%nterm <JLang::frontend::tree::EnumDefinitionValueList_owned_ptr> enum_value_list;
-%nterm <JLang::frontend::tree::EnumDefinitionValue_owned_ptr> enum_value;
+%nterm <::JLang::owned<JLang::frontend::tree::EnumDefinition>> enum_definition;
+%nterm <::JLang::owned<JLang::frontend::tree::EnumDefinitionValueList>> opt_enum_value_list;
+%nterm <::JLang::owned<JLang::frontend::tree::EnumDefinitionValueList>> enum_value_list;
+%nterm <::JLang::owned<JLang::frontend::tree::EnumDefinitionValue>> enum_value;
 
-%nterm <JLang::frontend::tree::UnsafeModifier_owned_ptr> opt_unsafe
-%nterm <JLang::frontend::tree::NamespaceDeclaration_owned_ptr> namespace_declaration;
-%nterm <JLang::frontend::tree::FileStatementNamespace_owned_ptr> file_statement_namespace;
-%nterm <JLang::frontend::tree::UsingAs_owned_ptr> opt_as;
-%nterm <JLang::frontend::tree::FileStatementUsing_owned_ptr> file_statement_using;
-%nterm <JLang::frontend::tree::FileStatementGlobalDefinition_owned_ptr> file_statement_global_definition;
-%nterm <JLang::frontend::tree::GlobalInitializer_owned_ptr> opt_global_initializer;
+%nterm <::JLang::owned<JLang::frontend::tree::UnsafeModifier>> opt_unsafe
+%nterm <::JLang::owned<JLang::frontend::tree::NamespaceDeclaration>> namespace_declaration;
+%nterm <::JLang::owned<JLang::frontend::tree::FileStatementNamespace>> file_statement_namespace;
+%nterm <::JLang::owned<JLang::frontend::tree::UsingAs>> opt_as;
+%nterm <::JLang::owned<JLang::frontend::tree::FileStatementUsing>> file_statement_using;
+%nterm <::JLang::owned<JLang::frontend::tree::FileStatementGlobalDefinition>> file_statement_global_definition;
+%nterm <::JLang::owned<JLang::frontend::tree::GlobalInitializer>> opt_global_initializer;
 
-%nterm <JLang::frontend::tree::GlobalInitializerExpressionPrimary_owned_ptr> global_initializer_expression_primary;
-%nterm <JLang::frontend::tree::GlobalInitializerAddressofExpressionPrimary_owned_ptr> global_initializer_addressof_expression_primary;
-%nterm <JLang::frontend::tree::GlobalInitializerStructInitializerList_owned_ptr> global_initializer_struct_initializer_list;
-%nterm <JLang::frontend::tree::GlobalInitializer_owned_ptr> global_initializer;
-%nterm <JLang::frontend::tree::StructInitializerList_owned_ptr> opt_struct_initializer_list;
-%nterm <JLang::frontend::tree::StructInitializerList_owned_ptr> struct_initializer_list;
-%nterm <JLang::frontend::tree::StructInitializer_owned_ptr> struct_initializer;
+%nterm <::JLang::owned<JLang::frontend::tree::GlobalInitializerExpressionPrimary>> global_initializer_expression_primary;
+%nterm <::JLang::owned<JLang::frontend::tree::GlobalInitializerAddressofExpressionPrimary>> global_initializer_addressof_expression_primary;
+%nterm <::JLang::owned<JLang::frontend::tree::GlobalInitializerStructInitializerList>> global_initializer_struct_initializer_list;
+%nterm <::JLang::owned<JLang::frontend::tree::GlobalInitializer>> global_initializer;
+%nterm <::JLang::owned<JLang::frontend::tree::StructInitializerList>> opt_struct_initializer_list;
+%nterm <::JLang::owned<JLang::frontend::tree::StructInitializerList>> struct_initializer_list;
+%nterm <::JLang::owned<JLang::frontend::tree::StructInitializer>> struct_initializer;
 
-%nterm <JLang::frontend::tree::AccessModifier_owned_ptr> opt_access_modifier;
-%nterm <JLang::frontend::tree::Terminal_owned_ptr> access_modifier;
+%nterm <::JLang::owned<JLang::frontend::tree::AccessModifier>> opt_access_modifier;
+%nterm <::JLang::owned<JLang::frontend::tree::Terminal>> access_modifier;
 
-%nterm <JLang::frontend::tree::ScopeBody_owned_ptr> scope_body;
-%nterm <JLang::frontend::tree::StatementList_owned_ptr> statement_list;
-%nterm <JLang::frontend::tree::Statement_owned_ptr> statement;
-%nterm <JLang::frontend::tree::StatementVariableDeclaration_owned_ptr> statement_variable_declaration;
-%nterm <JLang::frontend::tree::StatementBlock_owned_ptr> statement_block;
-%nterm <JLang::frontend::tree::StatementExpression_owned_ptr> statement_expression;
-%nterm <JLang::frontend::tree::StatementIfElse_owned_ptr> statement_ifelse;
-%nterm <JLang::frontend::tree::StatementWhile_owned_ptr> statement_while;
-%nterm <JLang::frontend::tree::StatementFor_owned_ptr> statement_for;
-%nterm <JLang::frontend::tree::StatementSwitch_owned_ptr> statement_switch;
-%nterm <JLang::frontend::tree::StatementLabel_owned_ptr> statement_label;
-%nterm <JLang::frontend::tree::StatementGoto_owned_ptr> statement_goto;
-%nterm <JLang::frontend::tree::StatementBreak_owned_ptr> statement_break;
-%nterm <JLang::frontend::tree::StatementContinue_owned_ptr> statement_continue;
-%nterm <JLang::frontend::tree::StatementReturn_owned_ptr> statement_return;
+%nterm <::JLang::owned<JLang::frontend::tree::ScopeBody>> scope_body;
+%nterm <::JLang::owned<JLang::frontend::tree::StatementList>> statement_list;
+%nterm <::JLang::owned<JLang::frontend::tree::Statement>> statement;
+%nterm <::JLang::owned<JLang::frontend::tree::StatementVariableDeclaration>> statement_variable_declaration;
+%nterm <::JLang::owned<JLang::frontend::tree::StatementBlock>> statement_block;
+%nterm <::JLang::owned<JLang::frontend::tree::StatementExpression>> statement_expression;
+%nterm <::JLang::owned<JLang::frontend::tree::StatementIfElse>> statement_ifelse;
+%nterm <::JLang::owned<JLang::frontend::tree::StatementWhile>> statement_while;
+%nterm <::JLang::owned<JLang::frontend::tree::StatementFor>> statement_for;
+%nterm <::JLang::owned<JLang::frontend::tree::StatementSwitch>> statement_switch;
+%nterm <::JLang::owned<JLang::frontend::tree::StatementLabel>> statement_label;
+%nterm <::JLang::owned<JLang::frontend::tree::StatementGoto>> statement_goto;
+%nterm <::JLang::owned<JLang::frontend::tree::StatementBreak>> statement_break;
+%nterm <::JLang::owned<JLang::frontend::tree::StatementContinue>> statement_continue;
+%nterm <::JLang::owned<JLang::frontend::tree::StatementReturn>> statement_return;
 
-%nterm <JLang::frontend::tree::StatementSwitchBlock_owned_ptr> statement_switch_block;
-%nterm <JLang::frontend::tree::StatementSwitchContent_owned_ptr> statement_switch_content;
-%nterm <JLang::frontend::tree::StatementSwitchContent_owned_ptr> opt_statement_switch_content;
+%nterm <::JLang::owned<JLang::frontend::tree::StatementSwitchBlock>> statement_switch_block;
+%nterm <::JLang::owned<JLang::frontend::tree::StatementSwitchContent>> statement_switch_content;
+%nterm <::JLang::owned<JLang::frontend::tree::StatementSwitchContent>> opt_statement_switch_content;
 
-%nterm <JLang::frontend::tree::FunctionDefinitionArgList_owned_ptr> opt_function_definition_arg_list;
-%nterm <JLang::frontend::tree::FunctionDefinitionArgList_owned_ptr> function_definition_arg_list;
-%nterm <JLang::frontend::tree::FunctionDefinitionArg_owned_ptr> function_definition_arg
+%nterm <::JLang::owned<JLang::frontend::tree::FunctionDefinitionArgList>> opt_function_definition_arg_list;
+%nterm <::JLang::owned<JLang::frontend::tree::FunctionDefinitionArgList>> function_definition_arg_list;
+%nterm <::JLang::owned<JLang::frontend::tree::FunctionDefinitionArg>> function_definition_arg
 
-%nterm <JLang::frontend::tree::ExpressionPrimary_owned_ptr> expression_primary;
-%nterm <JLang::frontend::tree::ExpressionPrimaryNested_owned_ptr> expression_primary_nested;
-%nterm <JLang::frontend::tree::ExpressionPrimaryIdentifier_owned_ptr> expression_primary_identifier;
-%nterm <JLang::frontend::tree::ExpressionPrimaryLiteralInt_owned_ptr> expression_primary_literal_int;
-%nterm <JLang::frontend::tree::ExpressionPrimaryLiteralChar_owned_ptr> expression_primary_literal_char;
-%nterm <JLang::frontend::tree::ExpressionPrimaryLiteralString_owned_ptr> expression_primary_literal_string;
-%nterm <JLang::frontend::tree::ExpressionPrimaryLiteralFloat_owned_ptr> expression_primary_literal_float;
+%nterm <::JLang::owned<JLang::frontend::tree::ExpressionPrimary>> expression_primary;
+%nterm <::JLang::owned<JLang::frontend::tree::ExpressionPrimaryNested>> expression_primary_nested;
+%nterm <::JLang::owned<JLang::frontend::tree::ExpressionPrimaryIdentifier>> expression_primary_identifier;
+%nterm <::JLang::owned<JLang::frontend::tree::ExpressionPrimaryLiteralInt>> expression_primary_literal_int;
+%nterm <::JLang::owned<JLang::frontend::tree::ExpressionPrimaryLiteralChar>> expression_primary_literal_char;
+%nterm <::JLang::owned<JLang::frontend::tree::ExpressionPrimaryLiteralString>> expression_primary_literal_string;
+%nterm <::JLang::owned<JLang::frontend::tree::ExpressionPrimaryLiteralFloat>> expression_primary_literal_float;
 
-%nterm <JLang::frontend::tree::Expression_owned_ptr> expression_postfix;
-%nterm <JLang::frontend::tree::Expression_owned_ptr> expression_postfix_primary;
-%nterm <JLang::frontend::tree::Expression_owned_ptr> expression_postfix_arrayindex;
-%nterm <JLang::frontend::tree::Expression_owned_ptr> expression_postfix_function_call;
-%nterm <JLang::frontend::tree::Expression_owned_ptr> expression_postfix_dot;
-%nterm <JLang::frontend::tree::Expression_owned_ptr> expression_postfix_arrow;
-%nterm <JLang::frontend::tree::Expression_owned_ptr> expression_postfix_increment;
-%nterm <JLang::frontend::tree::Expression_owned_ptr> expression_postfix_decrement;
+%nterm <::JLang::owned<JLang::frontend::tree::Expression>> expression_postfix;
+%nterm <::JLang::owned<JLang::frontend::tree::Expression>> expression_postfix_primary;
+%nterm <::JLang::owned<JLang::frontend::tree::Expression>> expression_postfix_arrayindex;
+%nterm <::JLang::owned<JLang::frontend::tree::Expression>> expression_postfix_function_call;
+%nterm <::JLang::owned<JLang::frontend::tree::Expression>> expression_postfix_dot;
+%nterm <::JLang::owned<JLang::frontend::tree::Expression>> expression_postfix_arrow;
+%nterm <::JLang::owned<JLang::frontend::tree::Expression>> expression_postfix_increment;
+%nterm <::JLang::owned<JLang::frontend::tree::Expression>> expression_postfix_decrement;
 
-%nterm <JLang::frontend::tree::Expression_owned_ptr> expression_unary;
-%nterm <JLang::frontend::tree::Expression_owned_ptr> expression_unary_increment;
-%nterm <JLang::frontend::tree::Expression_owned_ptr> expression_unary_decrement;
-%nterm <JLang::frontend::tree::Expression_owned_ptr> expression_unary_prefix;
-%nterm <JLang::frontend::tree::Expression_owned_ptr> expression_unary_sizeof_type;
+%nterm <::JLang::owned<JLang::frontend::tree::Expression>> expression_unary;
+%nterm <::JLang::owned<JLang::frontend::tree::Expression>> expression_unary_increment;
+%nterm <::JLang::owned<JLang::frontend::tree::Expression>> expression_unary_decrement;
+%nterm <::JLang::owned<JLang::frontend::tree::Expression>> expression_unary_prefix;
+%nterm <::JLang::owned<JLang::frontend::tree::Expression>> expression_unary_sizeof_type;
 
-%nterm <JLang::frontend::tree::Expression_owned_ptr> expression_cast;
-%nterm <JLang::frontend::tree::Expression_owned_ptr> expression_cast_unary;
-%nterm <JLang::frontend::tree::Expression_owned_ptr> expression_cast_cast;
+%nterm <::JLang::owned<JLang::frontend::tree::Expression>> expression_cast;
+%nterm <::JLang::owned<JLang::frontend::tree::Expression>> expression_cast_unary;
+%nterm <::JLang::owned<JLang::frontend::tree::Expression>> expression_cast_cast;
 
-%nterm <JLang::frontend::tree::Expression_owned_ptr> expression_multiplicative;
-%nterm <JLang::frontend::tree::Expression_owned_ptr> expression_multiplicative_cast;
-%nterm <JLang::frontend::tree::Expression_owned_ptr> expression_multiplicative_multiply;
-%nterm <JLang::frontend::tree::Expression_owned_ptr> expression_multiplicative_divide;
-%nterm <JLang::frontend::tree::Expression_owned_ptr> expression_multiplicative_modulo;
+%nterm <::JLang::owned<JLang::frontend::tree::Expression>> expression_multiplicative;
+%nterm <::JLang::owned<JLang::frontend::tree::Expression>> expression_multiplicative_cast;
+%nterm <::JLang::owned<JLang::frontend::tree::Expression>> expression_multiplicative_multiply;
+%nterm <::JLang::owned<JLang::frontend::tree::Expression>> expression_multiplicative_divide;
+%nterm <::JLang::owned<JLang::frontend::tree::Expression>> expression_multiplicative_modulo;
 
-%nterm <JLang::frontend::tree::Expression_owned_ptr> expression_additive;
-%nterm <JLang::frontend::tree::Expression_owned_ptr> expression_additive_multiplicative;
-%nterm <JLang::frontend::tree::Expression_owned_ptr> expression_additive_plus;
-%nterm <JLang::frontend::tree::Expression_owned_ptr> expression_additive_minus;
+%nterm <::JLang::owned<JLang::frontend::tree::Expression>> expression_additive;
+%nterm <::JLang::owned<JLang::frontend::tree::Expression>> expression_additive_multiplicative;
+%nterm <::JLang::owned<JLang::frontend::tree::Expression>> expression_additive_plus;
+%nterm <::JLang::owned<JLang::frontend::tree::Expression>> expression_additive_minus;
 
-%nterm <JLang::frontend::tree::Expression_owned_ptr> expression_shift;
-%nterm <JLang::frontend::tree::Expression_owned_ptr> expression_shift_additive;
-%nterm <JLang::frontend::tree::Expression_owned_ptr> expression_shift_left;
-%nterm <JLang::frontend::tree::Expression_owned_ptr> expression_shift_right;
+%nterm <::JLang::owned<JLang::frontend::tree::Expression>> expression_shift;
+%nterm <::JLang::owned<JLang::frontend::tree::Expression>> expression_shift_additive;
+%nterm <::JLang::owned<JLang::frontend::tree::Expression>> expression_shift_left;
+%nterm <::JLang::owned<JLang::frontend::tree::Expression>> expression_shift_right;
 
-%nterm <JLang::frontend::tree::Expression_owned_ptr> expression_relational;
-%nterm <JLang::frontend::tree::Expression_owned_ptr> expression_relational_shift;
-%nterm <JLang::frontend::tree::Expression_owned_ptr> expression_relational_gt;
-%nterm <JLang::frontend::tree::Expression_owned_ptr> expression_relational_lt;
-%nterm <JLang::frontend::tree::Expression_owned_ptr> expression_relational_le;
-%nterm <JLang::frontend::tree::Expression_owned_ptr> expression_relational_ge;
+%nterm <::JLang::owned<JLang::frontend::tree::Expression>> expression_relational;
+%nterm <::JLang::owned<JLang::frontend::tree::Expression>> expression_relational_shift;
+%nterm <::JLang::owned<JLang::frontend::tree::Expression>> expression_relational_gt;
+%nterm <::JLang::owned<JLang::frontend::tree::Expression>> expression_relational_lt;
+%nterm <::JLang::owned<JLang::frontend::tree::Expression>> expression_relational_le;
+%nterm <::JLang::owned<JLang::frontend::tree::Expression>> expression_relational_ge;
 
-%nterm <JLang::frontend::tree::Expression_owned_ptr> expression_equality;
-%nterm <JLang::frontend::tree::Expression_owned_ptr> expression_and;
-%nterm <JLang::frontend::tree::Expression_owned_ptr> expression_exclusive_or;
-%nterm <JLang::frontend::tree::Expression_owned_ptr> expression_inclusive_or;
-%nterm <JLang::frontend::tree::Expression_owned_ptr> expression_logical_and;
-%nterm <JLang::frontend::tree::Expression_owned_ptr> expression_logical_or;
+%nterm <::JLang::owned<JLang::frontend::tree::Expression>> expression_equality;
+%nterm <::JLang::owned<JLang::frontend::tree::Expression>> expression_and;
+%nterm <::JLang::owned<JLang::frontend::tree::Expression>> expression_exclusive_or;
+%nterm <::JLang::owned<JLang::frontend::tree::Expression>> expression_inclusive_or;
+%nterm <::JLang::owned<JLang::frontend::tree::Expression>> expression_logical_and;
+%nterm <::JLang::owned<JLang::frontend::tree::Expression>> expression_logical_or;
 
-%nterm <JLang::frontend::tree::Expression_owned_ptr> expression_conditional;
-%nterm <JLang::frontend::tree::Expression_owned_ptr> expression_assignment;
+%nterm <::JLang::owned<JLang::frontend::tree::Expression>> expression_conditional;
+%nterm <::JLang::owned<JLang::frontend::tree::Expression>> expression_assignment;
 
-%nterm <JLang::frontend::tree::TypeSpecifier_owned_ptr> type_specifier;
-%nterm <JLang::frontend::tree::TypeSpecifierCallArgs_owned_ptr> type_specifier_call_args;
-%nterm <JLang::frontend::tree::TypeName_owned_ptr> type_name;
-%nterm <JLang::frontend::tree::AccessQualifier_owned_ptr> type_access_qualifier;
-%nterm <JLang::frontend::tree::ArrayLength_owned_ptr> opt_array_length;
+%nterm <::JLang::owned<JLang::frontend::tree::TypeSpecifier>> type_specifier;
+%nterm <::JLang::owned<JLang::frontend::tree::TypeSpecifierCallArgs>> type_specifier_call_args;
+%nterm <::JLang::owned<JLang::frontend::tree::TypeName>> type_name;
+%nterm <::JLang::owned<JLang::frontend::tree::AccessQualifier>> type_access_qualifier;
+%nterm <::JLang::owned<JLang::frontend::tree::ArrayLength>> opt_array_length;
 
-%nterm <JLang::frontend::tree::ClassMemberDeclarationList_owned_ptr> opt_class_member_declaration_list;
-%nterm <JLang::frontend::tree::ClassMemberDeclarationList_owned_ptr> class_member_declaration_list;
-%nterm <JLang::frontend::tree::ClassMemberDeclaration_owned_ptr> class_member_declaration;
+%nterm <::JLang::owned<JLang::frontend::tree::ClassMemberDeclarationList>> opt_class_member_declaration_list;
+%nterm <::JLang::owned<JLang::frontend::tree::ClassMemberDeclarationList>> class_member_declaration_list;
+%nterm <::JLang::owned<JLang::frontend::tree::ClassMemberDeclaration>> class_member_declaration;
 
-%nterm <JLang::frontend::tree::Terminal_owned_ptr> operator_unary;
-%nterm <JLang::frontend::tree::Terminal_owned_ptr> operator_assignment;
+%nterm <::JLang::owned<JLang::frontend::tree::Terminal>> operator_unary;
+%nterm <::JLang::owned<JLang::frontend::tree::Terminal>> operator_assignment;
 
-%nterm <JLang::frontend::tree::ArgumentExpressionList_owned_ptr> opt_argument_expression_list;
-%nterm <JLang::frontend::tree::ArgumentExpressionList_owned_ptr> argument_expression_list;
+%nterm <::JLang::owned<JLang::frontend::tree::ArgumentExpressionList>> opt_argument_expression_list;
+%nterm <::JLang::owned<JLang::frontend::tree::ArgumentExpressionList>> argument_expression_list;
 
-%nterm <JLang::frontend::tree::Expression_owned_ptr> expression;
+%nterm <::JLang::owned<JLang::frontend::tree::Expression>> expression;
 
 %parse-param {JLang::frontend::ParseResult & return_data}
 

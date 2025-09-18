@@ -8,7 +8,7 @@ using namespace JLang::frontend::tree;
 using namespace JLang::frontend::namespaces;
 
 static
-ParseResult_owned_ptr
+::JLang::owned<ParseResult>
 parse(std::string & path, std::string base_filename)
 {
   std::string filename = path + std::string("/") + base_filename;
@@ -19,12 +19,12 @@ parse(std::string & path, std::string base_filename)
     return nullptr;
   }
 
-  NamespaceContext_owned_ptr namespace_context = std::make_unique<NamespaceContext>();
+  ::JLang::owned<NamespaceContext> namespace_context = std::make_unique<NamespaceContext>();
   
   InputSourceFile input_source(input);
   Parser parser(std::move(namespace_context));
   int rc = parser.parse(input_source);
-  ParseResult_owned_ptr parse_result = parser.get_parse_result();
+  ::JLang::owned<ParseResult> parse_result = parser.get_parse_result();
   return std::move(parse_result);
 }
 
@@ -67,9 +67,9 @@ int main(int argc, char **argv)
     ASSERT_INT_EQUAL(1, parse_result->get_translation_unit().get_statements().size(), "This should have one typedef");
     
     const auto & statement_type = parse_result->get_translation_unit().get_statements().at(0)->get_statement();
-    ASSERT_TRUE(std::holds_alternative<TypeDefinition_owned_ptr>(statement_type), "This should be a typedef");
+    ASSERT_TRUE(std::holds_alternative<::JLang::owned<TypeDefinition>>(statement_type), "This should be a typedef");
 
-    const auto & type_definition = std::get<TypeDefinition_owned_ptr>(statement_type);
+    const auto & type_definition = std::get<::JLang::owned<TypeDefinition>>(statement_type);
     ASSERT("char", type_definition->get_name(), "We expect that we are defining 'char'");
 
     const auto & access_modifier = type_definition->get_access_modifier();

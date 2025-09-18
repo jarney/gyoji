@@ -18,7 +18,7 @@ using namespace JLang::frontend::namespaces;
  */
 
 static
-ParseResult_owned_ptr
+::JLang::owned<ParseResult>
 parse(std::string & filename)
 {
   FILE *input = fopen(filename.c_str(), "rb");
@@ -26,7 +26,7 @@ parse(std::string & filename)
     fprintf(stderr, "Cannot open file %s\n", filename.c_str());
     return nullptr;
   }
-  NamespaceContext_owned_ptr namespace_context = std::make_unique<NamespaceContext>();
+  ::JLang::owned<NamespaceContext> namespace_context = std::make_unique<NamespaceContext>();
   InputSourceFile input_source(input);
   Parser parser(std::move(namespace_context));
   int rc = parser.parse(input_source);
@@ -34,7 +34,7 @@ parse(std::string & filename)
     fprintf(stderr, "Syntax error : %s\n", filename.c_str());
     return nullptr;
   }
-  ParseResult_owned_ptr parse_result = parser.get_parse_result();
+  ::JLang::owned<ParseResult> parse_result = parser.get_parse_result();
   return std::move(parse_result);
 }
 
@@ -48,9 +48,9 @@ int main(int argc, char **argv)
 
   std::string path(argv[1]);
 
-  ParseResult_owned_ptr result = parse(path);
+  ::JLang::owned<ParseResult> result = parse(path);
 
-  for (const Token_owned_ptr & token : result->get_token_stream().get_tokens()) {
+  for (const ::JLang::owned<Token> & token : result->get_token_stream().get_tokens()) {
     printf("%s", token->get_value().c_str());
   }
   

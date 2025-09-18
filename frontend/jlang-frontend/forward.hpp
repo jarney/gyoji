@@ -216,104 +216,23 @@ namespace JLang::frontend::tree {
 // in the tree.
 //----------------------------
   
-typedef std::unique_ptr<UsingAs> UsingAs_owned_ptr;
   
   
-  typedef std::unique_ptr<Terminal> Terminal_owned_ptr;
 
-  typedef std::unique_ptr<AccessQualifier> AccessQualifier_owned_ptr;
-  typedef std::unique_ptr<AccessModifier> AccessModifier_owned_ptr;
-  typedef std::unique_ptr<UnsafeModifier> UnsafeModifier_owned_ptr;
-  typedef std::unique_ptr<TypeSpecifier> TypeSpecifier_owned_ptr;
-  typedef std::unique_ptr<TypeName> TypeName_owned_ptr;
-    typedef std::unique_ptr<TypeSpecifierCallArgs> TypeSpecifierCallArgs_owned_ptr;
-    typedef std::unique_ptr<TypeSpecifierSimple> TypeSpecifierSimple_owned_ptr;
-    typedef std::unique_ptr<TypeSpecifierTemplate> TypeSpecifierTemplate_owned_ptr;
-      typedef std::unique_ptr<TypeSpecifierFunctionPointer> TypeSpecifierFunctionPointer_owned_ptr;
-    typedef std::unique_ptr<TypeSpecifierPointerTo> TypeSpecifierPointerTo_owned_ptr;
-    typedef std::unique_ptr<TypeSpecifierReferenceTo> TypeSpecifierReferenceTo_owned_ptr;
   
-  typedef std::unique_ptr<FunctionDefinitionArgList> FunctionDefinitionArgList_owned_ptr;
-    typedef std::unique_ptr<FunctionDefinitionArg> FunctionDefinitionArg_owned_ptr;
 
-    typedef std::unique_ptr<ClassDeclStart> ClassDeclStart_owned_ptr;
-    typedef std::unique_ptr<ClassArgumentList> ClassArgumentList_owned_ptr;
-    typedef std::unique_ptr<ClassMemberDeclarationList> ClassMemberDeclarationList_owned_ptr;
-      typedef std::unique_ptr<ClassMemberDeclaration> ClassMemberDeclaration_owned_ptr;
-        typedef std::unique_ptr<ClassMemberDeclarationVariable> ClassMemberDeclarationVariable_owned_ptr;
-        typedef std::unique_ptr<ClassMemberDeclarationMethod> ClassMemberDeclarationMethod_owned_ptr;
-        typedef std::unique_ptr<ClassMemberDeclarationConstructor> ClassMemberDeclarationConstructor_owned_ptr;
-        typedef std::unique_ptr<ClassMemberDeclarationDestructor> ClassMemberDeclarationDestructor_owned_ptr;
-  typedef std::unique_ptr<ClassDefinition> ClassDefinition_owned_ptr;
     
-  typedef std::unique_ptr<TypeDefinition> TypeDefinition_owned_ptr;
 
-  typedef std::unique_ptr<EnumDefinition> EnumDefinition_owned_ptr;
-    typedef std::unique_ptr<EnumDefinitionValueList> EnumDefinitionValueList_owned_ptr;
-      typedef std::unique_ptr<EnumDefinitionValue> EnumDefinitionValue_owned_ptr;
 
-  typedef std::unique_ptr<Expression> Expression_owned_ptr;
-    typedef std::unique_ptr<ExpressionPrimary> ExpressionPrimary_owned_ptr;
-      typedef std::unique_ptr<ExpressionPrimaryIdentifier> ExpressionPrimaryIdentifier_owned_ptr;
-      typedef std::unique_ptr<ExpressionPrimaryNested> ExpressionPrimaryNested_owned_ptr;
-      typedef std::unique_ptr<ExpressionPrimaryLiteralChar> ExpressionPrimaryLiteralChar_owned_ptr;
-      typedef std::unique_ptr<ExpressionPrimaryLiteralString> ExpressionPrimaryLiteralString_owned_ptr;
-      typedef std::unique_ptr<ExpressionPrimaryLiteralInt> ExpressionPrimaryLiteralInt_owned_ptr;
-      typedef std::unique_ptr<ExpressionPrimaryLiteralFloat> ExpressionPrimaryLiteralFloat_owned_ptr;
   
-    typedef std::unique_ptr<ExpressionPostfixArrayIndex> ExpressionPostfixArrayIndex_owned_ptr;
-    typedef std::unique_ptr<ExpressionPostfixFunctionCall> ExpressionPostfixFunctionCall_owned_ptr;
-      typedef std::unique_ptr<ArgumentExpressionList> ArgumentExpressionList_owned_ptr;
-    typedef std::unique_ptr<ExpressionPostfixDot> ExpressionPostfixDot_owned_ptr;
-    typedef std::unique_ptr<ExpressionPostfixArrow> ExpressionPostfixArrow_owned_ptr;
-    typedef std::unique_ptr<ExpressionPostfixIncDec> ExpressionPostfixIncDec_owned_ptr;
-    typedef std::unique_ptr<ExpressionUnaryPrefix> ExpressionUnaryPrefix_owned_ptr;
-    typedef std::unique_ptr<ExpressionUnarySizeofType> ExpressionUnarySizeofType_owned_ptr;
-    typedef std::unique_ptr<ExpressionCast> ExpressionCast_owned_ptr;
-    typedef std::unique_ptr<ExpressionBinary> ExpressionBinary_owned_ptr;
-    typedef std::unique_ptr<ExpressionTrinary> ExpressionTrinary_owned_ptr;
 
-  typedef std::unique_ptr<StatementList> StatementList_owned_ptr;
-    typedef std::unique_ptr<Statement> Statement_owned_ptr;
-      typedef std::unique_ptr<StatementVariableDeclaration> StatementVariableDeclaration_owned_ptr;
-      typedef std::unique_ptr<StatementBlock> StatementBlock_owned_ptr;
-      typedef std::unique_ptr<StatementExpression> StatementExpression_owned_ptr;
-      typedef std::unique_ptr<StatementIfElse> StatementIfElse_owned_ptr;
-      typedef std::unique_ptr<StatementWhile> StatementWhile_owned_ptr;
-      typedef std::unique_ptr<StatementFor> StatementFor_owned_ptr;
-      typedef std::unique_ptr<StatementSwitch> StatementSwitch_owned_ptr;
-        typedef std::unique_ptr<StatementSwitchContent> StatementSwitchContent_owned_ptr;
-          typedef std::unique_ptr<StatementSwitchBlock> StatementSwitchBlock_owned_ptr;
-      typedef std::unique_ptr<StatementLabel> StatementLabel_owned_ptr;
-      typedef std::unique_ptr<StatementGoto> StatementGoto_owned_ptr;
-      typedef std::unique_ptr<StatementContinue> StatementContinue_owned_ptr;
-      typedef std::unique_ptr<StatementBreak> StatementBreak_owned_ptr;
-      typedef std::unique_ptr<StatementReturn> StatementReturn_owned_ptr;
 
-  typedef std::unique_ptr<TranslationUnit> TranslationUnit_owned_ptr;
   /**
    * Convenience definition
    */
-    typedef std::unique_ptr<FileStatementList> FileStatementList_owned_ptr;
   /**
    * Convenience definition
    */
-      typedef std::unique_ptr<FileStatement> FileStatement_owned_ptr;
-        typedef std::unique_ptr<FileStatementFunctionDefinition> FileStatementFunctionDefinition_owned_ptr;
-          typedef std::unique_ptr<ScopeBody> ScopeBody_owned_ptr;
-        typedef std::unique_ptr<FileStatementFunctionDeclaration> FileStatementFunctionDeclaration_owned_ptr;
-          typedef std::unique_ptr<ArrayLength> ArrayLength_owned_ptr;
-        typedef std::unique_ptr<FileStatementGlobalDefinition> FileStatementGlobalDefinition_owned_ptr;
-          typedef std::unique_ptr<GlobalInitializer> GlobalInitializer_owned_ptr;
-            typedef std::unique_ptr<GlobalInitializerExpressionPrimary> GlobalInitializerExpressionPrimary_owned_ptr;
-            typedef std::unique_ptr<GlobalInitializerAddressofExpressionPrimary> GlobalInitializerAddressofExpressionPrimary_owned_ptr;
-            typedef std::unique_ptr<GlobalInitializerStructInitializerList> GlobalInitializerStructInitializerList_owned_ptr;
-              typedef std::unique_ptr<StructInitializerList> StructInitializerList_owned_ptr;
-                typedef std::unique_ptr<StructInitializer> StructInitializer_owned_ptr;
     
-        typedef std::unique_ptr<FileStatementNamespace> FileStatementNamespace_owned_ptr;
-          typedef std::unique_ptr<NamespaceDeclaration> NamespaceDeclaration_owned_ptr;
-        typedef std::unique_ptr<FileStatementUsing> FileStatementUsing_owned_ptr;
-          typedef std::unique_ptr<UsingAs> UsingAs_owned_ptr;
   
 };

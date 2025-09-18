@@ -7,6 +7,7 @@
 #include <memory>
 #include <variant>
 
+#include <jlang-misc/pointers.hpp>
 #include <jlang-errors/errors.hpp>
 
 #define _JLANG_INTERNAL

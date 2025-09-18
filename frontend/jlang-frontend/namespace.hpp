@@ -35,8 +35,6 @@ namespace JLang::frontend::namespaces {
  */
 class Namespace;
 class NamespaceContext;
-typedef std::unique_ptr<Namespace> Namespace_owned_ptr;
-typedef std::unique_ptr<NamespaceContext> NamespaceContext_owned_ptr;
 
 class Namespace {
 public:

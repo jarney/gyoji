@@ -9,7 +9,7 @@ TokenStream::TokenStream()
 TokenStream::~TokenStream()
 {}
 
-const std::vector<Token_owned_ptr> &
+const std::vector<::JLang::owned<Token>> &
 TokenStream::get_tokens() const
 {
   return tokens;
@@ -51,7 +51,7 @@ TokenStream::add_token(std::string _typestr,
                        size_t _column
                        )
 {
-  Token_owned_ptr token = std::make_unique<Token>(_typestr, _value, _line, _column);
+  ::JLang::owned<Token> token = std::make_unique<Token>(_typestr, _value, _line, _column);
   const Token & token_ref = *token;
   tokens_by_lineno[_line].push_back(token.get());
   tokens.push_back(std::move(token));

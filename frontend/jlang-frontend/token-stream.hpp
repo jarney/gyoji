@@ -6,8 +6,6 @@
 namespace JLang::frontend {
   class Token;
   class TokenStream;
-  typedef std::unique_ptr<Token> Token_owned_ptr;
-  typedef std::unique_ptr<TokenStream> TokenStream_owned_ptr;
 
   class Token {
   public:
@@ -34,7 +32,7 @@ namespace JLang::frontend {
   public:
     TokenStream();
     ~TokenStream();
-    const std::vector<Token_owned_ptr> & get_tokens() const;
+    const std::vector<::JLang::owned<Token>> & get_tokens() const;
     std::string get_line(size_t _line) const;
     const Token & add_token(std::string _typestr,
                             std::string _value,
@@ -52,7 +50,7 @@ namespace JLang::frontend {
      */
     std::vector<std::pair<size_t, std::string>> context(size_t line_start, size_t line_end) const;
   private:
-    std::vector<Token_owned_ptr> tokens;
+    std::vector<::JLang::owned<Token>> tokens;
     std::vector<Token*> empty_list;
     std::map<size_t, std::vector<Token*>> tokens_by_lineno;
   };

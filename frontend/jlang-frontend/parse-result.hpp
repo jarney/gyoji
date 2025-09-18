@@ -11,12 +11,11 @@ namespace JLang::frontend::yacc {
 namespace JLang::frontend {
   class Parser;
   class TokenStream;
-  typedef std::unique_ptr<TokenStream> TokenStream_owned_ptr;
   
   class ParseResult {
   public:
     ParseResult(
-                JLang::frontend::namespaces::NamespaceContext_owned_ptr _namespace_context
+                ::JLang::owned<JLang::frontend::namespaces::NamespaceContext> _namespace_context
                 );
     ~ParseResult();
     const JLang::frontend::namespaces::NamespaceContext & get_namespace_context() const;
@@ -27,7 +26,7 @@ namespace JLang::frontend {
     bool has_translation_unit() const;
     const JLang::frontend::tree::TranslationUnit & get_translation_unit() const;
     
-    void set_translation_unit(JLang::frontend::tree::TranslationUnit_owned_ptr );
+    void set_translation_unit(::JLang::owned<JLang::frontend::tree::TranslationUnit> );
 
     const JLang::frontend::TokenStream & get_token_stream() const;
 
@@ -36,16 +35,15 @@ namespace JLang::frontend {
     friend JLang::frontend::Parser;
 
   private:
-    JLang::frontend::namespaces::NamespaceContext_owned_ptr namespace_context;
+    ::JLang::owned<JLang::frontend::namespaces::NamespaceContext> namespace_context;
     
-    JLang::errors::Errors_owned_ptr errors;
+    ::JLang::owned<JLang::errors::Errors> errors;
     
-    JLang::frontend::TokenStream_owned_ptr token_stream;
+    ::JLang::owned<JLang::frontend::TokenStream> token_stream;
     
-    JLang::frontend::tree::TranslationUnit_owned_ptr translation_unit;
+    ::JLang::owned<JLang::frontend::tree::TranslationUnit> translation_unit;
 
   };
 
-  typedef std::unique_ptr<ParseResult> ParseResult_owned_ptr;
 };
 
