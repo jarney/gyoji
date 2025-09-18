@@ -17,10 +17,23 @@ Errors::print() const
 }
 
 void
-Errors::add_error(std::unique_ptr<Error> error)
+Errors::add_error(Error_owned_ptr error)
 {
   errors.push_back(std::move(error));
 }
+
+size_t
+Errors::size() const
+{
+  return errors.size();
+}
+
+const Error &
+Errors::get(size_t n) const
+{
+  return *errors.at(n);
+}
+
 //////////////////////////////////////////////////
 Error::Error(std::string _error_message)
   : error_message(_error_message)
@@ -31,35 +44,43 @@ void
 Error::print()
 {
   fprintf(stderr, "Error: %s\n", error_message.c_str());
-  for (const std::unique_ptr<ErrorMessage> & msg : messages) {
+  for (const ErrorMessage_owned_ptr & msg : messages) {
     msg->print();
   }
 }
 
 void
-Error::add_message(std::vector<std::pair<size_t, std::string>> context,
-                    size_t lineno,
-                    size_t colno,
-                    std::string errormsg)
+Error::add_message(std::vector<std::pair<size_t, std::string>> _context,
+                    size_t _line,
+                    size_t _column,
+                    std::string _errormsg)
 {
-  std::unique_ptr<ErrorMessage> message = std::make_unique<ErrorMessage>(
-                                                                         context,
-                                                                         lineno,
-                                                                         colno,
-                                                                         errormsg
+  ErrorMessage_owned_ptr message = std::make_unique<ErrorMessage>(
+                                                                  _context,
+                                                                  _line,
+                                                                  _column,
+                                                                  _errormsg
                                                                          );
   messages.push_back(std::move(message));
 }
 
+size_t
+Error::size() const
+{ return messages.size(); }
+
+const ErrorMessage &
+Error::get(size_t n) const
+{ return *messages.at(n); }
+
 //////////////////////////////////////////////////
 ErrorMessage::ErrorMessage(std::vector<std::pair<size_t, std::string>> _context,
-                           size_t _lineno,
-                           size_t _colno,
+                           size_t _line,
+                           size_t _column,
                            std::string _errormsg
                            )
   : context(_context)
-  , lineno(_lineno)
-  , colno(_colno)
+  , line(_line)
+  , column(_column)
   , errormsg(_errormsg)
 {}
 
@@ -72,27 +93,110 @@ ErrorMessage::get_context() const
 
 size_t
 ErrorMessage::get_line() const
-{ return lineno; }
+{ return line; }
 
 size_t
 ErrorMessage::get_column() const
-{ return colno; }
+{ return column; }
 
 const std::string &
 ErrorMessage::get_message() const
 { return errormsg; }
 
+// Case 1.
+//    ^
+//    |
+//    +---------message goes here, wrapped
+//              to indent level
+
+// Case 2
+//                                    ^
+//                                    |
+//  message goes here, wrapped -------+
+//  to indent level
+
+static std::string pad_string(size_t length)
+{
+  std::string prefix;
+  for (int i = 0; i < length; i++) {
+    prefix = prefix + std::string(" ");
+  }
+  return prefix;
+}
+
+static void draw_arrow(size_t column)
+{
+  std::string arrowhead_line("^");
+  std::string pipe_line("|");
+  std::string prefix = pad_string(column);
+  arrowhead_line = prefix + arrowhead_line;
+  pipe_line = prefix + pipe_line;
+  fprintf(stderr, "%s\n", arrowhead_line.c_str());
+  fprintf(stderr, "%s\n", pipe_line.c_str());
+}
+
+static std::string wrap_text(size_t max_width, std::string input)
+{
+  std::string wrapped;
+
+  size_t linelen = 0;
+  for (size_t i = 0; i < input.size(); i++) {
+    char c = input[i];
+    linelen++;
+    if (isspace(c)) {
+      if (linelen > max_width) {
+        wrapped += '\n';
+        linelen = 0;
+      }
+      else {
+        wrapped += c;
+      }
+    }
+    else {
+      wrapped += c;
+    }
+  }
+  
+  return wrapped;
+}
+
+static std::string indent_text(size_t indent, std::string input)
+{
+  std::string wrapped;
+
+  std::string pad = pad_string(indent);
+  wrapped.append(pad);
+  for (size_t i = 0; i < input.size(); i++) {
+    char c = input[i];
+    wrapped += c;
+    if (c == '\n') {
+      wrapped.append(pad);
+    }
+  }
+  
+  return wrapped;
+}
 
 void
 ErrorMessage::print()
 {
-  for (const std::pair<size_t, std::string> & line : context) {
-    fprintf(stderr, "%4ld: %s", line.first, line.second.c_str());
-    if (line.second.at(line.second.size()-1) != '\n') {
+  for (const std::pair<size_t, std::string> & linepair : context) {
+    fprintf(stderr, "%4ld: %s", linepair.first, linepair.second.c_str());
+    if (linepair.second.at(linepair.second.size()-1) != '\n') {
       fprintf(stderr, "\n");
     }
-    if (lineno == line.first) {
-      printf("Error on this line %s\n", errormsg.c_str());
+    if (line == linepair.first) {
+      draw_arrow(column+5);
+      if (column < 40) {
+        std::string wrapped = wrap_text(80-column, errormsg);
+        std::string indented = indent_text(column+5, wrapped);
+        printf("%s\n", indented.c_str());
+      }
+      else {
+        std::string wrapped = wrap_text(column, errormsg);
+        std::string indented = indent_text(5, wrapped);
+        printf("%s\n", indented.c_str());
+      }
     }
   }
 }

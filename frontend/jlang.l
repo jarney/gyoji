@@ -253,7 +253,7 @@ unsafe {PROCESS_NODE(UNSAFE);}
     non_syntax_data.push_back(std::move(nsd));
     LexContext *lex_context = (LexContext*)yyget_extra(yyscanner);
     lex_context->line++;
-    lex_context->column = 1;
+    lex_context->column = 0;
 }
 \#[a-zA-Z]+\ [[:digit:]]+\ \".*\"\n {
     TOKEN_ADD(file_metadata)

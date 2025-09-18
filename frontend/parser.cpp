@@ -13,13 +13,10 @@ using namespace JLang::frontend::tree;
 using namespace JLang::frontend::namespaces;
 using namespace JLang::frontend::yacc;
 
-Parser::Parser(
-               NamespaceContext & _namespace_context,
-               Errors & _errors
-               )
-{
-  yacc_context = std::make_unique<ParseResult>(_namespace_context, _errors);
-}
+Parser::Parser(NamespaceContext_owned_ptr _namespace_context)
+  : yacc_context(std::make_unique<ParseResult>(std::move(_namespace_context)))
+{}
+
 Parser::~Parser()
 {
 }
@@ -31,7 +28,7 @@ Parser::parse(InputSource & _input_source)
   yylex_init(&scanner);
 
   LexContext lex_context(
-                         yacc_context->namespace_context,
+                         *yacc_context->namespace_context,
                          *yacc_context->token_stream,
                          _input_source);
   yyset_extra(&lex_context, scanner);
@@ -40,11 +37,7 @@ Parser::parse(InputSource & _input_source)
   yacc::YaccParser parser { scanner, *yacc_context };
   int rc = parser.parse();
   yylex_destroy(scanner);
-  if (rc != 0) {
-    printf("Syntax error\n");
-    return rc;
-  }
-  return 0;
+  return rc;
 }
 
 ParseResult_owned_ptr

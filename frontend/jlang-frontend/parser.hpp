@@ -12,10 +12,7 @@ namespace JLang::frontend {
   // the whole thing.
   class Parser {
   public:
-    Parser(
-           JLang::frontend::namespaces::NamespaceContext & _namespace_context,
-           JLang::errors::Errors & _errors
-           );
+    Parser(JLang::frontend::namespaces::NamespaceContext_owned_ptr _namespace_context);
     ~Parser();
     int parse(InputSource & _input_source);
     

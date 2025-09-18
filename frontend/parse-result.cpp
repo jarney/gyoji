@@ -2,16 +2,16 @@
 #include <jlang.l.hpp>
 #include <jlang.y.hpp>
 
+using namespace JLang::errors;
 using namespace JLang::frontend;
 using namespace JLang::frontend::namespaces;
 using namespace JLang::frontend::tree;
 
 ParseResult::ParseResult(
-                         NamespaceContext & _namespace_context,
-                         JLang::errors::Errors & _errors
+                         NamespaceContext_owned_ptr  _namespace_context
                          )
-  : namespace_context(_namespace_context)
-  , errors(_errors)
+  : namespace_context(std::move(_namespace_context))
+  , errors(std::make_unique<Errors>())
   , token_stream(std::make_unique<TokenStream>())
   , translation_unit(nullptr)
 {}
@@ -21,13 +21,27 @@ ParseResult::~ParseResult()
 const NamespaceContext &
 ParseResult::get_namespace_context() const
 {
-  return namespace_context;
+  return *namespace_context;
+}
+const Errors &
+ParseResult::get_errors() const
+{
+  return *errors;
 }
 
 const TranslationUnit & 
 ParseResult::get_translation_unit() const
 {
   return *translation_unit;
+}
+bool
+ParseResult::has_translation_unit() const
+{ return translation_unit.get() != nullptr; }
+
+bool
+ParseResult::has_errors() const
+{
+  return errors->size() != 0;
 }
 
 const TokenStream &

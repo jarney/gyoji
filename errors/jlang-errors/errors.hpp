@@ -19,12 +19,19 @@
  */
 namespace JLang::errors {
 
+  class Errors;
+  class Error;
+  class ErrorMessage;
+  
+  typedef std::unique_ptr<Errors> Errors_owned_ptr;
+  typedef std::unique_ptr<Error> Error_owned_ptr;
+  typedef std::unique_ptr<ErrorMessage> ErrorMessage_owned_ptr;
 
   class ErrorMessage {
   public:
     ErrorMessage(std::vector<std::pair<size_t, std::string>> _context,
-                 size_t _lineno,
-                 size_t _colno,
+                 size_t _line,
+                 size_t _column,
                  std::string _errormsg
                  );
     ~ErrorMessage();
@@ -35,8 +42,8 @@ namespace JLang::errors {
     const std::string & get_message() const;
   private:
     std::vector<std::pair<size_t, std::string>> context;
-    size_t lineno;
-    size_t colno;
+    size_t line;
+    size_t column;
     std::string errormsg;
   };
   
@@ -50,8 +57,10 @@ namespace JLang::errors {
                      size_t colno,
                      std::string errormsg);
     void print();
+    size_t size() const;
+    const ErrorMessage & get(size_t n) const;
   private:
-    std::vector<std::unique_ptr<ErrorMessage>> messages;
+    std::vector<ErrorMessage_owned_ptr> messages;
     std::string error_message;
   };
   
@@ -59,10 +68,12 @@ namespace JLang::errors {
   public:
     Errors();
     ~Errors();
-    void add_error(std::unique_ptr<Error> error);
+    void add_error(Error_owned_ptr error);
     void print() const;
+    size_t size() const;
+    const Error & get(size_t n) const;
   private:
-    std::vector<std::unique_ptr<Error>> errors;
+    std::vector<Error_owned_ptr> errors;
   };
   
 };

@@ -16,6 +16,29 @@
       }                                                               \
   }
 
+
+#define ASSERT_TRUE(actual, message)                                  \
+  {                                                                   \
+        if (!(actual)) {                                              \
+        fprintf(stderr,                                               \
+                "Assertion failed at %s:%d : %s\n",                   \
+                __FILE__, __LINE__, message);                         \
+        fprintf(stderr, "Expected this condition to be true\n");      \
+        exit(1);                                                      \
+      }                                                               \
+  }
+
+#define ASSERT_FALSE(actual, message)                                 \
+  {                                                                   \
+        if (actual) {                                                 \
+        fprintf(stderr,                                               \
+                "Assertion failed at %s:%d : %s\n",                   \
+                __FILE__, __LINE__, message);                         \
+        fprintf(stderr, "Expected this condition to be false\n");     \
+        exit(1);                                                      \
+      }                                                               \
+  }
+
 #define ASSERT_INT_EQUAL(expect, actual, message)                     \
   {                                                                   \
     size_t actual_v = (size_t)(actual);                               \

@@ -26,10 +26,9 @@ parse(std::string & filename)
     fprintf(stderr, "Cannot open file %s\n", filename.c_str());
     return nullptr;
   }
-  NamespaceContext namespace_context;
-  Errors errors;
+  NamespaceContext_owned_ptr namespace_context = std::make_unique<NamespaceContext>();
   InputSourceFile input_source(input);
-  Parser parser(namespace_context, errors);
+  Parser parser(std::move(namespace_context));
   int rc = parser.parse(input_source);
   if (rc != 0) {
     fprintf(stderr, "Syntax error : %s\n", filename.c_str());

@@ -83,6 +83,9 @@ namespace JLang::frontend::tree {
     };
 
 
+  /**
+   * A statement at the file level consists of ...
+   */
     class FileStatement : public JLang::frontend::ast::SyntaxNode {
     public:
       typedef std::variant<
@@ -1518,19 +1521,38 @@ namespace JLang::frontend::tree {
     
     /**
      * This class represents a translation unit, the top-level
-     * result of parsing a source-file.  All syntax information
+     * result of parsing a source-file.  A translation unit
+     * normally corresponds to a unit that will ultimately
+     * be compiled into a binary object file (.o) and linked
+     * later into an executable.
+     *
+     * A translation unit consists of zero or more file-level
+     * statements that represent the file's content.  At this
+     * level, the statements may be one of:
+     * * Type Definition
+     * * Enum defintion
+     * * Class definition
+     * * Function definition
+     * * Global variable definition
+     * * Function forward declaration;
+     * * Namespace definition (possibly containing more statements inside them).
+     * * Using (as) declaration.
+     * 
+     * All syntax information
      * about the file appears in a tree-like structure beneath
      * this node.
      */
     class TranslationUnit : public JLang::frontend::ast::SyntaxNode {
     public:
-      
       TranslationUnit(
                       FileStatementList_owned_ptr file_statement_list,
                       Terminal_owned_ptr yyeof_token
                       );
       ~TranslationUnit();
-      //const FileStatementList&  get_statements() const;
+      /**
+       * This method returns a list of 'const' owned pointers to the
+       * statements defined in this translation unit.
+       */
       const std::vector<FileStatement_owned_ptr> & get_statements() const;
     private:
       Terminal_owned_ptr yyeof_token;

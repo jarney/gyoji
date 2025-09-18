@@ -1,4 +1,4 @@
+typedef u8 char;
 
 
-
-syntax error on line 4
+                                   char -f;

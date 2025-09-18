@@ -4,6 +4,10 @@
 #pragma once
 
 namespace JLang::frontend {
+  class Token;
+  class TokenStream;
+  typedef std::unique_ptr<Token> Token_owned_ptr;
+  typedef std::unique_ptr<TokenStream> TokenStream_owned_ptr;
 
   class Token {
   public:
@@ -25,7 +29,6 @@ namespace JLang::frontend {
       size_t line;
       size_t column;
   };
-  typedef std::unique_ptr<Token> Token_owned_ptr;
   
   class TokenStream {
   public:
@@ -53,5 +56,4 @@ namespace JLang::frontend {
     std::vector<Token*> empty_list;
     std::map<size_t, std::vector<Token*>> tokens_by_lineno;
   };
-  typedef std::unique_ptr<TokenStream> TokenStream_owned_ptr;
 };

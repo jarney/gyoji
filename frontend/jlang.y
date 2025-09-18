@@ -20,7 +20,8 @@
 %define api.namespace {JLang::frontend::yacc}
 %define api.value.type variant
 %param {yyscan_t scanner}
- 
+%define parse.error verbose
+
 %code provides
 {
 #define DEBUG_NONTERMINALS 0
@@ -541,8 +542,8 @@ namespace_declaration
                                                                                       std::move($2),
                                                                                       std::move($3)
                                                                                       );
-                return_data.namespace_context.namespace_new(namespace_name, Namespace::TYPE_NAMESPACE, visibility_from_modifier(access_modifier));
-                return_data.namespace_context.namespace_push(namespace_name);
+                return_data.namespace_context->namespace_new(namespace_name, Namespace::TYPE_NAMESPACE, visibility_from_modifier(access_modifier));
+                return_data.namespace_context->namespace_push(namespace_name);
                 PRINT_NONTERMINALS($$);
         }
         ;
@@ -557,7 +558,7 @@ file_statement_namespace
                                                                                         std::move($4),
                                                                                         std::move($5)
                                                                                         );
-                return_data.namespace_context.namespace_pop();
+                return_data.namespace_context->namespace_pop();
                 PRINT_NONTERMINALS($$);
         }
         ;
@@ -588,16 +589,16 @@ file_statement_using
                                                                                     std::move($5),
                                                                                     std::move($6)
                                                                                     );
-                NamespaceFoundReason::ptr found_std = return_data.namespace_context.namespace_lookup(namespace_name);
+                NamespaceFoundReason::ptr found_std = return_data.namespace_context->namespace_lookup(namespace_name);
                 if (!found_std) {
                   fprintf(stderr, "Error: no such namespace %s in using statement\n", namespace_name.c_str());
                   exit(1);
                 }
                 if (as_name.size() > 0) {
-                  return_data.namespace_context.namespace_using(as_name, found_std->location);
+                  return_data.namespace_context->namespace_using(as_name, found_std->location);
                 }
                 else {
-                  return_data.namespace_context.namespace_using("", found_std->location);
+                  return_data.namespace_context->namespace_using("", found_std->location);
                 }
                 PRINT_NONTERMINALS($$);
         }
@@ -612,16 +613,16 @@ file_statement_using
                                                                                     std::move($5),
                                                                                     std::move($6)
                                                                                     );
-                NamespaceFoundReason::ptr found_std = return_data.namespace_context.namespace_lookup(namespace_name);
+                NamespaceFoundReason::ptr found_std = return_data.namespace_context->namespace_lookup(namespace_name);
                 if (!found_std) {
                   fprintf(stderr, "Error: no such namespace %s in using statement\n", namespace_name.c_str());
                   exit(1);
                 }
                 if (as_name.size() > 0) {
-                  return_data.namespace_context.namespace_using(as_name, found_std->location);
+                  return_data.namespace_context->namespace_using(as_name, found_std->location);
                 }
                 else {
-                  return_data.namespace_context.namespace_using("", found_std->location);
+                  return_data.namespace_context->namespace_using("", found_std->location);
                 }
                 PRINT_NONTERMINALS($$);
         }
@@ -637,8 +638,8 @@ class_decl_start
                                                                          std::move($3),
                                                                          std::move($4)
                                                                          );
-                return_data.namespace_context.namespace_new(class_name, Namespace::TYPE_CLASS, visibility_from_modifier(visibility_modifier));
-                return_data.namespace_context.namespace_push(class_name);
+                return_data.namespace_context->namespace_new(class_name, Namespace::TYPE_CLASS, visibility_from_modifier(visibility_modifier));
+                return_data.namespace_context->namespace_push(class_name);
 #if 0
                 // XXX TODO: This isn't handled correctly for the strongly-typed AST.
                 if ($4->children.size() > 0) {
@@ -646,7 +647,7 @@ class_decl_start
                     if (child->type == Parser::symbol_kind_type::S_class_argument_list) {
                       for (auto grandchild : child->children) {
                         if (grandchild->type == Parser::symbol_kind_type::S_IDENTIFIER) {
-                          return_data.namespace_context.namespace_new(grandchild->get_value(), Namespace::TYPE_CLASS, Namespace::VISIBILITY_PRIVATE);
+                          return_data.namespace_context->namespace_new(grandchild->get_value(), Namespace::TYPE_CLASS, Namespace::VISIBILITY_PRIVATE);
                         }
                       }
                     }
@@ -696,7 +697,7 @@ class_definition
                                                                                  std::move($4),
                                                                                  std::move($5)
                                                                                  );
-                return_data.namespace_context.namespace_pop();
+                return_data.namespace_context->namespace_pop();
                 PRINT_NONTERMINALS($$);
         }
         ;
@@ -712,7 +713,7 @@ type_definition
                                                                                std::move($4),
                                                                                std::move($5)
                                                                                );
-                return_data.namespace_context.namespace_new(type_name, Namespace::TYPE_TYPEDEF, visibility_from_modifier(visibility_modifier));
+                return_data.namespace_context->namespace_new(type_name, Namespace::TYPE_TYPEDEF, visibility_from_modifier(visibility_modifier));
                 PRINT_NONTERMINALS($$);
         }
         ;
@@ -731,7 +732,7 @@ enum_definition
                                                                                 std::move($7),
                                                                                 std::move($8)
                                                                                 );
-                return_data.namespace_context.namespace_new(type_name, Namespace::TYPE_TYPEDEF, visibility_from_modifier(visibility_modifier));
+                return_data.namespace_context->namespace_new(type_name, Namespace::TYPE_TYPEDEF, visibility_from_modifier(visibility_modifier));
                 PRINT_NONTERMINALS($$);
         }
         ;
@@ -2175,27 +2176,10 @@ int visibility_from_modifier(JLang::frontend::tree::AccessModifier::AccessModifi
 void JLang::frontend::yacc::YaccParser::error(const std::string& msg) {
     LexContext *lex_context = (LexContext*)yyget_extra(scanner);
 
-    // What we want is a "token stream"
-    // which is organized by lineno (i.e. lex_context->get_token_stream())
-    // where the token stream is just the list (and content) of all of the
-    // raw elements parsed.
-    // The 'Terminal' we return contains a reference to the token stream
-    // which must live longer than the syntax tree.
-    
-    // TODO: put error handling here instead of stderr.
-    // What we really want here is enough context (from lineno)
-    // to recall the surrounding code so that it can be nicely
-    // formatted and we can report exactly where the error
-    // occurred and ----^ point to the exact spot where something
-    // bad happened.
-    // In the simplest case, suppose we have a map of line number to
-    // line of code.  Then we can simply do a lex_context->lines[lex_context->lineno]
-    // and use that to get the bad line of code.  Then if we also have
-    // a TERMINAL or some other syntax element, we can use that to identify
-    // the column inside that line to print the error line.
-    printf("Syntax error at line %ld:%ld : %s\n", lex_context->line,
-           lex_context->column,
-           msg.c_str());
+    // We don't directly print an error here, we report it
+    // to the error reporting system so that it can
+    // write error information when it needs to, presumably
+    // after collecting possibly multiple errors
 
     std::unique_ptr<JLang::errors::Error> error = std::make_unique<JLang::errors::Error>("Syntax Error");
 
@@ -2207,7 +2191,5 @@ void JLang::frontend::yacc::YaccParser::error(const std::string& msg) {
                        lex_context->column,
                        msg);
     
-    return_data.errors.add_error(std::move(error));
-    return_data.errors.print();
-    
+    return_data.errors->add_error(std::move(error));
 }

@@ -289,9 +289,15 @@ typedef std::unique_ptr<UsingAs> UsingAs_owned_ptr;
       typedef std::unique_ptr<StatementContinue> StatementContinue_owned_ptr;
       typedef std::unique_ptr<StatementBreak> StatementBreak_owned_ptr;
       typedef std::unique_ptr<StatementReturn> StatementReturn_owned_ptr;
-    
+
   typedef std::unique_ptr<TranslationUnit> TranslationUnit_owned_ptr;
+  /**
+   * Convenience definition
+   */
     typedef std::unique_ptr<FileStatementList> FileStatementList_owned_ptr;
+  /**
+   * Convenience definition
+   */
       typedef std::unique_ptr<FileStatement> FileStatement_owned_ptr;
         typedef std::unique_ptr<FileStatementFunctionDefinition> FileStatementFunctionDefinition_owned_ptr;
           typedef std::unique_ptr<ScopeBody> ScopeBody_owned_ptr;

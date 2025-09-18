@@ -33,8 +33,15 @@ namespace JLang::frontend::namespaces {
  * or it may be a CLASS (a type and also a nested namespace).
  *
  */
+class Namespace;
+class NamespaceContext;
+typedef std::unique_ptr<Namespace> Namespace_owned_ptr;
+typedef std::unique_ptr<NamespaceContext> NamespaceContext_owned_ptr;
+
 class Namespace {
 public:
+
+  
   typedef std::shared_ptr<Namespace> ptr;
   
   Namespace(std::string _name, int _type, int _visibility);

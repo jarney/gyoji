@@ -30,7 +30,7 @@ int main(int argc, char **argv)
       exit(1);
     }
 
-    NamespaceContext namespace_context;
+    NamespaceContext_owned_ptr namespace_context = std::make_unique<NamespaceContext>();
     
     std::shared_ptr<JBackend> backend;
     if (std::string("format-identity") == std::string(argv[1])) {
@@ -47,9 +47,8 @@ int main(int argc, char **argv)
       return 1;
     }
     InputSourceFile input_source(input);
-    Errors errors;
 
-    Parser parser(namespace_context, errors);
+    Parser parser(std::move(namespace_context));
     int rc = parser.parse(input_source);
     if (rc != 0) {
       printf("Syntax error\n");
