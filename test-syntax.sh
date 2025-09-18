@@ -14,6 +14,9 @@ syntax-typedef.j
 syntax-comments.j
 syntax-access-qualifier.j
 syntax-pointer.j
+syntax-function-declaration.j
+syntax-function-definition.j
+syntax-function-unsafe-block.j
 llvm-decl-var.j
 "
 echo "Checking token stream output."

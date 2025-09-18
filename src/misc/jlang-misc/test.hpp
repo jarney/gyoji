@@ -2,7 +2,7 @@
 #include <string>
 #include <stdio.h>
 
-#define ASSERT(expect, actual, message)                               \
+#define ASSERT_STR_EQUAL(expect, actual, message)                     \
   {                                                                   \
     std::string actual_str(actual);                                   \
     std::string expect_str(expect);                                   \
@@ -16,6 +16,7 @@
       }                                                               \
   }
 
+#define ASSERT(expect, actual, message) ASSERT_STR_EQUAL(expect, actual, message)
 
 #define ASSERT_TRUE(actual, message)                                  \
   {                                                                   \
