@@ -10,6 +10,10 @@ mkdir -p ${CMAKE_BINARY_DIR}/test-syntax-dir
 
 TEST_FILES="
 syntax-empty.j
+syntax-typedef.j
+syntax-comments.j
+syntax-access-qualifier.j
+syntax-pointer.j
 llvm-decl-var.j
 "
 echo "Checking token stream output."

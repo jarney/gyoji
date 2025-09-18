@@ -137,6 +137,8 @@ UnsafeModifier::is_unsafe() const
 }
 
 ///////////////////////////////////////////////////
+// TypeName
+///////////////////////////////////////////////////
 TypeName::TypeName(::JLang::owned<Terminal> _type_name)
   : SyntaxNode("type_name", this)
   , m_is_expression(false)
@@ -178,14 +180,13 @@ const Expression &
 TypeName::get_expression() const
 { return *expression; }
 ///////////////////////////////////////////////////
+// TypeName
+///////////////////////////////////////////////////
 TypeSpecifierCallArgs::TypeSpecifierCallArgs()
   : SyntaxNode("type_specifier_call_args", this)
 {}
 TypeSpecifierCallArgs::~TypeSpecifierCallArgs()
 {}
-const std::vector<::JLang::owned<TypeSpecifier>> &
-TypeSpecifierCallArgs::get_arguments() const
-{ return arguments; }
 void
 TypeSpecifierCallArgs::add_argument(::JLang::owned<TypeSpecifier> _argument)
 {
@@ -200,6 +201,9 @@ TypeSpecifierCallArgs::add_argument(::JLang::owned<Terminal> _comma_token, ::JLa
   comma_list.push_back(std::move(_comma_token));
   arguments.push_back(std::move(_argument));
 }
+const std::vector<::JLang::owned<TypeSpecifier>> &
+TypeSpecifierCallArgs::get_arguments() const
+{ return arguments; }
 
 ///////////////////////////////////////////////////
 TypeSpecifierSimple::TypeSpecifierSimple(
@@ -424,12 +428,12 @@ FileStatementFunctionDeclaration::get_unsafe_modifier() const
   return *unsafe_modifier;
 }
 const TypeSpecifier &
-FileStatementFunctionDeclaration::get_type_specifier() const
+FileStatementFunctionDeclaration::get_return_type() const
 {
   return *type_specifier;
 }
-const Terminal &
-FileStatementFunctionDeclaration::get_name() const { return *name; }
+const std::string &
+FileStatementFunctionDeclaration::get_name() const { return name->get_value(); }
  
 const FunctionDefinitionArgList &
 FileStatementFunctionDeclaration::get_arguments() const
@@ -1977,9 +1981,9 @@ FileStatementGlobalDefinition::get_unsafe_modifier() const
 const TypeSpecifier &
 FileStatementGlobalDefinition::get_type_specifier() const
 { return *type_specifier; }
-const Terminal &
+const std::string &
 FileStatementGlobalDefinition::get_name() const
-{ return *name; }
+{ return name->get_value(); }
 const ArrayLength &
 FileStatementGlobalDefinition::get_array_length() const
 { return *array_length; }

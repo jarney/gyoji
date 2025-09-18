@@ -16,11 +16,11 @@ static void print_whitespace(const TerminalNonSyntax & node)
 }
 static void print_comment_single_line(const TerminalNonSyntax & node)
 {
-  printf("//%s", node.get_data().c_str());
+  printf("%s", node.get_data().c_str());
 }
 static void print_comment_multi_line(const TerminalNonSyntax & node)
 {
-  printf("/*%s*/", node.get_data().c_str());
+  printf("%s", node.get_data().c_str());
 }
 static void print_file_metadata(const TerminalNonSyntax & node)
 {

@@ -68,46 +68,140 @@ int main(int argc, char **argv)
     ASSERT_TRUE(parse_result->has_translation_unit(), "We should have a translation unit");
     ASSERT_INT_EQUAL(4, parse_result->get_translation_unit().get_statements().size(), "This should have 4 typedefs");
     {    
-    const auto & statement_type = parse_result->get_translation_unit().get_statements().at(0)->get_statement();
-    ASSERT_TRUE(std::holds_alternative<::JLang::owned<TypeDefinition>>(statement_type), "This should be a typedef");
-
-    const auto & type_definition = std::get<::JLang::owned<TypeDefinition>>(statement_type);
-    ASSERT("char", type_definition->get_name(), "We expect that we are defining 'char'");
-
-    const auto & access_modifier = type_definition->get_access_modifier();
-    ASSERT_INT_EQUAL(AccessModifier::PUBLIC, access_modifier.get_type(), "We expect this to be public by default");
+      const auto & statement_type = parse_result->get_translation_unit().get_statements().at(0)->get_statement();
+      ASSERT_TRUE(std::holds_alternative<::JLang::owned<TypeDefinition>>(statement_type), "This should be a typedef");
+      
+      const auto & type_definition = std::get<::JLang::owned<TypeDefinition>>(statement_type);
+      ASSERT("char", type_definition->get_name(), "We expect that we are defining 'char'");
+      
+      const auto & access_modifier = type_definition->get_access_modifier();
+      ASSERT_INT_EQUAL(AccessModifier::PUBLIC, access_modifier.get_type(), "We expect this to be public by default");
     }
     {
-    const auto & statement_type = parse_result->get_translation_unit().get_statements().at(1)->get_statement();
-    ASSERT_TRUE(std::holds_alternative<::JLang::owned<TypeDefinition>>(statement_type), "This should be a typedef");
-
-    const auto & type_definition = std::get<::JLang::owned<TypeDefinition>>(statement_type);
-    ASSERT("public_char", type_definition->get_name(), "We expect that we are defining 'char'");
-
-    const auto & access_modifier = type_definition->get_access_modifier();
-    ASSERT_INT_EQUAL(AccessModifier::PUBLIC, access_modifier.get_type(), "We expect this to be public by default");
+      const auto & statement_type = parse_result->get_translation_unit().get_statements().at(1)->get_statement();
+      ASSERT_TRUE(std::holds_alternative<::JLang::owned<TypeDefinition>>(statement_type), "This should be a typedef");
+      
+      const auto & type_definition = std::get<::JLang::owned<TypeDefinition>>(statement_type);
+      ASSERT("public_char", type_definition->get_name(), "We expect that we are defining 'char'");
+      
+      const auto & access_modifier = type_definition->get_access_modifier();
+      ASSERT_INT_EQUAL(AccessModifier::PUBLIC, access_modifier.get_type(), "We expect this to be public by default");
     }
     {
-    const auto & statement_type = parse_result->get_translation_unit().get_statements().at(2)->get_statement();
-    ASSERT_TRUE(std::holds_alternative<::JLang::owned<TypeDefinition>>(statement_type), "This should be a typedef");
+      const auto & statement_type = parse_result->get_translation_unit().get_statements().at(2)->get_statement();
+      ASSERT_TRUE(std::holds_alternative<::JLang::owned<TypeDefinition>>(statement_type), "This should be a typedef");
 
-    const auto & type_definition = std::get<::JLang::owned<TypeDefinition>>(statement_type);
-    ASSERT("protected_char", type_definition->get_name(), "We expect that we are defining 'char'");
-
-    const auto & access_modifier = type_definition->get_access_modifier();
-    ASSERT_INT_EQUAL(AccessModifier::PROTECTED, access_modifier.get_type(), "We expect this to be protected.");
+      const auto & type_definition = std::get<::JLang::owned<TypeDefinition>>(statement_type);
+      ASSERT("protected_char", type_definition->get_name(), "We expect that we are defining 'char'");
+      
+      const auto & access_modifier = type_definition->get_access_modifier();
+      ASSERT_INT_EQUAL(AccessModifier::PROTECTED, access_modifier.get_type(), "We expect this to be protected.");
     }
     {
-    const auto & statement_type = parse_result->get_translation_unit().get_statements().at(3)->get_statement();
-    ASSERT_TRUE(std::holds_alternative<::JLang::owned<TypeDefinition>>(statement_type), "This should be a typedef");
-
-    const auto & type_definition = std::get<::JLang::owned<TypeDefinition>>(statement_type);
-    ASSERT("private_char", type_definition->get_name(), "We expect that we are defining 'char'");
-
-    const auto & access_modifier = type_definition->get_access_modifier();
-    ASSERT_INT_EQUAL(AccessModifier::PRIVATE, access_modifier.get_type(), "We expect this to be public by default");
+      const auto & statement_type = parse_result->get_translation_unit().get_statements().at(3)->get_statement();
+      ASSERT_TRUE(std::holds_alternative<::JLang::owned<TypeDefinition>>(statement_type), "This should be a typedef");
+      
+      const auto & type_definition = std::get<::JLang::owned<TypeDefinition>>(statement_type);
+      ASSERT("private_char", type_definition->get_name(), "We expect that we are defining 'char'");
+      
+      const auto & access_modifier = type_definition->get_access_modifier();
+      ASSERT_INT_EQUAL(AccessModifier::PRIVATE, access_modifier.get_type(), "We expect this to be public by default");
     }
   }
+  {
+    auto parse_result = parse(path, "tests/syntax-access-qualifier.j");
+    ASSERT_NOT_NULL(parse_result, "File should parse correctly.");
+    ASSERT_TRUE(parse_result->has_translation_unit(), "We should have a translation unit");
+    ASSERT_INT_EQUAL(2, parse_result->get_translation_unit().get_statements().size(), "This should have 2 global initializations.");
+
+    {
+      const auto & statement_type = parse_result->get_translation_unit().get_statements().at(0)->get_statement();
+      ASSERT_TRUE(std::holds_alternative<::JLang::owned<FileStatementGlobalDefinition>>(statement_type), "This should be a global definition");
+
+      const auto & global_definition = std::get<::JLang::owned<FileStatementGlobalDefinition>>(statement_type);
+      ASSERT("x", global_definition->get_name(), "We expect that we are defining the variable 'x'");
+
+      const auto & access_modifier = global_definition->get_access_modifier();
+      ASSERT_INT_EQUAL(AccessModifier::PUBLIC, access_modifier.get_type(), "We expect this to be public by default");
+
+      const auto & type_specifier = global_definition->get_type_specifier();
+      ASSERT_TRUE(std::holds_alternative<::JLang::owned<TypeSpecifierSimple>>(type_specifier.get_type()), "Expect a simple type.");
+      const auto & type_specifier_simple = std::get<::JLang::owned<TypeSpecifierSimple>>(type_specifier.get_type());
+      const auto & access_qualifier = type_specifier_simple->get_access_qualifier();
+      ASSERT_INT_EQUAL(AccessQualifier::CONST, access_qualifier.get_type(), "Expect this to be const qualified");
+
+    }
+    {
+      const auto & statement_type = parse_result->get_translation_unit().get_statements().at(1)->get_statement();
+      ASSERT_TRUE(std::holds_alternative<::JLang::owned<FileStatementGlobalDefinition>>(statement_type), "This should be a global definition");
+
+      const auto & global_definition = std::get<::JLang::owned<FileStatementGlobalDefinition>>(statement_type);
+      ASSERT("p", global_definition->get_name(), "We expect that we are defining the variable 'p'");
+
+      const auto & access_modifier = global_definition->get_access_modifier();
+      ASSERT_INT_EQUAL(AccessModifier::PUBLIC, access_modifier.get_type(), "We expect this to be public by default");
+
+      const auto & type_specifier = global_definition->get_type_specifier();
+      ASSERT_TRUE(std::holds_alternative<::JLang::owned<TypeSpecifierSimple>>(type_specifier.get_type()), "Expect a simple type.");
+      const auto & type_specifier_simple = std::get<::JLang::owned<TypeSpecifierSimple>>(type_specifier.get_type());
+      const auto & access_qualifier = type_specifier_simple->get_access_qualifier();
+      ASSERT_INT_EQUAL(AccessQualifier::VOLATILE, access_qualifier.get_type(), "Expect this to be const qualified");
+
+    }
+  }
+
+  {
+    auto parse_result = parse(path, "tests/syntax-pointer.j");
+    ASSERT_NOT_NULL(parse_result, "File should parse correctly.");
+    ASSERT_TRUE(parse_result->has_translation_unit(), "We should have a translation unit");
+    ASSERT_INT_EQUAL(2, parse_result->get_translation_unit().get_statements().size(), "This should have 2 global initializations.");
+
+    {
+      const auto & statement_type = parse_result->get_translation_unit().get_statements().at(0)->get_statement();
+      ASSERT_TRUE(std::holds_alternative<::JLang::owned<FileStatementGlobalDefinition>>(statement_type), "This should be a global definition");
+
+      const auto & global_definition = std::get<::JLang::owned<FileStatementGlobalDefinition>>(statement_type);
+      ASSERT("p", global_definition->get_name(), "We expect that we are defining the variable 'x'");
+
+      const auto & type_specifier = global_definition->get_type_specifier();
+
+      ASSERT_TRUE(std::holds_alternative<::JLang::owned<TypeSpecifierPointerTo>>(type_specifier.get_type()), "Expect a pointer to another type.");
+      const auto & type_specifier_pointer_to = std::get<::JLang::owned<TypeSpecifierPointerTo>>(type_specifier.get_type());
+
+      const auto & access_qualifier = type_specifier_pointer_to->get_access_qualifier();
+      ASSERT_INT_EQUAL(AccessQualifier::VOLATILE, access_qualifier.get_type(), "Expect this to be const qualified");
+      
+      const auto & type_referred_to = type_specifier_pointer_to->get_type_specifier();
+      ASSERT_TRUE(std::holds_alternative<::JLang::owned<TypeSpecifierSimple>>(type_referred_to.get_type()), "Expect a simple type we're referring to.");
+      const auto & type_specifier_referred_to_simple = std::get<::JLang::owned<TypeSpecifierSimple>>(type_referred_to.get_type());
+
+      const auto & access_qualifier_referred_to = type_specifier_referred_to_simple->get_access_qualifier();
+      ASSERT_INT_EQUAL(AccessQualifier::CONST, access_qualifier_referred_to.get_type(), "Expect this to be const qualified");
+    }
+    {
+      const auto & statement_type = parse_result->get_translation_unit().get_statements().at(1)->get_statement();
+      ASSERT_TRUE(std::holds_alternative<::JLang::owned<FileStatementGlobalDefinition>>(statement_type), "This should be a global definition");
+
+      const auto & global_definition = std::get<::JLang::owned<FileStatementGlobalDefinition>>(statement_type);
+      ASSERT("q", global_definition->get_name(), "We expect that we are defining the variable 'p'");
+
+      const auto & type_specifier = global_definition->get_type_specifier();
+
+      ASSERT_TRUE(std::holds_alternative<::JLang::owned<TypeSpecifierReferenceTo>>(type_specifier.get_type()), "Expect a pointer to another type.");
+      const auto & type_specifier_reference_to = std::get<::JLang::owned<TypeSpecifierReferenceTo>>(type_specifier.get_type());
+      
+      const auto & access_qualifier = type_specifier_reference_to->get_access_qualifier();
+      ASSERT_INT_EQUAL(AccessQualifier::CONST, access_qualifier.get_type(), "Expect this to be const qualified");
+      
+      const auto & type_referred_to = type_specifier_reference_to->get_type_specifier();
+      ASSERT_TRUE(std::holds_alternative<::JLang::owned<TypeSpecifierSimple>>(type_referred_to.get_type()), "Expect a simple type we're referring to.");
+      const auto & type_specifier_referred_to_simple = std::get<::JLang::owned<TypeSpecifierSimple>>(type_referred_to.get_type());
+
+      const auto & access_qualifier_referred_to = type_specifier_referred_to_simple->get_access_qualifier();
+      ASSERT_INT_EQUAL(AccessQualifier::VOLATILE, access_qualifier_referred_to.get_type(), "Expect this to be const qualified");
+    }
+  }
+
   
   printf("PASSED\n");
   

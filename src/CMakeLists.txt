@@ -1,6 +1,7 @@
 add_subdirectory(misc)
 add_subdirectory(errors)
 add_subdirectory(frontend)
+add_subdirectory(types)
 add_subdirectory(backend)
 #add_subdirectory(codegen)
 

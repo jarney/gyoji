@@ -256,6 +256,21 @@ unsafe {PROCESS_NODE(UNSAFE);}
     lex_context->column = 0;
 }
 \#[a-zA-Z]+\ [[:digit:]]+\ \".*\"\n {
+    // XXX TODO : Parse the source file and line number to
+    // mark the current position of compilation in terms of
+    // an original source file that generated this block of code.
+    // This is useful, for example, when working with a YACC file
+    // that generates some JLang code and you want to trace
+    // the error to the correct line of YACC code and not necessarily
+    // to the source file being compiled.
+    TOKEN_ADD(file_metadata)
+    ::JLang::owned<TerminalNonSyntax> nsd = std::make_unique<TerminalNonSyntax>(
+        TerminalNonSyntax::Type::EXTRA_FILE_METADATA,
+        tok
+    );
+    non_syntax_data.push_back(std::move(nsd));
+}
+\#.*\n {
     TOKEN_ADD(file_metadata)
     ::JLang::owned<TerminalNonSyntax> nsd = std::make_unique<TerminalNonSyntax>(
         TerminalNonSyntax::Type::EXTRA_FILE_METADATA,
