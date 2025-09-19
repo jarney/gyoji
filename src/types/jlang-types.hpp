@@ -30,6 +30,9 @@ namespace JLang::types {
    */
   class Types {
   public:
+    Types();
+    ~Types();
+    
     /**
      * This returns the fully resolved type from the
      * fully-qualified name of the type.  By fully-qualified,
@@ -47,6 +50,12 @@ namespace JLang::types {
      * specified.
      */
     void define_type(std::string type_name, JLang::owned<Type> type);
+
+    /**
+     * This is used for debugging purposes to dump
+     * the content of the type database.
+     */
+    void dump();
   private:
     std::map<std::string, JLang::owned<Type>> type_map;
   };
@@ -112,6 +121,7 @@ namespace JLang::types {
      * type as a primitive type.
      */
     Type(std::string _name, TypeType _type);
+
     /**
      * Destructor, nothing special.
      */
@@ -128,9 +138,16 @@ namespace JLang::types {
      * only later when the type resolution occurs.
      */
     bool is_incomplete();
+
+    /**
+     * Used for debugging purposes to dump the content
+     * of the type database.
+     */
+    void dump();
   private:
     bool complete;
     std::string name;
+    TypeType type;
   };
 
   //! Type Resolver

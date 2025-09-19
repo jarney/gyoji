@@ -1,0 +1,40 @@
+set(CMDLINE_LINK_LIBRARIES
+        jlang-backend
+        jlang-frontend
+        jlang-errors
+        jlang-misc
+	-L/usr/lib/llvm-18/lib -lLLVM-18
+)
+
+#        jlang-codegen
+set(CMDLINE_INCLUDE_DIRECTORIES
+        misc
+        errors
+        frontend
+        backend
+        codegen
+	/usr/include/llvm-18
+	/usr/include/llvm-c-18
+)
+
+
+add_executable(jformat-identity jformat-identity.cpp)
+target_include_directories(jformat-identity PUBLIC ${CMDLINE_INCLUDE_DIRECTORIES})
+target_link_libraries(jformat-identity PUBLIC ${CMDLINE_LINK_LIBRARIES})
+
+add_executable(jformat-tree jformat-tree.cpp)
+target_include_directories(jformat-tree PUBLIC ${CMDLINE_INCLUDE_DIRECTORIES})
+target_link_libraries(jformat-tree PUBLIC ${CMDLINE_LINK_LIBRARIES})
+
+add_executable(jcc jcc.cpp)
+target_include_directories(jcc PUBLIC ${CMDLINE_INCLUDE_DIRECTORIES})
+target_link_libraries(jcc PUBLIC ${CMDLINE_LINK_LIBRARIES})
+
+install(
+    TARGETS
+        jcc
+        jformat-identity
+        jformat-tree
+        RUNTIME DESTINATION bin
+)
+

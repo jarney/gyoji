@@ -2056,6 +2056,11 @@ class_member_declaration
                 $$ = std::make_unique<JLang::frontend::tree::ClassMemberDeclaration>(std::move(expr), sn);
                 PRINT_NONTERMINALS($$);
         }
+        | class_declaration {
+                const JLang::frontend::ast::SyntaxNode &sn = *($1);
+                $$ = std::make_unique<JLang::frontend::tree::ClassMemberDeclaration>(std::move($1), sn);
+                PRINT_NONTERMINALS($$);
+        }
         | class_definition {
                 const JLang::frontend::ast::SyntaxNode &sn = *($1);
                 $$ = std::make_unique<JLang::frontend::tree::ClassMemberDeclaration>(std::move($1), sn);

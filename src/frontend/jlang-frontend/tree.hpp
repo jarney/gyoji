@@ -1679,6 +1679,7 @@ namespace JLang::frontend::tree {
         ::JLang::owned<ClassMemberDeclarationMethod>,
         ::JLang::owned<ClassMemberDeclarationConstructor>,
         ::JLang::owned<ClassMemberDeclarationDestructor>,
+        ::JLang::owned<ClassDeclaration>,
         ::JLang::owned<ClassDefinition>,
         ::JLang::owned<EnumDefinition>,
         ::JLang::owned<TypeDefinition>
