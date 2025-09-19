@@ -648,7 +648,8 @@ class_decl_start
                                                                          std::move($1),
                                                                          std::move($2),
                                                                          std::move($3),
-                                                                         std::move($4)
+                                                                         std::move($4),
+                                                                         true // is_identifier
                                                                          );
                 return_data.namespace_context->namespace_new(class_name, Namespace::TYPE_CLASS, visibility_from_modifier(visibility_modifier));
                 return_data.namespace_context->namespace_push(class_name);
@@ -675,7 +676,8 @@ class_decl_start
                                                                          std::move($1),
                                                                          std::move($2),
                                                                          std::move($3),
-                                                                         std::move($4)
+                                                                         std::move($4),
+                                                                         false // is_identifier
                                                                          );
                 return_data.namespace_context->namespace_new(class_name, Namespace::TYPE_CLASS, visibility_from_modifier(visibility_modifier));
                 return_data.namespace_context->namespace_push(class_name);

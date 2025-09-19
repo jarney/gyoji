@@ -1018,7 +1018,8 @@ ClassDeclStart::ClassDeclStart(
                      ::JLang::owned<AccessModifier> _access_modifier,
                      ::JLang::owned<Terminal> _class_token,
                      ::JLang::owned<Terminal> _identifier_token,
-                     ::JLang::owned<ClassArgumentList> _class_argument_list
+                     ::JLang::owned<ClassArgumentList> _class_argument_list,
+                     bool is_identifier
 )
   : SyntaxNode("class_decl_start", this)
   , access_modifier(std::move(_access_modifier))
@@ -1030,6 +1031,14 @@ ClassDeclStart::ClassDeclStart(
   add_child(*class_token);
   add_child(*identifier_token);
   add_child(*class_argument_list);
+  if (is_identifier) {
+    name = identifier_token->get_fully_qualified_name() + "::" + identifier_token->get_value();
+    //fprintf(stderr, "CLASS_DECL_START id %s\n", name.c_str());
+  }
+  else {
+    name = identifier_token->get_fully_qualified_name();
+    //fprintf(stderr, "CLASS_DECL_START type %s\n", name.c_str());
+  }
 }
 ClassDeclStart::~ClassDeclStart()
 {}
@@ -1038,7 +1047,7 @@ ClassDeclStart::get_access_modifier() const
 { return *access_modifier; }
 const std::string &
 ClassDeclStart::get_name() const
-{ return identifier_token->get_value(); }
+{ return name; }
 const ClassArgumentList &
 ClassDeclStart::get_argument_list() const
 { return *class_argument_list; }
@@ -1329,9 +1338,9 @@ ClassDefinition::get_argument_list() const
 {
   return class_decl_start->get_argument_list();
 }
-const ClassMemberDeclarationList &
+const std::vector<::JLang::owned<ClassMemberDeclaration>> &
 ClassDefinition::get_members() const
-{ return *class_member_declaration_list; }
+{ return class_member_declaration_list->get_members(); }
 
 ///////////////////////////////////////////////////
 TypeDefinition::TypeDefinition(

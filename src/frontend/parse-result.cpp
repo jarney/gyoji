@@ -23,7 +23,7 @@ ParseResult::get_namespace_context() const
 {
   return *namespace_context;
 }
-const Errors &
+Errors &
 ParseResult::get_errors() const
 {
   return *errors;

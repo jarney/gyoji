@@ -79,7 +79,7 @@ namespace JLang::frontend {
      * This returns an object containing the details of any parse errors
      * that occurred during the parse.
      */
-    const JLang::errors::Errors & get_errors() const;
+    JLang::errors::Errors & get_errors() const;
 
     /**
      * This returns true if the parse resulted in a valid TranslationUnit.

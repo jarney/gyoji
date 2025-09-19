@@ -755,7 +755,7 @@ namespace JLang::frontend::tree {
    *
    * <pre>
    *      const TypeSpecifier::TypeSpecifierType & type = type_specifier.get_type();
-   *      if (std::variant_holds<JLang::owned<TypeSpecifierSimple>>(type)) {
+   *      if (std::holds_alternative<JLang::owned<TypeSpecifierSimple>>(type)) {
    *          const JLang::owned<TypeSpecifierSimple> & simple = std::get<JLang::owned<TypeSpecifierSimple>>(type);
    *          std::string name = simple.get_name();
    *      }
@@ -1533,7 +1533,8 @@ namespace JLang::frontend::tree {
                      ::JLang::owned<AccessModifier> _access_modifier,
                      ::JLang::owned<Terminal> _class_token,
                      ::JLang::owned<Terminal> _identifier_token,
-                     ::JLang::owned<ClassArgumentList> _class_argument_list
+                     ::JLang::owned<ClassArgumentList> _class_argument_list,
+                     bool is_identifier
                      );
                      
     /**
@@ -1548,6 +1549,7 @@ namespace JLang::frontend::tree {
       ::JLang::owned<Terminal> class_token;
       ::JLang::owned<Terminal> identifier_token;
       ::JLang::owned<ClassArgumentList> class_argument_list;
+      std::string name;
     };
     class ClassArgumentList : public JLang::frontend::ast::SyntaxNode {
     public:
@@ -1748,7 +1750,7 @@ namespace JLang::frontend::tree {
       const AccessModifier & get_access_modifier() const;
       const std::string & get_name() const;
       const ClassArgumentList & get_argument_list() const;
-      const ClassMemberDeclarationList & get_members() const;
+      const std::vector<::JLang::owned<ClassMemberDeclaration>> & get_members() const;
     private:
       ::JLang::owned<ClassDeclStart> class_decl_start;
       ::JLang::owned<Terminal> brace_l_token;

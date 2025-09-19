@@ -39,7 +39,7 @@ namespace JLang::types {
      * we mean a namespace path beginning with the root
      * namespace and identifying a specific type.
      */
-    const Type & get_type(std::string type) const;
+    Type * get_type(std::string type) const;
 
     /**
      * This is used to define a fully-qualified type
@@ -49,15 +49,16 @@ namespace JLang::types {
      * be required in order to ensure that the type is fully
      * specified.
      */
-    void define_type(std::string type_name, JLang::owned<Type> type);
+    void define_type(JLang::owned<Type> type);
 
     /**
      * This is used for debugging purposes to dump
      * the content of the type database.
      */
     void dump();
-  private:
+    
     std::map<std::string, JLang::owned<Type>> type_map;
+  private:
   };
 
   //! This represents a type as declared in a translation unit.
@@ -120,7 +121,7 @@ namespace JLang::types {
      * This defines a primitive type of the given
      * type as a primitive type.
      */
-    Type(std::string _name, TypeType _type);
+    Type(std::string _name, TypeType _type, bool _complete);
 
     /**
      * Destructor, nothing special.
@@ -130,15 +131,25 @@ namespace JLang::types {
     /**
      * This returns the fully-qualified name of the type.
      */
-    const std::string & get_name();
+    const std::string & get_name() const;
     /**
      * This returns true if the type has not yet been completely specified.
      * In particular, types may be incomplete when they are initially
      * declared in a forward-declaration, but may receive a final definition
      * only later when the type resolution occurs.
      */
-    bool is_incomplete();
+    bool is_complete();
+    
+    /**
+     * Completes the definition of a composite type.
+     */
+    void complete_composite_definition(std::map<std::string, Type*> _members);
 
+    /**
+     * Completes the definition of a pointer or reference.
+     */
+    void complete_pointer_definition(Type *_type);
+    
     /**
      * Used for debugging purposes to dump the content
      * of the type database.
@@ -148,8 +159,30 @@ namespace JLang::types {
     bool complete;
     std::string name;
     TypeType type;
+    Type *pointer_or_ref;
+    std::map<std::string, Type*> members;
   };
 
+  class TypeResolver {
+  public:
+    TypeResolver(const JLang::frontend::ParseResult & _parse_result, Types & _types);
+    ~TypeResolver();
+    void resolve_types();
+  private:
+
+    Type * extract_from_type_specifier(const JLang::frontend::tree::TypeSpecifier & type_specifier) const;
+    
+    void extract_from_class_declaration(const JLang::frontend::tree::ClassDeclaration & declaration);
+    void extract_from_class_members(Type & type, const JLang::frontend::tree::ClassDefinition & definition);
+    void extract_from_class_definition(const JLang::frontend::tree::ClassDefinition & definition);
+    void extract_from_enum(const JLang::frontend::tree::EnumDefinition & enum_definition);
+    void extract_from_namespace(const JLang::frontend::tree::FileStatementNamespace & namespace_declaration);
+    void extract_types(const std::vector<::JLang::owned<JLang::frontend::tree::FileStatement>> & statements);
+    
+    Types & types;
+    const JLang::frontend::ParseResult & parse_result;
+  };
+  
   //! Type Resolver
   /**
    * This function reads the result of a parse and produces
@@ -159,6 +192,9 @@ namespace JLang::types {
    * canonical primitive types specified by the language
    * so that in the end, code-generation can operate only
    * on those primitive types at the machine level.
+   * At the end of this, every type should be defined
+   * in terms of primitive types (u32, f32,...), composite types (flattened)
+   * and pointer types (represented as a u64).
    */
   JLang::owned<Types> resolve_types(const JLang::frontend::ParseResult & parse_result);
   
