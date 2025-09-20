@@ -23,6 +23,8 @@ int main(int argc, char **argv)
   std::string path(argv[1]);
 
   auto parse_result = std::move(parse(path, "tests/type-resolution.j"));
+
+  parse_result->get_namespace_context().namespace_dump();
   
   JLang::owned<Types> types = std::move(resolve_types(*parse_result));
 

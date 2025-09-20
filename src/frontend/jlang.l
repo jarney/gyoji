@@ -77,6 +77,12 @@ void move_array(
     PRINT_TERMINALS(#nodetype, yytext)                               \
     RETURN_NODE(nodetype);
 
+#define PROCESS_IDENTIFIER_ID(nodetype, ns_ptr)                      \
+    START_NODE(nodetype)                                             \
+    node->set_fully_qualified_name(ns_ptr->fully_qualified());       \
+    PRINT_TERMINALS(#nodetype, yytext)                               \
+    RETURN_NODE(nodetype);
+
 %}
  
 %option reentrant interactive noyywrap nodefault
@@ -200,7 +206,7 @@ unsafe {PROCESS_NODE(UNSAFE);}
         // When declaring an identifier, the second
         // argument tells us what namespace the identifier
         // should go into.
-        PROCESS_IDENTIFIER(IDENTIFIER, context.current());
+        PROCESS_IDENTIFIER_ID(IDENTIFIER, context.current());
     }
     else {
         PROCESS_NODE(YYEOF);

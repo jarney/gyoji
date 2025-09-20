@@ -1032,12 +1032,16 @@ ClassDeclStart::ClassDeclStart(
   add_child(*identifier_token);
   add_child(*class_argument_list);
   if (is_identifier) {
-    name = identifier_token->get_fully_qualified_name() + "::" + identifier_token->get_value();
-    //fprintf(stderr, "CLASS_DECL_START id %s\n", name.c_str());
+    std::string nsn = identifier_token->get_fully_qualified_name();
+    if (nsn.size() > 0) {
+      name = nsn + "::" + identifier_token->get_value();
+    }
+    else {
+      name = identifier_token->get_value();
+    }
   }
   else {
     name = identifier_token->get_fully_qualified_name();
-    //fprintf(stderr, "CLASS_DECL_START type %s\n", name.c_str());
   }
 }
 ClassDeclStart::~ClassDeclStart()

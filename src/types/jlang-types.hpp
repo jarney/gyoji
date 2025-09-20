@@ -143,7 +143,7 @@ namespace JLang::types {
     /**
      * Completes the definition of a composite type.
      */
-    void complete_composite_definition(std::map<std::string, Type*> _members);
+    void complete_composite_definition(std::vector<std::pair<std::string, Type*>> _members);
 
     /**
      * Completes the definition of a pointer or reference.
@@ -160,7 +160,7 @@ namespace JLang::types {
     std::string name;
     TypeType type;
     Type *pointer_or_ref;
-    std::map<std::string, Type*> members;
+    std::vector<std::pair<std::string, Type*>> members;
   };
 
   class TypeResolver {
@@ -170,7 +170,7 @@ namespace JLang::types {
     void resolve_types();
   private:
 
-    Type * extract_from_type_specifier(const JLang::frontend::tree::TypeSpecifier & type_specifier) const;
+    Type * extract_from_type_specifier(const JLang::frontend::tree::TypeSpecifier & type_specifier);
     
     void extract_from_class_declaration(const JLang::frontend::tree::ClassDeclaration & declaration);
     void extract_from_class_members(Type & type, const JLang::frontend::tree::ClassDefinition & definition);
@@ -178,6 +178,8 @@ namespace JLang::types {
     void extract_from_enum(const JLang::frontend::tree::EnumDefinition & enum_definition);
     void extract_from_namespace(const JLang::frontend::tree::FileStatementNamespace & namespace_declaration);
     void extract_types(const std::vector<::JLang::owned<JLang::frontend::tree::FileStatement>> & statements);
+    
+    Type *get_or_create(std::string pointer_name, Type *pointer_target, Type::TypeType type_type);
     
     Types & types;
     const JLang::frontend::ParseResult & parse_result;

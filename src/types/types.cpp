@@ -9,17 +9,31 @@ using namespace JLang::frontend::tree;
 void
 TypeResolver::extract_from_class_declaration(const ClassDeclaration & declaration)
 {
-  fprintf(stderr, "Declaring class %s\n", declaration.get_name().c_str());
   JLang::owned<Type> type = std::make_unique<Type>(declaration.get_name(), Type::TYPE_COMPOSITE, false);
   types.define_type(std::move(type));
 }
 
 Type *
-TypeResolver::extract_from_type_specifier(const TypeSpecifier & type_specifier) const
+TypeResolver::get_or_create(std::string pointer_name, Type *pointer_target, Type::TypeType type_type)
+{
+    Type *pointer_type = types.get_type(pointer_name);
+    if (pointer_type != nullptr) {
+      return pointer_type;
+    }
+    else {
+      JLang::owned<Type> pointer_type_created = std::make_unique<Type>(pointer_name, type_type, true);
+      pointer_type_created->complete_pointer_definition(pointer_target);
+      pointer_type = pointer_type_created.get();
+      types.define_type(std::move(pointer_type_created));
+      return pointer_type;
+    }
+}
+
+Type *
+TypeResolver::extract_from_type_specifier(const TypeSpecifier & type_specifier) 
 {
   const auto & type_specifier_type = type_specifier.get_type();
   if (std::holds_alternative<JLang::owned<TypeSpecifierSimple>>(type_specifier_type)) {
-    fprintf(stderr, "Extracting from type specifier simple\n");
     const JLang::owned<TypeSpecifierSimple> & simple = std::get<JLang::owned<TypeSpecifierSimple>>(type_specifier_type);
     const auto & type_name = simple->get_type_name();
     if (type_name.is_expression()) {
@@ -32,56 +46,37 @@ TypeResolver::extract_from_type_specifier(const TypeSpecifier & type_specifier) 
       fprintf(stderr, "Could not find type %s\n", name.c_str());
       return nullptr;
     }
-    fprintf(stderr, "Returning pointer that should be valid %p\n", type);
     return type;
   }
   else if (std::holds_alternative<JLang::owned<TypeSpecifierTemplate>>(type_specifier_type)) {
-    fprintf(stderr, "Extracting from type specifier template\n");
     const auto & template_type = std::get<JLang::owned<TypeSpecifierTemplate>>(type_specifier_type);
-    fprintf(stderr, "Error: Template types are not yet supported\n");
     return nullptr;
   }
   else if (std::holds_alternative<JLang::owned<TypeSpecifierFunctionPointer>>(type_specifier_type)) {
-    fprintf(stderr, "Extracting from type specifier fptr\n");
     const auto & fptr_type = std::get<JLang::owned<TypeSpecifierFunctionPointer>>(type_specifier_type);
-    fprintf(stderr, "Error: Function pointer types are not yet supported\n");
     return nullptr;
   }
   else if (std::holds_alternative<JLang::owned<TypeSpecifierPointerTo>>(type_specifier_type)) {
-    fprintf(stderr, "Extracting from type specifier pointerto\n");
-    // At the end of this, we need to:
-    // We need to return a Type that is a POINTER_TO the target type.
-    // If this type already exists, we just return it.
-    // If this type doesn't exist, we need to create it.
-    //     This may mean recursively doing this for the target.
     const auto & type_specifier_pointer_to = std::get<JLang::owned<TypeSpecifierPointerTo>>(type_specifier_type);
-
     Type *pointer_target = extract_from_type_specifier(type_specifier_pointer_to->get_type_specifier());
     if (pointer_target == nullptr) {
       fprintf(stderr, "Could not find target of pointer\n");
       return nullptr;
     }
-    fprintf(stderr, "Found pointer target %p %s\n", pointer_target, pointer_target->get_name().c_str());
     std::string pointer_name = pointer_target->get_name() + std::string("*");
-    Type *pointer_type = types.get_type(pointer_name);
-    if (pointer_type != nullptr) {
-      fprintf(stderr, "Pointer type exists, returning it %s\n", pointer_type->get_name().c_str());
-      return pointer_type;
-    }
-    else {
-      fprintf(stderr, "Pointer type not existing, creating it\n");
-      JLang::owned<Type> pointer_type_created = std::make_unique<Type>(pointer_name, Type::TYPE_POINTER, true);
-      pointer_type_created->complete_pointer_definition(pointer_target);
-      pointer_type = pointer_type_created.get();
-      types.define_type(std::move(pointer_type_created));
-      fprintf(stderr, "Pointer type created %s\n", pointer_name.c_str());
-      return pointer_type;
-    }
+    Type *pointer_type = get_or_create(pointer_name, pointer_target, Type::TYPE_POINTER);
+    return pointer_type;
   }
   else if (std::holds_alternative<JLang::owned<TypeSpecifierReferenceTo>>(type_specifier_type)) {
-    fprintf(stderr, "Extracting from type specifier referenceto\n");
-    const auto & ref_type = std::get<JLang::owned<TypeSpecifierReferenceTo>>(type_specifier_type);
-    fprintf(stderr, "Error: Un-handled type\n");
+    const auto & type_specifier_reference_to = std::get<JLang::owned<TypeSpecifierReferenceTo>>(type_specifier_type);
+    Type *pointer_target = extract_from_type_specifier(type_specifier_reference_to->get_type_specifier());
+    if (pointer_target == nullptr) {
+      fprintf(stderr, "Could not find target of reference\n");
+      return nullptr;
+    }
+    std::string pointer_name = pointer_target->get_name() + std::string("&");
+    Type *pointer_type = get_or_create(pointer_name, pointer_target, Type::TYPE_REFERENCE);
+    return pointer_type;
   }
   else {
     fprintf(stderr, "Error: Un-handled type (compiler bug)\n");
@@ -94,7 +89,7 @@ TypeResolver::extract_from_type_specifier(const TypeSpecifier & type_specifier) 
 void
 TypeResolver::extract_from_class_members(Type & type, const ClassDefinition & definition)
 {
-  std::map<std::string, Type *> members;
+  std::vector<std::pair<std::string, Type *>> members;
 
   const auto & class_members = definition.get_members();
   for (const auto & class_member : class_members) {
@@ -107,7 +102,7 @@ TypeResolver::extract_from_class_members(Type & type, const ClassDefinition & de
         printf("Error: member variable type %s not resolved\n", member_variable->get_name().c_str());
       }
       else {
-        members.insert(std::pair<std::string, Type*>(member_variable->get_name(), member_type));
+        members.push_back(std::pair<std::string, Type*>(member_variable->get_name(), member_type));
         printf("Got member variable %s\n", member_variable->get_name().c_str());
       }
     }
@@ -124,7 +119,6 @@ TypeResolver::extract_from_class_definition(const ClassDefinition & definition)
   if (it == types.type_map.end()) {
     // Case 1: No forward declaration exists, fill in the definition
     // from the class.
-    fprintf(stderr, "Defining class %s\n", definition.get_name().c_str());
     JLang::owned<Type> type = std::make_unique<Type>(definition.get_name(), Type::TYPE_COMPOSITE, true);
     extract_from_class_members(*type, definition);
     types.define_type(std::move(type));
@@ -249,20 +243,20 @@ Types::Types()
   // XXX Definitely not the place to do this, but
   // it's a good enough place for now that I don't care
   // until we have a type system we can plug into this
-  define_type(std::make_unique<Type>("::u8", Type::TYPE_PRIMITIVE, true));
+  define_type(std::make_unique<Type>("u8", Type::TYPE_PRIMITIVE, true));
 
-  define_type(std::make_unique<Type>("::i16", Type::TYPE_PRIMITIVE, true));
-  define_type(std::make_unique<Type>("::i32", Type::TYPE_PRIMITIVE, true));
-  define_type(std::make_unique<Type>("::i64", Type::TYPE_PRIMITIVE, true));
+  define_type(std::make_unique<Type>("i16", Type::TYPE_PRIMITIVE, true));
+  define_type(std::make_unique<Type>("i32", Type::TYPE_PRIMITIVE, true));
+  define_type(std::make_unique<Type>("i64", Type::TYPE_PRIMITIVE, true));
 
-  define_type(std::make_unique<Type>("::u16", Type::TYPE_PRIMITIVE, true));
-  define_type(std::make_unique<Type>("::u32", Type::TYPE_PRIMITIVE, true));
-  define_type(std::make_unique<Type>("::u64", Type::TYPE_PRIMITIVE, true));
+  define_type(std::make_unique<Type>("u16", Type::TYPE_PRIMITIVE, true));
+  define_type(std::make_unique<Type>("u32", Type::TYPE_PRIMITIVE, true));
+  define_type(std::make_unique<Type>("u64", Type::TYPE_PRIMITIVE, true));
 
-  define_type(std::make_unique<Type>("::f32", Type::TYPE_PRIMITIVE, true));
-  define_type(std::make_unique<Type>("::f64", Type::TYPE_PRIMITIVE, true));
+  define_type(std::make_unique<Type>("f32", Type::TYPE_PRIMITIVE, true));
+  define_type(std::make_unique<Type>("f64", Type::TYPE_PRIMITIVE, true));
 
-  define_type(std::make_unique<Type>("::void", Type::TYPE_PRIMITIVE, true));
+  define_type(std::make_unique<Type>("void", Type::TYPE_PRIMITIVE, true));
 }
 
 Types::~Types()
@@ -323,7 +317,7 @@ Type::complete_pointer_definition(Type *_type)
 }
 
 void
-Type::complete_composite_definition(std::map<std::string, Type*> _members)
+Type::complete_composite_definition(std::vector<std::pair<std::string, Type*>> _members)
 {
   complete = true;
   members = _members;
@@ -360,7 +354,7 @@ Type::dump()
 
     fprintf(stderr, "{\n");
     for (const auto & m : members) {
-      fprintf(stderr, "    %s\n", m.second->get_name().c_str());
+      fprintf(stderr, "    %s %s\n", m.second->get_name().c_str(), m.first.c_str());
     }
     fprintf(stderr, "}\n");
   }

@@ -56,8 +56,15 @@ std::string Namespace::fully_qualified_ns(void)
   }
   Namespace* current = parent;
   while (current) {
-    if (current->name.size() > 0) {
-      ret = "::" + current->name + ret;
+    current = current->parent;
+  }
+  current = parent;
+  while (current) {
+    if (ret.size() > 0 && (current->parent != nullptr)) {
+      ret = current->name + "::" + ret;
+    }
+    else {
+      ret = current->name + ret;
     }
     current = current->parent;
   }
@@ -67,7 +74,11 @@ std::string Namespace::fully_qualified_ns(void)
 
 std::string Namespace::fully_qualified(void)
 {
-  return fully_qualified_ns() + std::string("::") + name;
+  std::string ns = fully_qualified_ns();
+  if (ns.size() > 0) {
+    return ns + std::string("::") + name;
+  }
+  return name;
 }
 
 int
@@ -280,7 +291,7 @@ static void print_indent(void)
     printf(" ");
   }
 }
-void NamespaceContext::namespace_dump_node(Namespace* parent)
+void NamespaceContext::namespace_dump_node(Namespace* parent) const
 {
   print_indent();
   printf("<namespace name='%s'>\n", parent->name.c_str());
@@ -290,14 +301,14 @@ void NamespaceContext::namespace_dump_node(Namespace* parent)
   }
   for (auto alias : parent->aliases) {
     print_indent();
-    printf("Context: %s name : %s\n", alias.first.c_str(), alias.second->name.c_str());
+    printf("<using ns='%s' as='%s'/>\n", alias.second->name.c_str(), alias.first.c_str());
   }
   indent--;
   print_indent();
   printf("</namespace>\n");
 }
 
-void NamespaceContext::namespace_dump()
+void NamespaceContext::namespace_dump() const
 {
   if (root == nullptr) {
     printf("!!! root was null\n");

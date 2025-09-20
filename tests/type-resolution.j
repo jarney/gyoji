@@ -5,6 +5,11 @@ class Outer {
     Inner *outer_ptr;
     i32 int_value;
     u8 char_value;
+    Inner inner_inline;
+    u32 * *u1;
+    u32 & *u2;
+    u32 * &u3;
+    u32 & &u4;
 };
 
 class Inner {
@@ -16,6 +21,16 @@ namespace epsilon {
     class SmallValue {
         f64 small_epsilon_value;
     };
+};
+
+namespace severely {
+          namespace nested {
+                    namespace container {
+                              class DownThere {
+                                    public u32 member;
+                              };
+                    };
+          };
 };
 
 namespace JLang {

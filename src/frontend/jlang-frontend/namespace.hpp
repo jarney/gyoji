@@ -304,14 +304,14 @@ namespace JLang::frontend::namespaces {
      * resolution by dumping the entire
      * namespace tree to stdout.
      */
-    void namespace_dump();
+    void namespace_dump() const;
   private:
     /**
      * This is used for debugging namespace
      * resolution by dumping the given namespace
      * tree to stdout.
      */
-    void namespace_dump_node(Namespace* parent);
+    void namespace_dump_node(Namespace* parent) const;
     
     /**
      * This is used internally to search for namespace matches
