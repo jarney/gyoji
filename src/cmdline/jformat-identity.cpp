@@ -1,11 +1,11 @@
 #include <jlang-frontend.hpp>
-#include <jlang-frontend/input-source-file.hpp>
+#include <jlang-misc/input-source-file.hpp>
 
 #include <jlang-backend/jbackend.hpp>
 #include <jlang-backend/jbackend-format-identity.hpp>
 #include <jlang-backend/jbackend-format-tree.hpp>
 
-using namespace JLang::errors;
+using namespace JLang::context;
 using namespace JLang::frontend;
 using namespace JLang::frontend::tree;
 using namespace JLang::frontend::namespaces;
@@ -28,7 +28,7 @@ int main(int argc, char **argv)
 
     ::JLang::owned<NamespaceContext> namespace_context = std::make_unique<NamespaceContext>();
     
-    InputSourceFile input_source(input);
+    JLang::misc::InputSourceFile input_source(input);
 
     ::JLang::owned<ParseResult> parse_result = 
         Parser::parse(

@@ -7,6 +7,7 @@
 #include <lex-context.hpp>
 #undef _JLANG_INTERNAL
 
+using namespace JLang::context;
 using namespace JLang::frontend;
 using namespace JLang::frontend::tree;
 using namespace JLang::frontend::namespaces;

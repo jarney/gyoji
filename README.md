@@ -113,6 +113,58 @@ all throughout the program whereas the parse tree is only used
 in the initial stages and is not directly accessible in
 later stages of code generation.
 
+High-level lifetimes and interactions:
+```
+Context             Front-end     MIR     Analysis      Back end
+|<------------------ Read Tokens
+|                       |
+|<------------------ Write errors
+|                       |
+|                    Write MIR---->+
+|                                  |
+|                                  +----->Semantic
+|                                         analysis
+|<--------------------------------------- Emit errors
+|                                  |
+|                                  |
+|                                  |
+|                                  |
+|                                  +-------------------->Consume MIR
+|                                                        Produce .o
+|                                                         |
+|                                                         |
+|                                                         +---------------->
+|
++--->Report errors to user
+     End program.
+
+```
+
+Library Dependency Stack
+```
++--------------+
+| Frontend     | 
+|    Namespaces| +-------------+ 
+|    Lowering  | | Analysi  s  |
++--------------+ |   Semantics | +---------+
+    Create MIR   |   Borrowing | | Codegen |
+    (immutable)  +-------------+ |  LLVM   |
+                     Use MIR     +---------+
+                                   Consume MIR
++-------------------------------------------------+
+| Compiler Context                                |
++---------------------------+--+------------------+
+            +-------------+ |  |            +-------------------+
+            | Errors      | |  |            | misc: Utilities   |
+            +-------------+ |  |            |       for strings |
+               +------------+  |            +-------------------+
+               | TokenStream   |
+               +---------------+
+```
+
+Sequence Diagram:
+
+Low-level lifetimes:
 ```
 +-------------------------- Compiler Context
 | +------------------------ TokenStream Input context

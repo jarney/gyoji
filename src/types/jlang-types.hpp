@@ -184,7 +184,8 @@ namespace JLang::types {
     void extract_types(const std::vector<::JLang::owned<JLang::frontend::tree::FileStatement>> & statements);
     
     Type *get_or_create(std::string pointer_name, Type *pointer_target, Type::TypeType type_type);
-    
+
+    // Move to analysis
     void check_complete_type(Type *type) const;
     
     Types & types;

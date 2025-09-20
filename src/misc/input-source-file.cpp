@@ -1,7 +1,7 @@
-#include <jlang-frontend/input-source-file.hpp>
+#include <jlang-misc/input-source-file.hpp>
 #include <errno.h>
 
-using namespace JLang::frontend;
+using namespace JLang::misc;
 
 InputSourceFile::InputSourceFile(FILE *_file)
   : file(_file)

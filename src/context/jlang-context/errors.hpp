@@ -18,7 +18,7 @@
  * can be reported with the full context of
  * where the error originated.
  */
-namespace JLang::errors {
+namespace JLang::context {
 
   class Errors;
   class Error;

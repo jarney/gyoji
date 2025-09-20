@@ -1,6 +1,6 @@
-#include <jlang-errors/errors.hpp>
+#include <jlang-context/errors.hpp>
 
-using namespace JLang::errors;
+using namespace JLang::context;
 
 //////////////////////////////////////////////////
 Errors::Errors()

@@ -1,6 +1,6 @@
 set(FRONTEND_INCLUDES
         ${PROJECT_SOURCE_DIR}/src/misc
-        ${PROJECT_SOURCE_DIR}/src/errors
+        ${PROJECT_SOURCE_DIR}/src/context
         ${PROJECT_SOURCE_DIR}/src/frontend
         ${CMAKE_BINARY_DIR}
 )
@@ -11,11 +11,8 @@ set(FRONTEND_PUBLIC_HEADERS_TOP
 set(FRONTEND_PUBLIC_HEADERS_BOTTOM
     jlang-frontend/tree.hpp
     jlang-frontend/syntax-node.hpp
-    jlang-frontend/token-stream.hpp
     jlang-frontend/namespace.hpp
     jlang-frontend/parse-result.hpp
-    jlang-frontend/input-source.hpp
-    jlang-frontend/input-source-file.hpp
     jlang-frontend/forward.hpp
     jlang-frontend/parser.hpp
 )
@@ -24,14 +21,11 @@ set(FRONTEND_SOURCES
     jlang.l
     jlang.y
     tree.cpp
-    token-stream.cpp
     syntax-node.cpp
     namespace.cpp
     parse-result.cpp
     lex-context.hpp
     lex-context.cpp
-    input-source.cpp
-    input-source-file.cpp
     parser.cpp
     ${FRONTEND_PUBLIC_HEADERS_TOP}
     ${FRONTEND_PUBLIC_HEADERS_BOTTOM}
@@ -70,7 +64,7 @@ add_executable(test_namespace test_namespace.cpp)
 target_include_directories(test_namespace PUBLIC ${FRONTEND_INCLUDES})
 target_link_libraries(test_namespace
     jlang-frontend
-    jlang-errors
+    jlang-context
     jlang-misc
 )
 add_test(NAME test_namespace COMMAND test_namespace)
@@ -79,7 +73,7 @@ add_executable(test_syntax test_syntax.cpp)
 target_include_directories(test_syntax PUBLIC ${FRONTEND_INCLUDES})
 target_link_libraries(test_syntax
     jlang-frontend
-    jlang-errors
+    jlang-context
     jlang-misc
 )
 add_test(NAME test_syntax COMMAND test_syntax ${CMAKE_SOURCE_DIR})
@@ -89,6 +83,6 @@ add_executable(test_token_stream test_token_stream.cpp)
 target_include_directories(test_token_stream PUBLIC ${FRONTEND_INCLUDES})
 target_link_libraries(test_token_stream
     jlang-frontend
-    jlang-errors
+    jlang-context
     jlang-misc
 )

@@ -12,7 +12,7 @@ target_include_directories(jlang-types
     PUBLIC
             ${PROJECT_SOURCE_DIR}/src/frontend
             ${PROJECT_SOURCE_DIR}/src/misc
-            ${PROJECT_SOURCE_DIR}/src/errors
+            ${PROJECT_SOURCE_DIR}/src/context
             ${PROJECT_SOURCE_DIR}/src/types
 )
 install(
@@ -28,6 +28,6 @@ install(
 
 add_executable(test_types test_types.cpp)
 target_include_directories(test_types PUBLIC ${PROJECT_SOURCE_DIR}/types)
-target_link_libraries(test_types jlang-types jlang-frontend jlang-errors jlang-misc)
+target_link_libraries(test_types jlang-types jlang-frontend jlang-context jlang-misc)
 add_test(NAME test_types COMMAND test_types ${CMAKE_SOURCE_DIR})
 

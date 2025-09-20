@@ -57,7 +57,7 @@ namespace JLang::frontend::tree {
      * Constructs a non-syntax node corresponding to the
      * given lexical token of the given token type.
      */
-    TerminalNonSyntax(Type _type, const Token & _token);
+    TerminalNonSyntax(Type _type, const JLang::context::Token & _token);
     /**
      * Destructor, nothing special.
      */
@@ -76,7 +76,7 @@ namespace JLang::frontend::tree {
     
   private:
     Type type;
-    const Token & token;
+    const JLang::context::Token & token;
   };
 
   //! Represents tokens from the lexer used to represent keywords and identifiers found in the source.
@@ -91,7 +91,7 @@ namespace JLang::frontend::tree {
      * Construct a terminal from the corresponding
      * lexer token.
      */
-    Terminal(const Token & _token);
+    Terminal(const JLang::context::Token & _token);
     /**
      * Destructor, nothing special.
      */
@@ -137,7 +137,7 @@ namespace JLang::frontend::tree {
     // be de-referenced and never assigned to
     std::vector<::JLang::owned<TerminalNonSyntax>> non_syntax;
   private:
-    const Token & token;
+    const JLang::context::Token & token;
     std::string fully_qualified_name;
   };
   

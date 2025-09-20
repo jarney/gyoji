@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 //----------------------------
 // Unique pointer types to
 // be used internally to enforce

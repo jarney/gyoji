@@ -14,7 +14,6 @@ namespace JLang::frontend::yacc {
  */
 namespace JLang::frontend {
   class Parser;
-  class TokenStream;
 
   /**
    * This class represents the result of parsing a source-file.
@@ -79,7 +78,7 @@ namespace JLang::frontend {
      * This returns an object containing the details of any parse errors
      * that occurred during the parse.
      */
-    JLang::errors::Errors & get_errors() const;
+    JLang::context::Errors & get_errors() const;
 
     /**
      * This returns true if the parse resulted in a valid TranslationUnit.
@@ -110,7 +109,7 @@ namespace JLang::frontend {
      * reconstruct all of the input data, but also allows structured
      * access to it for the purpose of producing structured error messages.
      */
-    const JLang::frontend::TokenStream & get_token_stream() const;
+    const JLang::context::TokenStream & get_token_stream() const;
 
     friend JLang::frontend::yacc::YaccParser;
     friend JLang::frontend::yacc::LexContext;
@@ -124,9 +123,9 @@ namespace JLang::frontend {
     
     ::JLang::owned<JLang::frontend::namespaces::NamespaceContext> namespace_context;
     
-    ::JLang::owned<JLang::errors::Errors> errors;
+    ::JLang::owned<JLang::context::Errors> errors;
     
-    ::JLang::owned<JLang::frontend::TokenStream> token_stream;
+    ::JLang::owned<JLang::context::TokenStream> token_stream;
     
     ::JLang::owned<JLang::frontend::tree::TranslationUnit> translation_unit;
 

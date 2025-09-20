@@ -1,7 +1,7 @@
-#include <jlang-frontend/input-source.hpp>
+#include <jlang-misc/input-source.hpp>
 #include <stdio.h>
 
-namespace JLang::frontend {
+namespace JLang::misc {
 
   /**
    * This is an implementation of an input source based

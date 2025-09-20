@@ -2,7 +2,7 @@
 #include <jlang.l.hpp>
 #include <jlang.y.hpp>
 
-using namespace JLang::errors;
+using namespace JLang::context;
 using namespace JLang::frontend;
 using namespace JLang::frontend::namespaces;
 using namespace JLang::frontend::tree;

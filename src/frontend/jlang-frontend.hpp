@@ -8,16 +8,16 @@
 #include <variant>
 
 #include <jlang-misc/pointers.hpp>
-#include <jlang-errors/errors.hpp>
+#include <jlang-misc/input-source.hpp>
+#include <jlang-context/errors.hpp>
+#include <jlang-context/token-stream.hpp>
 
 #define _JLANG_INTERNAL
 #include <jlang-frontend/forward.hpp>
 #include <jlang-frontend/namespace.hpp>
 #include <jlang-frontend/syntax-node.hpp>
-#include <jlang-frontend/token-stream.hpp>
 #include <jlang-frontend/tree.hpp>
 #include <jlang-frontend/parse-result.hpp>
-#include <jlang-frontend/input-source.hpp>
 #include <jlang-frontend/parser.hpp>
 #undef _JLANG_INTERNAL
 

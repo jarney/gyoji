@@ -1,7 +1,7 @@
 set(CMDLINE_LINK_LIBRARIES
         jlang-backend
         jlang-frontend
-        jlang-errors
+        jlang-context
         jlang-misc
 	-L/usr/lib/llvm-18/lib -lLLVM-18
 )
@@ -9,7 +9,7 @@ set(CMDLINE_LINK_LIBRARIES
 #        jlang-codegen
 set(CMDLINE_INCLUDE_DIRECTORIES
         misc
-        errors
+        context
         frontend
         backend
         codegen

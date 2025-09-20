@@ -1,11 +1,16 @@
 
 set(MISC_PUBLIC_HEADERS
+    jlang-misc/input-source.hpp
+    jlang-misc/input-source-file.hpp
+    jlang-misc/jstring.hpp
     jlang-misc/jstring.hpp
     jlang-misc/test.hpp
     jlang-misc/xml.hpp
 )
 set(MISC_SOURCES
     jstring.cpp
+    input-source.cpp
+    input-source-file.cpp
     xml.cpp
     ${MISC_PUBLIC_HEADERS}
 )

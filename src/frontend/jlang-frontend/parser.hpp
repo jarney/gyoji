@@ -41,7 +41,7 @@ namespace JLang::frontend {
      */
     static ::JLang::owned<ParseResult> parse(
                                              ::JLang::owned<JLang::frontend::namespaces::NamespaceContext> _namespace_context,
-                                             InputSource & _input_source
+                                             JLang::misc::InputSource & _input_source
                                              );
   };
 

@@ -1,6 +1,6 @@
 #pragma once
 
-namespace JLang::frontend {
+namespace JLang::misc {
 
   /**
    * This interface is used to provide the parser with a method

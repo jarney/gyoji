@@ -1,8 +1,8 @@
 #include <jlang-frontend.hpp>
-#include <jlang-frontend/input-source-file.hpp>
+#include <jlang-misc/input-source-file.hpp>
 #include <jlang-misc/test.hpp>
 
-using namespace JLang::errors;
+using namespace JLang::context;
 using namespace JLang::frontend;
 using namespace JLang::frontend::tree;
 using namespace JLang::frontend::namespaces;
@@ -27,7 +27,7 @@ parse(std::string & filename)
     return nullptr;
   }
   ::JLang::owned<NamespaceContext> namespace_context = std::make_unique<NamespaceContext>();
-  InputSourceFile input_source(input);
+  JLang::misc::InputSourceFile input_source(input);
   ::JLang::owned<ParseResult> parse_result = 
       Parser::parse(std::move(namespace_context),
                     input_source);

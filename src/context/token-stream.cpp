@@ -1,7 +1,6 @@
-#include <jlang-frontend.hpp>
-#include <algorithm>
+#include <jlang-context/token-stream.hpp>
 
-using namespace JLang::frontend;
+using namespace JLang::context;
 
 TokenStream::TokenStream()
 {}

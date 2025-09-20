@@ -131,7 +131,7 @@ TypeResolver::extract_from_class_definition(const ClassDefinition & definition)
     }
     else {
       auto & errors = parse_result.get_errors();
-      std::unique_ptr<JLang::errors::Error> error = std::make_unique<JLang::errors::Error>("Type Resolution Error");
+      std::unique_ptr<JLang::context::Error> error = std::make_unique<JLang::context::Error>("Type Resolution Error");
       error->add_message(parse_result.get_token_stream().context(0, 10),
                          0, // LINE
                          0, // COLUMN
@@ -229,7 +229,7 @@ void TypeResolver::check_complete_type(Type *type) const
     for (const auto & member : type->get_members()) {
       if (!member.second->is_complete()) {
         fprintf(stderr, "Incomplete type %s\n", member.second->get_name().c_str());
-        std::unique_ptr<JLang::errors::Error> error = std::make_unique<JLang::errors::Error>("Class contains incomplete type");
+        std::unique_ptr<JLang::context::Error> error = std::make_unique<JLang::context::Error>("Class contains incomplete type");
         error->add_message(parse_result.get_token_stream().context(12, 18),
                            14,
                            19,

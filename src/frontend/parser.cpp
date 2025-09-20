@@ -6,7 +6,7 @@
 #include <jlang.l.hpp>
 #include <jlang.y.hpp>
 
-using namespace JLang::errors;
+using namespace JLang::context;
 using namespace JLang::frontend;
 using namespace JLang::frontend::ast;
 using namespace JLang::frontend::tree;
@@ -14,7 +14,10 @@ using namespace JLang::frontend::namespaces;
 using namespace JLang::frontend::yacc;
 
 ::JLang::owned<ParseResult>
-Parser::parse(::JLang::owned<NamespaceContext> _namespace_context, InputSource & _input_source)
+Parser::parse(
+              ::JLang::owned<NamespaceContext> _namespace_context,
+              JLang::misc::InputSource & _input_source
+              )
 {
   ::JLang::owned<ParseResult> result = std::make_unique<ParseResult>(std::move(_namespace_context));
   

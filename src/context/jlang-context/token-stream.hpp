@@ -1,9 +1,11 @@
-#ifndef _JLANG_INTERNAL
-#error "This header is intended to be used internally as a part of the JLang front-end.  Please include frontend.hpp instead."
-#endif
 #pragma once
+#include <string>
+#include <vector>
+#include <map>
+#include <algorithm>
+#include <jlang-misc/pointers.hpp>
 
-namespace JLang::frontend {
+namespace JLang::context {
   class Token;
   class TokenStream;
 

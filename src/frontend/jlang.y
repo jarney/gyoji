@@ -9,7 +9,8 @@
 #include <lex-context.hpp>
 #undef _JLANG_INTERNAL
   
- using namespace JLang::frontend::namespaces;
+  using namespace JLang::context;
+  using namespace JLang::frontend::namespaces;
   
 %}
  
@@ -2220,7 +2221,7 @@ void JLang::frontend::yacc::YaccParser::error(const std::string& msg) {
     // write error information when it needs to, presumably
     // after collecting possibly multiple errors
 
-    std::unique_ptr<JLang::errors::Error> error = std::make_unique<JLang::errors::Error>("Syntax Error");
+    std::unique_ptr<JLang::context::Error> error = std::make_unique<JLang::context::Error>("Syntax Error");
 
     // Generate context from token stream and line number.
     // Context should be 3 lines, 2 before, and the line.
