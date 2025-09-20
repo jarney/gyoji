@@ -44,6 +44,27 @@ namespace JLang::errors {
     size_t column;
     std::string errormsg;
   };
+
+  class SourceReference {
+  public:
+    SourceReference(std::string _filename,
+                         size_t _line,
+                         size_t _column,
+                         size_t _context_start,
+                         size_t _context_end);
+    ~SourceReference();
+    const std::string & get_filename() const;
+    size_t get_line() const;
+    size_t get_column() const;
+    size_t get_context_start() const;
+    size_t get_context_end() const;
+  private:
+    std::string filename;
+    size_t line;
+    size_t column;
+    size_t context_start_line;
+    size_t context_end_line;
+  };
   
   class Error {
   public:

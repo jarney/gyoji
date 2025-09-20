@@ -25,14 +25,12 @@ int main(int argc, char **argv)
         
     NamespaceFoundReason::ptr string_protected = ctx.namespace_lookup("string_protected");
     ASSERT_BOOL(true, string_protected->reason == NamespaceFoundReason::REASON_FOUND, "Resolved string as protected");
-    
     NamespaceFoundReason::ptr string_private = ctx.namespace_lookup("string_private");
     ASSERT_BOOL(true, string_private->reason == NamespaceFoundReason::REASON_FOUND, "Resolved string as private");
   }
 
   // Look things up using a fully-qualified path to
   // force resolution through the root.
-
   
   {
     NamespaceFoundReason::ptr string_public = ctx.namespace_lookup("::std::string");
@@ -55,8 +53,6 @@ int main(int argc, char **argv)
 
   // In this context, we should be able
   // to resolve everything in our parent namespaces directly.
-
-  
   {
     NamespaceFoundReason::ptr string_public = ctx.namespace_lookup("string");
     ASSERT_BOOL(true, string_public->reason == NamespaceFoundReason::REASON_FOUND, "Resolved string as public because we're in a nested namespace.");
@@ -70,8 +66,6 @@ int main(int argc, char **argv)
 
   // In this context, we should be able
   // to resolve everything in our parent namespaces directly.
-
-  
   {
     NamespaceFoundReason::ptr int_public = ctx.namespace_lookup("int");
     ASSERT_BOOL(true, int_public->reason == NamespaceFoundReason::REASON_FOUND, "Resolved string as public");

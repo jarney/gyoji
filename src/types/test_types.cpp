@@ -37,7 +37,6 @@ int main(int argc, char **argv)
   printf("    PASSED\n");
 }
 
-
 static
 ::JLang::owned<ParseResult>
 parse(std::string & path, std::string base_filename)

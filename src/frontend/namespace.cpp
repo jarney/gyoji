@@ -56,10 +56,6 @@ std::string Namespace::fully_qualified_ns(void)
   }
   Namespace* current = parent;
   while (current) {
-    current = current->parent;
-  }
-  current = parent;
-  while (current) {
     if (ret.size() > 0 && (current->parent != nullptr)) {
       ret = current->name + "::" + ret;
     }
@@ -180,6 +176,7 @@ NamespaceContext::namespace_lookup_visibility(std::string search_context, Namesp
   if (effective_visibility == Namespace::VISIBILITY_PROTECTED) {
     Namespace* found_parent = found->parent;
     std::string found_context = found_parent->fully_qualified_ns();
+    
     // If it's protected, we need to make sure that the full path
     // of what's found is a parent of our current location.
     // If it's protected, then found must be contained in search.
@@ -196,9 +193,10 @@ NamespaceContext::namespace_lookup_visibility(std::string search_context, Namesp
   // value of visibility as we walk up the tree.
   if (effective_visibility == Namespace::VISIBILITY_PRIVATE) {
     std::string found_context = found->fully_qualified_ns();
-    // If it's private, we need to make sure that
+    // If it is private, we need to make sure that
     // the full path of what we found matches the full
     // path of our current location.
+    //    return std::make_shared<NamespaceFoundReason>(NamespaceFoundReason::REASON_NOT_FOUND_PRIVATE);
     size_t pos = search_context.find(found_context);
     if (pos == 0) {
       return std::make_shared<NamespaceFoundReason>(NamespaceFoundReason::REASON_FOUND, found);
@@ -221,6 +219,7 @@ NamespaceFoundReason::ptr NamespaceContext::namespace_lookup(std::string name)
   }
 
   std::string namespace_lookup_context = namespace_fully_qualified();
+  
   // If it starts with '::' then it is an
   // absolute path and should be resolved
   // from the root without any 'using' qualifiers.
@@ -277,8 +276,11 @@ std::string NamespaceContext::namespace_fully_qualified()
 {
   std::string ret;
   for (auto current : stack) {
-    if (current->name.size() > 0) {
+    if (ret.size() > 0 && (current->parent != nullptr)) {
       ret = ret + "::" + current->name;
+    }
+    else {
+      ret = ret + current->name;
     }
   }
   return ret;
@@ -294,7 +296,7 @@ static void print_indent(void)
 void NamespaceContext::namespace_dump_node(Namespace* parent) const
 {
   print_indent();
-  printf("<namespace name='%s'>\n", parent->name.c_str());
+  printf("<namespace name='%s' vis='%d'>\n", parent->name.c_str(), parent->visibility);
   indent++;
   for (const auto & ns : parent->children) {
     namespace_dump_node(ns.second.get());

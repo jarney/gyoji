@@ -12,10 +12,10 @@ class Outer {
     u32 &&u4;
 };
 
-//class Inner {
-//    public u32 unsigned_value;
-//    public f32 float_value;
-//};
+class Inner {
+    public u32 unsigned_value;
+    public f32 float_value;
+};
 
 namespace epsilon {
     class SmallValue {

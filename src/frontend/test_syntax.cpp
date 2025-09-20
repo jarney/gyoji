@@ -132,7 +132,7 @@ int main(int argc, char **argv)
 
       const auto & type_name = type_specifier_simple->get_type_name();
       ASSERT_FALSE(type_name.is_expression(), "This should be a simple type and not an expression");
-      ASSERT_STR_EQUAL("::u32", type_name.get_name(), "This should be just a u32");
+      ASSERT_STR_EQUAL("u32", type_name.get_name(), "This should be just a u32");
 
     }
     {
@@ -153,7 +153,7 @@ int main(int argc, char **argv)
 
       const auto & type_name = type_specifier_simple->get_type_name();
       ASSERT_FALSE(type_name.is_expression(), "This should be a simple type and not an expression");
-      ASSERT_STR_EQUAL("::f64", type_name.get_name(), "This should be just a f64");
+      ASSERT_STR_EQUAL("f64", type_name.get_name(), "This should be just a f64");
     }
   }
 

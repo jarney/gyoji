@@ -3,10 +3,6 @@
 #endif
 #pragma once
 
-namespace JLang::frontend::yacc {
-  class LexContext;
-};
-
 namespace JLang::frontend {
   class Token;
   class TokenStream;

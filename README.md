@@ -101,6 +101,131 @@ The architecture of the compiler is as follows:
   although there is probably very little utility in doing that, it might
   be cool to try.
 
+# Lifetimes
+The following is a "lifetime" diagram that indicates the lifetimes
+involved in the compiler stages.  This is important because the compiler
+is designed such that more than one front-end and back-end can be
+used.  In order to facilitate this capability, it is important to understand
+which parts of the compiler will have access to other components at
+different stages throughout the compile lifecycle.  For instance,
+the error handling of the compiler is a feature that is used
+all throughout the program whereas the parse tree is only used
+in the initial stages and is not directly accessible in
+later stages of code generation.
+
+```
++-------------------------- Compiler Context
+| +------------------------ TokenStream Input context
+| |                                    provides context to the error handler.
+| |
+| | +---------------------- Errors : Error reporting library
+| | |
+| | |
+| | |
+| | |
+| | |
+| | |
+| |-|--------------------- Parser : Reads from input                    Parsing
+| | |                                      * Parses input into a
+| | |                                        parse tree
+| | |                                      * Records input data
+| | |                                        in token stream.
+| | | +------------------- TranslationUnit
+| | | |
+| | | | +----------------- NamespaceContext
+| | | | |
+| | | | | +--------------- mir::Types                               Type Lowering
+| | | | | | 
+| | | | | | +------------  mir::Functions                       Function lowering
+| | | | | | |
+| | | | | | |                                                   Type consistency
+| | | | | | |
+| | | | | | |
+| | | | +----------------- ~NamespaceContext
+| | | |   | |
+| | | +-------------------  ~TranslationUnit
+| | |     | |
+| | |     | | +----------  Analysis                              Static Analysis
+| | |     | | |                                                  Borrow Checking
+| | |     | | |                                                  Visibility rules
+| | |     | | |
+| | |     | | |
+| | |     | | +---------- ~Analysis
+| | |     | |
+| | |     | +------------- LLVMBackend                           Code Generation
+| | |     | |
+| | |     | +------------- ~LLVMBackend
+| | |     |
+| | |     +--------------- ~types::Types
+| | |     
+| | +---------------------- ~Errors
+| |
+| +------------------------ ~TokenStream
+|
++-------------------------- ~CompilerContext
+```
+
+As you can see from this diagram, the only
+things that last the entire program scope are
+the token stream and error reporting facilities.
+All other aspects of the program have more limited
+lifetimes.  This enforces some separation of
+concerns because some parts of the system simply will
+not have access to others due to their lifetimes.
+
+Lifetime notes:
+
+* TokenStream: While this may be considered
+               a part of the front-end, the reality is that
+               every front-end will read input from the
+               source.  This represents the source un-touched
+               by any particular grammar front-end we choose to place
+               on it and as such, this is agnostic of
+               the syntax being parsed, making it possible to
+               parse multiple styles of syntax.
+               
+* Errors       Errors need access to the token stream
+               so it can produce context-aware messages
+               pointing out the exact location in source
+               of the various error conditions.
+
+* Compiler Context: The compiler context is a container
+                    for the objects that live for the entire
+                    lifecycle of the compilation and wraps their
+                    lifetimes to ensure that their scope lasts
+                    for as long as they need to.
+                    Other lifetimes such as the MIR are limited
+                    and are "produced" by the front-end
+                    and their lifetime is "handed off" to the
+                    back-end which uses and then consumes it.
+
+* MIR : It is the responsibility of the front-end to produce the MIR
+        representation.  The responsibility of the front-end is to
+        produce a parse tree AND THEN TO CONSUME IT after producing
+        the MIR for the back-end.  The ultimate result of parsing
+        it to consume input, placing it faithfully into the TokenStream
+        and to produce the MIR.  The parse tree is simply a PART OF
+        the front-end and is not directly exposed beyond the MIR
+        to the analysis or code-generation stages.  All context relevant
+        for analysis, code-generation, and debugging must be placed into
+        the MIR so that it can be used in the later stages.
+
+        As such, the MIR representation is really the "core" of the
+        language with the front-end simply providing syntactical sugar
+        to make it easier to manipulate.
+
+* Analysis: The analysis is independent of the code generation system.
+            It is responsible for any semantic analysis and operates
+            purely on the MIR.  The borrow-checking, visibility rules,
+            control-flow analysis (unreachable code), etc.
+            are all performed at this stage on the MIR so that the result
+            is MIR that is ready for code-generation which should not,
+            at this point, produce errors because is makes guarantees on
+            the validity of the constructions.
+
+## Parsing
+Read token stream and produce 
+
 # Plans/Projects
 
 The structure of the project is such that independent projects can be worked on and completed independently.
