@@ -4,6 +4,7 @@ set(TYPES_PUBLIC_HEADERS
 )
 set(TYPES_SOURCES
     types.cpp
+    type-resolver.cpp
     ${TYPES_PUBLIC_HEADERS}
 )
 

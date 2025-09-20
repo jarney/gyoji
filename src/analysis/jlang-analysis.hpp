@@ -1,3 +1,30 @@
 #pragma once
+#include <jlang-mir/types.hpp>
+#include <jlang-context.hpp>
+
+namespace JLang::analysis {
+
+  class AnalysisPass {
+  public:
+    AnalysisPass(JLang::context::CompilerContext & _compiler_context);
+    ~AnalysisPass();
+    virtual void check(JLang::mir::Types & types) = 0;
+
+    JLang::context::CompilerContext & get_compiler_context() const;
+  private:
+    JLang::context::CompilerContext & compiler_context;
+  };
+
+  class AnalysisPassTypeResolution : public AnalysisPass {
+  public:
+    AnalysisPassTypeResolution(JLang::context::CompilerContext & _compiler_context);
+    ~AnalysisPassTypeResolution();
+    
+    void check(JLang::mir::Types & types) const;
+  private:
+    void check_type(JLang::mir::Type *type) const;
+  };
+
+};
 
 void do_analysis();

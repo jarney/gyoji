@@ -1,6 +1,9 @@
 #pragma once
 
-#include <jlang-frontend.hpp>
+#include <jlang-misc/pointers.hpp>
+#include <string>
+#include <map>
+#include <vector>
 
 //! The types namespace is used to extract and resolve types from the syntax tree.
 /**
@@ -18,7 +21,7 @@
  * error handling system so that the programmer is aware
  * of why the definition or resolution did not succeed.
  */
-namespace JLang::types {
+namespace JLang::mir {
   class Type;
   class Types;
   
@@ -167,45 +170,4 @@ namespace JLang::types {
     std::vector<std::pair<std::string, Type*>> members;
   };
 
-  class TypeResolver {
-  public:
-    TypeResolver(const JLang::frontend::ParseResult & _parse_result, Types & _types);
-    ~TypeResolver();
-    void resolve_types();
-  private:
-
-    Type * extract_from_type_specifier(const JLang::frontend::tree::TypeSpecifier & type_specifier);
-    
-    void extract_from_class_declaration(const JLang::frontend::tree::ClassDeclaration & declaration);
-    void extract_from_class_members(Type & type, const JLang::frontend::tree::ClassDefinition & definition);
-    void extract_from_class_definition(const JLang::frontend::tree::ClassDefinition & definition);
-    void extract_from_enum(const JLang::frontend::tree::EnumDefinition & enum_definition);
-    void extract_from_namespace(const JLang::frontend::tree::FileStatementNamespace & namespace_declaration);
-    void extract_types(const std::vector<JLang::owned<JLang::frontend::tree::FileStatement>> & statements);
-    
-    Type *get_or_create(std::string pointer_name, Type *pointer_target, Type::TypeType type_type);
-
-    // Move to analysis
-    void check_complete_type(Type *type) const;
-    
-    Types & types;
-    const JLang::frontend::ParseResult & parse_result;
-  };
-  
-  //! Type Resolver
-  /**
-   * This function reads the result of a parse and produces
-   * the set of types defined or referenced by it.  This is
-   * essentially the process of 'lowering' for types where
-   * each user-defined type is decomposed to a set of
-   * canonical primitive types specified by the language
-   * so that in the end, code-generation can operate only
-   * on those primitive types at the machine level.
-   * At the end of this, every type should be defined
-   * in terms of primitive types (u32, f32,...), composite types (flattened)
-   * and pointer types (represented as a u64).
-   */
-  JLang::owned<Types> resolve_types(const JLang::frontend::ParseResult & parse_result);
-  
-  int doit();
 };

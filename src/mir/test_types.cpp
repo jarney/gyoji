@@ -1,12 +1,13 @@
 #include <jlang-misc/input-source-file.hpp>
 #include <jlang-frontend.hpp>
+#include <jlang-mir/type-resolver.hpp>
 #include <jlang-mir/types.hpp>
 #include <jlang-misc/test.hpp>
 
 using namespace JLang::context;
 using namespace JLang::frontend;
 using namespace JLang::frontend::namespaces;
-using namespace JLang::types;
+using namespace JLang::mir;
 
 
 static
