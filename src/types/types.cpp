@@ -223,6 +223,24 @@ TypeResolver::TypeResolver(const JLang::frontend::ParseResult & _parse_result, T
 TypeResolver::~TypeResolver()
 {}
 
+void TypeResolver::check_complete_type(Type *type) const
+{
+  if (type->get_type() == Type::TYPE_COMPOSITE) {
+    for (const auto & member : type->get_members()) {
+      if (!member.second->is_complete()) {
+        fprintf(stderr, "Incomplete type %s\n", member.second->get_name().c_str());
+        std::unique_ptr<JLang::errors::Error> error = std::make_unique<JLang::errors::Error>("Class contains incomplete type");
+        error->add_message(parse_result.get_token_stream().context(12, 18),
+                           14,
+                           19,
+                           std::string("Incomplete type in member ") + member.first + std::string(" of type ") + type->get_name() + std::string("\n"));
+        parse_result.get_errors().add_error(std::move(error));
+      }
+      check_complete_type(member.second);
+    }
+  }
+}
+
 void TypeResolver::resolve_types()
 {
   // To resolve the types, we need only iterate the
@@ -234,14 +252,9 @@ void TypeResolver::resolve_types()
   // TODO: Go back through all of the types and make sure that every type
   // that is used in a structure 'inline' is actually complete.
   // If not, produce a compile error to that effect.
+  // This needs to be recursive!
   for (const auto & type : types.type_map) {
-    if (type.second->get_type() == Type::TYPE_COMPOSITE) {
-      for (const auto & member : type.second->get_members()) {
-        if (!member.second->is_complete()) {
-          fprintf(stderr, "Incomplete type %s\n", member.first.c_str());
-        }
-      }
-    }
+    check_complete_type(type.second.get());
   }
 }
 

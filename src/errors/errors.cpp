@@ -182,13 +182,11 @@ ErrorMessage::print()
 {
   for (const std::pair<size_t, std::string> & linepair : context) {
     fprintf(stderr, "%4ld: %s", linepair.first, linepair.second.c_str());
-    fprintf(stderr, "XXX Before at\n");
     if (linepair.second.size() > 0) {
       if (linepair.second.at(linepair.second.size()-1) != '\n') {
         fprintf(stderr, "\n");
       }
     }
-    fprintf(stderr, "XXX Before arrows\n");
     if (line == linepair.first) {
       draw_arrow(column+5);
       if (column < 40) {

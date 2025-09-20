@@ -185,6 +185,8 @@ namespace JLang::types {
     
     Type *get_or_create(std::string pointer_name, Type *pointer_target, Type::TypeType type_type);
     
+    void check_complete_type(Type *type) const;
+    
     Types & types;
     const JLang::frontend::ParseResult & parse_result;
   };

@@ -28,6 +28,10 @@ int main(int argc, char **argv)
   
   JLang::owned<Types> types = std::move(resolve_types(*parse_result));
 
+  if (parse_result->has_errors()) {
+    parse_result->get_errors().print();
+    return -1;
+  }
   types->dump();
   
   printf("    PASSED\n");
