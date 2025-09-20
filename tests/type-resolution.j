@@ -6,16 +6,16 @@ class Outer {
     i32 int_value;
     u8 char_value;
     Inner inner_inline;
-    u32 * *u1;
-    u32 & *u2;
-    u32 * &u3;
-    u32 & &u4;
+    u32 **u1;
+    u32 &*u2;
+    u32 *&u3;
+    u32 &&u4;
 };
 
-class Inner {
-    public u32 unsigned_value;
-    public f32 float_value;
-};
+//class Inner {
+//    public u32 unsigned_value;
+//    public f32 float_value;
+//};
 
 namespace epsilon {
     class SmallValue {

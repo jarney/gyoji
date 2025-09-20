@@ -1797,10 +1797,29 @@ ExpressionBinary::ExpressionBinary(
   : SyntaxNode("expression_binary", this)
   , expression_a(std::move(_expression_a))
   , operator_token(std::move(_operator_token))
+  , operator_token2(nullptr)
   , expression_b(std::move(_expression_b))
 {
   add_child(*expression_a);
   add_child(*operator_token);
+  add_child(*expression_b);
+  type = OperationType::LOGICAL_AND; // XXX TODO: get these from the tokens.
+}
+ExpressionBinary::ExpressionBinary(
+                       ::JLang::owned<Expression> _expression_a,
+                       ::JLang::owned<Terminal> _operator_token,
+                       ::JLang::owned<Terminal> _operator_token2,
+                       ::JLang::owned<Expression> _expression_b
+                       )
+  : SyntaxNode("expression_binary", this)
+  , expression_a(std::move(_expression_a))
+  , operator_token(std::move(_operator_token))
+  , operator_token2(std::move(_operator_token2))
+  , expression_b(std::move(_expression_b))
+{
+  add_child(*expression_a);
+  add_child(*operator_token);
+  add_child(*operator_token2);
   add_child(*expression_b);
   type = OperationType::LOGICAL_AND; // XXX TODO: get these from the tokens.
 }

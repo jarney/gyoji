@@ -138,7 +138,11 @@ namespace JLang::types {
      * declared in a forward-declaration, but may receive a final definition
      * only later when the type resolution occurs.
      */
-    bool is_complete();
+    bool is_complete() const;
+
+    TypeType get_type() const;
+
+    const std::vector<std::pair<std::string, Type*>> & get_members() const;
     
     /**
      * Completes the definition of a composite type.

@@ -83,6 +83,7 @@ void move_array(
     PRINT_TERMINALS(#nodetype, yytext)                               \
     RETURN_NODE(nodetype);
 
+// \&\& { PROCESS_NODE(AND_OP);}
 %}
  
 %option reentrant interactive noyywrap nodefault
@@ -148,7 +149,7 @@ unsafe {PROCESS_NODE(UNSAFE);}
 == { PROCESS_NODE(EQ_OP); }
 != { PROCESS_NODE(NE_OP); }
 \^ { PROCESS_NODE(XOR_OP);}
-\&\& { PROCESS_NODE(AND_OP);}
+
 \|\| { PROCESS_NODE(OR_OP);}
 \*\= { PROCESS_NODE(MUL_ASSIGN); }
 \/\= { PROCESS_NODE(DIV_ASSIGN); }

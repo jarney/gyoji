@@ -230,6 +230,19 @@ void TypeResolver::resolve_types()
   // resolving them down to their primitive types.
   const auto & translation_unit = parse_result.get_translation_unit();
   extract_types(translation_unit.get_statements());
+
+  // TODO: Go back through all of the types and make sure that every type
+  // that is used in a structure 'inline' is actually complete.
+  // If not, produce a compile error to that effect.
+  for (const auto & type : types.type_map) {
+    if (type.second->get_type() == Type::TYPE_COMPOSITE) {
+      for (const auto & member : type.second->get_members()) {
+        if (!member.second->is_complete()) {
+          fprintf(stderr, "Incomplete type %s\n", member.first.c_str());
+        }
+      }
+    }
+  }
 }
 
   
@@ -302,12 +315,19 @@ Type::~Type()
 {}
 
 bool
-Type::is_complete()
+Type::is_complete() const
 { return complete; }
 
+Type::TypeType
+Type::get_type() const
+{ return type; }
 const std::string &
 Type::get_name() const
 { return name; }
+
+const std::vector<std::pair<std::string, Type*>> &
+Type::get_members() const
+{ return members; }
 
 void
 Type::complete_pointer_definition(Type *_type)
@@ -343,7 +363,9 @@ Type::dump()
   else if (type == TYPE_ENUM) {
     type_desc = std::string("enum");
   }
-
+  if (!is_complete()) {
+    fprintf(stderr, "(incomplete) ");
+  }
   if (type == TYPE_PRIMITIVE) {
     fprintf(stderr, "Type %s : %s\n",
             name.c_str(), type_desc.c_str());

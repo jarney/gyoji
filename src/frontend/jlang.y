@@ -1838,11 +1838,12 @@ expression_logical_and
                 $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         }
-        | expression_logical_and AND_OP expression_inclusive_or {
+        | expression_logical_and ANDPERSAND ANDPERSAND expression_inclusive_or {
                 auto expr = std::make_unique<JLang::frontend::tree::ExpressionBinary>(
                                                                                          std::move($1),
                                                                                          std::move($2),
-                                                                                         std::move($3)
+                                                                                         std::move($3),
+                                                                                         std::move($4)
                                                                                          );
                 const JLang::frontend::ast::SyntaxNode &sn = *(expr);
                 $$ = std::make_unique<JLang::frontend::tree::Expression>(std::move(expr), sn);

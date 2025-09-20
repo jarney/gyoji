@@ -2187,6 +2187,24 @@ namespace JLang::frontend::tree {
                        ::JLang::owned<Terminal> _operator_token,
                        ::JLang::owned<Expression> _expression_b
                        );
+      /**
+       * This form of the constructor is introduced because
+       * of a token oddity.  The && symbol can't be a single
+       * token because that causes problems with declaring
+       * references to references (i.e. int &&a -> int & & a)
+       * so we need to only recognize & as a token.  Therefore
+       * the grammar for a binary and is expresion ANDPERSAND ANDPERSAND expression
+       * so even though it's a binary operation, it can take two
+       * operator arguments.  This is purely a quirk of the
+       * syntax and there are not new semantics because
+       * of it.
+       */
+      ExpressionBinary(
+                       ::JLang::owned<Expression> _expression_a,
+                       ::JLang::owned<Terminal> _operator_token,
+                       ::JLang::owned<Terminal> _operator_token2,
+                       ::JLang::owned<Expression> _expression_b
+                       );
     /**
      * Destructor, nothing special.
      */
@@ -2199,6 +2217,7 @@ namespace JLang::frontend::tree {
       OperationType type;
       ::JLang::owned<Expression> expression_a;
       ::JLang::owned<Terminal> operator_token;
+      ::JLang::owned<Terminal> operator_token2;
       ::JLang::owned<Expression> expression_b;
     };
     
