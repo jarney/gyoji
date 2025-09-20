@@ -135,7 +135,7 @@ namespace JLang::frontend::tree {
     // in this vector.  It may be returned to access it,
     // but these are owned pointers, so they must only
     // be de-referenced and never assigned to
-    std::vector<::JLang::owned<TerminalNonSyntax>> non_syntax;
+    std::vector<JLang::owned<TerminalNonSyntax>> non_syntax;
   private:
     const JLang::context::Token & token;
     std::string fully_qualified_name;
@@ -158,15 +158,15 @@ namespace JLang::frontend::tree {
   class FileStatement : public JLang::frontend::ast::SyntaxNode {
   public:
     typedef std::variant<
-            ::JLang::owned<FileStatementFunctionDefinition>,
-            ::JLang::owned<FileStatementFunctionDeclaration>,
-            ::JLang::owned<FileStatementGlobalDefinition>,
-            ::JLang::owned<ClassDeclaration>,
-            ::JLang::owned<ClassDefinition>,
-            ::JLang::owned<EnumDefinition>,
-            ::JLang::owned<TypeDefinition>,
-            ::JLang::owned<FileStatementNamespace>,
-            ::JLang::owned<FileStatementUsing>> FileStatementType;
+            JLang::owned<FileStatementFunctionDefinition>,
+            JLang::owned<FileStatementFunctionDeclaration>,
+            JLang::owned<FileStatementGlobalDefinition>,
+            JLang::owned<ClassDeclaration>,
+            JLang::owned<ClassDefinition>,
+            JLang::owned<EnumDefinition>,
+            JLang::owned<TypeDefinition>,
+            JLang::owned<FileStatementNamespace>,
+            JLang::owned<FileStatementUsing>> FileStatementType;
     
     FileStatement(FileStatementType _statement, const JLang::frontend::ast::SyntaxNode & _sn);
     ~FileStatement();
@@ -232,7 +232,7 @@ namespace JLang::frontend::tree {
      * Constructs an access qualifier from a parse token
      * which will be either VOLATILE or CONST.
      */
-    AccessQualifier(::JLang::owned<Terminal> _qualifier);
+    AccessQualifier(JLang::owned<Terminal> _qualifier);
     /**
      * Constructs a default access qualifier (UNSPECIFIED)
      * if no qualifier is specified in the source file.
@@ -248,7 +248,7 @@ namespace JLang::frontend::tree {
     const AccessQualifier::AccessQualifierType & get_type() const;
   private:
     AccessQualifier::AccessQualifierType type;
-    ::JLang::owned<Terminal> qualifier;
+    JLang::owned<Terminal> qualifier;
   };
 
   //! Declares PUBLIC, PROTECTED, or PRIVATE access to functions and members.
@@ -281,7 +281,7 @@ namespace JLang::frontend::tree {
      * Constructs an access modifier for the given
      * terminal which will be either PUBLIC, PROTECTED, or PRIVATE.
      */
-    AccessModifier(::JLang::owned<Terminal> _modifier);
+    AccessModifier(JLang::owned<Terminal> _modifier);
     /**
      * This is the default constructor used when the
      * access modifier is not explicitly specified in the
@@ -298,7 +298,7 @@ namespace JLang::frontend::tree {
     const AccessModifierType & get_type() const;
   private:
     AccessModifierType type;
-    ::JLang::owned<Terminal> modifier;
+    JLang::owned<Terminal> modifier;
   };
 
   //! Represents the safety/borrow check semantics for a function or block.
@@ -321,7 +321,7 @@ namespace JLang::frontend::tree {
      * in the input.  This indicates that a block HAS been marked
      * as unsafe.
      */
-    UnsafeModifier(::JLang::owned<Terminal> _unsafe_token);
+    UnsafeModifier(JLang::owned<Terminal> _unsafe_token);
     /**
      * The default unsafe modifier (i.e. not specified) refers
      * to a block that is NOT marked as unsafe.
@@ -337,7 +337,7 @@ namespace JLang::frontend::tree {
      */
     bool is_unsafe() const;
   private:
-    ::JLang::owned<Terminal> unsafe_token;
+    JLang::owned<Terminal> unsafe_token;
   };
 
   //! Represents the name of a type.
@@ -375,17 +375,17 @@ namespace JLang::frontend::tree {
      * Constructs a simple type name representing the
      * type specified in the source file.
      */
-    TypeName(::JLang::owned<Terminal> _type_name);
+    TypeName(JLang::owned<Terminal> _type_name);
 
     /**
      * Constructs a 'typeof' expression where the type
      * has the meaning of the type of the expression
      * specified.
      */
-    TypeName(::JLang::owned<Terminal> _typeof_token,
-             ::JLang::owned<Terminal> _paren_l_token,
-             ::JLang::owned<Expression> _expression,
-             ::JLang::owned<Terminal> _paren_r_token
+    TypeName(JLang::owned<Terminal> _typeof_token,
+             JLang::owned<Terminal> _paren_l_token,
+             JLang::owned<Expression> _expression,
+             JLang::owned<Terminal> _paren_r_token
              );
     /**
      * Destructor, nothing special.
@@ -427,12 +427,12 @@ namespace JLang::frontend::tree {
   private:
     bool m_is_expression;
     // For raw names
-    ::JLang::owned<Terminal> type_name;
+    JLang::owned<Terminal> type_name;
     // for typeof expressions
-    ::JLang::owned<Terminal> typeof_token;
-    ::JLang::owned<Terminal> paren_l_token;
-    ::JLang::owned<Expression> expression;
-    ::JLang::owned<Terminal> paren_r_token;
+    JLang::owned<Terminal> typeof_token;
+    JLang::owned<Terminal> paren_l_token;
+    JLang::owned<Expression> expression;
+    JLang::owned<Terminal> paren_r_token;
   };
 
   //! Represents arguments to a template type.
@@ -458,22 +458,22 @@ namespace JLang::frontend::tree {
      * This adds the given type specifier to the list of
      * template arguments.
      */
-    void add_argument(::JLang::owned<TypeSpecifier> _argument);
+    void add_argument(JLang::owned<TypeSpecifier> _argument);
     /**
      * This adds the next argument to the list along with accounting for
      * the comma that separates the arguments.  The comma token is
      * consumed here and is not useful for the semantics, but must be
      * consumed so that the syntax tree can accurately reproduce the output.
      */
-    void add_argument(::JLang::owned<Terminal> _comma_token, ::JLang::owned<TypeSpecifier> _argument);
+    void add_argument(JLang::owned<Terminal> _comma_token, JLang::owned<TypeSpecifier> _argument);
 
     /**
      * This provides immutable access to the list of arguments.
      */
-    const std::vector<::JLang::owned<TypeSpecifier>> & get_arguments() const;
+    const std::vector<JLang::owned<TypeSpecifier>> & get_arguments() const;
   private:
-    std::vector<::JLang::owned<Terminal>> comma_list;
-    std::vector<::JLang::owned<TypeSpecifier>> arguments;
+    std::vector<JLang::owned<Terminal>> comma_list;
+    std::vector<JLang::owned<TypeSpecifier>> arguments;
   };
 
   //! Represents a simple type.
@@ -488,8 +488,8 @@ namespace JLang::frontend::tree {
      * Constructs a type qualified by its access semantics.
      */
     TypeSpecifierSimple(
-                        ::JLang::owned<AccessQualifier> _access_qualifier,
-                        ::JLang::owned<TypeName> _type_name
+                        JLang::owned<AccessQualifier> _access_qualifier,
+                        JLang::owned<TypeName> _type_name
                         );
     /**
      * Destructor, nothing special.
@@ -504,8 +504,8 @@ namespace JLang::frontend::tree {
      */
     const TypeName & get_type_name() const;
   private:
-    ::JLang::owned<AccessQualifier> access_qualifier;
-    ::JLang::owned<TypeName> type_name;
+    JLang::owned<AccessQualifier> access_qualifier;
+    JLang::owned<TypeName> type_name;
   };
 
   //! Represents a type with type-arguments modifying the type's definition.
@@ -535,10 +535,10 @@ namespace JLang::frontend::tree {
   class TypeSpecifierTemplate : public JLang::frontend::ast::SyntaxNode {
   public:
     TypeSpecifierTemplate(
-                          ::JLang::owned<TypeSpecifier> _type_specifier,
-                          ::JLang::owned<Terminal> _paren_l_token,
-                          ::JLang::owned<TypeSpecifierCallArgs> _type_specifier_call_args,
-                          ::JLang::owned<Terminal> _paren_r_token
+                          JLang::owned<TypeSpecifier> _type_specifier,
+                          JLang::owned<Terminal> _paren_l_token,
+                          JLang::owned<TypeSpecifierCallArgs> _type_specifier_call_args,
+                          JLang::owned<Terminal> _paren_r_token
                           );
     /**
      * Destructor, nothing special.
@@ -555,10 +555,10 @@ namespace JLang::frontend::tree {
     const TypeSpecifierCallArgs & get_args() const;
 
   private:
-    ::JLang::owned<TypeSpecifier> type_specifier;
-    ::JLang::owned<Terminal> paren_l_token;
-    ::JLang::owned<TypeSpecifierCallArgs> type_specifier_call_args;
-    ::JLang::owned<Terminal> paren_r_token;
+    JLang::owned<TypeSpecifier> type_specifier;
+    JLang::owned<Terminal> paren_l_token;
+    JLang::owned<TypeSpecifierCallArgs> type_specifier_call_args;
+    JLang::owned<Terminal> paren_r_token;
   };
 
   //! Represents a pointer to a function.
@@ -583,14 +583,14 @@ namespace JLang::frontend::tree {
      * given.
      */
     TypeSpecifierFunctionPointer(
-                                 ::JLang::owned<TypeSpecifier> _type_specifier,
-                                 ::JLang::owned<Terminal> _paren_l1_token,
-                                 ::JLang::owned<Terminal> _star_token,
-                                 ::JLang::owned<Terminal> _identifier_token,
-                                 ::JLang::owned<Terminal> _paren_r1_token,
-                                 ::JLang::owned<Terminal> _paren_l2_token,
-                                 ::JLang::owned<FunctionDefinitionArgList> _function_definition_arg_list,
-                                 ::JLang::owned<Terminal> _paren_r2_token
+                                 JLang::owned<TypeSpecifier> _type_specifier,
+                                 JLang::owned<Terminal> _paren_l1_token,
+                                 JLang::owned<Terminal> _star_token,
+                                 JLang::owned<Terminal> _identifier_token,
+                                 JLang::owned<Terminal> _paren_r1_token,
+                                 JLang::owned<Terminal> _paren_l2_token,
+                                 JLang::owned<FunctionDefinitionArgList> _function_definition_arg_list,
+                                 JLang::owned<Terminal> _paren_r2_token
                                  );
     /**
      * Destructor, nothing special.
@@ -609,14 +609,14 @@ namespace JLang::frontend::tree {
      */
     const FunctionDefinitionArgList & get_args() const;
   private:
-    ::JLang::owned<TypeSpecifier> type_specifier;
-    ::JLang::owned<Terminal> paren_l1_token;
-    ::JLang::owned<Terminal> star_token;
-    ::JLang::owned<Terminal> identifier_token;
-    ::JLang::owned<Terminal> paren_r1_token;
-    ::JLang::owned<Terminal> paren_l2_token;
-    ::JLang::owned<FunctionDefinitionArgList> function_definition_arg_list;
-    ::JLang::owned<Terminal> paren_r2_token;
+    JLang::owned<TypeSpecifier> type_specifier;
+    JLang::owned<Terminal> paren_l1_token;
+    JLang::owned<Terminal> star_token;
+    JLang::owned<Terminal> identifier_token;
+    JLang::owned<Terminal> paren_r1_token;
+    JLang::owned<Terminal> paren_l2_token;
+    JLang::owned<FunctionDefinitionArgList> function_definition_arg_list;
+    JLang::owned<Terminal> paren_r2_token;
   };
 
   //! Represents an unsafe poniter to a specific type.
@@ -650,9 +650,9 @@ namespace JLang::frontend::tree {
      * marked with access as 'const', 'volatile', or 'unspecified'.
      */
     TypeSpecifierPointerTo(
-                           ::JLang::owned<TypeSpecifier> _type_specifier,
-                           ::JLang::owned<Terminal> _star_token,
-                           ::JLang::owned<AccessQualifier> _access_qualifier
+                           JLang::owned<TypeSpecifier> _type_specifier,
+                           JLang::owned<Terminal> _star_token,
+                           JLang::owned<AccessQualifier> _access_qualifier
                            );
     /**
      * Destructor, nothing special.
@@ -669,9 +669,9 @@ namespace JLang::frontend::tree {
      */
     const AccessQualifier & get_access_qualifier() const;
   private:
-    ::JLang::owned<TypeSpecifier> type_specifier;
-    ::JLang::owned<Terminal> star_token;
-    ::JLang::owned<AccessQualifier> access_qualifier;
+    JLang::owned<TypeSpecifier> type_specifier;
+    JLang::owned<Terminal> star_token;
+    JLang::owned<AccessQualifier> access_qualifier;
   };
 
   //! Represents a safe reference to a specific type.
@@ -705,9 +705,9 @@ namespace JLang::frontend::tree {
      * using the access qualifiers given.
      */
     TypeSpecifierReferenceTo(
-                             ::JLang::owned<TypeSpecifier> _type_specifier,
-                             ::JLang::owned<Terminal> _andpersand_token,
-                             ::JLang::owned<AccessQualifier> _access_qualifier
+                             JLang::owned<TypeSpecifier> _type_specifier,
+                             JLang::owned<Terminal> _andpersand_token,
+                             JLang::owned<AccessQualifier> _access_qualifier
                              );
     /**
      * Destructor, nothing special.
@@ -724,9 +724,9 @@ namespace JLang::frontend::tree {
      */
     const AccessQualifier & get_access_qualifier() const;
   private:
-    ::JLang::owned<TypeSpecifier> type_specifier;
-    ::JLang::owned<Terminal> andpersand_token;
-    ::JLang::owned<AccessQualifier> access_qualifier;
+    JLang::owned<TypeSpecifier> type_specifier;
+    JLang::owned<Terminal> andpersand_token;
+    JLang::owned<AccessQualifier> access_qualifier;
   };
 
   //! Represents a type being specified.
@@ -764,11 +764,11 @@ namespace JLang::frontend::tree {
   class TypeSpecifier : public JLang::frontend::ast::SyntaxNode {
   public:
     typedef std::variant<
-    ::JLang::owned<TypeSpecifierSimple>,
-    ::JLang::owned<TypeSpecifierTemplate>,
-    ::JLang::owned<TypeSpecifierFunctionPointer>,
-    ::JLang::owned<TypeSpecifierPointerTo>,
-    ::JLang::owned<TypeSpecifierReferenceTo>
+    JLang::owned<TypeSpecifierSimple>,
+    JLang::owned<TypeSpecifierTemplate>,
+    JLang::owned<TypeSpecifierFunctionPointer>,
+    JLang::owned<TypeSpecifierPointerTo>,
+    JLang::owned<TypeSpecifierReferenceTo>
     > TypeSpecifierType;
     TypeSpecifier(TypeSpecifier::TypeSpecifierType _type, const JLang::frontend::ast::SyntaxNode & _sn);
     /**
@@ -793,8 +793,8 @@ namespace JLang::frontend::tree {
    */
   class FunctionDefinitionArg : public JLang::frontend::ast::SyntaxNode {
   public:
-    FunctionDefinitionArg(::JLang::owned<TypeSpecifier> _type_specifier,
-                          ::JLang::owned<Terminal> _identifier_token
+    FunctionDefinitionArg(JLang::owned<TypeSpecifier> _type_specifier,
+                          JLang::owned<Terminal> _identifier_token
                           );
     /**
      * Destructor, nothing special.
@@ -809,8 +809,8 @@ namespace JLang::frontend::tree {
      */
     const std::string & get_name() const;
   private:
-    ::JLang::owned<TypeSpecifier> type_specifier;
-    ::JLang::owned<Terminal> identifier_token;
+    JLang::owned<TypeSpecifier> type_specifier;
+    JLang::owned<Terminal> identifier_token;
   };
 
   //! Represents the list of arguments to a function definition.
@@ -828,21 +828,21 @@ namespace JLang::frontend::tree {
     /**
      * Returns the list of arguments to the function.
      */
-    const std::vector<::JLang::owned<FunctionDefinitionArg>> & get_arguments() const;
+    const std::vector<JLang::owned<FunctionDefinitionArg>> & get_arguments() const;
     /**
      * Adds a single argument to the function, used during
      * the parse stage to construct the function arguments
      * from the input syntax.
      */
-    void add_argument(::JLang::owned<FunctionDefinitionArg> _argument);
+    void add_argument(JLang::owned<FunctionDefinitionArg> _argument);
     /**
      * Adds the comma separator to the function arguments, but this
      * plays no role in the semantics.
      */
-    void add_comma(::JLang::owned<Terminal> _comma);
+    void add_comma(JLang::owned<Terminal> _comma);
   private:
-    std::vector<::JLang::owned<Terminal>> commas;
-    std::vector<::JLang::owned<FunctionDefinitionArg>> arguments;
+    std::vector<JLang::owned<Terminal>> commas;
+    std::vector<JLang::owned<FunctionDefinitionArg>> arguments;
   };
 
   //! Represents the declaration of a function.
@@ -857,14 +857,14 @@ namespace JLang::frontend::tree {
   class FileStatementFunctionDeclaration : public JLang::frontend::ast::SyntaxNode {
   public:
     FileStatementFunctionDeclaration(
-                                     ::JLang::owned<AccessModifier> _access_modifier,
-                                     ::JLang::owned<UnsafeModifier> _unsafe_modifier,
-                                     ::JLang::owned<TypeSpecifier> _type_specifier,
-                                     ::JLang::owned<Terminal> _name,
-                                     ::JLang::owned<Terminal> _paren_l,
-                                     ::JLang::owned<FunctionDefinitionArgList> _arguments,
-                                     ::JLang::owned<Terminal> _paren_r,
-                                     ::JLang::owned<Terminal> _semicolon
+                                     JLang::owned<AccessModifier> _access_modifier,
+                                     JLang::owned<UnsafeModifier> _unsafe_modifier,
+                                     JLang::owned<TypeSpecifier> _type_specifier,
+                                     JLang::owned<Terminal> _name,
+                                     JLang::owned<Terminal> _paren_l,
+                                     JLang::owned<FunctionDefinitionArgList> _arguments,
+                                     JLang::owned<Terminal> _paren_r,
+                                     JLang::owned<Terminal> _semicolon
                                      );
     /**
      * Destructor, nothing special.
@@ -894,14 +894,14 @@ namespace JLang::frontend::tree {
     const FunctionDefinitionArgList & get_arguments() const;
     
   private:
-    ::JLang::owned<AccessModifier> access_modifier;
-    ::JLang::owned<UnsafeModifier> unsafe_modifier;
-    ::JLang::owned<TypeSpecifier> type_specifier;
-    ::JLang::owned<Terminal> name; // function name (IDENTIFIER)
-    ::JLang::owned<Terminal> paren_l; // argument list delimiter PAREN_L
-    ::JLang::owned<FunctionDefinitionArgList> arguments;
-    ::JLang::owned<Terminal> paren_r; // argument list delimiter PAREN_R
-    ::JLang::owned<Terminal> semicolon; // argument list delimiter SEMICOLON
+    JLang::owned<AccessModifier> access_modifier;
+    JLang::owned<UnsafeModifier> unsafe_modifier;
+    JLang::owned<TypeSpecifier> type_specifier;
+    JLang::owned<Terminal> name; // function name (IDENTIFIER)
+    JLang::owned<Terminal> paren_l; // argument list delimiter PAREN_L
+    JLang::owned<FunctionDefinitionArgList> arguments;
+    JLang::owned<Terminal> paren_r; // argument list delimiter PAREN_R
+    JLang::owned<Terminal> semicolon; // argument list delimiter SEMICOLON
   };
 
   //! Represents the declaration of a variable inside the scope of a function or block.
@@ -926,11 +926,11 @@ namespace JLang::frontend::tree {
      * consuming the parse tokens.
      */
     StatementVariableDeclaration(
-                                 ::JLang::owned<TypeSpecifier> _type_specifier,
-                                 ::JLang::owned<Terminal> _identifier_token,
-                                 ::JLang::owned<ArrayLength> _array_length,
-                                 ::JLang::owned<GlobalInitializer> _global_initializer,
-                                 ::JLang::owned<Terminal> _semicolon_token
+                                 JLang::owned<TypeSpecifier> _type_specifier,
+                                 JLang::owned<Terminal> _identifier_token,
+                                 JLang::owned<ArrayLength> _array_length,
+                                 JLang::owned<GlobalInitializer> _global_initializer,
+                                 JLang::owned<Terminal> _semicolon_token
                                  );
     /**
      * Destructor, nothing special.
@@ -955,11 +955,11 @@ namespace JLang::frontend::tree {
      */
     const GlobalInitializer & get_initializer() const;
   private:
-    ::JLang::owned<TypeSpecifier> type_specifier;
-    ::JLang::owned<Terminal> identifier_token;
-    ::JLang::owned<ArrayLength> array_length;
-    ::JLang::owned<GlobalInitializer> global_initializer;
-    ::JLang::owned<Terminal> semicolon_token;
+    JLang::owned<TypeSpecifier> type_specifier;
+    JLang::owned<Terminal> identifier_token;
+    JLang::owned<ArrayLength> array_length;
+    JLang::owned<GlobalInitializer> global_initializer;
+    JLang::owned<Terminal> semicolon_token;
   private:
   };
 
@@ -992,8 +992,8 @@ namespace JLang::frontend::tree {
      * with an optional unsafe modifier.
      */
     StatementBlock(
-                   ::JLang::owned<UnsafeModifier> _unsafe_modifier,
-                   ::JLang::owned<ScopeBody> _scope_body
+                   JLang::owned<UnsafeModifier> _unsafe_modifier,
+                   JLang::owned<ScopeBody> _scope_body
                    );
     /**
      * Destructor, nothing special.
@@ -1010,8 +1010,8 @@ namespace JLang::frontend::tree {
      */
     const ScopeBody & get_scope_body() const;
   private:
-    ::JLang::owned<UnsafeModifier> unsafe_modifier;
-    ::JLang::owned<ScopeBody> scope_body;
+    JLang::owned<UnsafeModifier> unsafe_modifier;
+    JLang::owned<ScopeBody> scope_body;
   private:
   };
 
@@ -1033,8 +1033,8 @@ namespace JLang::frontend::tree {
   class StatementExpression : public JLang::frontend::ast::SyntaxNode {
   public:
     StatementExpression(
-                        ::JLang::owned<Expression> _expression,
-                        ::JLang::owned<Terminal> _semicolon_token
+                        JLang::owned<Expression> _expression,
+                        JLang::owned<Terminal> _semicolon_token
                         );
     /**
      * Destructor, nothing special.
@@ -1042,8 +1042,8 @@ namespace JLang::frontend::tree {
     ~StatementExpression();
     const Expression & get_expression() const;
   private:
-    ::JLang::owned<Expression> expression;
-    ::JLang::owned<Terminal> semicolon_token;
+    JLang::owned<Expression> expression;
+    JLang::owned<Terminal> semicolon_token;
   };
 
   //! This represents an if condition in one of several forms.
@@ -1108,11 +1108,11 @@ namespace JLang::frontend::tree {
      * for when the condition is true.
      */
     StatementIfElse(
-                    ::JLang::owned<Terminal> _if_token,
-                    ::JLang::owned<Terminal> _paren_l_token,
-                    ::JLang::owned<Expression> _expression,
-                    ::JLang::owned<Terminal> _paren_r_token,
-                    ::JLang::owned<ScopeBody> _if_scope_body
+                    JLang::owned<Terminal> _if_token,
+                    JLang::owned<Terminal> _paren_l_token,
+                    JLang::owned<Expression> _expression,
+                    JLang::owned<Terminal> _paren_r_token,
+                    JLang::owned<ScopeBody> _if_scope_body
                     );
     /**
      * Constructs an if/else block where one block
@@ -1120,13 +1120,13 @@ namespace JLang::frontend::tree {
      * block represents the code for the expression false.
      */
     StatementIfElse(
-                    ::JLang::owned<Terminal> _if_token,
-                    ::JLang::owned<Terminal> _paren_l_token,
-                    ::JLang::owned<Expression> _expression,
-                    ::JLang::owned<Terminal> _paren_r_token,
-                    ::JLang::owned<ScopeBody> _if_scope_body,
-                    ::JLang::owned<Terminal> _else_token,
-                    ::JLang::owned<ScopeBody> _else_scope_body
+                    JLang::owned<Terminal> _if_token,
+                    JLang::owned<Terminal> _paren_l_token,
+                    JLang::owned<Expression> _expression,
+                    JLang::owned<Terminal> _paren_r_token,
+                    JLang::owned<ScopeBody> _if_scope_body,
+                    JLang::owned<Terminal> _else_token,
+                    JLang::owned<ScopeBody> _else_scope_body
                     );
     /**
      * Constructs an if/elseif chain where each 'else if'
@@ -1134,13 +1134,13 @@ namespace JLang::frontend::tree {
      * conditions.
      */
     StatementIfElse(
-                    ::JLang::owned<Terminal> _if_token,
-                    ::JLang::owned<Terminal> _paren_l_token,
-                    ::JLang::owned<Expression> _expression,
-                    ::JLang::owned<Terminal> _paren_r_token,
-                    ::JLang::owned<ScopeBody> _if_scope_body,
-                    ::JLang::owned<Terminal> _else_token,
-                    ::JLang::owned<StatementIfElse> _statement_if_else
+                    JLang::owned<Terminal> _if_token,
+                    JLang::owned<Terminal> _paren_l_token,
+                    JLang::owned<Expression> _expression,
+                    JLang::owned<Terminal> _paren_r_token,
+                    JLang::owned<ScopeBody> _if_scope_body,
+                    JLang::owned<Terminal> _else_token,
+                    JLang::owned<StatementIfElse> _statement_if_else
                     );
     /**
      * Destructor, nothing special.
@@ -1176,14 +1176,14 @@ namespace JLang::frontend::tree {
   private:
     bool m_has_else;
     bool m_has_else_if;
-    ::JLang::owned<Terminal> if_token;
-    ::JLang::owned<Terminal> paren_l_token;
-    ::JLang::owned<Expression> expression;
-    ::JLang::owned<Terminal> paren_r_token;
-    ::JLang::owned<ScopeBody> if_scope_body;
-    ::JLang::owned<Terminal> else_token;
-    ::JLang::owned<ScopeBody> else_scope_body;
-    ::JLang::owned<StatementIfElse> else_if;
+    JLang::owned<Terminal> if_token;
+    JLang::owned<Terminal> paren_l_token;
+    JLang::owned<Expression> expression;
+    JLang::owned<Terminal> paren_r_token;
+    JLang::owned<ScopeBody> if_scope_body;
+    JLang::owned<Terminal> else_token;
+    JLang::owned<ScopeBody> else_scope_body;
+    JLang::owned<StatementIfElse> else_if;
   };
 
   //! Represents a 'while' statement in a function or scope.
@@ -1205,11 +1205,11 @@ namespace JLang::frontend::tree {
   class StatementWhile : public JLang::frontend::ast::SyntaxNode {
   public:
     StatementWhile(
-                   ::JLang::owned<Terminal> _while_token,
-                   ::JLang::owned<Terminal> _paren_l_token,
-                   ::JLang::owned<Expression> _expression,
-                   ::JLang::owned<Terminal> _paren_r_token,
-                   ::JLang::owned<ScopeBody> _scope_body
+                   JLang::owned<Terminal> _while_token,
+                   JLang::owned<Terminal> _paren_l_token,
+                   JLang::owned<Expression> _expression,
+                   JLang::owned<Terminal> _paren_r_token,
+                   JLang::owned<ScopeBody> _scope_body
                    );
     /**
      * Destructor, nothing special.
@@ -1224,25 +1224,25 @@ namespace JLang::frontend::tree {
     const Expression & get_expression() const;
     const ScopeBody & get_scope_body() const;
   private:
-    ::JLang::owned<Terminal> while_token;
-    ::JLang::owned<Terminal> paren_l_token;
-    ::JLang::owned<Expression> expression;
-    ::JLang::owned<Terminal> paren_r_token;
-    ::JLang::owned<ScopeBody> scope_body;
+    JLang::owned<Terminal> while_token;
+    JLang::owned<Terminal> paren_l_token;
+    JLang::owned<Expression> expression;
+    JLang::owned<Terminal> paren_r_token;
+    JLang::owned<ScopeBody> scope_body;
   };
   
   class StatementFor : public JLang::frontend::ast::SyntaxNode {
   public:
     StatementFor(
-                 ::JLang::owned<Terminal> _for_token,
-                 ::JLang::owned<Terminal> _paren_l_token,
-                 ::JLang::owned<Expression> _expression_initial,
-                 ::JLang::owned<Terminal> _semicolon_initial,
-                 ::JLang::owned<Expression> _expression_termination,
-                 ::JLang::owned<Terminal> _semicolon_termination,
-                 ::JLang::owned<Expression> _expression_increment,
-                 ::JLang::owned<Terminal> _paren_r_token,
-                 ::JLang::owned<ScopeBody> _scope_body
+                 JLang::owned<Terminal> _for_token,
+                 JLang::owned<Terminal> _paren_l_token,
+                 JLang::owned<Expression> _expression_initial,
+                 JLang::owned<Terminal> _semicolon_initial,
+                 JLang::owned<Expression> _expression_termination,
+                 JLang::owned<Terminal> _semicolon_termination,
+                 JLang::owned<Expression> _expression_increment,
+                 JLang::owned<Terminal> _paren_r_token,
+                 JLang::owned<ScopeBody> _scope_body
                  );
     /**
      * Destructor, nothing special.
@@ -1253,29 +1253,29 @@ namespace JLang::frontend::tree {
     const Expression & get_expression_increment() const;
     const ScopeBody & get_scope_body() const;
   private:
-    ::JLang::owned<Terminal> for_token;
-    ::JLang::owned<Terminal> paren_l_token;
-    ::JLang::owned<Expression> expression_initial;
-    ::JLang::owned<Terminal> semicolon_initial;
-    ::JLang::owned<Expression> expression_termination;
-    ::JLang::owned<Terminal> semicolon_termination;
-    ::JLang::owned<Expression> expression_increment;
-    ::JLang::owned<Terminal> paren_r_token;
-    ::JLang::owned<ScopeBody> scope_body;
+    JLang::owned<Terminal> for_token;
+    JLang::owned<Terminal> paren_l_token;
+    JLang::owned<Expression> expression_initial;
+    JLang::owned<Terminal> semicolon_initial;
+    JLang::owned<Expression> expression_termination;
+    JLang::owned<Terminal> semicolon_termination;
+    JLang::owned<Expression> expression_increment;
+    JLang::owned<Terminal> paren_r_token;
+    JLang::owned<ScopeBody> scope_body;
   };
 
     class StatementSwitchBlock : public JLang::frontend::ast::SyntaxNode {
     public:
       StatementSwitchBlock(
-                           ::JLang::owned<Terminal> _default_token,
-                           ::JLang::owned<Terminal> _colon_token,
-                           ::JLang::owned<ScopeBody> _scope_body
+                           JLang::owned<Terminal> _default_token,
+                           JLang::owned<Terminal> _colon_token,
+                           JLang::owned<ScopeBody> _scope_body
                            );
       StatementSwitchBlock(
-                           ::JLang::owned<Terminal> _case_token,
-                           ::JLang::owned<Expression> _expression,
-                           ::JLang::owned<Terminal> _colon_token,
-                           ::JLang::owned<ScopeBody> _scope_body
+                           JLang::owned<Terminal> _case_token,
+                           JLang::owned<Expression> _expression,
+                           JLang::owned<Terminal> _colon_token,
+                           JLang::owned<ScopeBody> _scope_body
                            );
     /**
      * Destructor, nothing special.
@@ -1287,13 +1287,13 @@ namespace JLang::frontend::tree {
     private:
       bool m_is_default;
       // For the default case
-      ::JLang::owned<Terminal> default_token;
+      JLang::owned<Terminal> default_token;
       // For the expression case
-      ::JLang::owned<Terminal> case_token;
-      ::JLang::owned<Expression> expression;
+      JLang::owned<Terminal> case_token;
+      JLang::owned<Expression> expression;
       // Common:
-      ::JLang::owned<Terminal> colon_token;
-      ::JLang::owned<ScopeBody> scope_body;
+      JLang::owned<Terminal> colon_token;
+      JLang::owned<ScopeBody> scope_body;
     };
     
     class StatementSwitchContent : public JLang::frontend::ast::SyntaxNode {
@@ -1303,22 +1303,22 @@ namespace JLang::frontend::tree {
      * Destructor, nothing special.
      */
       ~StatementSwitchContent();
-      const std::vector<::JLang::owned<StatementSwitchBlock>> & get_blocks() const;
-      void add_block(::JLang::owned<StatementSwitchBlock> _block);
+      const std::vector<JLang::owned<StatementSwitchBlock>> & get_blocks() const;
+      void add_block(JLang::owned<StatementSwitchBlock> _block);
     private:
-      std::vector<::JLang::owned<StatementSwitchBlock>> blocks;
+      std::vector<JLang::owned<StatementSwitchBlock>> blocks;
     };
     
     class StatementSwitch : public JLang::frontend::ast::SyntaxNode {
     public:
       StatementSwitch(
-                      ::JLang::owned<Terminal> _switch_token,
-                      ::JLang::owned<Terminal> _paren_l_token,
-                      ::JLang::owned<Expression> expression,
-                      ::JLang::owned<Terminal> _paren_r_token,
-                      ::JLang::owned<Terminal> _brace_l_token,
-                      ::JLang::owned<StatementSwitchContent> _switch_content,
-                      ::JLang::owned<Terminal> _brace_r_token
+                      JLang::owned<Terminal> _switch_token,
+                      JLang::owned<Terminal> _paren_l_token,
+                      JLang::owned<Expression> expression,
+                      JLang::owned<Terminal> _paren_r_token,
+                      JLang::owned<Terminal> _brace_l_token,
+                      JLang::owned<StatementSwitchContent> _switch_content,
+                      JLang::owned<Terminal> _brace_r_token
                       );
     /**
      * Destructor, nothing special.
@@ -1327,20 +1327,20 @@ namespace JLang::frontend::tree {
       const Expression & get_expression() const;
       const StatementSwitchContent & get_switch_content() const;
     private:
-      ::JLang::owned<Terminal> switch_token;
-      ::JLang::owned<Terminal> paren_l_token;
-      ::JLang::owned<Expression> expression;
-      ::JLang::owned<Terminal> paren_r_token;
-      ::JLang::owned<Terminal> brace_l_token;
-      ::JLang::owned<StatementSwitchContent> switch_content;
-      ::JLang::owned<Terminal> brace_r_token;
+      JLang::owned<Terminal> switch_token;
+      JLang::owned<Terminal> paren_l_token;
+      JLang::owned<Expression> expression;
+      JLang::owned<Terminal> paren_r_token;
+      JLang::owned<Terminal> brace_l_token;
+      JLang::owned<StatementSwitchContent> switch_content;
+      JLang::owned<Terminal> brace_r_token;
     };
     class StatementLabel : public JLang::frontend::ast::SyntaxNode {
     public:
       StatementLabel(
-                     ::JLang::owned<Terminal> _label_token,
-                     ::JLang::owned<Terminal> _identifier_token,
-                     ::JLang::owned<Terminal> _colon_token
+                     JLang::owned<Terminal> _label_token,
+                     JLang::owned<Terminal> _identifier_token,
+                     JLang::owned<Terminal> _colon_token
                      );
     /**
      * Destructor, nothing special.
@@ -1348,16 +1348,16 @@ namespace JLang::frontend::tree {
       ~StatementLabel();
       const std::string & get_name() const;
     private:
-      ::JLang::owned<Terminal> label_token;
-      ::JLang::owned<Terminal> identifier_token;
-      ::JLang::owned<Terminal> colon_token;
+      JLang::owned<Terminal> label_token;
+      JLang::owned<Terminal> identifier_token;
+      JLang::owned<Terminal> colon_token;
     };
     class StatementGoto : public JLang::frontend::ast::SyntaxNode {
     public:
       StatementGoto(
-                    ::JLang::owned<Terminal> _goto_token,
-                    ::JLang::owned<Terminal> _identifier_token,
-                    ::JLang::owned<Terminal> _semicolon_token
+                    JLang::owned<Terminal> _goto_token,
+                    JLang::owned<Terminal> _identifier_token,
+                    JLang::owned<Terminal> _semicolon_token
                     );
     /**
      * Destructor, nothing special.
@@ -1365,44 +1365,44 @@ namespace JLang::frontend::tree {
       ~StatementGoto();
       const std::string & get_label() const;
     private:
-      ::JLang::owned<Terminal> goto_token;
-      ::JLang::owned<Terminal> identifier_token;
-      ::JLang::owned<Terminal> semicolon_token;
+      JLang::owned<Terminal> goto_token;
+      JLang::owned<Terminal> identifier_token;
+      JLang::owned<Terminal> semicolon_token;
     };
     class StatementBreak : public JLang::frontend::ast::SyntaxNode {
     public:
       StatementBreak(
-                     ::JLang::owned<Terminal> _break_token,
-                     ::JLang::owned<Terminal> _semicolon_token
+                     JLang::owned<Terminal> _break_token,
+                     JLang::owned<Terminal> _semicolon_token
                      );
     /**
      * Destructor, nothing special.
      */
       ~StatementBreak();
     private:
-      ::JLang::owned<Terminal> break_token;
-      ::JLang::owned<Terminal> semicolon_token;
+      JLang::owned<Terminal> break_token;
+      JLang::owned<Terminal> semicolon_token;
     };
     class StatementContinue : public JLang::frontend::ast::SyntaxNode {
     public:
       StatementContinue(
-                        ::JLang::owned<Terminal> _continue_token,
-                        ::JLang::owned<Terminal> _semicolon_token
+                        JLang::owned<Terminal> _continue_token,
+                        JLang::owned<Terminal> _semicolon_token
                         );
     /**
      * Destructor, nothing special.
      */
       ~StatementContinue();
     private:
-      ::JLang::owned<Terminal> continue_token;
-      ::JLang::owned<Terminal> semicolon_token;
+      JLang::owned<Terminal> continue_token;
+      JLang::owned<Terminal> semicolon_token;
     };
     class StatementReturn : public JLang::frontend::ast::SyntaxNode {
     public:
       StatementReturn(
-                      ::JLang::owned<Terminal> _return_token,
-                      ::JLang::owned<Expression> _expression,
-                      ::JLang::owned<Terminal> _semicolon_token
+                      JLang::owned<Terminal> _return_token,
+                      JLang::owned<Expression> _expression,
+                      JLang::owned<Terminal> _semicolon_token
                       );
     /**
      * Destructor, nothing special.
@@ -1410,26 +1410,26 @@ namespace JLang::frontend::tree {
       ~StatementReturn();
       const Expression & get_expression() const;
     private:
-      ::JLang::owned<Terminal> return_token;
-      ::JLang::owned<Expression> expression;
-      ::JLang::owned<Terminal> semicolon_token;
+      JLang::owned<Terminal> return_token;
+      JLang::owned<Expression> expression;
+      JLang::owned<Terminal> semicolon_token;
     };
 
     class Statement : public JLang::frontend::ast::SyntaxNode {
     public:
       typedef std::variant<
-            ::JLang::owned<StatementVariableDeclaration>,
-            ::JLang::owned<StatementBlock>,
-            ::JLang::owned<StatementExpression>,
-            ::JLang::owned<StatementIfElse>,
-            ::JLang::owned<StatementWhile>,
-            ::JLang::owned<StatementFor>,
-            ::JLang::owned<StatementSwitch>,
-            ::JLang::owned<StatementLabel>,
-            ::JLang::owned<StatementGoto>,
-            ::JLang::owned<StatementBreak>,
-            ::JLang::owned<StatementContinue>,
-            ::JLang::owned<StatementReturn>
+            JLang::owned<StatementVariableDeclaration>,
+            JLang::owned<StatementBlock>,
+            JLang::owned<StatementExpression>,
+            JLang::owned<StatementIfElse>,
+            JLang::owned<StatementWhile>,
+            JLang::owned<StatementFor>,
+            JLang::owned<StatementSwitch>,
+            JLang::owned<StatementLabel>,
+            JLang::owned<StatementGoto>,
+            JLang::owned<StatementBreak>,
+            JLang::owned<StatementContinue>,
+            JLang::owned<StatementReturn>
       > StatementType;
 
       Statement(StatementType _statement, const SyntaxNode & _sn);
@@ -1449,18 +1449,18 @@ namespace JLang::frontend::tree {
      * Destructor, nothing special.
      */
       ~StatementList();
-      void add_statement(::JLang::owned<Statement> _statement);
-      const std::vector<::JLang::owned<Statement>> &get_statements() const;
+      void add_statement(JLang::owned<Statement> _statement);
+      const std::vector<JLang::owned<Statement>> &get_statements() const;
     private:
-      std::vector<::JLang::owned<Statement>> statements;
+      std::vector<JLang::owned<Statement>> statements;
     };
     
     class ScopeBody : public JLang::frontend::ast::SyntaxNode {
     public:
       ScopeBody(
-                ::JLang::owned<Terminal> brace_l_token,
-                ::JLang::owned<StatementList> statement_list,
-                ::JLang::owned<Terminal> brace_r_token
+                JLang::owned<Terminal> brace_l_token,
+                JLang::owned<StatementList> statement_list,
+                JLang::owned<Terminal> brace_r_token
                 );
     /**
      * Destructor, nothing special.
@@ -1468,22 +1468,22 @@ namespace JLang::frontend::tree {
       ~ScopeBody();
       const StatementList & get_statements() const;
     private:
-      ::JLang::owned<Terminal> brace_l_token;
-      ::JLang::owned<StatementList> statement_list;
-      ::JLang::owned<Terminal> brace_r_token;
+      JLang::owned<Terminal> brace_l_token;
+      JLang::owned<StatementList> statement_list;
+      JLang::owned<Terminal> brace_r_token;
     };
     
     class FileStatementFunctionDefinition : public JLang::frontend::ast::SyntaxNode {
     public:
       FileStatementFunctionDefinition(
-                                      ::JLang::owned<AccessModifier> _access_modifier,
-                                      ::JLang::owned<UnsafeModifier> _unsafe_modifier,
-                                      ::JLang::owned<TypeSpecifier> _type_specifier,
-                                      ::JLang::owned<Terminal> _name,
-                                      ::JLang::owned<Terminal> _paren_l,
-                                      ::JLang::owned<FunctionDefinitionArgList> _arguments,
-                                      ::JLang::owned<Terminal> _paren_r,
-                                      ::JLang::owned<ScopeBody> _scope_body
+                                      JLang::owned<AccessModifier> _access_modifier,
+                                      JLang::owned<UnsafeModifier> _unsafe_modifier,
+                                      JLang::owned<TypeSpecifier> _type_specifier,
+                                      JLang::owned<Terminal> _name,
+                                      JLang::owned<Terminal> _paren_l,
+                                      JLang::owned<FunctionDefinitionArgList> _arguments,
+                                      JLang::owned<Terminal> _paren_r,
+                                      JLang::owned<ScopeBody> _scope_body
                                       );
     /**
      * Destructor, nothing special.
@@ -1497,23 +1497,23 @@ namespace JLang::frontend::tree {
       const ScopeBody & get_scope_body() const;
       
     private:
-      ::JLang::owned<AccessModifier> access_modifier;
-      ::JLang::owned<UnsafeModifier> unsafe_modifier;
-      ::JLang::owned<TypeSpecifier> type_specifier;
-      ::JLang::owned<Terminal> name; // function name (IDENTIFIER)
-      ::JLang::owned<Terminal> paren_l; // argument list delimiter PAREN_L
-      ::JLang::owned<FunctionDefinitionArgList> arguments;
-      ::JLang::owned<Terminal> paren_r; // argument list delimiter PAREN_R
-      ::JLang::owned<ScopeBody> scope_body; // argument list delimiter SEMICOLON
+      JLang::owned<AccessModifier> access_modifier;
+      JLang::owned<UnsafeModifier> unsafe_modifier;
+      JLang::owned<TypeSpecifier> type_specifier;
+      JLang::owned<Terminal> name; // function name (IDENTIFIER)
+      JLang::owned<Terminal> paren_l; // argument list delimiter PAREN_L
+      JLang::owned<FunctionDefinitionArgList> arguments;
+      JLang::owned<Terminal> paren_r; // argument list delimiter PAREN_R
+      JLang::owned<ScopeBody> scope_body; // argument list delimiter SEMICOLON
     };
 
     class ArrayLength : public JLang::frontend::ast::SyntaxNode {
     public:
       ArrayLength();
       ArrayLength(
-                  ::JLang::owned<Terminal> _bracket_l_token,
-                  ::JLang::owned<Terminal> _literal_int_token,
-                  ::JLang::owned<Terminal> _bracket_r_token
+                  JLang::owned<Terminal> _bracket_l_token,
+                  JLang::owned<Terminal> _literal_int_token,
+                  JLang::owned<Terminal> _bracket_r_token
                   );
     /**
      * Destructor, nothing special.
@@ -1522,18 +1522,18 @@ namespace JLang::frontend::tree {
       bool is_array() const;
       size_t get_size() const;
     private:
-      ::JLang::owned<Terminal> bracket_l_token;
-      ::JLang::owned<Terminal> literal_int_token;
-      ::JLang::owned<Terminal> bracket_r_token;
+      JLang::owned<Terminal> bracket_l_token;
+      JLang::owned<Terminal> literal_int_token;
+      JLang::owned<Terminal> bracket_r_token;
     };
 
     class ClassDeclStart : public JLang::frontend::ast::SyntaxNode {
     public:
       ClassDeclStart(
-                     ::JLang::owned<AccessModifier> _access_modifier,
-                     ::JLang::owned<Terminal> _class_token,
-                     ::JLang::owned<Terminal> _identifier_token,
-                     ::JLang::owned<ClassArgumentList> _class_argument_list,
+                     JLang::owned<AccessModifier> _access_modifier,
+                     JLang::owned<Terminal> _class_token,
+                     JLang::owned<Terminal> _identifier_token,
+                     JLang::owned<ClassArgumentList> _class_argument_list,
                      bool is_identifier
                      );
                      
@@ -1545,38 +1545,38 @@ namespace JLang::frontend::tree {
       const std::string & get_name() const;
       const ClassArgumentList & get_argument_list() const;
     private:
-      ::JLang::owned<AccessModifier> access_modifier;
-      ::JLang::owned<Terminal> class_token;
-      ::JLang::owned<Terminal> identifier_token;
-      ::JLang::owned<ClassArgumentList> class_argument_list;
+      JLang::owned<AccessModifier> access_modifier;
+      JLang::owned<Terminal> class_token;
+      JLang::owned<Terminal> identifier_token;
+      JLang::owned<ClassArgumentList> class_argument_list;
       std::string name;
     };
     class ClassArgumentList : public JLang::frontend::ast::SyntaxNode {
     public:
       ClassArgumentList();
-      ClassArgumentList(::JLang::owned<Terminal> _argument);
+      ClassArgumentList(JLang::owned<Terminal> _argument);
     /**
      * Destructor, nothing special.
      */
       ~ClassArgumentList();
-      void add_argument(::JLang::owned<Terminal> _comma, ::JLang::owned<Terminal> _argument);
-      void add_parens(::JLang::owned<Terminal> _paren_l, ::JLang::owned<Terminal> _paren_r);
-      const std::vector<::JLang::owned<Terminal>> & get_arguments() const;
+      void add_argument(JLang::owned<Terminal> _comma, JLang::owned<Terminal> _argument);
+      void add_parens(JLang::owned<Terminal> _paren_l, JLang::owned<Terminal> _paren_r);
+      const std::vector<JLang::owned<Terminal>> & get_arguments() const;
     private:
-      ::JLang::owned<Terminal> paren_l;
-      std::vector<::JLang::owned<Terminal>> comma_list;
-      std::vector<::JLang::owned<Terminal>> argument_list;
-      ::JLang::owned<Terminal> paren_r;
+      JLang::owned<Terminal> paren_l;
+      std::vector<JLang::owned<Terminal>> comma_list;
+      std::vector<JLang::owned<Terminal>> argument_list;
+      JLang::owned<Terminal> paren_r;
     };
 
     class ClassMemberDeclarationVariable : public JLang::frontend::ast::SyntaxNode {
     public:
       ClassMemberDeclarationVariable(
-                                     ::JLang::owned<AccessModifier> _access_modifier,
-                                     ::JLang::owned<TypeSpecifier> _type_specifier,
-                                     ::JLang::owned<Terminal> _identifier_token,
-                                     ::JLang::owned<ArrayLength> _array_length,
-                                     ::JLang::owned<Terminal> _semicolon_token
+                                     JLang::owned<AccessModifier> _access_modifier,
+                                     JLang::owned<TypeSpecifier> _type_specifier,
+                                     JLang::owned<Terminal> _identifier_token,
+                                     JLang::owned<ArrayLength> _array_length,
+                                     JLang::owned<Terminal> _semicolon_token
                                      );
     /**
      * Destructor, nothing special.
@@ -1587,22 +1587,22 @@ namespace JLang::frontend::tree {
       const std::string & get_name() const;
       const ArrayLength & get_array_length() const;
     private:
-      ::JLang::owned<AccessModifier> access_modifier;
-      ::JLang::owned<TypeSpecifier> type_specifier;
-      ::JLang::owned<Terminal> identifier_token;
-      ::JLang::owned<ArrayLength> array_length;
-      ::JLang::owned<Terminal> semicolon_token;
+      JLang::owned<AccessModifier> access_modifier;
+      JLang::owned<TypeSpecifier> type_specifier;
+      JLang::owned<Terminal> identifier_token;
+      JLang::owned<ArrayLength> array_length;
+      JLang::owned<Terminal> semicolon_token;
     };    
     class ClassMemberDeclarationMethod : public JLang::frontend::ast::SyntaxNode {
     public:
       ClassMemberDeclarationMethod(
-                                     ::JLang::owned<AccessModifier> _access_modifier,
-                                     ::JLang::owned<TypeSpecifier> _type_specifier,
-                                     ::JLang::owned<Terminal> _identifier_token,
-                                     ::JLang::owned<Terminal> _paren_l_token,
-                                     ::JLang::owned<FunctionDefinitionArgList> _function_definition_arg_list,
-                                     ::JLang::owned<Terminal> _paren_r_token,
-                                     ::JLang::owned<Terminal> _semicolon_token
+                                     JLang::owned<AccessModifier> _access_modifier,
+                                     JLang::owned<TypeSpecifier> _type_specifier,
+                                     JLang::owned<Terminal> _identifier_token,
+                                     JLang::owned<Terminal> _paren_l_token,
+                                     JLang::owned<FunctionDefinitionArgList> _function_definition_arg_list,
+                                     JLang::owned<Terminal> _paren_r_token,
+                                     JLang::owned<Terminal> _semicolon_token
                                    );
     /**
      * Destructor, nothing special.
@@ -1613,23 +1613,23 @@ namespace JLang::frontend::tree {
       const std::string & get_name() const;
       const FunctionDefinitionArgList & get_arguments() const;
     private:
-      ::JLang::owned<AccessModifier> access_modifier;
-      ::JLang::owned<TypeSpecifier> type_specifier;
-      ::JLang::owned<Terminal> identifier_token;
-      ::JLang::owned<Terminal> paren_l_token;
-      ::JLang::owned<FunctionDefinitionArgList> function_definition_arg_list;
-      ::JLang::owned<Terminal> paren_r_token;
-      ::JLang::owned<Terminal> semicolon_token;
+      JLang::owned<AccessModifier> access_modifier;
+      JLang::owned<TypeSpecifier> type_specifier;
+      JLang::owned<Terminal> identifier_token;
+      JLang::owned<Terminal> paren_l_token;
+      JLang::owned<FunctionDefinitionArgList> function_definition_arg_list;
+      JLang::owned<Terminal> paren_r_token;
+      JLang::owned<Terminal> semicolon_token;
     };
     class ClassMemberDeclarationConstructor : public JLang::frontend::ast::SyntaxNode {
     public:
       ClassMemberDeclarationConstructor(
-                                        ::JLang::owned<AccessModifier> _access_modifier,
-                                        ::JLang::owned<TypeSpecifier> _type_specifier,
-                                        ::JLang::owned<Terminal> _paren_l_token,
-                                        ::JLang::owned<FunctionDefinitionArgList> _function_definition_arg_list,
-                                        ::JLang::owned<Terminal> _paren_r_token,
-                                        ::JLang::owned<Terminal> _semicolon_token
+                                        JLang::owned<AccessModifier> _access_modifier,
+                                        JLang::owned<TypeSpecifier> _type_specifier,
+                                        JLang::owned<Terminal> _paren_l_token,
+                                        JLang::owned<FunctionDefinitionArgList> _function_definition_arg_list,
+                                        JLang::owned<Terminal> _paren_r_token,
+                                        JLang::owned<Terminal> _semicolon_token
                                         );
     /**
      * Destructor, nothing special.
@@ -1639,23 +1639,23 @@ namespace JLang::frontend::tree {
       const TypeSpecifier & get_type_specifier() const;
       const FunctionDefinitionArgList & get_arguments() const;
     private:
-      ::JLang::owned<AccessModifier> access_modifier;
-      ::JLang::owned<TypeSpecifier> type_specifier;
-      ::JLang::owned<Terminal> paren_l_token;
-      ::JLang::owned<FunctionDefinitionArgList> function_definition_arg_list;
-      ::JLang::owned<Terminal> paren_r_token;
-      ::JLang::owned<Terminal> semicolon_token;
+      JLang::owned<AccessModifier> access_modifier;
+      JLang::owned<TypeSpecifier> type_specifier;
+      JLang::owned<Terminal> paren_l_token;
+      JLang::owned<FunctionDefinitionArgList> function_definition_arg_list;
+      JLang::owned<Terminal> paren_r_token;
+      JLang::owned<Terminal> semicolon_token;
     };
     class ClassMemberDeclarationDestructor : public JLang::frontend::ast::SyntaxNode {
     public:
       ClassMemberDeclarationDestructor(
-                                       ::JLang::owned<AccessModifier> _access_modifier,
-                                       ::JLang::owned<Terminal> _tilde_token,
-                                       ::JLang::owned<TypeSpecifier> _type_specifier,
-                                       ::JLang::owned<Terminal> _paren_l_token,
-                                       ::JLang::owned<FunctionDefinitionArgList> _function_definition_arg_list,
-                                       ::JLang::owned<Terminal> _paren_r_token,
-                                       ::JLang::owned<Terminal> _semicolon_token
+                                       JLang::owned<AccessModifier> _access_modifier,
+                                       JLang::owned<Terminal> _tilde_token,
+                                       JLang::owned<TypeSpecifier> _type_specifier,
+                                       JLang::owned<Terminal> _paren_l_token,
+                                       JLang::owned<FunctionDefinitionArgList> _function_definition_arg_list,
+                                       JLang::owned<Terminal> _paren_r_token,
+                                       JLang::owned<Terminal> _semicolon_token
                                    );
     /**
      * Destructor, nothing special.
@@ -1665,26 +1665,26 @@ namespace JLang::frontend::tree {
       const TypeSpecifier & get_type_specifier() const;
       const FunctionDefinitionArgList & get_arguments() const;
     private:
-      ::JLang::owned<AccessModifier> access_modifier;
-      ::JLang::owned<Terminal> tilde_token;
-      ::JLang::owned<TypeSpecifier> type_specifier;
-      ::JLang::owned<Terminal> paren_l_token;
-      ::JLang::owned<FunctionDefinitionArgList> function_definition_arg_list;
-      ::JLang::owned<Terminal> paren_r_token;
-      ::JLang::owned<Terminal> semicolon_token;
+      JLang::owned<AccessModifier> access_modifier;
+      JLang::owned<Terminal> tilde_token;
+      JLang::owned<TypeSpecifier> type_specifier;
+      JLang::owned<Terminal> paren_l_token;
+      JLang::owned<FunctionDefinitionArgList> function_definition_arg_list;
+      JLang::owned<Terminal> paren_r_token;
+      JLang::owned<Terminal> semicolon_token;
     };
     
     class ClassMemberDeclaration : public JLang::frontend::ast::SyntaxNode {
     public:
       typedef std::variant<
-        ::JLang::owned<ClassMemberDeclarationVariable>,
-        ::JLang::owned<ClassMemberDeclarationMethod>,
-        ::JLang::owned<ClassMemberDeclarationConstructor>,
-        ::JLang::owned<ClassMemberDeclarationDestructor>,
-        ::JLang::owned<ClassDeclaration>,
-        ::JLang::owned<ClassDefinition>,
-        ::JLang::owned<EnumDefinition>,
-        ::JLang::owned<TypeDefinition>
+        JLang::owned<ClassMemberDeclarationVariable>,
+        JLang::owned<ClassMemberDeclarationMethod>,
+        JLang::owned<ClassMemberDeclarationConstructor>,
+        JLang::owned<ClassMemberDeclarationDestructor>,
+        JLang::owned<ClassDeclaration>,
+        JLang::owned<ClassDefinition>,
+        JLang::owned<EnumDefinition>,
+        JLang::owned<TypeDefinition>
       > MemberType;
       ClassMemberDeclaration(
                              MemberType _member,
@@ -1706,10 +1706,10 @@ namespace JLang::frontend::tree {
      * Destructor, nothing special.
      */
       ~ClassMemberDeclarationList();
-      const std::vector<::JLang::owned<ClassMemberDeclaration>> & get_members() const;
-      void add_member(::JLang::owned<ClassMemberDeclaration> _member);
+      const std::vector<JLang::owned<ClassMemberDeclaration>> & get_members() const;
+      void add_member(JLang::owned<ClassMemberDeclaration> _member);
     private:
-      std::vector<::JLang::owned<ClassMemberDeclaration>> members;
+      std::vector<JLang::owned<ClassMemberDeclaration>> members;
     };
 
   /**
@@ -1719,8 +1719,8 @@ namespace JLang::frontend::tree {
   class ClassDeclaration : public JLang::frontend::ast::SyntaxNode {
   public:
     ClassDeclaration(
-                     ::JLang::owned<ClassDeclStart> _class_decl_start,
-                     ::JLang::owned<Terminal> _semicolon_token
+                     JLang::owned<ClassDeclStart> _class_decl_start,
+                     JLang::owned<Terminal> _semicolon_token
                      );
     /**
      * Destructor, nothing special.
@@ -1730,18 +1730,18 @@ namespace JLang::frontend::tree {
     const std::string & get_name() const;
     const ClassArgumentList & get_argument_list() const;
   private:
-    ::JLang::owned<ClassDeclStart> class_decl_start;
-    ::JLang::owned<Terminal> semicolon_token;
+    JLang::owned<ClassDeclStart> class_decl_start;
+    JLang::owned<Terminal> semicolon_token;
   };
   
     class ClassDefinition : public JLang::frontend::ast::SyntaxNode {
     public:
       ClassDefinition(
-                      ::JLang::owned<ClassDeclStart> _class_decl_start,
-                      ::JLang::owned<Terminal> _brace_l_token,
-                      ::JLang::owned<ClassMemberDeclarationList> _class_member_declaration_list,
-                      ::JLang::owned<Terminal> _brace_r_token,
-                      ::JLang::owned<Terminal> _semicolon_token
+                      JLang::owned<ClassDeclStart> _class_decl_start,
+                      JLang::owned<Terminal> _brace_l_token,
+                      JLang::owned<ClassMemberDeclarationList> _class_member_declaration_list,
+                      JLang::owned<Terminal> _brace_r_token,
+                      JLang::owned<Terminal> _semicolon_token
                       );
     /**
      * Destructor, nothing special.
@@ -1750,23 +1750,23 @@ namespace JLang::frontend::tree {
       const AccessModifier & get_access_modifier() const;
       const std::string & get_name() const;
       const ClassArgumentList & get_argument_list() const;
-      const std::vector<::JLang::owned<ClassMemberDeclaration>> & get_members() const;
+      const std::vector<JLang::owned<ClassMemberDeclaration>> & get_members() const;
     private:
-      ::JLang::owned<ClassDeclStart> class_decl_start;
-      ::JLang::owned<Terminal> brace_l_token;
-      ::JLang::owned<ClassMemberDeclarationList> class_member_declaration_list;
-      ::JLang::owned<Terminal> brace_r_token;
-      ::JLang::owned<Terminal> semicolon_token;
+      JLang::owned<ClassDeclStart> class_decl_start;
+      JLang::owned<Terminal> brace_l_token;
+      JLang::owned<ClassMemberDeclarationList> class_member_declaration_list;
+      JLang::owned<Terminal> brace_r_token;
+      JLang::owned<Terminal> semicolon_token;
     };
 
     class TypeDefinition : public JLang::frontend::ast::SyntaxNode {
     public:
       TypeDefinition(
-                     ::JLang::owned<AccessModifier> _access_modifier,
-                     ::JLang::owned<Terminal> _typedef_token,
-                     ::JLang::owned<TypeSpecifier> _type_specifier,
-                     ::JLang::owned<Terminal> _identifier_token,
-                     ::JLang::owned<Terminal> _semicolon_token
+                     JLang::owned<AccessModifier> _access_modifier,
+                     JLang::owned<Terminal> _typedef_token,
+                     JLang::owned<TypeSpecifier> _type_specifier,
+                     JLang::owned<Terminal> _identifier_token,
+                     JLang::owned<Terminal> _semicolon_token
                      );
     /**
      * Destructor, nothing special.
@@ -1776,20 +1776,20 @@ namespace JLang::frontend::tree {
       const std::string & get_name() const;
       const TypeSpecifier & get_type_specifier() const;
     private:
-      ::JLang::owned<AccessModifier> access_modifier;
-      ::JLang::owned<Terminal> typedef_token;
-      ::JLang::owned<TypeSpecifier> type_specifier;
-      ::JLang::owned<Terminal> identifier_token;
-      ::JLang::owned<Terminal> semicolon_token;
+      JLang::owned<AccessModifier> access_modifier;
+      JLang::owned<Terminal> typedef_token;
+      JLang::owned<TypeSpecifier> type_specifier;
+      JLang::owned<Terminal> identifier_token;
+      JLang::owned<Terminal> semicolon_token;
     };
 
     class EnumDefinitionValue : public JLang::frontend::ast::SyntaxNode {
     public:
       EnumDefinitionValue(
-                          ::JLang::owned<Terminal> _identifier_token,
-                          ::JLang::owned<Terminal> _equals_token,
-                          ::JLang::owned<ExpressionPrimary> _expression_primary,
-                          ::JLang::owned<Terminal> _semicolon_token
+                          JLang::owned<Terminal> _identifier_token,
+                          JLang::owned<Terminal> _equals_token,
+                          JLang::owned<ExpressionPrimary> _expression_primary,
+                          JLang::owned<Terminal> _semicolon_token
                           );                          
     /**
      * Destructor, nothing special.
@@ -1798,10 +1798,10 @@ namespace JLang::frontend::tree {
       const std::string & get_name() const;
       const ExpressionPrimary & get_expression() const;
     private:
-      ::JLang::owned<Terminal> identifier_token;
-      ::JLang::owned<Terminal> equals_token;
-      ::JLang::owned<ExpressionPrimary> expression_primary;
-      ::JLang::owned<Terminal> semicolon_token;      
+      JLang::owned<Terminal> identifier_token;
+      JLang::owned<Terminal> equals_token;
+      JLang::owned<ExpressionPrimary> expression_primary;
+      JLang::owned<Terminal> semicolon_token;      
     };
     
     class EnumDefinitionValueList : public JLang::frontend::ast::SyntaxNode {
@@ -1811,23 +1811,23 @@ namespace JLang::frontend::tree {
      * Destructor, nothing special.
      */
       ~EnumDefinitionValueList();
-      void add_value(::JLang::owned<EnumDefinitionValue>);
-      const std::vector<::JLang::owned<EnumDefinitionValue>> &get_values() const;
+      void add_value(JLang::owned<EnumDefinitionValue>);
+      const std::vector<JLang::owned<EnumDefinitionValue>> &get_values() const;
     private:
-      std::vector<::JLang::owned<EnumDefinitionValue>> values;
+      std::vector<JLang::owned<EnumDefinitionValue>> values;
     };
 
     class EnumDefinition : public JLang::frontend::ast::SyntaxNode {
     public:
       EnumDefinition(
-                     ::JLang::owned<AccessModifier> _access_modifier,
-                     ::JLang::owned<Terminal> _enum_token,
-                     ::JLang::owned<Terminal> _type_name_token,
-                     ::JLang::owned<Terminal> _identifier_token,
-                     ::JLang::owned<Terminal> _brace_l_token,
-                     ::JLang::owned<EnumDefinitionValueList> _enum_value_list,
-                     ::JLang::owned<Terminal> _brace_r_token,
-                     ::JLang::owned<Terminal> _semicolon_token
+                     JLang::owned<AccessModifier> _access_modifier,
+                     JLang::owned<Terminal> _enum_token,
+                     JLang::owned<Terminal> _type_name_token,
+                     JLang::owned<Terminal> _identifier_token,
+                     JLang::owned<Terminal> _brace_l_token,
+                     JLang::owned<EnumDefinitionValueList> _enum_value_list,
+                     JLang::owned<Terminal> _brace_r_token,
+                     JLang::owned<Terminal> _semicolon_token
                      );
     /**
      * Destructor, nothing special.
@@ -1838,34 +1838,34 @@ namespace JLang::frontend::tree {
       const std::string & enum_name() const;
       const EnumDefinitionValueList & get_value_list() const;
     private:
-      ::JLang::owned<AccessModifier> access_modifier;
-      ::JLang::owned<Terminal> enum_token;
-      ::JLang::owned<Terminal> type_name_token;
-      ::JLang::owned<Terminal> identifier_token;
-      ::JLang::owned<Terminal> brace_l_token;
-      ::JLang::owned<EnumDefinitionValueList> enum_value_list;
-      ::JLang::owned<Terminal> brace_r_token;
-      ::JLang::owned<Terminal> semicolon_token;
+      JLang::owned<AccessModifier> access_modifier;
+      JLang::owned<Terminal> enum_token;
+      JLang::owned<Terminal> type_name_token;
+      JLang::owned<Terminal> identifier_token;
+      JLang::owned<Terminal> brace_l_token;
+      JLang::owned<EnumDefinitionValueList> enum_value_list;
+      JLang::owned<Terminal> brace_r_token;
+      JLang::owned<Terminal> semicolon_token;
       
     };
 
     class ExpressionPrimaryIdentifier : public JLang::frontend::ast::SyntaxNode {
     public:
-      ExpressionPrimaryIdentifier(::JLang::owned<Terminal> _identifier_token);
+      ExpressionPrimaryIdentifier(JLang::owned<Terminal> _identifier_token);
     /**
      * Destructor, nothing special.
      */
       ~ExpressionPrimaryIdentifier();
       const std::string & get_identifier() const;
     private:
-      ::JLang::owned<Terminal> identifier_token;
+      JLang::owned<Terminal> identifier_token;
     };
     class ExpressionPrimaryNested : public JLang::frontend::ast::SyntaxNode {
     public:
       ExpressionPrimaryNested(
-                              ::JLang::owned<Terminal> _paren_l_token,
-                              ::JLang::owned<Expression> _expression,
-                              ::JLang::owned<Terminal> _paren_r_token
+                              JLang::owned<Terminal> _paren_l_token,
+                              JLang::owned<Expression> _expression,
+                              JLang::owned<Terminal> _paren_r_token
                               );
     /**
      * Destructor, nothing special.
@@ -1873,15 +1873,15 @@ namespace JLang::frontend::tree {
       ~ExpressionPrimaryNested();
       const Expression & get_expression() const;
     private:
-      ::JLang::owned<Terminal> paren_l_token;
-      ::JLang::owned<Expression> expression;
-      ::JLang::owned<Terminal> paren_r_token;
+      JLang::owned<Terminal> paren_l_token;
+      JLang::owned<Expression> expression;
+      JLang::owned<Terminal> paren_r_token;
     };
 
     class ExpressionPrimaryLiteralInt : public JLang::frontend::ast::SyntaxNode {
     public:
       ExpressionPrimaryLiteralInt(
-                                  ::JLang::owned<Terminal> literal_token
+                                  JLang::owned<Terminal> literal_token
                                   );
     /**
      * Destructor, nothing special.
@@ -1889,12 +1889,12 @@ namespace JLang::frontend::tree {
       ~ExpressionPrimaryLiteralInt();
       const std::string & get_value() const;
     private:
-      ::JLang::owned<Terminal> literal_token;
+      JLang::owned<Terminal> literal_token;
     };
     class ExpressionPrimaryLiteralChar : public JLang::frontend::ast::SyntaxNode {
     public:
       ExpressionPrimaryLiteralChar(
-                                  ::JLang::owned<Terminal> _literal_token
+                                  JLang::owned<Terminal> _literal_token
                                   );
     /**
      * Destructor, nothing special.
@@ -1902,12 +1902,12 @@ namespace JLang::frontend::tree {
       ~ExpressionPrimaryLiteralChar();
       const std::string & get_value() const;
     private:
-      ::JLang::owned<Terminal> literal_token;
+      JLang::owned<Terminal> literal_token;
     };
     class ExpressionPrimaryLiteralString : public JLang::frontend::ast::SyntaxNode {
     public:
       ExpressionPrimaryLiteralString(
-                                     ::JLang::owned<Terminal> _literal_token
+                                     JLang::owned<Terminal> _literal_token
                                      );
     /**
      * Destructor, nothing special.
@@ -1915,12 +1915,12 @@ namespace JLang::frontend::tree {
       ~ExpressionPrimaryLiteralString();
       const std::string & get_value() const;
     private:
-      ::JLang::owned<Terminal> literal_token;
+      JLang::owned<Terminal> literal_token;
     };
     class ExpressionPrimaryLiteralFloat : public JLang::frontend::ast::SyntaxNode {
     public:
       ExpressionPrimaryLiteralFloat(
-                                  ::JLang::owned<Terminal> _literal_token
+                                  JLang::owned<Terminal> _literal_token
                                   );
     /**
      * Destructor, nothing special.
@@ -1928,17 +1928,17 @@ namespace JLang::frontend::tree {
       ~ExpressionPrimaryLiteralFloat();
       const std::string & get_value() const;
     private:
-      ::JLang::owned<Terminal> literal_token;
+      JLang::owned<Terminal> literal_token;
     };
     
     class ExpressionPrimary : public JLang::frontend::ast::SyntaxNode {
     public:
-      typedef std::variant<::JLang::owned<ExpressionPrimaryIdentifier>,
-                           ::JLang::owned<ExpressionPrimaryNested>,
-                           ::JLang::owned<ExpressionPrimaryLiteralChar>,
-                           ::JLang::owned<ExpressionPrimaryLiteralString>,
-                           ::JLang::owned<ExpressionPrimaryLiteralInt>,
-                           ::JLang::owned<ExpressionPrimaryLiteralFloat>
+      typedef std::variant<JLang::owned<ExpressionPrimaryIdentifier>,
+                           JLang::owned<ExpressionPrimaryNested>,
+                           JLang::owned<ExpressionPrimaryLiteralChar>,
+                           JLang::owned<ExpressionPrimaryLiteralString>,
+                           JLang::owned<ExpressionPrimaryLiteralInt>,
+                           JLang::owned<ExpressionPrimaryLiteralFloat>
                            > ExpressionType;
       ExpressionPrimary(ExpressionPrimary::ExpressionType _expression_type, const SyntaxNode & _sn);
     /**
@@ -1953,10 +1953,10 @@ namespace JLang::frontend::tree {
     class ExpressionPostfixArrayIndex : public JLang::frontend::ast::SyntaxNode {
     public:
       ExpressionPostfixArrayIndex(
-                                  ::JLang::owned<Expression> _array_expression,
-                                  ::JLang::owned<Terminal> _bracket_l_token,
-                                  ::JLang::owned<Expression> _index_expression,
-                                  ::JLang::owned<Terminal> _bracket_r_token
+                                  JLang::owned<Expression> _array_expression,
+                                  JLang::owned<Terminal> _bracket_l_token,
+                                  JLang::owned<Expression> _index_expression,
+                                  JLang::owned<Terminal> _bracket_r_token
                                   );
     /**
      * Destructor, nothing special.
@@ -1965,10 +1965,10 @@ namespace JLang::frontend::tree {
       const Expression & get_array() const;
       const Expression & get_index() const;
     private:
-      ::JLang::owned<Expression> array_expression;
-      ::JLang::owned<Terminal> bracket_l_token;
-      ::JLang::owned<Expression> index_expression;
-      ::JLang::owned<Terminal> bracket_r_token;
+      JLang::owned<Expression> array_expression;
+      JLang::owned<Terminal> bracket_l_token;
+      JLang::owned<Expression> index_expression;
+      JLang::owned<Terminal> bracket_r_token;
     };
 
     class ArgumentExpressionList : public JLang::frontend::ast::SyntaxNode {
@@ -1978,21 +1978,21 @@ namespace JLang::frontend::tree {
      * Destructor, nothing special.
      */
       ~ArgumentExpressionList();
-      const std::vector<::JLang::owned<Expression>> & get_arguments() const;
-      void add_argument(::JLang::owned<Expression> _argument);
-      void add_argument(::JLang::owned<Terminal> _comma_token, ::JLang::owned<Expression> _argument);
+      const std::vector<JLang::owned<Expression>> & get_arguments() const;
+      void add_argument(JLang::owned<Expression> _argument);
+      void add_argument(JLang::owned<Terminal> _comma_token, JLang::owned<Expression> _argument);
     private:
-      std::vector<::JLang::owned<Terminal>> comma_list;
-      std::vector<::JLang::owned<Expression>> arguments;
+      std::vector<JLang::owned<Terminal>> comma_list;
+      std::vector<JLang::owned<Expression>> arguments;
     };
     
     class ExpressionPostfixFunctionCall : public JLang::frontend::ast::SyntaxNode {
     public:
       ExpressionPostfixFunctionCall(
-                                    ::JLang::owned<Expression> _function_expression,
-                                    ::JLang::owned<Terminal> _paren_l_token,
-                                    ::JLang::owned<ArgumentExpressionList> _arguments,
-                                    ::JLang::owned<Terminal> _paren_r_token
+                                    JLang::owned<Expression> _function_expression,
+                                    JLang::owned<Terminal> _paren_l_token,
+                                    JLang::owned<ArgumentExpressionList> _arguments,
+                                    JLang::owned<Terminal> _paren_r_token
                                     );
     /**
      * Destructor, nothing special.
@@ -2001,18 +2001,18 @@ namespace JLang::frontend::tree {
       const Expression & get_function() const;
       const ArgumentExpressionList & get_arguments() const;
     private:
-      ::JLang::owned<Expression> function_expression;
-      ::JLang::owned<Terminal> paren_l_token;
-      ::JLang::owned<ArgumentExpressionList> arguments;
-      ::JLang::owned<Terminal> paren_r_token;
+      JLang::owned<Expression> function_expression;
+      JLang::owned<Terminal> paren_l_token;
+      JLang::owned<ArgumentExpressionList> arguments;
+      JLang::owned<Terminal> paren_r_token;
     };
 
     class ExpressionPostfixDot : public JLang::frontend::ast::SyntaxNode {
     public:
       ExpressionPostfixDot(
-                           ::JLang::owned<Expression> _expression,
-                           ::JLang::owned<Terminal> _dot_token,
-                           ::JLang::owned<Terminal> _identifier_token
+                           JLang::owned<Expression> _expression,
+                           JLang::owned<Terminal> _dot_token,
+                           JLang::owned<Terminal> _identifier_token
                            );
     /**
      * Destructor, nothing special.
@@ -2021,17 +2021,17 @@ namespace JLang::frontend::tree {
       const Expression & get_expression() const;
       const std::string & get_identifier() const;
     private:
-      ::JLang::owned<Expression> expression;
-      ::JLang::owned<Terminal> dot_token;
-      ::JLang::owned<Terminal> identifier_token;
+      JLang::owned<Expression> expression;
+      JLang::owned<Terminal> dot_token;
+      JLang::owned<Terminal> identifier_token;
     };
     
     class ExpressionPostfixArrow : public JLang::frontend::ast::SyntaxNode {
     public:
       ExpressionPostfixArrow(
-                             ::JLang::owned<Expression> _expression,
-                             ::JLang::owned<Terminal> _arrow_token,
-                             ::JLang::owned<Terminal> _identifier_token
+                             JLang::owned<Expression> _expression,
+                             JLang::owned<Terminal> _arrow_token,
+                             JLang::owned<Terminal> _identifier_token
                              );
     /**
      * Destructor, nothing special.
@@ -2040,9 +2040,9 @@ namespace JLang::frontend::tree {
       const Expression & get_expression() const;
       const std::string & get_identifier() const;
     private:
-      ::JLang::owned<Expression> expression;
-      ::JLang::owned<Terminal> arrow_token;
-      ::JLang::owned<Terminal> identifier_token;
+      JLang::owned<Expression> expression;
+      JLang::owned<Terminal> arrow_token;
+      JLang::owned<Terminal> identifier_token;
     };
 
     class ExpressionPostfixIncDec : public JLang::frontend::ast::SyntaxNode {
@@ -2052,8 +2052,8 @@ namespace JLang::frontend::tree {
         DECREMENT
       } OperationType;
       ExpressionPostfixIncDec(
-                              ::JLang::owned<Expression> _expression,
-                              ::JLang::owned<Terminal> _operator_token
+                              JLang::owned<Expression> _expression,
+                              JLang::owned<Terminal> _operator_token
                               );
     /**
      * Destructor, nothing special.
@@ -2063,8 +2063,8 @@ namespace JLang::frontend::tree {
       const Expression & get_expression();
     private:
       ExpressionPostfixIncDec::OperationType type;
-      ::JLang::owned<Terminal> operator_token;
-      ::JLang::owned<Expression> expression;
+      JLang::owned<Terminal> operator_token;
+      JLang::owned<Expression> expression;
     };
 
     class ExpressionUnaryPrefix : public JLang::frontend::ast::SyntaxNode {
@@ -2080,8 +2080,8 @@ namespace JLang::frontend::tree {
         LOGICAL_NOT
       } OperationType;
       ExpressionUnaryPrefix(
-                            ::JLang::owned<Terminal> _operator_token,
-                            ::JLang::owned<Expression> _expression
+                            JLang::owned<Terminal> _operator_token,
+                            JLang::owned<Expression> _expression
                             );
     /**
      * Destructor, nothing special.
@@ -2091,17 +2091,17 @@ namespace JLang::frontend::tree {
       const Expression & get_expression();
     private:
       ExpressionUnaryPrefix::OperationType type;
-      ::JLang::owned<Terminal> operator_token;
-      ::JLang::owned<Expression> expression;
+      JLang::owned<Terminal> operator_token;
+      JLang::owned<Expression> expression;
     };
 
     class ExpressionUnarySizeofType : public JLang::frontend::ast::SyntaxNode {
     public:
       ExpressionUnarySizeofType(
-                                ::JLang::owned<Terminal> _sizeof_token,
-                                ::JLang::owned<Terminal> _paren_l_token,
-                                ::JLang::owned<TypeSpecifier> _type_specifier,
-                                ::JLang::owned<Terminal> _paren_r_token
+                                JLang::owned<Terminal> _sizeof_token,
+                                JLang::owned<Terminal> _paren_l_token,
+                                JLang::owned<TypeSpecifier> _type_specifier,
+                                JLang::owned<Terminal> _paren_r_token
                                 );
     /**
      * Destructor, nothing special.
@@ -2109,21 +2109,21 @@ namespace JLang::frontend::tree {
       ~ExpressionUnarySizeofType();
       const TypeSpecifier & get_type_specifier() const;
     private:
-      ::JLang::owned<Terminal> sizeof_token;
-      ::JLang::owned<Terminal> paren_l_token;
-      ::JLang::owned<TypeSpecifier> type_specifier;
-      ::JLang::owned<Terminal> paren_r_token;
+      JLang::owned<Terminal> sizeof_token;
+      JLang::owned<Terminal> paren_l_token;
+      JLang::owned<TypeSpecifier> type_specifier;
+      JLang::owned<Terminal> paren_r_token;
     };
 
     class ExpressionCast : public JLang::frontend::ast::SyntaxNode {
     public:
       ExpressionCast(
-                     ::JLang::owned<Terminal> _cast_token,
-                     ::JLang::owned<Terminal> _paren_l_token,
-                     ::JLang::owned<TypeSpecifier> _type_specifier,
-                     ::JLang::owned<Terminal> _comma_token,
-                     ::JLang::owned<Expression> _expression,
-                     ::JLang::owned<Terminal> _paren_r_token
+                     JLang::owned<Terminal> _cast_token,
+                     JLang::owned<Terminal> _paren_l_token,
+                     JLang::owned<TypeSpecifier> _type_specifier,
+                     JLang::owned<Terminal> _comma_token,
+                     JLang::owned<Expression> _expression,
+                     JLang::owned<Terminal> _paren_r_token
                      );
     /**
      * Destructor, nothing special.
@@ -2132,12 +2132,12 @@ namespace JLang::frontend::tree {
       const TypeSpecifier & get_type() const;
       const Expression & get_expression() const;
     private:
-      ::JLang::owned<Terminal> cast_token;
-      ::JLang::owned<Terminal> paren_l_token;
-      ::JLang::owned<TypeSpecifier> type_specifier;
-      ::JLang::owned<Terminal> comma_token;
-      ::JLang::owned<Expression> expression;
-      ::JLang::owned<Terminal> paren_r_token;
+      JLang::owned<Terminal> cast_token;
+      JLang::owned<Terminal> paren_l_token;
+      JLang::owned<TypeSpecifier> type_specifier;
+      JLang::owned<Terminal> comma_token;
+      JLang::owned<Expression> expression;
+      JLang::owned<Terminal> paren_r_token;
     };
 
     class ExpressionBinary : public JLang::frontend::ast::SyntaxNode {
@@ -2183,9 +2183,9 @@ namespace JLang::frontend::tree {
         OR_ASSIGN        
       } OperationType;
       ExpressionBinary(
-                       ::JLang::owned<Expression> _expression_a,
-                       ::JLang::owned<Terminal> _operator_token,
-                       ::JLang::owned<Expression> _expression_b
+                       JLang::owned<Expression> _expression_a,
+                       JLang::owned<Terminal> _operator_token,
+                       JLang::owned<Expression> _expression_b
                        );
       /**
        * This form of the constructor is introduced because
@@ -2200,10 +2200,10 @@ namespace JLang::frontend::tree {
        * of it.
        */
       ExpressionBinary(
-                       ::JLang::owned<Expression> _expression_a,
-                       ::JLang::owned<Terminal> _operator_token,
-                       ::JLang::owned<Terminal> _operator_token2,
-                       ::JLang::owned<Expression> _expression_b
+                       JLang::owned<Expression> _expression_a,
+                       JLang::owned<Terminal> _operator_token,
+                       JLang::owned<Terminal> _operator_token2,
+                       JLang::owned<Expression> _expression_b
                        );
     /**
      * Destructor, nothing special.
@@ -2215,20 +2215,20 @@ namespace JLang::frontend::tree {
       
     private:
       OperationType type;
-      ::JLang::owned<Expression> expression_a;
-      ::JLang::owned<Terminal> operator_token;
-      ::JLang::owned<Terminal> operator_token2;
-      ::JLang::owned<Expression> expression_b;
+      JLang::owned<Expression> expression_a;
+      JLang::owned<Terminal> operator_token;
+      JLang::owned<Terminal> operator_token2;
+      JLang::owned<Expression> expression_b;
     };
     
     class ExpressionTrinary : public JLang::frontend::ast::SyntaxNode {
     public:
       ExpressionTrinary(
-                        ::JLang::owned<Expression> _condition,
-                        ::JLang::owned<Terminal> _questionmark_token,
-                        ::JLang::owned<Expression> _if_expression,
-                        ::JLang::owned<Terminal> _colon_token,
-                        ::JLang::owned<Expression> _else_expression
+                        JLang::owned<Expression> _condition,
+                        JLang::owned<Terminal> _questionmark_token,
+                        JLang::owned<Expression> _if_expression,
+                        JLang::owned<Terminal> _colon_token,
+                        JLang::owned<Expression> _else_expression
                         );
     /**
      * Destructor, nothing special.
@@ -2238,26 +2238,26 @@ namespace JLang::frontend::tree {
       const Expression & get_if() const;
       const Expression & get_else() const;
     private:
-      ::JLang::owned<Expression> condition;
-      ::JLang::owned<Terminal> questionmark_token;
-      ::JLang::owned<Expression> if_expression;
-      ::JLang::owned<Terminal> colon_token;
-      ::JLang::owned<Expression> else_expression;      
+      JLang::owned<Expression> condition;
+      JLang::owned<Terminal> questionmark_token;
+      JLang::owned<Expression> if_expression;
+      JLang::owned<Terminal> colon_token;
+      JLang::owned<Expression> else_expression;      
     };
     
     class Expression : public JLang::frontend::ast::SyntaxNode {
     public:
-      typedef std::variant<::JLang::owned<ExpressionPrimary>,
-                           ::JLang::owned<ExpressionPostfixArrayIndex>,
-                           ::JLang::owned<ExpressionPostfixFunctionCall>,
-                           ::JLang::owned<ExpressionPostfixDot>,
-                           ::JLang::owned<ExpressionPostfixArrow>,
-                           ::JLang::owned<ExpressionPostfixIncDec>,
-                           ::JLang::owned<ExpressionUnaryPrefix>,
-                           ::JLang::owned<ExpressionUnarySizeofType>,
-                           ::JLang::owned<ExpressionBinary>,
-                           ::JLang::owned<ExpressionTrinary>,
-                           ::JLang::owned<ExpressionCast>
+      typedef std::variant<JLang::owned<ExpressionPrimary>,
+                           JLang::owned<ExpressionPostfixArrayIndex>,
+                           JLang::owned<ExpressionPostfixFunctionCall>,
+                           JLang::owned<ExpressionPostfixDot>,
+                           JLang::owned<ExpressionPostfixArrow>,
+                           JLang::owned<ExpressionPostfixIncDec>,
+                           JLang::owned<ExpressionUnaryPrefix>,
+                           JLang::owned<ExpressionUnarySizeofType>,
+                           JLang::owned<ExpressionBinary>,
+                           JLang::owned<ExpressionTrinary>,
+                           JLang::owned<ExpressionCast>
                            > ExpressionType;
       Expression(Expression::ExpressionType _expression_type, const SyntaxNode & _sn);
     /**
@@ -2271,8 +2271,8 @@ namespace JLang::frontend::tree {
     
     class GlobalInitializerExpressionPrimary : public JLang::frontend::ast::SyntaxNode {
     public:
-      GlobalInitializerExpressionPrimary(::JLang::owned<Terminal> _equals_token,
-                                         ::JLang::owned<ExpressionPrimary> _expression
+      GlobalInitializerExpressionPrimary(JLang::owned<Terminal> _equals_token,
+                                         JLang::owned<ExpressionPrimary> _expression
                                          );
     /**
      * Destructor, nothing special.
@@ -2280,16 +2280,16 @@ namespace JLang::frontend::tree {
       ~GlobalInitializerExpressionPrimary();
       const ExpressionPrimary & get_expression() const;
     private:
-      ::JLang::owned<Terminal> equals_token;
-      ::JLang::owned<ExpressionPrimary> expression;
+      JLang::owned<Terminal> equals_token;
+      JLang::owned<ExpressionPrimary> expression;
 
     };
     class GlobalInitializerAddressofExpressionPrimary : public JLang::frontend::ast::SyntaxNode {
     public:
       GlobalInitializerAddressofExpressionPrimary(
-                                                  ::JLang::owned<Terminal> _equals_token,
-                                                  ::JLang::owned<Terminal> _addressof_token,
-                                                  ::JLang::owned<ExpressionPrimary> _expression
+                                                  JLang::owned<Terminal> _equals_token,
+                                                  JLang::owned<Terminal> _addressof_token,
+                                                  JLang::owned<ExpressionPrimary> _expression
                                          );
     /**
      * Destructor, nothing special.
@@ -2297,18 +2297,18 @@ namespace JLang::frontend::tree {
       ~GlobalInitializerAddressofExpressionPrimary();
       const ExpressionPrimary & get_expression() const;
     private:
-      ::JLang::owned<Terminal> equals_token;
-      ::JLang::owned<Terminal> addressof_token;
-      ::JLang::owned<ExpressionPrimary> expression;
+      JLang::owned<Terminal> equals_token;
+      JLang::owned<Terminal> addressof_token;
+      JLang::owned<ExpressionPrimary> expression;
     };
 
     class StructInitializer : public JLang::frontend::ast::SyntaxNode {
     public:
       StructInitializer(
-                        ::JLang::owned<Terminal> _dot_token,
-                        ::JLang::owned<Terminal> _identifier_token,
-                        ::JLang::owned<GlobalInitializer> _global_initializer,
-                        ::JLang::owned<Terminal> _semicolon_token
+                        JLang::owned<Terminal> _dot_token,
+                        JLang::owned<Terminal> _identifier_token,
+                        JLang::owned<GlobalInitializer> _global_initializer,
+                        JLang::owned<Terminal> _semicolon_token
                         );
     /**
      * Destructor, nothing special.
@@ -2316,10 +2316,10 @@ namespace JLang::frontend::tree {
       ~StructInitializer();
       const GlobalInitializer & get_initializer() const;
     private:
-      ::JLang::owned<Terminal> dot_token;
-      ::JLang::owned<Terminal> identifier_token;
-      ::JLang::owned<GlobalInitializer> global_initializer;
-      ::JLang::owned<Terminal> semicolon_token;
+      JLang::owned<Terminal> dot_token;
+      JLang::owned<Terminal> identifier_token;
+      JLang::owned<GlobalInitializer> global_initializer;
+      JLang::owned<Terminal> semicolon_token;
     };
           
     class StructInitializerList : public JLang::frontend::ast::SyntaxNode {
@@ -2329,19 +2329,19 @@ namespace JLang::frontend::tree {
      * Destructor, nothing special.
      */
       ~StructInitializerList();
-      void add_initializer(::JLang::owned<StructInitializer> initializer);
-      const std::vector<::JLang::owned<StructInitializer>> & get_initializers() const;
+      void add_initializer(JLang::owned<StructInitializer> initializer);
+      const std::vector<JLang::owned<StructInitializer>> & get_initializers() const;
     private:
-      std::vector<::JLang::owned<StructInitializer>> initializers;
+      std::vector<JLang::owned<StructInitializer>> initializers;
     };
           
     class GlobalInitializerStructInitializerList : public JLang::frontend::ast::SyntaxNode {
     public:
       GlobalInitializerStructInitializerList(
-                                             ::JLang::owned<Terminal> _equals_token,
-                                             ::JLang::owned<Terminal> _brace_l_token,
-                                             ::JLang::owned<StructInitializerList> _struct_initializer,
-                                             ::JLang::owned<Terminal> _brace_r_token
+                                             JLang::owned<Terminal> _equals_token,
+                                             JLang::owned<Terminal> _brace_l_token,
+                                             JLang::owned<StructInitializerList> _struct_initializer,
+                                             JLang::owned<Terminal> _brace_r_token
                                              );
 
     /**
@@ -2350,18 +2350,18 @@ namespace JLang::frontend::tree {
       ~GlobalInitializerStructInitializerList();
       const StructInitializerList & get_struct_initializer() const;
     private:
-      ::JLang::owned<Terminal> equals_token;
-      ::JLang::owned<Terminal> brace_l_token;
-      ::JLang::owned<StructInitializerList> struct_initializer;
-      ::JLang::owned<Terminal> brace_r_token;
+      JLang::owned<Terminal> equals_token;
+      JLang::owned<Terminal> brace_l_token;
+      JLang::owned<StructInitializerList> struct_initializer;
+      JLang::owned<Terminal> brace_r_token;
     };
     
     class GlobalInitializer : public JLang::frontend::ast::SyntaxNode {
     public:
       typedef std::variant<
-        ::JLang::owned<GlobalInitializerExpressionPrimary>,
-        ::JLang::owned<GlobalInitializerAddressofExpressionPrimary>,
-        ::JLang::owned<GlobalInitializerStructInitializerList>,
+        JLang::owned<GlobalInitializerExpressionPrimary>,
+        JLang::owned<GlobalInitializerAddressofExpressionPrimary>,
+        JLang::owned<GlobalInitializerStructInitializerList>,
         nullptr_t> GlobalInitializerType;
       GlobalInitializer();
       GlobalInitializer(GlobalInitializerType initializer, const JLang::frontend::ast::SyntaxNode & _sn);
@@ -2377,13 +2377,13 @@ namespace JLang::frontend::tree {
     class FileStatementGlobalDefinition : public JLang::frontend::ast::SyntaxNode {
     public:
       FileStatementGlobalDefinition(
-                                    ::JLang::owned<AccessModifier> _access_modifier,
-                                    ::JLang::owned<UnsafeModifier> _unsafe_modifier,
-                                    ::JLang::owned<TypeSpecifier> _type_specifier,
-                                    ::JLang::owned<Terminal> _name,
-                                    ::JLang::owned<ArrayLength> _array_length,
-                                    ::JLang::owned<GlobalInitializer> _global_initializer,
-                                    ::JLang::owned<Terminal> _semicolon
+                                    JLang::owned<AccessModifier> _access_modifier,
+                                    JLang::owned<UnsafeModifier> _unsafe_modifier,
+                                    JLang::owned<TypeSpecifier> _type_specifier,
+                                    JLang::owned<Terminal> _name,
+                                    JLang::owned<ArrayLength> _array_length,
+                                    JLang::owned<GlobalInitializer> _global_initializer,
+                                    JLang::owned<Terminal> _semicolon
                                     );
     /**
      * Destructor, nothing special.
@@ -2396,21 +2396,21 @@ namespace JLang::frontend::tree {
       const ArrayLength & get_array_length() const;
       const GlobalInitializer & get_global_initializer() const;
     private:
-      ::JLang::owned<AccessModifier> access_modifier;
-      ::JLang::owned<UnsafeModifier> unsafe_modifier;
-      ::JLang::owned<TypeSpecifier> type_specifier;
-      ::JLang::owned<Terminal> name; // function name (IDENTIFIER)
-      ::JLang::owned<ArrayLength> array_length;
-      ::JLang::owned<GlobalInitializer> global_initializer;
-      ::JLang::owned<Terminal> semicolon;
+      JLang::owned<AccessModifier> access_modifier;
+      JLang::owned<UnsafeModifier> unsafe_modifier;
+      JLang::owned<TypeSpecifier> type_specifier;
+      JLang::owned<Terminal> name; // function name (IDENTIFIER)
+      JLang::owned<ArrayLength> array_length;
+      JLang::owned<GlobalInitializer> global_initializer;
+      JLang::owned<Terminal> semicolon;
     };
     
     class NamespaceDeclaration : public JLang::frontend::ast::SyntaxNode {
     public:
       NamespaceDeclaration(
-                           ::JLang::owned<AccessModifier> _access_modifier,
-                           ::JLang::owned<Terminal> _namespace_token,
-                           ::JLang::owned<Terminal> _identifier_token
+                           JLang::owned<AccessModifier> _access_modifier,
+                           JLang::owned<Terminal> _namespace_token,
+                           JLang::owned<Terminal> _identifier_token
                            );
     /**
      * Destructor, nothing special.
@@ -2419,18 +2419,18 @@ namespace JLang::frontend::tree {
       const AccessModifier & get_access_modifier() const;
       const Terminal & get_name() const;
     private:
-      ::JLang::owned<AccessModifier> access_modifier;
-      ::JLang::owned<Terminal> namespace_token;
-      ::JLang::owned<Terminal> identifier_token;
+      JLang::owned<AccessModifier> access_modifier;
+      JLang::owned<Terminal> namespace_token;
+      JLang::owned<Terminal> identifier_token;
     };
 
     class FileStatementNamespace : public JLang::frontend::ast::SyntaxNode {
     public:
-      FileStatementNamespace(::JLang::owned<NamespaceDeclaration> _namespace_declaration,
-                             ::JLang::owned<Terminal> _brace_l_token,
-                             ::JLang::owned<FileStatementList> _file_statement_list,
-                             ::JLang::owned<Terminal> _brace_r_token,
-                             ::JLang::owned<Terminal> _semicolon_token
+      FileStatementNamespace(JLang::owned<NamespaceDeclaration> _namespace_declaration,
+                             JLang::owned<Terminal> _brace_l_token,
+                             JLang::owned<FileStatementList> _file_statement_list,
+                             JLang::owned<Terminal> _brace_r_token,
+                             JLang::owned<Terminal> _semicolon_token
                              );
     /**
      * Destructor, nothing special.
@@ -2439,18 +2439,18 @@ namespace JLang::frontend::tree {
       const NamespaceDeclaration & get_declaration() const;
       const FileStatementList & get_statement_list() const;
     private:
-      ::JLang::owned<NamespaceDeclaration> namespace_declaration;
-      ::JLang::owned<Terminal> brace_l_token;
-      ::JLang::owned<FileStatementList> file_statement_list;
-      ::JLang::owned<Terminal> brace_r_token;
-      ::JLang::owned<Terminal> semicolon_token;
+      JLang::owned<NamespaceDeclaration> namespace_declaration;
+      JLang::owned<Terminal> brace_l_token;
+      JLang::owned<FileStatementList> file_statement_list;
+      JLang::owned<Terminal> brace_r_token;
+      JLang::owned<Terminal> semicolon_token;
     };
 
     class UsingAs : public JLang::frontend::ast::SyntaxNode {
     public:
       UsingAs(
-              ::JLang::owned<Terminal> _as_token,
-              ::JLang::owned<Terminal> _identifier_token
+              JLang::owned<Terminal> _as_token,
+              JLang::owned<Terminal> _identifier_token
               );
       UsingAs();
     /**
@@ -2460,18 +2460,18 @@ namespace JLang::frontend::tree {
       const std::string & get_using_name() const;
     private:
       std::string using_name;
-      ::JLang::owned<Terminal> as_token;
-      ::JLang::owned<Terminal> identifier_token;
+      JLang::owned<Terminal> as_token;
+      JLang::owned<Terminal> identifier_token;
     };
     
     class FileStatementUsing : public JLang::frontend::ast::SyntaxNode {
     public:
-          FileStatementUsing(::JLang::owned<AccessModifier> _access_modifier,
-                             ::JLang::owned<Terminal> _using,
-                             ::JLang::owned<Terminal> _namespace,
-                             ::JLang::owned<Terminal> _namespace_name,
-                             ::JLang::owned<UsingAs> _using_as,
-                             ::JLang::owned<Terminal> _semicolon);
+          FileStatementUsing(JLang::owned<AccessModifier> _access_modifier,
+                             JLang::owned<Terminal> _using,
+                             JLang::owned<Terminal> _namespace,
+                             JLang::owned<Terminal> _namespace_name,
+                             JLang::owned<UsingAs> _using_as,
+                             JLang::owned<Terminal> _semicolon);
     /**
      * Destructor, nothing special.
      */
@@ -2481,12 +2481,12 @@ namespace JLang::frontend::tree {
       const std::string & get_namespace() const;
       const UsingAs &get_using_as() const;
       
-      ::JLang::owned<AccessModifier> access_modifier;
-      ::JLang::owned<Terminal> using_token;
-      ::JLang::owned<Terminal> namespace_token;
-      ::JLang::owned<Terminal> namespace_name_token;
-      ::JLang::owned<UsingAs> using_as;
-      ::JLang::owned<Terminal> semicolon_token;
+      JLang::owned<AccessModifier> access_modifier;
+      JLang::owned<Terminal> using_token;
+      JLang::owned<Terminal> namespace_token;
+      JLang::owned<Terminal> namespace_name_token;
+      JLang::owned<UsingAs> using_as;
+      JLang::owned<Terminal> semicolon_token;
     };
 
     /**
@@ -2499,16 +2499,16 @@ namespace JLang::frontend::tree {
     class FileStatementList : public JLang::frontend::ast::SyntaxNode {
     public:
       FileStatementList();
-      FileStatementList(::JLang::owned<Terminal> _yyeof);
+      FileStatementList(JLang::owned<Terminal> _yyeof);
     /**
      * Destructor, nothing special.
      */
       ~FileStatementList();
-      const std::vector<::JLang::owned<FileStatement>> & get_statements() const;
-      void add_statement(::JLang::owned<FileStatement> statement);
+      const std::vector<JLang::owned<FileStatement>> & get_statements() const;
+      void add_statement(JLang::owned<FileStatement> statement);
     private:
-      ::JLang::owned<Terminal> yyeof;
-      std::vector<::JLang::owned<FileStatement>> statements;
+      JLang::owned<Terminal> yyeof;
+      std::vector<JLang::owned<FileStatement>> statements;
     };
 
   //! Represents the top-level syntax unit for a source file.
@@ -2538,8 +2538,8 @@ namespace JLang::frontend::tree {
     class TranslationUnit : public JLang::frontend::ast::SyntaxNode {
     public:
       TranslationUnit(
-                      ::JLang::owned<FileStatementList> file_statement_list,
-                      ::JLang::owned<Terminal> yyeof_token
+                      JLang::owned<FileStatementList> file_statement_list,
+                      JLang::owned<Terminal> yyeof_token
                       );
     /**
      * Destructor, nothing special.
@@ -2549,10 +2549,10 @@ namespace JLang::frontend::tree {
        * This method returns a list of 'const' owned pointers to the
        * statements defined in this translation unit.
        */
-      const std::vector<::JLang::owned<FileStatement>> & get_statements() const;
+      const std::vector<JLang::owned<FileStatement>> & get_statements() const;
     private:
-      ::JLang::owned<Terminal> yyeof_token;
-      ::JLang::owned<FileStatementList> file_statement_list;
+      JLang::owned<Terminal> yyeof_token;
+      JLang::owned<FileStatementList> file_statement_list;
       
     };
     

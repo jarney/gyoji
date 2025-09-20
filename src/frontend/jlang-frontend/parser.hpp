@@ -39,8 +39,8 @@ namespace JLang::frontend {
      *
      * @param _input_source      This is the source from which to read data.
      */
-    static ::JLang::owned<ParseResult> parse(
-                                             ::JLang::owned<JLang::frontend::namespaces::NamespaceContext> _namespace_context,
+    static JLang::owned<ParseResult> parse(
+                                             JLang::owned<JLang::frontend::namespaces::NamespaceContext> _namespace_context,
                                              JLang::misc::InputSource & _input_source
                                              );
   };

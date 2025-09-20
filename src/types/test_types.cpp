@@ -9,7 +9,7 @@ using namespace JLang::types;
 
 
 static
-::JLang::owned<ParseResult>
+JLang::owned<ParseResult>
 parse(std::string & path, std::string base_filename);
 
 int main(int argc, char **argv)
@@ -38,7 +38,7 @@ int main(int argc, char **argv)
 }
 
 static
-::JLang::owned<ParseResult>
+JLang::owned<ParseResult>
 parse(std::string & path, std::string base_filename)
 {
   std::string filename = path + std::string("/") + base_filename;
@@ -49,10 +49,10 @@ parse(std::string & path, std::string base_filename)
     return nullptr;
   }
 
-  ::JLang::owned<NamespaceContext> namespace_context = std::make_unique<NamespaceContext>();
+  JLang::owned<NamespaceContext> namespace_context = std::make_unique<NamespaceContext>();
   
   JLang::misc::InputSourceFile input_source(input);
-  ::JLang::owned<ParseResult> parse_result =
+  JLang::owned<ParseResult> parse_result =
       Parser::parse(std::move(namespace_context),
                    input_source
                    );

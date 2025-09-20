@@ -14,7 +14,7 @@ using namespace JLang::frontend::namespaces;
 using namespace JLang::frontend::yacc;
 
 
-std::vector<::JLang::owned<TerminalNonSyntax>> non_syntax_data;
+std::vector<JLang::owned<TerminalNonSyntax>> non_syntax_data;
 
 #define DEBUG_TERMINALS 0
 #if DEBUG_TERMINALS
@@ -32,8 +32,8 @@ std::vector<::JLang::owned<TerminalNonSyntax>> non_syntax_data;
 
 
 void move_array(
-                std::vector<::JLang::owned<TerminalNonSyntax>> & dst,
-                std::vector<::JLang::owned<TerminalNonSyntax>> & src
+                std::vector<JLang::owned<TerminalNonSyntax>> & dst,
+                std::vector<JLang::owned<TerminalNonSyntax>> & src
                 )
 {
     dst.clear();
@@ -62,7 +62,7 @@ void move_array(
     TOKEN_ADD(nodetype);                                             \
     Terminal* node = new Terminal(tok);                              \
     move_array(node->non_syntax, non_syntax_data);                   \
-    yylval->emplace<::JLang::owned<Terminal>>(node);                       \
+    yylval->emplace<JLang::owned<Terminal>>(node);                       \
 
 #define RETURN_NODE(nodetype)                                        \
     return YaccParser::token::nodetype;
@@ -218,7 +218,7 @@ unsafe {PROCESS_NODE(UNSAFE);}
 "/*"        {
   BEGIN(COMMENT);
   TOKEN_ADD(comment);
-  ::JLang::owned<TerminalNonSyntax> nsd = std::make_unique<TerminalNonSyntax>(
+  JLang::owned<TerminalNonSyntax> nsd = std::make_unique<TerminalNonSyntax>(
         TerminalNonSyntax::TerminalNonSyntax::Type::EXTRA_COMMENT_MULTI_LINE,
         tok
         );
@@ -238,7 +238,7 @@ unsafe {PROCESS_NODE(UNSAFE);}
 \/\/.* {
 // Single-line comment:
     TOKEN_ADD(single_line_comment);
-    ::JLang::owned<TerminalNonSyntax> nsd = std::make_unique<TerminalNonSyntax>(
+    JLang::owned<TerminalNonSyntax> nsd = std::make_unique<TerminalNonSyntax>(
         TerminalNonSyntax::Type::EXTRA_COMMENT_SINGLE_LINE,
         tok
     );
@@ -246,7 +246,7 @@ unsafe {PROCESS_NODE(UNSAFE);}
 }
 [ \t]+ {
     TOKEN_ADD(whitespace);
-    ::JLang::owned<TerminalNonSyntax> nsd = std::make_unique<TerminalNonSyntax>(
+    JLang::owned<TerminalNonSyntax> nsd = std::make_unique<TerminalNonSyntax>(
         TerminalNonSyntax::Type::EXTRA_WHITESPACE, 
         tok
     );
@@ -254,7 +254,7 @@ unsafe {PROCESS_NODE(UNSAFE);}
 }
 \n {
     TOKEN_ADD(newline);
-    ::JLang::owned<TerminalNonSyntax> nsd = std::make_unique<TerminalNonSyntax>(
+    JLang::owned<TerminalNonSyntax> nsd = std::make_unique<TerminalNonSyntax>(
         TerminalNonSyntax::Type::EXTRA_WHITESPACE, 
         tok
     );
@@ -272,7 +272,7 @@ unsafe {PROCESS_NODE(UNSAFE);}
     // the error to the correct line of YACC code and not necessarily
     // to the source file being compiled.
     TOKEN_ADD(file_metadata)
-    ::JLang::owned<TerminalNonSyntax> nsd = std::make_unique<TerminalNonSyntax>(
+    JLang::owned<TerminalNonSyntax> nsd = std::make_unique<TerminalNonSyntax>(
         TerminalNonSyntax::Type::EXTRA_FILE_METADATA,
         tok
     );
@@ -280,7 +280,7 @@ unsafe {PROCESS_NODE(UNSAFE);}
 }
 \#.*\n {
     TOKEN_ADD(file_metadata)
-    ::JLang::owned<TerminalNonSyntax> nsd = std::make_unique<TerminalNonSyntax>(
+    JLang::owned<TerminalNonSyntax> nsd = std::make_unique<TerminalNonSyntax>(
         TerminalNonSyntax::Type::EXTRA_FILE_METADATA,
         tok
     );

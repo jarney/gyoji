@@ -26,11 +26,11 @@ int main(int argc, char **argv)
       exit(1);
     }
 
-    ::JLang::owned<NamespaceContext> namespace_context = std::make_unique<NamespaceContext>();
+    JLang::owned<NamespaceContext> namespace_context = std::make_unique<NamespaceContext>();
     
     JLang::misc::InputSourceFile input_source(input);
 
-    ::JLang::owned<ParseResult> parse_result = 
+    JLang::owned<ParseResult> parse_result = 
         Parser::parse(
                       std::move(namespace_context),
                       input_source

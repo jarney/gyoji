@@ -79,7 +79,7 @@ namespace JLang::context {
     size_t size() const;
     const ErrorMessage & get(size_t n) const;
   private:
-    std::vector<::JLang::owned<ErrorMessage>> messages;
+    std::vector<JLang::owned<ErrorMessage>> messages;
     std::string error_message;
   };
   
@@ -87,12 +87,12 @@ namespace JLang::context {
   public:
     Errors();
     ~Errors();
-    void add_error(::JLang::owned<Error> error);
+    void add_error(JLang::owned<Error> error);
     void print() const;
     size_t size() const;
     const Error & get(size_t n) const;
   private:
-    std::vector<::JLang::owned<Error>> errors;
+    std::vector<JLang::owned<Error>> errors;
   };
   
 };

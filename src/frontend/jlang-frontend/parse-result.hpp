@@ -52,7 +52,7 @@ namespace JLang::frontend {
      * set of primitive types available.
      */
     ParseResult(
-                ::JLang::owned<JLang::frontend::namespaces::NamespaceContext> _namespace_context
+                JLang::owned<JLang::frontend::namespaces::NamespaceContext> _namespace_context
                 );
     /**
      * Destructor, nothing special.
@@ -119,15 +119,15 @@ namespace JLang::frontend {
     /**
      * This is used internally by the YACC grammar to return the parse tree.
      */
-    void set_translation_unit(::JLang::owned<JLang::frontend::tree::TranslationUnit> tu);
+    void set_translation_unit(JLang::owned<JLang::frontend::tree::TranslationUnit> tu);
     
-    ::JLang::owned<JLang::frontend::namespaces::NamespaceContext> namespace_context;
+    JLang::owned<JLang::frontend::namespaces::NamespaceContext> namespace_context;
     
-    ::JLang::owned<JLang::context::Errors> errors;
+    JLang::owned<JLang::context::Errors> errors;
     
-    ::JLang::owned<JLang::context::TokenStream> token_stream;
+    JLang::owned<JLang::context::TokenStream> token_stream;
     
-    ::JLang::owned<JLang::frontend::tree::TranslationUnit> translation_unit;
+    JLang::owned<JLang::frontend::tree::TranslationUnit> translation_unit;
 
   };
 

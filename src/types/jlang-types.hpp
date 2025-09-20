@@ -181,7 +181,7 @@ namespace JLang::types {
     void extract_from_class_definition(const JLang::frontend::tree::ClassDefinition & definition);
     void extract_from_enum(const JLang::frontend::tree::EnumDefinition & enum_definition);
     void extract_from_namespace(const JLang::frontend::tree::FileStatementNamespace & namespace_declaration);
-    void extract_types(const std::vector<::JLang::owned<JLang::frontend::tree::FileStatement>> & statements);
+    void extract_types(const std::vector<JLang::owned<JLang::frontend::tree::FileStatement>> & statements);
     
     Type *get_or_create(std::string pointer_name, Type *pointer_target, Type::TypeType type_type);
 

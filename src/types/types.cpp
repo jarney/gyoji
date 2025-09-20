@@ -159,7 +159,7 @@ TypeResolver::extract_from_namespace(const FileStatementNamespace & namespace_de
 }
 
 void
-TypeResolver::extract_types(const std::vector<::JLang::owned<FileStatement>> & statements)
+TypeResolver::extract_types(const std::vector<JLang::owned<FileStatement>> & statements)
 {
   for (const auto & statement : statements) {
     const auto & file_statement = statement->get_statement();

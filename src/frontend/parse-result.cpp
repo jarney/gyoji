@@ -8,7 +8,7 @@ using namespace JLang::frontend::namespaces;
 using namespace JLang::frontend::tree;
 
 ParseResult::ParseResult(
-                         ::JLang::owned<NamespaceContext>  _namespace_context
+                         JLang::owned<NamespaceContext>  _namespace_context
                          )
   : namespace_context(std::move(_namespace_context))
   , errors(std::make_unique<Errors>())
@@ -51,7 +51,7 @@ ParseResult::get_token_stream() const
 }
 
 void
-ParseResult::set_translation_unit(::JLang::owned<TranslationUnit> _translation_unit)
+ParseResult::set_translation_unit(JLang::owned<TranslationUnit> _translation_unit)
 {
   translation_unit = std::move(_translation_unit);
 }

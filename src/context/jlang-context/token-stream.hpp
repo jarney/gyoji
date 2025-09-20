@@ -101,7 +101,7 @@ namespace JLang::context {
      * the parse.  This is returned as an immutable list
      * of pointers owned by the token stream.
      */
-    const std::vector<::JLang::owned<Token>> & get_tokens() const;
+    const std::vector<JLang::owned<Token>> & get_tokens() const;
 
     /**
      * This returns the exact text of a single line of source-data.
@@ -145,7 +145,7 @@ namespace JLang::context {
     void append_token(std::string _value);
   private:
     
-    std::vector<::JLang::owned<Token>> tokens;
+    std::vector<JLang::owned<Token>> tokens;
     std::vector<Token*> empty_list;
     std::map<size_t, std::vector<Token*>> tokens_by_lineno;
   };

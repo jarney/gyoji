@@ -17,7 +17,7 @@ Errors::print() const
 }
 
 void
-Errors::add_error(::JLang::owned<Error> error)
+Errors::add_error(JLang::owned<Error> error)
 {
   errors.push_back(std::move(error));
 }
@@ -44,7 +44,7 @@ void
 Error::print()
 {
   fprintf(stderr, "Error: %s\n", error_message.c_str());
-  for (const ::JLang::owned<ErrorMessage> & msg : messages) {
+  for (const JLang::owned<ErrorMessage> & msg : messages) {
     msg->print();
   }
 }
@@ -55,7 +55,7 @@ Error::add_message(std::vector<std::pair<size_t, std::string>> _context,
                     size_t _column,
                     std::string _errormsg)
 {
-  ::JLang::owned<ErrorMessage> message = std::make_unique<ErrorMessage>(
+  JLang::owned<ErrorMessage> message = std::make_unique<ErrorMessage>(
                                                                   _context,
                                                                   _line,
                                                                   _column,

@@ -13,13 +13,13 @@ using namespace JLang::frontend::tree;
 using namespace JLang::frontend::namespaces;
 using namespace JLang::frontend::yacc;
 
-::JLang::owned<ParseResult>
+JLang::owned<ParseResult>
 Parser::parse(
-              ::JLang::owned<NamespaceContext> _namespace_context,
+              JLang::owned<NamespaceContext> _namespace_context,
               JLang::misc::InputSource & _input_source
               )
 {
-  ::JLang::owned<ParseResult> result = std::make_unique<ParseResult>(std::move(_namespace_context));
+  JLang::owned<ParseResult> result = std::make_unique<ParseResult>(std::move(_namespace_context));
   
   yyscan_t scanner;
   yylex_init(&scanner);
