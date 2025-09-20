@@ -7,12 +7,12 @@ namespace JLang::frontend::yacc {
   class LexContext {
   public:
     LexContext(JLang::frontend::namespaces::NamespaceContext &_namespace_context,
-               JLang::context::TokenStream &_token_stream,
+               JLang::context::CompilerContext & _compiler_context,
                JLang::misc::InputSource &_input_source);
     ~LexContext();
     JLang::frontend::namespaces::NamespaceContext& namespace_context;
     JLang::misc::InputSource & input_source;
-    JLang::context::TokenStream & token_stream;
+    JLang::context::CompilerContext & compiler_context;
     size_t line;
     size_t column;
   };

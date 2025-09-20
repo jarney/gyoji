@@ -8,11 +8,11 @@ using namespace JLang::frontend::namespaces;
 using namespace JLang::frontend::tree;
 
 ParseResult::ParseResult(
+                         JLang::context::CompilerContext & _compiler_context,
                          JLang::owned<NamespaceContext>  _namespace_context
                          )
   : namespace_context(std::move(_namespace_context))
-  , errors(std::make_unique<Errors>())
-  , token_stream(std::make_unique<TokenStream>())
+  , compiler_context(_compiler_context)
   , translation_unit(nullptr)
 {}
 ParseResult::~ParseResult()
@@ -26,7 +26,7 @@ ParseResult::get_namespace_context() const
 Errors &
 ParseResult::get_errors() const
 {
-  return *errors;
+  return compiler_context.get_errors();
 }
 
 const TranslationUnit & 
@@ -41,13 +41,13 @@ ParseResult::has_translation_unit() const
 bool
 ParseResult::has_errors() const
 {
-  return errors->size() != 0;
+  return compiler_context.get_errors().size() != 0;
 }
 
 const TokenStream &
 ParseResult::get_token_stream() const
 {
-  return *token_stream;
+  return compiler_context.get_token_stream();
 }
 
 void

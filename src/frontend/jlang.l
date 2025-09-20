@@ -46,23 +46,27 @@ void move_array(
 #define TOKEN_APPEND()                                               \
 {                                                                    \
     LexContext *lc = (LexContext*)yyget_extra(yyscanner);            \
-    lc->token_stream.append_token(std::string(yytext));              \
+    lc->compiler_context.get_token_stream()                          \
+        .append_token(std::string(yytext));                          \
 }
 
 #define TOKEN_ADD(nodetype)                                          \
     LexContext *lc = (LexContext*)yyget_extra(yyscanner);            \
-    const Token &tok = lc->token_stream.add_token(                   \
-        std::string(#nodetype),                                      \
-        std::string(yytext),                                         \
-        lc->line,                                                    \
-        lc->column);                                                 \
+    const Token &tok =                                               \
+        lc->compiler_context.get_token_stream()                      \
+            .add_token(                                              \
+                std::string(#nodetype),                              \
+                std::string(yytext),                                 \
+                lc->line,                                            \
+                lc->column                                           \
+            );                                                       \
     lc->column += strlen(yytext);                                    \
 
 #define START_NODE(nodetype)                                         \
     TOKEN_ADD(nodetype);                                             \
     Terminal* node = new Terminal(tok);                              \
     move_array(node->non_syntax, non_syntax_data);                   \
-    yylval->emplace<JLang::owned<Terminal>>(node);                       \
+    yylval->emplace<JLang::owned<Terminal>>(node);
 
 #define RETURN_NODE(nodetype)                                        \
     return YaccParser::token::nodetype;

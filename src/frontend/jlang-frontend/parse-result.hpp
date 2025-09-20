@@ -52,6 +52,7 @@ namespace JLang::frontend {
      * set of primitive types available.
      */
     ParseResult(
+                JLang::context::CompilerContext & _compiler_context,
                 JLang::owned<JLang::frontend::namespaces::NamespaceContext> _namespace_context
                 );
     /**
@@ -122,10 +123,8 @@ namespace JLang::frontend {
     void set_translation_unit(JLang::owned<JLang::frontend::tree::TranslationUnit> tu);
     
     JLang::owned<JLang::frontend::namespaces::NamespaceContext> namespace_context;
-    
-    JLang::owned<JLang::context::Errors> errors;
-    
-    JLang::owned<JLang::context::TokenStream> token_stream;
+
+    JLang::context::CompilerContext & compiler_context;
     
     JLang::owned<JLang::frontend::tree::TranslationUnit> translation_unit;
 

@@ -9,7 +9,7 @@ using namespace JLang::frontend::namespaces;
 
 static
 JLang::owned<ParseResult>
-parse(std::string & path, std::string base_filename)
+parse(std::string & path, CompilerContext & compiler_context, std::string base_filename)
 {
   std::string filename = path + std::string("/") + base_filename;
   
@@ -18,14 +18,11 @@ parse(std::string & path, std::string base_filename)
     fprintf(stderr, "Cannot open file %s\n", base_filename.c_str());
     return nullptr;
   }
-
-  JLang::owned<NamespaceContext> namespace_context = std::make_unique<NamespaceContext>();
-  
   JLang::misc::InputSourceFile input_source(input);
   JLang::owned<ParseResult> parse_result =
-      Parser::parse(std::move(namespace_context),
-                   input_source
-                   );
+    Parser::parse(compiler_context,
+                  input_source
+                  );
 
   return std::move(parse_result);
 }
@@ -37,24 +34,25 @@ int main(int argc, char **argv)
     return -1;
   }
   std::string path(argv[1]);
-
+  CompilerContext context;
+  
   // Check that we have the right number of statements in this file.
   {
-    auto parse_result = parse(path, "tests/llvm-decl-var.j");
+    auto parse_result = parse(path, context, "tests/llvm-decl-var.j");
     ASSERT_NOT_NULL(parse_result, "Parse of known-good thing should not be null");
     ASSERT_TRUE(parse_result->has_translation_unit(), "We should have a translation unit");
     ASSERT_INT_EQUAL(6, parse_result->get_translation_unit().get_statements().size(), "Wrong number of statements in file");
   }
 
   {
-    auto parse_result = parse(path, "tests/syntax-empty.j");
+    auto parse_result = parse(path, context, "tests/syntax-empty.j");
     ASSERT_NOT_NULL(parse_result, "Empty file should parse");
     ASSERT_TRUE(parse_result->has_translation_unit(), "We should have a translation unit");
     ASSERT_INT_EQUAL(0, parse_result->get_translation_unit().get_statements().size(), "Empty file should have no statements");
   }
 
   {
-    auto parse_result = parse(path, "tests/syntax-invalid-garbage.j");
+    auto parse_result = parse(path, context, "tests/syntax-invalid-garbage.j");
     ASSERT_TRUE(parse_result->has_errors(), "We expect a syntax error in this file");
     ASSERT_INT_EQUAL(1, parse_result->get_errors().size(), "We should have exactly one error");
     ASSERT_INT_EQUAL(1, parse_result->get_errors().get(0).size(), "That error should have exactly one message");
@@ -63,7 +61,7 @@ int main(int argc, char **argv)
 
   // Check typedefs and associated modifiers.
   {
-    auto parse_result = parse(path, "tests/syntax-typedef.j");
+    auto parse_result = parse(path, context, "tests/syntax-typedef.j");
     ASSERT_NOT_NULL(parse_result, "File should parse correctly.");
     ASSERT_TRUE(parse_result->has_translation_unit(), "We should have a translation unit");
     ASSERT_INT_EQUAL(4, parse_result->get_translation_unit().get_statements().size(), "This should have 4 typedefs");
@@ -109,7 +107,7 @@ int main(int argc, char **argv)
     }
   }
   {
-    auto parse_result = parse(path, "tests/syntax-access-qualifier.j");
+    auto parse_result = parse(path, context, "tests/syntax-access-qualifier.j");
     ASSERT_NOT_NULL(parse_result, "File should parse correctly.");
     ASSERT_TRUE(parse_result->has_translation_unit(), "We should have a translation unit");
     ASSERT_INT_EQUAL(2, parse_result->get_translation_unit().get_statements().size(), "This should have 2 global initializations.");
@@ -158,7 +156,7 @@ int main(int argc, char **argv)
   }
 
   {
-    auto parse_result = parse(path, "tests/syntax-pointer.j");
+    auto parse_result = parse(path, context, "tests/syntax-pointer.j");
     ASSERT_NOT_NULL(parse_result, "File should parse correctly.");
     ASSERT_TRUE(parse_result->has_translation_unit(), "We should have a translation unit");
     ASSERT_INT_EQUAL(2, parse_result->get_translation_unit().get_statements().size(), "This should have 2 global initializations.");
@@ -209,7 +207,7 @@ int main(int argc, char **argv)
     }
   }
   {
-    auto parse_result = parse(path, "tests/syntax-function-declaration.j");
+    auto parse_result = parse(path, context, "tests/syntax-function-declaration.j");
     ASSERT_NOT_NULL(parse_result, "File should parse correctly.");
     ASSERT_TRUE(parse_result->has_translation_unit(), "We should have a translation unit");
     ASSERT_INT_EQUAL(2, parse_result->get_translation_unit().get_statements().size(), "This should have a function declaration.");
@@ -239,7 +237,7 @@ int main(int argc, char **argv)
     }
   }
   {
-    auto parse_result = parse(path, "tests/syntax-function-definition.j");
+    auto parse_result = parse(path, context, "tests/syntax-function-definition.j");
     ASSERT_NOT_NULL(parse_result, "File should parse correctly.");
     ASSERT_TRUE(parse_result->has_translation_unit(), "We should have a translation unit");
     ASSERT_INT_EQUAL(1, parse_result->get_translation_unit().get_statements().size(), "This should have a function definition.");
@@ -253,7 +251,7 @@ int main(int argc, char **argv)
   }
 
   {
-    auto parse_result = parse(path, "tests/syntax-function-unsafe-block.j");
+    auto parse_result = parse(path, context, "tests/syntax-function-unsafe-block.j");
     ASSERT_NOT_NULL(parse_result, "File should parse correctly.");
     ASSERT_TRUE(parse_result->has_translation_unit(), "We should have a translation unit");
     ASSERT_INT_EQUAL(1, parse_result->get_translation_unit().get_statements().size(), "This should have a function definition.");

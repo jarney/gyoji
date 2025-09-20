@@ -9,8 +9,7 @@
 
 #include <jlang-misc/pointers.hpp>
 #include <jlang-misc/input-source.hpp>
-#include <jlang-context/errors.hpp>
-#include <jlang-context/token-stream.hpp>
+#include <jlang-context.hpp>
 
 #define _JLANG_INTERNAL
 #include <jlang-frontend/forward.hpp>

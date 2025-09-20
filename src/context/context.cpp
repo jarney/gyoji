@@ -2,18 +2,18 @@
 
 using namespace JLang::context;
 
-Context::Context()
+CompilerContext::CompilerContext()
   : errors(std::make_unique<Errors>())
   , token_stream(std::make_unique<TokenStream>())
 {}
-Context::~Context()
+CompilerContext::~CompilerContext()
 {}
 
 
 Errors &
-Context::get_errors() const
+CompilerContext::get_errors() const
 { return *errors; }
 
 TokenStream &
-Context::get_token_stream() const
+CompilerContext::get_token_stream() const
 { return *token_stream; }

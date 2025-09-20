@@ -15,18 +15,22 @@ using namespace JLang::frontend::yacc;
 
 JLang::owned<ParseResult>
 Parser::parse(
-              JLang::owned<NamespaceContext> _namespace_context,
+              JLang::context::CompilerContext & _compiler_context,
               JLang::misc::InputSource & _input_source
               )
 {
-  JLang::owned<ParseResult> result = std::make_unique<ParseResult>(std::move(_namespace_context));
+  auto namespace_context = std::make_unique<JLang::frontend::namespaces::NamespaceContext>();
+  JLang::owned<ParseResult> result = std::make_unique<ParseResult>(
+                                                                   _compiler_context,
+                                                                   std::move(namespace_context)
+                                                                   );
   
   yyscan_t scanner;
   yylex_init(&scanner);
 
   LexContext lex_context(
                          *result->namespace_context,
-                         *result->token_stream,
+                         _compiler_context,
                          _input_source);
   yyset_extra(&lex_context, scanner);
   

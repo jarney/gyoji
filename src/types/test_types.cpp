@@ -3,6 +3,7 @@
 #include <jlang-types.hpp>
 #include <jlang-misc/test.hpp>
 
+using namespace JLang::context;
 using namespace JLang::frontend;
 using namespace JLang::frontend::namespaces;
 using namespace JLang::types;
@@ -10,7 +11,7 @@ using namespace JLang::types;
 
 static
 JLang::owned<ParseResult>
-parse(std::string & path, std::string base_filename);
+parse(std::string & path, CompilerContext & context, std::string base_filename);
 
 int main(int argc, char **argv)
 {
@@ -22,7 +23,9 @@ int main(int argc, char **argv)
 
   std::string path(argv[1]);
 
-  auto parse_result = std::move(parse(path, "tests/type-resolution.j"));
+  CompilerContext context;
+  
+  auto parse_result = std::move(parse(path, context, "tests/type-resolution.j"));
 
   parse_result->get_namespace_context().namespace_dump();
   
@@ -39,7 +42,7 @@ int main(int argc, char **argv)
 
 static
 JLang::owned<ParseResult>
-parse(std::string & path, std::string base_filename)
+parse(std::string & path, CompilerContext & context, std::string base_filename)
 {
   std::string filename = path + std::string("/") + base_filename;
   
@@ -49,12 +52,11 @@ parse(std::string & path, std::string base_filename)
     return nullptr;
   }
 
-  JLang::owned<NamespaceContext> namespace_context = std::make_unique<NamespaceContext>();
-  
   JLang::misc::InputSourceFile input_source(input);
   JLang::owned<ParseResult> parse_result =
-      Parser::parse(std::move(namespace_context),
-                   input_source
+      Parser::parse(
+                    context,
+                    input_source
                    );
 
   return std::move(parse_result);

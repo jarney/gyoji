@@ -64,12 +64,12 @@ int main(int argc, char **argv)
       exit(1);
     }
 
-    JLang::owned<NamespaceContext> namespace_context = std::make_unique<NamespaceContext>();
+    CompilerContext context;
     JLang::misc::InputSourceFile input_source(input);
 
     JLang::owned<ParseResult> parse_result = 
         Parser::parse(
-                      std::move(namespace_context),
+                      context,
                       input_source
                       );
     fclose(input);

@@ -19,18 +19,20 @@ using namespace JLang::frontend::namespaces;
 
 static
 JLang::owned<ParseResult>
-parse(std::string & filename)
+parse(std::string & filename, CompilerContext & context)
 {
   FILE *input = fopen(filename.c_str(), "rb");
   if (input == NULL) {
     fprintf(stderr, "Cannot open file %s\n", filename.c_str());
     return nullptr;
   }
-  JLang::owned<NamespaceContext> namespace_context = std::make_unique<NamespaceContext>();
+  
   JLang::misc::InputSourceFile input_source(input);
   JLang::owned<ParseResult> parse_result = 
-      Parser::parse(std::move(namespace_context),
-                    input_source);
+    Parser::parse(
+                  context,
+                  input_source
+                  );
   if (parse_result->has_errors()) {
     parse_result->get_errors().print();
     return nullptr;
@@ -49,7 +51,9 @@ int main(int argc, char **argv)
 
   std::string path(argv[1]);
 
-  JLang::owned<ParseResult> result = parse(path);
+  CompilerContext context;
+  
+  JLang::owned<ParseResult> result = parse(path, context);
 
   for (const JLang::owned<Token> & token : result->get_token_stream().get_tokens()) {
     printf("%s", token->get_value().c_str());

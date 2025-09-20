@@ -4,10 +4,10 @@
 #include <jlang-context/token-stream.hpp>
 
 namespace JLang::context {
-  class Context {
+  class CompilerContext {
   public:
-    Context();
-    ~Context();
+    CompilerContext();
+    ~CompilerContext();
 
     Errors & get_errors() const;
     TokenStream & get_token_stream() const;

@@ -2226,10 +2226,10 @@ void JLang::frontend::yacc::YaccParser::error(const std::string& msg) {
     // Generate context from token stream and line number.
     // Context should be 3 lines, 2 before, and the line.
     //    std::vector<std::pair<int, std::string>> context;
-    error->add_message(lex_context->token_stream.context(lex_context->line-2, lex_context->line),
+    error->add_message(lex_context->compiler_context.get_token_stream().context(lex_context->line-2, lex_context->line),
                        lex_context->line,
                        lex_context->column,
                        msg);
     
-    return_data.errors->add_error(std::move(error));
+    return_data.compiler_context.get_errors().add_error(std::move(error));
 }
