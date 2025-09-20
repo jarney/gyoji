@@ -1,8 +1,9 @@
 add_subdirectory(misc)
 add_subdirectory(context)
 add_subdirectory(frontend)
-add_subdirectory(types)
+add_subdirectory(mir)
 add_subdirectory(backend)
+add_subdirectory(analysis)
 add_subdirectory(cmdline)
 #add_subdirectory(codegen)
 

@@ -1,6 +1,6 @@
 #include <jlang-misc/input-source-file.hpp>
 #include <jlang-frontend.hpp>
-#include <jlang-types.hpp>
+#include <jlang-mir/types.hpp>
 #include <jlang-misc/test.hpp>
 
 using namespace JLang::context;

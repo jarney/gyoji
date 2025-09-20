@@ -1,4 +1,4 @@
-#include <jlang-types.hpp>
+#include <jlang-mir/types.hpp>
 #include <variant>
 #include <stdio.h>
 
