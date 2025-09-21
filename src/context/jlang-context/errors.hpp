@@ -34,7 +34,7 @@ namespace JLang::context {
     ~ErrorMessage();
     void print();
     const std::vector<std::pair<size_t, std::string>> & get_context() const;
-    const SourceReference & get_source_reference() const;
+    const SourceReference & get_source_ref() const;
     const std::string & get_message() const;
     void add_context(const std::vector<std::pair<size_t, std::string>> & _context);
     size_t get_line() const;

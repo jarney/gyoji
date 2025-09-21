@@ -122,7 +122,7 @@ namespace JLang::frontend::tree {
      * Returns a reference to the place in the source-file
      * where this terminal occurred.
      */
-    const JLang::context::SourceReference & get_source_ref() const;
+    const JLang::context::SourceReference & get_terminal_source_ref() const;
     
     /**
      * For the case of identifier tokens, this returns
@@ -243,7 +243,7 @@ namespace JLang::frontend::tree {
      * Constructs a default access qualifier (UNSPECIFIED)
      * if no qualifier is specified in the source file.
      */
-    AccessQualifier();
+    AccessQualifier(const JLang::context::SourceReference & _source_ref);
     /**
      * Destructor, nothing special.
      */
@@ -293,7 +293,7 @@ namespace JLang::frontend::tree {
      * access modifier is not explicitly specified in the
      * source file (i.e. optional).
      */
-    AccessModifier();
+    AccessModifier(const JLang::context::SourceReference & _source_ref);
     /**
      * Destructor, nothing special.
      */
@@ -332,7 +332,7 @@ namespace JLang::frontend::tree {
      * The default unsafe modifier (i.e. not specified) refers
      * to a block that is NOT marked as unsafe.
      */
-    UnsafeModifier();
+    UnsafeModifier(const JLang::context::SourceReference & _source_ref);
     /**
      * Destructor, nothing special.
      */
@@ -456,7 +456,7 @@ namespace JLang::frontend::tree {
     /**
      * Constructs a new empty template argument list.
      */
-    TypeSpecifierCallArgs();
+    TypeSpecifierCallArgs(const JLang::context::SourceReference & _source_ref);
     /**
      * Destructor, nothing special.
      */
@@ -829,7 +829,7 @@ namespace JLang::frontend::tree {
    */
   class FunctionDefinitionArgList : public JLang::frontend::ast::SyntaxNode {
   public:
-    FunctionDefinitionArgList();
+    FunctionDefinitionArgList(const JLang::context::SourceReference & _source_ref);
     /**
      * Destructor, nothing special.
      */
@@ -1309,7 +1309,7 @@ namespace JLang::frontend::tree {
     
     class StatementSwitchContent : public JLang::frontend::ast::SyntaxNode {
     public:
-      StatementSwitchContent();
+      StatementSwitchContent(const JLang::context::SourceReference & _source_ref);
     /**
      * Destructor, nothing special.
      */
@@ -1457,7 +1457,7 @@ namespace JLang::frontend::tree {
     
     class StatementList : public JLang::frontend::ast::SyntaxNode {
     public:
-      StatementList();
+      StatementList(const JLang::context::SourceReference & _source_ref);
     /**
      * Destructor, nothing special.
      */
@@ -1522,7 +1522,7 @@ namespace JLang::frontend::tree {
 
     class ArrayLength : public JLang::frontend::ast::SyntaxNode {
     public:
-      ArrayLength();
+      ArrayLength(const JLang::context::SourceReference & _source_ref);
       ArrayLength(
                   JLang::owned<Terminal> _bracket_l_token,
                   JLang::owned<Terminal> _literal_int_token,
@@ -1568,7 +1568,7 @@ namespace JLang::frontend::tree {
     };
     class ClassArgumentList : public JLang::frontend::ast::SyntaxNode {
     public:
-      ClassArgumentList();
+      ClassArgumentList(const JLang::context::SourceReference & _source_ref);
       ClassArgumentList(JLang::owned<Terminal> _argument);
     /**
      * Destructor, nothing special.
@@ -1718,7 +1718,7 @@ namespace JLang::frontend::tree {
     
     class ClassMemberDeclarationList : public JLang::frontend::ast::SyntaxNode {
     public:
-      ClassMemberDeclarationList();
+      ClassMemberDeclarationList(const JLang::context::SourceReference & _source_ref);
     /**
      * Destructor, nothing special.
      */
@@ -1829,7 +1829,7 @@ namespace JLang::frontend::tree {
     
     class EnumDefinitionValueList : public JLang::frontend::ast::SyntaxNode {
     public:
-      EnumDefinitionValueList();
+      EnumDefinitionValueList(const JLang::context::SourceReference & _source_ref);
     /**
      * Destructor, nothing special.
      */
@@ -2005,7 +2005,7 @@ namespace JLang::frontend::tree {
 
     class ArgumentExpressionList : public JLang::frontend::ast::SyntaxNode {
     public:
-      ArgumentExpressionList();
+      ArgumentExpressionList(const JLang::context::SourceReference & _source_ref);
     /**
      * Destructor, nothing special.
      */
@@ -2358,7 +2358,7 @@ namespace JLang::frontend::tree {
           
     class StructInitializerList : public JLang::frontend::ast::SyntaxNode {
     public:
-      StructInitializerList();
+      StructInitializerList(const JLang::context::SourceReference & _source_ref);
     /**
      * Destructor, nothing special.
      */
@@ -2397,7 +2397,7 @@ namespace JLang::frontend::tree {
         JLang::owned<GlobalInitializerAddressofExpressionPrimary>,
         JLang::owned<GlobalInitializerStructInitializerList>,
         nullptr_t> GlobalInitializerType;
-      GlobalInitializer();
+      GlobalInitializer(const JLang::context::SourceReference & _source_ref);
       GlobalInitializer(GlobalInitializerType initializer, const JLang::frontend::ast::SyntaxNode & _sn);
     /**
      * Destructor, nothing special.
@@ -2487,7 +2487,7 @@ namespace JLang::frontend::tree {
               JLang::owned<Terminal> _as_token,
               JLang::owned<Terminal> _identifier_token
               );
-      UsingAs();
+      UsingAs(const JLang::context::SourceReference & _source_ref);
     /**
      * Destructor, nothing special.
      */
@@ -2537,7 +2537,7 @@ namespace JLang::frontend::tree {
      */
     class FileStatementList : public JLang::frontend::ast::SyntaxNode {
     public:
-      FileStatementList();
+      FileStatementList(const JLang::context::SourceReference & _source_ref);
       FileStatementList(JLang::owned<Terminal> _yyeof);
     /**
      * Destructor, nothing special.

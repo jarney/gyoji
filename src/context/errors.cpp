@@ -25,8 +25,8 @@ Errors::add_error(JLang::owned<Error> error)
   for (const auto & message : error->get_messages()) {
     message->add_context(
                          token_stream.context(
-                                              message->get_source_reference().get_line()-2,
-                                              message->get_source_reference().get_line()+1
+                                              message->get_source_ref().get_line()-2,
+                                              message->get_source_ref().get_line()+1
                                               )
                          );
 
@@ -106,7 +106,7 @@ ErrorMessage::get_context() const
 { return context; }
 
 const SourceReference & 
-ErrorMessage::get_source_reference() const
+ErrorMessage::get_source_ref() const
 { return src_ref; }
 
 const std::string &

@@ -49,7 +49,7 @@ namespace JLang::frontend::ast {
    */
   class SyntaxNode {
     public:
-      typedef std::variant<JLANG_SYNTAX_NODE_VARIANT_LIST> specific_type_t;
+    typedef std::variant<JLANG_SYNTAX_NODE_VARIANT_LIST> specific_type_t;
 
     /**
      * Create a new syntax node of the given type holding
@@ -58,15 +58,16 @@ namespace JLang::frontend::ast {
      * @param _type Type of node this represents.
      * @param _data The specific data associated with this node.
      */
-      SyntaxNode(std::string _type, specific_type_t _data);
-      ~SyntaxNode();
-      
+    SyntaxNode(std::string _type, specific_type_t _data, const JLang::context::SourceReference & _source_ref);
+    ~SyntaxNode();
+
 
     /**
      * This method returns a reference to an immutable array
      * of children of this node.
      */
     const std::vector<std::reference_wrapper<const SyntaxNode>> & get_children() const;
+
     /**
      * This method returns an immutable reference to
      * the type of the node.
@@ -82,6 +83,7 @@ namespace JLang::frontend::ast {
     template <class T> bool has_data() const {
       return std::holds_alternative<T*>(data);
     }
+
     /**
      * This returns an immutable reference to the
      * data of type T contained in this node.
@@ -94,30 +96,38 @@ namespace JLang::frontend::ast {
       const T *d = std::get<T*>(data);
       return *d;
     }
-
+    
     /**
      * This method is provided so that callers
      * of derived classes can be sure to get access
      * to the SyntaxNode base-class instance.
      */
     const SyntaxNode & get_syntax_node() const;
-      
-    private:
-      // This list does NOT own its children, so
-      // the class deriving from this one must
-      // agree to own the pointers separately.
-      std::vector<std::reference_wrapper<const SyntaxNode>> children; 
-      
-    protected:
-      // Children are owned by their parents, so this is
-      // private and can only be called by the
-      // deriving class.
-      void add_child(const SyntaxNode & node);
-      void prepend_child(const SyntaxNode & node);
-      
-      std::string type;
-      specific_type_t data;
-    };
+
+    /**
+     * Returns the source reference for where
+     * this node appears in the source tree.
+     */
+    const JLang::context::SourceReference & get_source_ref() const;
+
+  private:
+    // This list does NOT own its children, so
+    // the class deriving from this one must
+    // agree to own the pointers separately.
+    std::vector<std::reference_wrapper<const SyntaxNode>> children; 
+    const JLang::context::SourceReference & source_ref;
+    
+  protected:
+    // Children are owned by their parents, so this is
+    // private and can only be called by the
+    // deriving class.
+    void add_child(const SyntaxNode & node);
+    void prepend_child(const SyntaxNode & node);
+    
+    std::string type;
+    specific_type_t data;
+    
+  };
 
 };
 /*! @} End of Doxygen Groups*/

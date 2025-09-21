@@ -3,6 +3,7 @@
 using namespace JLang::context;
 
 TokenStream::TokenStream()
+  : zero_source_ref("", 1, 0)
 {}
 
 TokenStream::~TokenStream()
@@ -13,6 +14,22 @@ TokenStream::get_tokens() const
 {
   return tokens;
 }
+
+/**
+ * Returns the most recent source reference found.
+ * If no prior source reference was found, this must
+ * be the first token in the file and we will return
+ * the most recent one.
+ */
+const SourceReference &
+TokenStream::get_current_source_ref() const
+{
+  if (tokens.size() == 0) {
+    return zero_source_ref;
+  }
+  return tokens.back()->get_source_ref();
+}
+
 
 std::string TokenStream::get_line(size_t _line) const
 {
@@ -104,6 +121,6 @@ Token::get_column() const
 { return src_ref.get_column(); }
 
 const SourceReference &
-Token::get_source_reference() const
+Token::get_source_ref() const
 { return src_ref; }
 

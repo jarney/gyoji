@@ -65,7 +65,7 @@ namespace JLang::context {
      */
     const size_t get_column() const;
 
-    const SourceReference & get_source_reference() const;
+    const SourceReference & get_source_ref() const;
     
     friend TokenStream;
   private:
@@ -106,6 +106,14 @@ namespace JLang::context {
      */
     const std::vector<JLang::owned<Token>> & get_tokens() const;
 
+    /**
+     * Returns the most recent source reference found.
+     * If no prior source reference was found, this must
+     * be the first token in the file and we will return
+     * the most recent one.
+     */
+    const SourceReference & get_current_source_ref() const;
+    
     /**
      * This returns the exact text of a single line of source-data.
      * This is useful in constructing the context for structured
@@ -152,5 +160,6 @@ namespace JLang::context {
     std::vector<JLang::owned<Token>> tokens;
     std::vector<Token*> empty_list;
     std::map<size_t, std::vector<Token*>> tokens_by_lineno;
+    SourceReference zero_source_ref;
   };
 };

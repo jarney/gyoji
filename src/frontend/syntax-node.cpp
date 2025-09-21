@@ -4,9 +4,10 @@ using namespace JLang::frontend;
 using namespace JLang::frontend::ast;
 
 ///////////////////////////////////////////////////
-SyntaxNode::SyntaxNode(std::string _type, SyntaxNode::specific_type_t _data)
+SyntaxNode::SyntaxNode(std::string _type, SyntaxNode::specific_type_t _data, const JLang::context::SourceReference & _source_ref)
   : type(_type)
   , data(_data)
+  , source_ref(_source_ref)
 {}
 SyntaxNode::~SyntaxNode()
 {}
@@ -33,3 +34,6 @@ const SyntaxNode &
 SyntaxNode::get_syntax_node() const
 { return *this; }
 
+const JLang::context::SourceReference &
+SyntaxNode::get_source_ref() const
+{ return source_ref; }

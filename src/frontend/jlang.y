@@ -320,7 +320,7 @@ opt_file_statement_list
 
 file_statement_list 
         : file_statement {
-          $$ = std::make_unique<JLang::frontend::tree::FileStatementList>();
+          $$ = std::make_unique<JLang::frontend::tree::FileStatementList>(return_data.compiler_context.get_token_stream().get_current_source_ref());
           $$->add_statement(std::move($1));
           PRINT_NONTERMINALS($$);
         }
@@ -409,21 +409,21 @@ file_statement
 file_statement_global_definition
         : opt_access_modifier opt_unsafe type_specifier IDENTIFIER opt_array_length opt_global_initializer SEMICOLON {
           $$ = std::make_unique<JLang::frontend::tree::FileStatementGlobalDefinition>(
-                                                                                         std::move($1),
-                                                                                         std::move($2),
-                                                                                         std::move($3),
-                                                                                         std::move($4),
-                                                                                         std::move($5),
-                                                                                         std::move($6),
-                                                                                         std::move($7)
-                                                                                         );
+                                                                                      std::move($1),
+                                                                                      std::move($2),
+                                                                                      std::move($3),
+                                                                                      std::move($4),
+                                                                                      std::move($5),
+                                                                                      std::move($6),
+                                                                                      std::move($7)
+                                                                                      );
           PRINT_NONTERMINALS($$);
         }
         ;
 
 opt_global_initializer
         : /**/ {
-                $$ = std::make_unique<JLang::frontend::tree::GlobalInitializer>();
+                $$ = std::make_unique<JLang::frontend::tree::GlobalInitializer>(return_data.compiler_context.get_token_stream().get_current_source_ref());
                 PRINT_NONTERMINALS($$);
         }
         | global_initializer {
@@ -479,7 +479,7 @@ global_initializer_struct_initializer_list
 
 opt_struct_initializer_list
         : /**/ {
-                $$ = std::make_unique<JLang::frontend::tree::StructInitializerList>();
+                $$ = std::make_unique<JLang::frontend::tree::StructInitializerList>(return_data.compiler_context.get_token_stream().get_current_source_ref());
                 PRINT_NONTERMINALS($$);
         }
         | struct_initializer_list {
@@ -490,7 +490,7 @@ opt_struct_initializer_list
 
 struct_initializer_list
         : struct_initializer {
-                $$ = std::make_unique<JLang::frontend::tree::StructInitializerList>();
+                $$ = std::make_unique<JLang::frontend::tree::StructInitializerList>($1->get_source_ref());
                 $$->add_initializer(std::move($1));
                 PRINT_NONTERMINALS($$);
         }
@@ -515,8 +515,7 @@ struct_initializer
 
 opt_access_modifier
         : /**/ {
-                $$ = std::make_unique<JLang::frontend::tree::AccessModifier>();
-                                                                             
+                $$ = std::make_unique<JLang::frontend::tree::AccessModifier>(return_data.compiler_context.get_token_stream().get_current_source_ref());
                 PRINT_NONTERMINALS($$);
         }
         | access_modifier {
@@ -574,7 +573,7 @@ file_statement_namespace
 
 opt_as
         : /**/ {
-                $$ = std::make_unique<JLang::frontend::tree::UsingAs>();
+                $$ = std::make_unique<JLang::frontend::tree::UsingAs>(return_data.compiler_context.get_token_stream().get_current_source_ref());
                 PRINT_NONTERMINALS($$);
         }
         | AS IDENTIFIER {
@@ -687,7 +686,7 @@ class_decl_start
 
 opt_class_argument_list
         : /**/ {
-                $$ = std::make_unique<JLang::frontend::tree::ClassArgumentList>();
+                $$ = std::make_unique<JLang::frontend::tree::ClassArgumentList>(return_data.compiler_context.get_token_stream().get_current_source_ref());
                 PRINT_NONTERMINALS($$);
         }
         | PAREN_L class_argument_list PAREN_R {
@@ -777,7 +776,7 @@ enum_definition
 
 opt_enum_value_list
         : /**/ {
-                $$ = std::make_unique<JLang::frontend::tree::EnumDefinitionValueList>();
+                $$ = std::make_unique<JLang::frontend::tree::EnumDefinitionValueList>(return_data.compiler_context.get_token_stream().get_current_source_ref());
                 PRINT_NONTERMINALS($$);
         }
         | enum_value_list {
@@ -788,7 +787,7 @@ opt_enum_value_list
 
 enum_value_list
         : enum_value {
-                $$ = std::make_unique<JLang::frontend::tree::EnumDefinitionValueList>();
+                $$ = std::make_unique<JLang::frontend::tree::EnumDefinitionValueList>(return_data.compiler_context.get_token_stream().get_current_source_ref());
                 $$->add_value(std::move($1));
                 PRINT_NONTERMINALS($$);
         }
@@ -813,7 +812,7 @@ enum_value
   
 opt_unsafe
         : /**/ {
-                $$ = std::make_unique<JLang::frontend::tree::UnsafeModifier>();
+                $$ = std::make_unique<JLang::frontend::tree::UnsafeModifier>(return_data.compiler_context.get_token_stream().get_current_source_ref());
                 PRINT_NONTERMINALS($$);
         }
         | UNSAFE {
@@ -856,7 +855,7 @@ file_statement_function_definition
 
 opt_function_definition_arg_list
         : /**/ {
-                $$ = std::make_unique<JLang::frontend::tree::FunctionDefinitionArgList>();
+                $$ = std::make_unique<JLang::frontend::tree::FunctionDefinitionArgList>(return_data.compiler_context.get_token_stream().get_current_source_ref());
                 PRINT_NONTERMINALS($$);
         }
         | function_definition_arg_list {
@@ -867,7 +866,7 @@ opt_function_definition_arg_list
 
 function_definition_arg_list
         : function_definition_arg {
-                $$ = std::make_unique<JLang::frontend::tree::FunctionDefinitionArgList>();
+                $$ = std::make_unique<JLang::frontend::tree::FunctionDefinitionArgList>($1->get_source_ref());
                 $$->add_argument(std::move($1));
                 PRINT_NONTERMINALS($$);
         }
@@ -901,7 +900,7 @@ scope_body
 
 statement_list
         : /**/ {
-                $$ = std::make_unique<JLang::frontend::tree::StatementList>();
+                $$ = std::make_unique<JLang::frontend::tree::StatementList>(return_data.compiler_context.get_token_stream().get_current_source_ref());
                 PRINT_NONTERMINALS($$);
         }
         | statement_list statement {
@@ -976,7 +975,7 @@ statement
 
 opt_array_length
         : /**/ {
-                $$ = std::make_unique<JLang::frontend::tree::ArrayLength>();
+                $$ = std::make_unique<JLang::frontend::tree::ArrayLength>(return_data.compiler_context.get_token_stream().get_current_source_ref());
                 PRINT_NONTERMINALS($$);
         }
         | BRACKET_L LITERAL_INT BRACKET_R {
@@ -1155,7 +1154,7 @@ statement_switch
 
 opt_statement_switch_content
         : /**/ {
-                $$ = std::make_unique<JLang::frontend::tree::StatementSwitchContent>();
+                $$ = std::make_unique<JLang::frontend::tree::StatementSwitchContent>(return_data.compiler_context.get_token_stream().get_current_source_ref());
                 PRINT_NONTERMINALS($$);
         }
         | statement_switch_content {
@@ -1166,7 +1165,7 @@ opt_statement_switch_content
 
 statement_switch_content
         : statement_switch_block {
-                $$ = std::make_unique<JLang::frontend::tree::StatementSwitchContent>();
+                $$ = std::make_unique<JLang::frontend::tree::StatementSwitchContent>($1->get_source_ref());
                 $$->add_block(std::move($1));
                 PRINT_NONTERMINALS($$);
         }
@@ -1980,7 +1979,7 @@ type_name
 
 opt_class_member_declaration_list
         : /**/ {
-                $$ = std::make_unique<JLang::frontend::tree::ClassMemberDeclarationList>();
+                $$ = std::make_unique<JLang::frontend::tree::ClassMemberDeclarationList>(return_data.compiler_context.get_token_stream().get_current_source_ref());
                 PRINT_NONTERMINALS($$);
         }
         | class_member_declaration_list {
@@ -1991,7 +1990,7 @@ opt_class_member_declaration_list
 
 class_member_declaration_list
         : class_member_declaration {
-                $$ = std::make_unique<JLang::frontend::tree::ClassMemberDeclarationList>();
+                $$ = std::make_unique<JLang::frontend::tree::ClassMemberDeclarationList>($1->get_source_ref());
                 $$->add_member(std::move($1));
                 PRINT_NONTERMINALS($$);
         }
@@ -2085,7 +2084,7 @@ class_member_declaration
 
 type_access_qualifier
         : /**/ {
-                $$ = std::make_unique<JLang::frontend::tree::AccessQualifier>();
+                $$ = std::make_unique<JLang::frontend::tree::AccessQualifier>(return_data.compiler_context.get_token_stream().get_current_source_ref());
                 PRINT_NONTERMINALS($$);
         }
         | CONST {
@@ -2104,7 +2103,7 @@ type_access_qualifier
 
 type_specifier_call_args
         : type_specifier {
-                $$ = std::make_unique<JLang::frontend::tree::TypeSpecifierCallArgs>();
+                $$ = std::make_unique<JLang::frontend::tree::TypeSpecifierCallArgs>(return_data.compiler_context.get_token_stream().get_current_source_ref());
                 $$->add_argument(std::move($1));
                 PRINT_NONTERMINALS($$);
         }
@@ -2175,7 +2174,7 @@ type_specifier
 
 opt_argument_expression_list
         : /**/ {
-                $$ = std::make_unique<JLang::frontend::tree::ArgumentExpressionList>();
+                $$ = std::make_unique<JLang::frontend::tree::ArgumentExpressionList>(return_data.compiler_context.get_token_stream().get_current_source_ref());
                 PRINT_NONTERMINALS($$);
         }
         | argument_expression_list {
@@ -2186,7 +2185,7 @@ opt_argument_expression_list
 
 argument_expression_list
         : expression {
-                $$ = std::make_unique<JLang::frontend::tree::ArgumentExpressionList>();
+                $$ = std::make_unique<JLang::frontend::tree::ArgumentExpressionList>($1->get_source_ref());
                 $$->add_argument(std::move($1));
                 PRINT_NONTERMINALS($$);
         }
