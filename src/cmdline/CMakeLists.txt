@@ -1,6 +1,7 @@
 set(CMDLINE_LINK_LIBRARIES
         jlang-backend
         jlang-frontend
+        jlang-mir
         jlang-context
         jlang-misc
 	-L/usr/lib/llvm-18/lib -lLLVM-18

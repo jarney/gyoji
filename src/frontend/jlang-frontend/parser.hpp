@@ -43,6 +43,21 @@ namespace JLang::frontend {
                                            JLang::context::CompilerContext & _compiler_context,
                                            JLang::misc::InputSource & _input_source
                                            );
+
+    /**
+     * This function parses the input code and produces an MIR
+     * representation of the result that can be passed directly
+     * to the analysis and later, the code-generation systems
+     * to generate code.  This is the ultimate result of
+     * the front-end.  Any alternative front-end syntax layers
+     * should also parse using the context and produce an MIR
+     * as a result.  The caller will take ownership of the resulting
+     * MIR and make it available to downstream consumers.
+     */
+    static JLang::owned<JLang::mir::MIR> parse_to_mir(
+                                          JLang::context::CompilerContext & _compiler_context,
+                                          JLang::misc::InputSource & _input_source
+                                          );
   };
 
 };

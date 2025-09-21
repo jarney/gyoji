@@ -1,5 +1,4 @@
-#include <jlang-mir/type-resolver.hpp>
-#include <jlang-mir/types.hpp>
+#include <jlang-frontend/type-resolver.hpp>
 #include <variant>
 #include <stdio.h>
 
@@ -197,26 +196,6 @@ TypeResolver::extract_types(const std::vector<JLang::owned<FileStatement>> & sta
   }
 }
 
-JLang::owned<Types> JLang::frontend::resolve_types(const JLang::frontend::ParseResult & parse_result)
-{
-  auto types = std::make_unique<Types>();
-
-  // We don't need to report an error at this point
-  // because lack of a translation unit means
-  // that our caller should not even have called us
-  // and should report a syntax error at the
-  // higher level.
-  if (!parse_result.has_translation_unit()) {
-    return types;
-  }
-  
-  TypeResolver resolver(parse_result, *types);
-
-  resolver.resolve_types();
-  
-  return types;
-}
-
 TypeResolver::TypeResolver(const JLang::frontend::ParseResult & _parse_result, Types & _types)
   : parse_result(_parse_result)
   , types(_types)
@@ -258,3 +237,24 @@ void TypeResolver::resolve_types()
     check_complete_type(type.second.get());
   }
 }
+
+void
+JLang::frontend::resolve_types(
+                               Types & types,
+                               const JLang::frontend::ParseResult & parse_result
+                               )
+{
+  // We don't need to report an error at this point
+  // because lack of a translation unit means
+  // that our caller should not even have called us
+  // and should report a syntax error at the
+  // higher level.
+  if (!parse_result.has_translation_unit()) {
+    return;
+  }
+  
+  TypeResolver resolver(parse_result, types);
+
+  resolver.resolve_types();
+}
+

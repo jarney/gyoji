@@ -7,6 +7,7 @@
 #include <jlang.y.hpp>
 
 using namespace JLang::context;
+using namespace JLang::mir;
 using namespace JLang::frontend;
 using namespace JLang::frontend::ast;
 using namespace JLang::frontend::tree;
@@ -39,4 +40,24 @@ Parser::parse(
   yylex_destroy(scanner);
   
   return std::move(result);
+}
+
+JLang::owned<MIR>
+Parser::parse_to_mir(
+                     JLang::context::CompilerContext & _compiler_context,
+                     JLang::misc::InputSource & _input_source
+                     )
+{
+  JLang::owned<MIR> mir = std::make_unique<MIR>();
+
+
+  JLang::owned<ParseResult> parse_result = parse(_compiler_context, _input_source);
+
+  // Lowering for types.
+  resolve_types(mir->get_types(), *parse_result);
+
+  // Lowering for functions (not done yet)
+  //resolve_functions(mir->get_functions(), *parse_result);
+
+  return std::move(mir);
 }

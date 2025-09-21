@@ -1,22 +1,19 @@
 # TODO list
 
 ## Semantic processing
-* Do this in a minimal sense next so we can build an MIR -> LLVM layer next.
-  We're going to need a 'real' type system and fully parse all of the syntax
-  tree elements into something that we can produce code for.
-  The approach will be to start with a definition of a 'global' and a 'function'
-  so that we can immediately start writing our some minimal LLVM object data
-  and then continue to build out the rest of the syntax appropriately.
-
-  Type: (basic types as well as composite/class types)
-  Statements (basic assignment expressions with literals)
-
-  MIR tree should not make any assumptions about LLVM, but should
-  instead expose data through a 'visitor' so that the LLVM code generator
-  can do its work.
-
-* Build a more appropriate intermediate semantic representation of the parsed
-  file that is better suited to code generation.
+* Error Handling
+  * Syntax Errors, we should consume more context
+    so we don't cut off the error line as soon as the
+    parse halts.
+  * Error ease: Errors should be easy to write
+    and easy to track the "debug info" through
+    to the MIR level with a "SrouceReference".
+    Also, now that the "errors" and "token stream"
+    live in the same place, we don't need the caller
+    reporting the error to care about that,
+    we just need to give them a list of errors
+    with source references and the reporting
+    system can figure it out from there.
 
 * Build some tests that verify compatibility with
   most of the expectations of the C-style

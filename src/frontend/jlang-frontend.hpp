@@ -10,6 +10,7 @@
 #include <jlang-misc/pointers.hpp>
 #include <jlang-misc/input-source.hpp>
 #include <jlang-context.hpp>
+#include <jlang-mir.hpp>
 
 #define _JLANG_INTERNAL
 #include <jlang-frontend/forward.hpp>
@@ -18,6 +19,7 @@
 #include <jlang-frontend/tree.hpp>
 #include <jlang-frontend/parse-result.hpp>
 #include <jlang-frontend/parser.hpp>
+#include <jlang-frontend/type-resolver.hpp>
 #undef _JLANG_INTERNAL
 
 

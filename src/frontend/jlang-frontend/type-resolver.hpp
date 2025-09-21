@@ -43,6 +43,6 @@ namespace JLang::frontend {
    * in terms of primitive types (u32, f32,...), composite types (flattened)
    * and pointer types (represented as a u64).
    */
-  JLang::owned<JLang::mir::Types> resolve_types(const JLang::frontend::ParseResult & parse_result);
+  void resolve_types(JLang::mir::Types & types, const JLang::frontend::ParseResult & parse_result);
   
 };

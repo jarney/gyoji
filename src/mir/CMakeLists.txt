@@ -1,10 +1,13 @@
 
 set(TYPES_PUBLIC_HEADERS
+    jlang-mir.hpp
+    jlang-mir/functions.hpp
     jlang-mir/types.hpp
 )
 set(TYPES_SOURCES
+    mir.cpp
+    functions.cpp
     types.cpp
-    type-resolver.cpp
     ${TYPES_PUBLIC_HEADERS}
 )
 
@@ -26,9 +29,4 @@ install(
         ${TYPES_PUBLIC_HEADERS}
         DESTINATION include/jlang-mir
 )
-
-add_executable(test_types test_types.cpp)
-target_include_directories(test_types PUBLIC ${PROJECT_SOURCE_DIR}/types)
-target_link_libraries(test_types jlang-mir jlang-frontend jlang-context jlang-misc)
-add_test(NAME test_types COMMAND test_types ${CMAKE_SOURCE_DIR})
 

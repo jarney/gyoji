@@ -1,5 +1,6 @@
 set(FRONTEND_INCLUDES
         ${PROJECT_SOURCE_DIR}/src/misc
+        ${PROJECT_SOURCE_DIR}/src/mir
         ${PROJECT_SOURCE_DIR}/src/context
         ${PROJECT_SOURCE_DIR}/src/frontend
         ${CMAKE_BINARY_DIR}
@@ -15,6 +16,7 @@ set(FRONTEND_PUBLIC_HEADERS_BOTTOM
     jlang-frontend/parse-result.hpp
     jlang-frontend/forward.hpp
     jlang-frontend/parser.hpp
+    jlang-frontend/type-resolver.hpp
 )
 
 set(FRONTEND_SOURCES
@@ -27,6 +29,7 @@ set(FRONTEND_SOURCES
     lex-context.hpp
     lex-context.cpp
     parser.cpp
+    type-resolver.cpp
     ${FRONTEND_PUBLIC_HEADERS_TOP}
     ${FRONTEND_PUBLIC_HEADERS_BOTTOM}
 )
@@ -64,6 +67,7 @@ add_executable(test_namespace test_namespace.cpp)
 target_include_directories(test_namespace PUBLIC ${FRONTEND_INCLUDES})
 target_link_libraries(test_namespace
     jlang-frontend
+    jlang-mir
     jlang-context
     jlang-misc
 )
@@ -73,6 +77,7 @@ add_executable(test_syntax test_syntax.cpp)
 target_include_directories(test_syntax PUBLIC ${FRONTEND_INCLUDES})
 target_link_libraries(test_syntax
     jlang-frontend
+    jlang-mir
     jlang-context
     jlang-misc
 )
@@ -83,6 +88,13 @@ add_executable(test_token_stream test_token_stream.cpp)
 target_include_directories(test_token_stream PUBLIC ${FRONTEND_INCLUDES})
 target_link_libraries(test_token_stream
     jlang-frontend
+    jlang-mir
     jlang-context
     jlang-misc
 )
+
+add_executable(test_types test_types.cpp)
+target_include_directories(test_types PUBLIC ${PROJECT_SOURCE_DIR}/types)
+target_link_libraries(test_types jlang-frontend jlang-mir jlang-context jlang-misc)
+add_test(NAME test_types COMMAND test_types ${CMAKE_SOURCE_DIR})
+

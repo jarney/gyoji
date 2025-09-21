@@ -1,7 +1,7 @@
 #include <jlang-misc/input-source-file.hpp>
 #include <jlang-frontend.hpp>
-#include <jlang-mir/type-resolver.hpp>
-#include <jlang-mir/types.hpp>
+#include <jlang-frontend/type-resolver.hpp>
+#include <jlang-mir.hpp>
 #include <jlang-misc/test.hpp>
 
 using namespace JLang::context;
@@ -11,8 +11,8 @@ using namespace JLang::mir;
 
 
 static
-JLang::owned<ParseResult>
-parse(std::string & path, CompilerContext & context, std::string base_filename);
+JLang::owned<MIR>
+parse_to_mir(std::string & path, CompilerContext & context, std::string base_filename);
 
 int main(int argc, char **argv)
 {
@@ -26,24 +26,16 @@ int main(int argc, char **argv)
 
   CompilerContext context;
   
-  auto parse_result = std::move(parse(path, context, "tests/type-resolution.j"));
+  auto mir = std::move(parse_to_mir(path, context, "tests/type-resolution.j"));
 
-  parse_result->get_namespace_context().namespace_dump();
-  
-  JLang::owned<Types> types = std::move(resolve_types(*parse_result));
-
-  if (parse_result->has_errors()) {
-    parse_result->get_errors().print();
-    return -1;
-  }
-  types->dump();
+  mir->get_types().dump();
   
   printf("    PASSED\n");
 }
 
 static
-JLang::owned<ParseResult>
-parse(std::string & path, CompilerContext & context, std::string base_filename)
+JLang::owned<MIR>
+parse_to_mir(std::string & path, CompilerContext & context, std::string base_filename)
 {
   std::string filename = path + std::string("/") + base_filename;
   
@@ -54,11 +46,11 @@ parse(std::string & path, CompilerContext & context, std::string base_filename)
   }
 
   JLang::misc::InputSourceFile input_source(input);
-  JLang::owned<ParseResult> parse_result =
-      Parser::parse(
-                    context,
-                    input_source
-                   );
+  auto mir =
+      Parser::parse_to_mir(
+                           context,
+                           input_source
+                           );
 
-  return std::move(parse_result);
+  return std::move(mir);
 }

@@ -23,6 +23,7 @@ target_include_directories(jlang-backend
     PUBLIC
             ${PROJECT_SOURCE_DIR}/src/misc
             ${PROJECT_SOURCE_DIR}/src/context
+            ${PROJECT_SOURCE_DIR}/src/mir
             ${PROJECT_SOURCE_DIR}/src/frontend
             ${PROJECT_SOURCE_DIR}/src/backend
             ${CMAKE_BINARY_DIR}
