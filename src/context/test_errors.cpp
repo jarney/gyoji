@@ -8,12 +8,12 @@ int main(int argc, char **argv)
 
   TokenStream token_stream;
   size_t lineno = 1;
-  token_stream.add_token("none", "{", lineno++, 0);
-  token_stream.add_token("none", "    x = 12;", lineno++, 0);
-  token_stream.add_token("none", "    a = asdfasdf::23;", lineno++, 0);
-  token_stream.add_token("none", "123456789", lineno++, 0);
-  token_stream.add_token("none", "    y = 14;", lineno++, 0);
-  token_stream.add_token("none", "    p = x + y;", lineno++, 0);
+  token_stream.add_token("none", "{",           "foo.j", lineno++, 0);
+  token_stream.add_token("none", "    x = 12;", "foo.j", lineno++, 0);
+  token_stream.add_token("none", "    a = asdfasdf::23;", "foo.j", lineno++, 0);
+  token_stream.add_token("none", "123456789", "foo.j", lineno++, 0);
+  token_stream.add_token("none", "    y = 14;", "foo.j", lineno++, 0);
+  token_stream.add_token("none", "    p = x + y;", "foo.j", lineno++, 0);
   
   Errors errors(token_stream);
 

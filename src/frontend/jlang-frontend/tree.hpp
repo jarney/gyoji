@@ -119,6 +119,12 @@ namespace JLang::frontend::tree {
     const size_t get_column() const;
 
     /**
+     * Returns a reference to the place in the source-file
+     * where this terminal occurred.
+     */
+    const JLang::context::SourceReference & get_source_ref() const;
+    
+    /**
      * For the case of identifier tokens, this returns
      * the fully-qualified name of the type, namespace,
      * or identifier once namespace resolution has
@@ -418,6 +424,7 @@ namespace JLang::frontend::tree {
      * returns false.
      */
     const std::string & get_name() const;
+    const JLang::context::SourceReference & get_name_source_ref() const;
     /**
      * Returns the expression representing the type
      * being referenced.  Only safe to call when is_expression()
@@ -604,6 +611,7 @@ namespace JLang::frontend::tree {
      * Returns the name of the function pointer being declared.
      */
     const std::string & get_name() const;
+    const JLang::context::SourceReference & get_name_source_ref() const;
     /**
      * Returns the list of arguments the function expects.
      */
@@ -808,6 +816,7 @@ namespace JLang::frontend::tree {
      * Represents the name of the argument;
      */
     const std::string & get_name() const;
+    const JLang::context::SourceReference & get_name_source_ref() const;
   private:
     JLang::owned<TypeSpecifier> type_specifier;
     JLang::owned<Terminal> identifier_token;
@@ -887,6 +896,7 @@ namespace JLang::frontend::tree {
      * Specifies the name of the function.
      */
     const std::string & get_name() const;
+    const JLang::context::SourceReference & get_name_source_ref() const;
     /**
      * Specifies the list of arguments with names
      * and types for the function.
@@ -944,6 +954,7 @@ namespace JLang::frontend::tree {
      * Returns the name of the variable being declared.
      */
     const std::string & get_name() const;
+    const JLang::context::SourceReference & get_name_source_ref() const;
     /**
      * If the variable is an array, this gives the length
      * of the array being declared.
@@ -1347,6 +1358,7 @@ namespace JLang::frontend::tree {
      */
       ~StatementLabel();
       const std::string & get_name() const;
+      const JLang::context::SourceReference & get_name_source_ref() const;
     private:
       JLang::owned<Terminal> label_token;
       JLang::owned<Terminal> identifier_token;
@@ -1364,6 +1376,7 @@ namespace JLang::frontend::tree {
      */
       ~StatementGoto();
       const std::string & get_label() const;
+      const JLang::context::SourceReference & get_label_source_ref() const;
     private:
       JLang::owned<Terminal> goto_token;
       JLang::owned<Terminal> identifier_token;
@@ -1543,6 +1556,8 @@ namespace JLang::frontend::tree {
       ~ClassDeclStart();
       const AccessModifier & get_access_modifier() const;
       const std::string & get_name() const;
+      const JLang::context::SourceReference & get_name_source_ref() const;
+      
       const ClassArgumentList & get_argument_list() const;
     private:
       JLang::owned<AccessModifier> access_modifier;
@@ -1585,6 +1600,7 @@ namespace JLang::frontend::tree {
       const AccessModifier & get_access_modifier() const;
       const TypeSpecifier & get_type_specifier() const;
       const std::string & get_name() const;
+      const JLang::context::SourceReference & get_name_source_ref() const;
       const ArrayLength & get_array_length() const;
     private:
       JLang::owned<AccessModifier> access_modifier;
@@ -1611,6 +1627,7 @@ namespace JLang::frontend::tree {
       const AccessModifier & get_access_modifier() const;
       const TypeSpecifier & get_type_specifier() const;
       const std::string & get_name() const;
+      const JLang::context::SourceReference & get_name_source_ref() const;
       const FunctionDefinitionArgList & get_arguments() const;
     private:
       JLang::owned<AccessModifier> access_modifier;
@@ -1727,7 +1744,10 @@ namespace JLang::frontend::tree {
      */
     ~ClassDeclaration();
     const AccessModifier & get_access_modifier() const;
+    
     const std::string & get_name() const;
+    const JLang::context::SourceReference & get_name_source_ref() const;
+    
     const ClassArgumentList & get_argument_list() const;
   private:
     JLang::owned<ClassDeclStart> class_decl_start;
@@ -1749,6 +1769,7 @@ namespace JLang::frontend::tree {
       ~ClassDefinition();
       const AccessModifier & get_access_modifier() const;
       const std::string & get_name() const;
+      const JLang::context::SourceReference & get_name_source_ref() const;
       const ClassArgumentList & get_argument_list() const;
       const std::vector<JLang::owned<ClassMemberDeclaration>> & get_members() const;
     private:
@@ -1774,6 +1795,7 @@ namespace JLang::frontend::tree {
       ~TypeDefinition();
       const AccessModifier & get_access_modifier() const;
       const std::string & get_name() const;
+      const JLang::context::SourceReference & get_name_source_ref() const;
       const TypeSpecifier & get_type_specifier() const;
     private:
       JLang::owned<AccessModifier> access_modifier;
@@ -1796,6 +1818,7 @@ namespace JLang::frontend::tree {
      */
       ~EnumDefinitionValue();
       const std::string & get_name() const;
+      const JLang::context::SourceReference & get_name_source_ref() const;
       const ExpressionPrimary & get_expression() const;
     private:
       JLang::owned<Terminal> identifier_token;
@@ -1835,7 +1858,11 @@ namespace JLang::frontend::tree {
       ~EnumDefinition();
       const AccessModifier & get_access_modifier() const;
       const std::string & type_name() const;
+      const JLang::context::SourceReference & get_type_name_source_ref() const;
+      
       const std::string & enum_name() const;
+      const JLang::context::SourceReference & get_enum_name_source_ref() const;
+      
       const EnumDefinitionValueList & get_value_list() const;
     private:
       JLang::owned<AccessModifier> access_modifier;
@@ -1857,6 +1884,7 @@ namespace JLang::frontend::tree {
      */
       ~ExpressionPrimaryIdentifier();
       const std::string & get_identifier() const;
+      const JLang::context::SourceReference & get_identifier_source_ref() const;
     private:
       JLang::owned<Terminal> identifier_token;
     };
@@ -1888,6 +1916,7 @@ namespace JLang::frontend::tree {
      */
       ~ExpressionPrimaryLiteralInt();
       const std::string & get_value() const;
+      const JLang::context::SourceReference & get_value_source_ref() const;
     private:
       JLang::owned<Terminal> literal_token;
     };
@@ -1901,6 +1930,7 @@ namespace JLang::frontend::tree {
      */
       ~ExpressionPrimaryLiteralChar();
       const std::string & get_value() const;
+      const JLang::context::SourceReference & get_value_source_ref() const;
     private:
       JLang::owned<Terminal> literal_token;
     };
@@ -1914,6 +1944,7 @@ namespace JLang::frontend::tree {
      */
       ~ExpressionPrimaryLiteralString();
       const std::string & get_value() const;
+      const JLang::context::SourceReference & get_value_source_ref() const;
     private:
       JLang::owned<Terminal> literal_token;
     };
@@ -1927,6 +1958,7 @@ namespace JLang::frontend::tree {
      */
       ~ExpressionPrimaryLiteralFloat();
       const std::string & get_value() const;
+      const JLang::context::SourceReference & get_value_source_ref() const;
     private:
       JLang::owned<Terminal> literal_token;
     };
@@ -2020,6 +2052,7 @@ namespace JLang::frontend::tree {
       ~ExpressionPostfixDot();
       const Expression & get_expression() const;
       const std::string & get_identifier() const;
+      const JLang::context::SourceReference & get_identifier_source_ref() const;
     private:
       JLang::owned<Expression> expression;
       JLang::owned<Terminal> dot_token;
@@ -2039,6 +2072,7 @@ namespace JLang::frontend::tree {
       ~ExpressionPostfixArrow();
       const Expression & get_expression() const;
       const std::string & get_identifier() const;
+      const JLang::context::SourceReference & get_identifier_source_ref() const;
     private:
       JLang::owned<Expression> expression;
       JLang::owned<Terminal> arrow_token;
@@ -2393,6 +2427,7 @@ namespace JLang::frontend::tree {
       const UnsafeModifier & get_unsafe_modifier() const;
       const TypeSpecifier & get_type_specifier() const;
       const std::string & get_name() const;
+      const JLang::context::SourceReference & get_name_source_ref() const;
       const ArrayLength & get_array_length() const;
       const GlobalInitializer & get_global_initializer() const;
     private:
@@ -2457,8 +2492,11 @@ namespace JLang::frontend::tree {
      * Destructor, nothing special.
      */
       ~UsingAs();
+      bool is_as() const;
       const std::string & get_using_name() const;
+      const JLang::context::SourceReference & get_using_name_source_ref() const;
     private:
+      bool aas;
       std::string using_name;
       JLang::owned<Terminal> as_token;
       JLang::owned<Terminal> identifier_token;
@@ -2479,6 +2517,7 @@ namespace JLang::frontend::tree {
     private:
       const AccessModifier & get_access_modifier() const;
       const std::string & get_namespace() const;
+      const JLang::context::SourceReference & get_namespace_source_ref() const;
       const UsingAs &get_using_as() const;
       
       JLang::owned<AccessModifier> access_modifier;

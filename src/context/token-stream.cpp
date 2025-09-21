@@ -46,11 +46,12 @@ TokenStream::context(size_t line_start, size_t line_end) const
 const Token &
 TokenStream::add_token(std::string _typestr,
                        std::string _value,
+                       std::string _filename,
                        size_t _line,
                        size_t _column
                        )
 {
-  JLang::owned<Token> token = std::make_unique<Token>(_typestr, _value, _line, _column);
+  JLang::owned<Token> token = std::make_unique<Token>(_typestr, _value, _filename, _line, _column);
   const Token & token_ref = *token;
   tokens_by_lineno[_line].push_back(token.get());
   tokens.push_back(std::move(token));
@@ -68,13 +69,13 @@ TokenStream::append_token(std::string _value)
 Token::Token(
           std::string _typestr,
           std::string _value,
+          std::string _filename,
           size_t _line,
           size_t _column
           )
   : typestr(_typestr)
   , value(_value)
-  , line(_line)
-  , column(_column)
+  , src_ref(_filename, _line, _column)
 {}
 
 Token::~Token()
@@ -96,8 +97,13 @@ Token::append(std::string & _value)
 
 const size_t
 Token::get_line() const
-{ return line; }
+{ return src_ref.get_line(); }
 
 const size_t
 Token::get_column() const
-{ return column; }
+{ return src_ref.get_column(); }
+
+const SourceReference &
+Token::get_source_reference() const
+{ return src_ref; }
+

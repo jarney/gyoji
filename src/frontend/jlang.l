@@ -57,6 +57,7 @@ void move_array(
             .add_token(                                              \
                 std::string(#nodetype),                              \
                 std::string(yytext),                                 \
+                std::string("Some filename"),                        \
                 lc->line,                                            \
                 lc->column                                           \
             );                                                       \

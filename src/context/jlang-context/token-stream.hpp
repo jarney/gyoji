@@ -4,6 +4,7 @@
 #include <map>
 #include <algorithm>
 #include <jlang-misc/pointers.hpp>
+#include <jlang-context/source-reference.hpp>
 
 namespace JLang::context {
   class Token;
@@ -29,6 +30,7 @@ namespace JLang::context {
     Token(
           std::string _typestr,
           std::string _value,
+          std::string _filename,
           size_t _line,
           size_t _column
           );
@@ -62,6 +64,8 @@ namespace JLang::context {
      * token was found.
      */
     const size_t get_column() const;
+
+    const SourceReference & get_source_reference() const;
     
     friend TokenStream;
   private:
@@ -72,8 +76,7 @@ namespace JLang::context {
     void append(std::string & value);
     std::string typestr;
     std::string value;
-    size_t line;
-    size_t column;
+    SourceReference src_ref;
   };
 
   /**
@@ -118,6 +121,7 @@ namespace JLang::context {
      */
     const Token & add_token(std::string _typestr,
                             std::string _value,
+                            std::string _filename,
                             size_t _line,
                             size_t _column
                             );

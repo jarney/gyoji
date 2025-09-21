@@ -26,6 +26,9 @@ Terminal::get_line() const
 const size_t
 Terminal::get_column() const
 { return token.get_column(); }
+const SourceReference &
+Terminal::get_source_ref() const
+{ return token.get_source_reference(); }
 
 const std::string &
 Terminal::get_fully_qualified_name() const
@@ -177,6 +180,9 @@ TypeName::is_expression() const
 const std::string &
 TypeName::get_name() const
 { return type_name->get_fully_qualified_name(); }
+const SourceReference &
+TypeName::get_name_source_ref() const
+{ return type_name->get_source_ref(); }
 const Expression &
 TypeName::get_expression() const
 { return *expression; }
@@ -280,6 +286,9 @@ const TypeSpecifier & TypeSpecifierFunctionPointer::get_return_type() const
 const std::string &
 TypeSpecifierFunctionPointer::get_name() const
 { return identifier_token->get_value(); }
+const SourceReference &
+TypeSpecifierFunctionPointer::get_name_source_ref() const
+{ return identifier_token->get_source_ref(); }
 const FunctionDefinitionArgList &
 TypeSpecifierFunctionPointer::get_args() const
 { return *function_definition_arg_list; }
@@ -361,6 +370,9 @@ FunctionDefinitionArg::get_type_specifier() const
 const std::string &
 FunctionDefinitionArg::get_name() const
 { return identifier_token->get_value(); }
+const SourceReference &
+FunctionDefinitionArg::get_name_source_ref() const
+{ return identifier_token->get_source_ref(); }
 
 ///////////////////////////////////////////////////
 FunctionDefinitionArgList::FunctionDefinitionArgList()
@@ -420,21 +432,19 @@ FileStatementFunctionDeclaration::~FileStatementFunctionDeclaration()
 {}
 const AccessModifier &
 FileStatementFunctionDeclaration::get_access_modifier() const
-{
-  return *access_modifier;
-}
+{ return *access_modifier; }
 const UnsafeModifier &
 FileStatementFunctionDeclaration::get_unsafe_modifier() const
-{
-  return *unsafe_modifier;
-}
+{ return *unsafe_modifier; }
 const TypeSpecifier &
 FileStatementFunctionDeclaration::get_return_type() const
-{
-  return *type_specifier;
-}
+{ return *type_specifier; }
 const std::string &
-FileStatementFunctionDeclaration::get_name() const { return name->get_value(); }
+FileStatementFunctionDeclaration::get_name() const
+{ return name->get_value(); }
+const SourceReference &
+FileStatementFunctionDeclaration::get_name_source_ref() const
+{ return name->get_source_ref(); }
  
 const FunctionDefinitionArgList &
 FileStatementFunctionDeclaration::get_arguments() const
@@ -470,6 +480,9 @@ StatementVariableDeclaration::get_type_specifier() const
 const std::string &
 StatementVariableDeclaration::get_name() const
 { return identifier_token->get_value(); }
+const SourceReference &
+StatementVariableDeclaration::get_name_source_ref() const
+{ return identifier_token->get_source_ref(); }
 const ArrayLength &
 StatementVariableDeclaration::get_array_length() const
 { return *array_length; }
@@ -804,6 +817,9 @@ StatementLabel::~StatementLabel()
 const std::string &
 StatementLabel::get_name() const
 { return identifier_token->get_value(); }
+const SourceReference &
+StatementLabel::get_name_source_ref() const
+{ return identifier_token->get_source_ref(); }
 
 ///////////////////////////////////////////////////
 StatementGoto::StatementGoto(
@@ -825,6 +841,9 @@ StatementGoto::~StatementGoto()
 const std::string &
 StatementGoto::get_label() const
 { return identifier_token->get_value(); }
+const SourceReference &
+StatementGoto::get_label_source_ref() const
+{ return identifier_token->get_source_ref(); }
 ///////////////////////////////////////////////////
 StatementBreak::StatementBreak(
                                JLang::owned<Terminal> _break_token,
@@ -1053,6 +1072,10 @@ ClassDeclStart::get_access_modifier() const
 const std::string &
 ClassDeclStart::get_name() const
 { return name; }
+const SourceReference &
+ClassDeclStart::get_name_source_ref() const
+{ return identifier_token->get_source_ref(); }
+
 const ClassArgumentList &
 ClassDeclStart::get_argument_list() const
 { return *class_argument_list; }
@@ -1124,6 +1147,9 @@ ClassMemberDeclarationVariable::get_type_specifier() const
 const std::string &
 ClassMemberDeclarationVariable::get_name() const
 { return identifier_token->get_value(); }
+const SourceReference &
+ClassMemberDeclarationVariable::get_name_source_ref() const
+{ return identifier_token->get_source_ref(); }
 const ArrayLength &
 ClassMemberDeclarationVariable::get_array_length() const
 { return *array_length; }
@@ -1165,6 +1191,9 @@ ClassMemberDeclarationMethod::get_type_specifier() const
 const std::string &
 ClassMemberDeclarationMethod::get_name() const
 { return identifier_token->get_value(); }
+const SourceReference &
+ClassMemberDeclarationMethod::get_name_source_ref() const
+{ return identifier_token->get_source_ref(); }
 const FunctionDefinitionArgList &
 ClassMemberDeclarationMethod::get_arguments() const
 { return *function_definition_arg_list; }
@@ -1299,6 +1328,10 @@ ClassDeclaration::get_name() const
 {
   return class_decl_start->get_name();
 }
+const SourceReference &
+ClassDeclaration::get_name_source_ref() const
+{ return class_decl_start->get_name_source_ref(); }
+
 const ClassArgumentList &
 ClassDeclaration::get_argument_list() const
 {
@@ -1338,6 +1371,9 @@ ClassDefinition::get_name() const
 {
   return class_decl_start->get_name();
 }
+const SourceReference &
+ClassDefinition::get_name_source_ref() const
+{ return class_decl_start->get_name_source_ref(); }
 const ClassArgumentList &
 ClassDefinition::get_argument_list() const
 {
@@ -1376,6 +1412,9 @@ TypeDefinition::get_access_modifier() const
 const std::string &
 TypeDefinition::get_name() const
 { return identifier_token->get_value(); }
+const SourceReference &
+TypeDefinition::get_name_source_ref() const
+{ return identifier_token->get_source_ref(); }
 const TypeSpecifier &
 TypeDefinition::get_type_specifier() const
 { return *type_specifier; }
@@ -1403,6 +1442,9 @@ EnumDefinitionValue::~EnumDefinitionValue()
 const std::string &
 EnumDefinitionValue::get_name() const
 { return identifier_token->get_value(); }
+const SourceReference &
+EnumDefinitionValue::get_name_source_ref() const
+{ return identifier_token->get_source_ref(); }
 
 const ExpressionPrimary &
 EnumDefinitionValue::get_expression() const
@@ -1463,9 +1505,15 @@ EnumDefinition::get_access_modifier() const
 const std::string &
 EnumDefinition::type_name() const
 { return type_name_token->get_value(); }
+const SourceReference &
+EnumDefinition::get_type_name_source_ref() const
+{ return type_name_token->get_source_ref(); }
 const std::string &
 EnumDefinition::enum_name() const
 { return identifier_token->get_value(); }
+const SourceReference &
+EnumDefinition::get_enum_name_source_ref() const
+{ return identifier_token->get_source_ref(); }
 const EnumDefinitionValueList &
 EnumDefinition::get_value_list() const
 { return *enum_value_list; }
@@ -1516,6 +1564,9 @@ ExpressionPrimaryLiteralInt::~ExpressionPrimaryLiteralInt()
 const std::string &
 ExpressionPrimaryLiteralInt::get_value() const
 { return literal_token->get_value(); }
+const SourceReference &
+ExpressionPrimaryLiteralInt::get_value_source_ref() const
+{ return literal_token->get_source_ref(); }
 ///////////////////////////////////////////////////
 ExpressionPrimaryLiteralChar::ExpressionPrimaryLiteralChar(
                                                          JLang::owned<Terminal> _literal_token
@@ -1530,6 +1581,9 @@ ExpressionPrimaryLiteralChar::~ExpressionPrimaryLiteralChar()
 const std::string &
 ExpressionPrimaryLiteralChar::get_value() const
 { return literal_token->get_value(); }
+const SourceReference &
+ExpressionPrimaryLiteralChar::get_value_source_ref() const
+{ return literal_token->get_source_ref(); }
 ///////////////////////////////////////////////////
 ExpressionPrimaryLiteralString::ExpressionPrimaryLiteralString(
                                                          JLang::owned<Terminal> _literal_token
@@ -1544,6 +1598,9 @@ ExpressionPrimaryLiteralString::~ExpressionPrimaryLiteralString()
 const std::string &
 ExpressionPrimaryLiteralString::get_value() const
 { return literal_token->get_value(); }
+const SourceReference &
+ExpressionPrimaryLiteralString::get_value_source_ref() const
+{ return literal_token->get_source_ref(); }
 ///////////////////////////////////////////////////
 ExpressionPrimaryLiteralFloat::ExpressionPrimaryLiteralFloat(
                                                          JLang::owned<Terminal> _literal_token
@@ -1553,11 +1610,14 @@ ExpressionPrimaryLiteralFloat::ExpressionPrimaryLiteralFloat(
 {
   add_child(*literal_token);
 }
+ExpressionPrimaryLiteralFloat::~ExpressionPrimaryLiteralFloat()
+{}
 const std::string &
 ExpressionPrimaryLiteralFloat::get_value() const
 { return literal_token->get_value(); }
-ExpressionPrimaryLiteralFloat::~ExpressionPrimaryLiteralFloat()
-{}
+const SourceReference &
+ExpressionPrimaryLiteralFloat::get_value_source_ref() const
+{ return literal_token->get_source_ref(); }
 
 ///////////////////////////////////////////////////
 ExpressionPrimary::ExpressionPrimary(ExpressionPrimary::ExpressionType _expression_type, const SyntaxNode & _sn)
@@ -1671,6 +1731,9 @@ ExpressionPostfixDot::get_expression() const
 const std::string &
 ExpressionPostfixDot::get_identifier() const
 { return identifier_token->get_value(); }
+const SourceReference &
+ExpressionPostfixDot::get_identifier_source_ref() const
+{ return identifier_token->get_source_ref(); }
 
 ///////////////////////////////////////////////////
 ExpressionPostfixArrow::ExpressionPostfixArrow(
@@ -1695,6 +1758,9 @@ ExpressionPostfixArrow::get_expression() const
 const std::string &
 ExpressionPostfixArrow::get_identifier() const
 { return identifier_token->get_value(); }
+const SourceReference &
+ExpressionPostfixArrow::get_identifier_source_ref() const
+{ return identifier_token->get_source_ref(); }
 
 ///////////////////////////////////////////////////
 ExpressionPostfixIncDec::ExpressionPostfixIncDec(
@@ -2047,6 +2113,9 @@ FileStatementGlobalDefinition::get_type_specifier() const
 const std::string &
 FileStatementGlobalDefinition::get_name() const
 { return name->get_value(); }
+const SourceReference &
+FileStatementGlobalDefinition::get_name_source_ref() const
+{ return name->get_source_ref(); }
 const ArrayLength &
 FileStatementGlobalDefinition::get_array_length() const
 { return *array_length; }
@@ -2114,6 +2183,7 @@ UsingAs::UsingAs(
         JLang::owned<Terminal> _identifier_token
         )
   : SyntaxNode("using_as", this)
+  , aas(true)
   , as_token(std::move(_as_token))
   , identifier_token(std::move(_identifier_token))
 {
@@ -2123,6 +2193,7 @@ UsingAs::UsingAs(
 }
 UsingAs::UsingAs()
   : SyntaxNode("using_as", this)
+  , aas(false)
   , as_token(nullptr)
   , identifier_token(nullptr)
 {
@@ -2133,6 +2204,12 @@ UsingAs::~UsingAs()
 const std::string &
 UsingAs::get_using_name() const
 { return using_name; }
+bool
+UsingAs::is_as() const
+{ return aas; }
+const SourceReference &
+UsingAs::get_using_name_source_ref() const
+{ return identifier_token->get_source_ref(); }
 
 FileStatementUsing::FileStatementUsing(JLang::owned<AccessModifier> _access_modifier,
                              JLang::owned<Terminal> _using,
