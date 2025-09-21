@@ -167,7 +167,13 @@ namespace JLang::mir {
     std::string name;
     TypeType type;
     Type *pointer_or_ref;
+
+    // TODO: This should be a vector of members
+    // instead so we can also put the SourceRef into each of them.
     std::vector<std::pair<std::string, Type*>> members;
+    
+    // TODO   SourceRef & declared;
+    // TODO   SourceRef & defined;
   };
 
 };

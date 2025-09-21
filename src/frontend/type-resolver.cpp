@@ -3,6 +3,7 @@
 #include <stdio.h>
 
 using namespace JLang::mir;
+using namespace JLang::context;
 using namespace JLang::frontend;
 using namespace JLang::frontend::tree;
 
@@ -130,12 +131,11 @@ TypeResolver::extract_from_class_definition(const ClassDefinition & definition)
       extract_from_class_members(type, definition);
     }
     else {
-      auto & errors = parse_result.get_errors();
+      SourceReference src_ref("asdf.h", (size_t)0, (size_t)10);
+      
       std::unique_ptr<JLang::context::Error> error = std::make_unique<JLang::context::Error>("Type Resolution Error");
-      error->add_message(parse_result.get_token_stream().context(0, 10),
-                         0, // LINE
-                         0, // COLUMN
-                         "Duplicate type");
+      error->add_message(src_ref, "Duplicate type");      
+      parse_result.get_errors().add_error(std::move(error));
       
     }
 
@@ -209,12 +209,14 @@ void TypeResolver::check_complete_type(Type *type) const
     for (const auto & member : type->get_members()) {
       if (!member.second->is_complete()) {
         fprintf(stderr, "Incomplete type %s\n", member.second->get_name().c_str());
+        
+        SourceReference src_ref("asdf.h", (size_t)0, (size_t)10);
         std::unique_ptr<JLang::context::Error> error = std::make_unique<JLang::context::Error>("Class contains incomplete type");
-        error->add_message(parse_result.get_token_stream().context(12, 18),
-                           14,
-                           19,
-                           std::string("Incomplete type in member ") + member.first + std::string(" of type ") + type->get_name() + std::string("\n"));
+        error->add_message(src_ref, std::string("Incomplete type in member ") + member.first + std::string(" of type ") + type->get_name() + std::string("\n"));
         parse_result.get_errors().add_error(std::move(error));
+      
+
+        
       }
       check_complete_type(member.second);
     }

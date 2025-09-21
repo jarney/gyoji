@@ -5,7 +5,8 @@ set(JLANG_ERRORS_PUBLIC_HEADERS
     jlang-context/token-stream.hpp
 )
 set(JLANG_ERRORS_SOURCES
-    context.cpp
+    compiler-context.cpp
+    source-reference.cpp
     errors.cpp
     token-stream.cpp
     ${JLANG_ERRORS_PUBLIC_HEADERS}

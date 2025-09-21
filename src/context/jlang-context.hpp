@@ -2,6 +2,7 @@
 
 #include <jlang-context/errors.hpp>
 #include <jlang-context/token-stream.hpp>
+#include <jlang-context/source-reference.hpp>
 
 namespace JLang::context {
   class CompilerContext {

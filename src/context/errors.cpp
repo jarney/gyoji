@@ -1,9 +1,11 @@
 #include <jlang-context/errors.hpp>
+#include <jlang-context/token-stream.hpp>
 
 using namespace JLang::context;
 
 //////////////////////////////////////////////////
-Errors::Errors()
+Errors::Errors(TokenStream & _token_stream)
+  : token_stream(_token_stream)
 {}
 Errors::~Errors()
 {}
@@ -19,6 +21,16 @@ Errors::print() const
 void
 Errors::add_error(JLang::owned<Error> error)
 {
+  // TODO: Iterate the messages and resolve the context.
+  for (const auto & message : error->get_messages()) {
+    message->add_context(
+                         token_stream.context(
+                                              message->get_source_reference().get_line()-2,
+                                              message->get_source_reference().get_line()+1
+                                              )
+                         );
+
+  }
   errors.push_back(std::move(error));
 }
 
@@ -50,19 +62,19 @@ Error::print()
 }
 
 void
-Error::add_message(std::vector<std::pair<size_t, std::string>> _context,
-                    size_t _line,
-                    size_t _column,
-                    std::string _errormsg)
+Error::add_message(SourceReference & _src_ref,
+                   std::string _errormsg)
 {
   JLang::owned<ErrorMessage> message = std::make_unique<ErrorMessage>(
-                                                                  _context,
-                                                                  _line,
-                                                                  _column,
-                                                                  _errormsg
-                                                                         );
+                                                                      _src_ref,
+                                                                      _errormsg
+                                                                      );
   messages.push_back(std::move(message));
 }
+
+const std::vector<JLang::owned<ErrorMessage>> &
+Error::get_messages() const
+{ return messages; }
 
 size_t
 Error::size() const
@@ -73,35 +85,45 @@ Error::get(size_t n) const
 { return *messages.at(n); }
 
 //////////////////////////////////////////////////
-ErrorMessage::ErrorMessage(std::vector<std::pair<size_t, std::string>> _context,
-                           size_t _line,
-                           size_t _column,
+ErrorMessage::ErrorMessage(
+                           const SourceReference & _src_ref,
                            std::string _errormsg
                            )
-  : context(_context)
-  , line(_line)
-  , column(_column)
+  : context()
+  , src_ref(_src_ref)
   , errormsg(_errormsg)
 {}
 
 ErrorMessage::~ErrorMessage()
 {}
 
+void
+ErrorMessage::add_context(const std::vector<std::pair<size_t, std::string>> & _context)
+{ context = _context; }
+
 const std::vector<std::pair<size_t, std::string>> &
 ErrorMessage::get_context() const
 { return context; }
 
-size_t
-ErrorMessage::get_line() const
-{ return line; }
-
-size_t
-ErrorMessage::get_column() const
-{ return column; }
+const SourceReference & 
+ErrorMessage::get_source_reference() const
+{ return src_ref; }
 
 const std::string &
 ErrorMessage::get_message() const
 { return errormsg; }
+
+size_t
+ErrorMessage::get_line() const
+{ return src_ref.get_line(); }
+
+size_t
+ErrorMessage::get_column() const
+{ return src_ref.get_column(); }
+
+std::string
+ErrorMessage::get_filename() const
+{ return src_ref.get_filename(); }
 
 // Case 1.
 //    ^
@@ -180,6 +202,8 @@ static std::string indent_text(size_t indent, std::string input)
 void
 ErrorMessage::print()
 {
+  size_t line = src_ref.get_line();
+  size_t column = src_ref.get_column();
   for (const std::pair<size_t, std::string> & linepair : context) {
     fprintf(stderr, "%4ld: %s", linepair.first, linepair.second.c_str());
     if (linepair.second.size() > 0) {

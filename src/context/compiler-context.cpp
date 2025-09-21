@@ -3,9 +3,10 @@
 using namespace JLang::context;
 
 CompilerContext::CompilerContext()
-  : errors(std::make_unique<Errors>())
-  , token_stream(std::make_unique<TokenStream>())
-{}
+{
+  token_stream = std::make_unique<TokenStream>();
+  errors = std::make_unique<Errors>(*token_stream);
+}
 CompilerContext::~CompilerContext()
 {}
 

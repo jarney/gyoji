@@ -5,6 +5,7 @@
   * Syntax Errors, we should consume more context
     so we don't cut off the error line as soon as the
     parse halts.
+
   * Error ease: Errors should be easy to write
     and easy to track the "debug info" through
     to the MIR level with a "SrouceReference".
@@ -14,6 +15,17 @@
     we just need to give them a list of errors
     with source references and the reporting
     system can figure it out from there.
+    
+    XXX Only thing left here is to push source references
+        from tokens down to Terminals and then down to
+        the MIR as references (with lifetime of Context)
+        Also, bring the source filename through to here
+        and start honoring the #line tokens to update
+        the source locations.
+
+  * Basic MIR lowering for functions/expressions.
+
+  * More MIR for types : Enums and such.
 
 * Build some tests that verify compatibility with
   most of the expectations of the C-style
@@ -49,10 +61,6 @@
 * Basic string manipulation functions
 * Containers: map, list, string, vector, set
 
-# Error handling
-* For common syntax errors, figure out how to suggest a good
-  solution to them and actually have useful error messages.
-  
 ---------------------------------------------------------------
 
 Semantics:

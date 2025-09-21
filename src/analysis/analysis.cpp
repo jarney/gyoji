@@ -47,9 +47,9 @@ AnalysisPassTypeResolution::check_type(Type *type) const
       if (!member.second->is_complete()) {
         fprintf(stderr, "Incomplete type %s\n", member.second->get_name().c_str());
         std::unique_ptr<JLang::context::Error> error = std::make_unique<JLang::context::Error>("Class contains incomplete type");
-        error->add_message(get_compiler_context().get_token_stream().context(12, 18),
-                           14,
-                           19,
+
+        JLang::context::SourceReference src_ref("asdf.h", 14, 19);
+        error->add_message(src_ref,
                            std::string("Incomplete type in member ") + member.first + std::string(" of type ") + type->get_name() + std::string("\n"));
         get_compiler_context().get_errors().add_error(std::move(error));
       }

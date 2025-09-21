@@ -5,6 +5,7 @@
 #include <memory>
 
 #include <jlang-misc/pointers.hpp>
+#include <jlang-context/source-reference.hpp>
 /*!
  * The errors namespace contains code related
  * to reporting errors about the source code.
@@ -27,65 +28,44 @@ namespace JLang::context {
 
   class ErrorMessage {
   public:
-    ErrorMessage(std::vector<std::pair<size_t, std::string>> _context,
-                 size_t _line,
-                 size_t _column,
+    ErrorMessage(const SourceReference & _src_ref,
                  std::string _errormsg
                  );
     ~ErrorMessage();
     void print();
     const std::vector<std::pair<size_t, std::string>> & get_context() const;
+    const SourceReference & get_source_reference() const;
+    const std::string & get_message() const;
+    void add_context(const std::vector<std::pair<size_t, std::string>> & _context);
     size_t get_line() const;
     size_t get_column() const;
-    const std::string & get_message() const;
+    std::string get_filename() const;
   private:
     std::vector<std::pair<size_t, std::string>> context;
-    size_t line;
-    size_t column;
+    SourceReference src_ref;
     std::string errormsg;
   };
 
-  class SourceReference {
-  public:
-    SourceReference(std::string _filename,
-                         size_t _line,
-                         size_t _column,
-                         size_t _context_start,
-                         size_t _context_end);
-    ~SourceReference();
-    const std::string & get_filename() const;
-    size_t get_line() const;
-    size_t get_column() const;
-    size_t get_context_start() const;
-    size_t get_context_end() const;
-  private:
-    std::string filename;
-    size_t line;
-    size_t column;
-    size_t context_start_line;
-    size_t context_end_line;
-  };
-  
   class Error {
   public:
     Error(std::string _error_message);
     ~Error();
-    void add_message(
-                     std::vector<std::pair<size_t, std::string>> context,
-                     size_t lineno,
-                     size_t colno,
-                     std::string errormsg);
+    void add_message(SourceReference & _src_ref,
+                     std::string _errormsg);
     void print();
     size_t size() const;
     const ErrorMessage & get(size_t n) const;
+    const std::vector<JLang::owned<ErrorMessage>> & get_messages() const;
   private:
     std::vector<JLang::owned<ErrorMessage>> messages;
     std::string error_message;
   };
+
+  class TokenStream;
   
   class Errors {
   public:
-    Errors();
+    Errors(TokenStream & _token_stream);
     ~Errors();
     void add_error(JLang::owned<Error> error);
     void print() const;
@@ -93,6 +73,7 @@ namespace JLang::context {
     const Error & get(size_t n) const;
   private:
     std::vector<JLang::owned<Error>> errors;
+    const TokenStream & token_stream;
   };
   
 };
