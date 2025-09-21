@@ -1534,6 +1534,7 @@ namespace JLang::frontend::tree {
       ~ArrayLength();
       bool is_array() const;
       size_t get_size() const;
+      const JLang::context::SourceReference & get_size_source_ref() const;
     private:
       JLang::owned<Terminal> bracket_l_token;
       JLang::owned<Terminal> literal_int_token;
@@ -1557,7 +1558,7 @@ namespace JLang::frontend::tree {
       const AccessModifier & get_access_modifier() const;
       const std::string & get_name() const;
       const JLang::context::SourceReference & get_name_source_ref() const;
-      
+
       const ClassArgumentList & get_argument_list() const;
     private:
       JLang::owned<AccessModifier> access_modifier;
@@ -2122,6 +2123,7 @@ namespace JLang::frontend::tree {
      */
       ~ExpressionUnaryPrefix();
       const ExpressionUnaryPrefix::OperationType & get_type();
+      const JLang::context::SourceReference & get_operator_source_ref() const;
       const Expression & get_expression();
     private:
       ExpressionUnaryPrefix::OperationType type;
@@ -2245,6 +2247,7 @@ namespace JLang::frontend::tree {
       ~ExpressionBinary();
       const Expression & get_a() const;
       const ExpressionBinary::OperationType & get_operator() const;
+      const JLang::context::SourceReference & get_operator_source_ref() const;
       const Expression & get_b() const;
       
     private:

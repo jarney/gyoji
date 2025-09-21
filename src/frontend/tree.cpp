@@ -1032,6 +1032,9 @@ ArrayLength::is_array() const
 size_t
 ArrayLength::get_size() const
 { return (size_t)atol(literal_int_token->get_value().c_str());}
+const JLang::context::SourceReference &
+ArrayLength::get_size_source_ref() const
+{ return literal_int_token->get_source_ref(); }
 
 ///////////////////////////////////////////////////
 ClassDeclStart::ClassDeclStart(
@@ -1804,6 +1807,9 @@ ExpressionUnaryPrefix::~ExpressionUnaryPrefix()
 const ExpressionUnaryPrefix::OperationType &
 ExpressionUnaryPrefix::get_type()
 { return type; }
+const JLang::context::SourceReference &
+ExpressionUnaryPrefix::get_operator_source_ref() const
+{ return operator_token->get_source_ref(); }
 const Expression &
 ExpressionUnaryPrefix::get_expression()
 { return *expression; }
@@ -1898,6 +1904,9 @@ ExpressionBinary::get_a() const
 const ExpressionBinary::OperationType &
 ExpressionBinary::get_operator() const
 { return type; }
+const JLang::context::SourceReference &
+ExpressionBinary::get_operator_source_ref() const
+{ return operator_token->get_source_ref(); }
 const Expression &
 ExpressionBinary::get_b() const
 { return *expression_a; }
