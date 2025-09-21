@@ -1,5 +1,7 @@
 #include <jlang-misc/input-source.hpp>
 #include <stdio.h>
+#include <unistd.h>
+#include <fcntl.h>
 
 namespace JLang::misc {
 
@@ -18,7 +20,7 @@ namespace JLang::misc {
      * the data, but assumes no responsibility for its
      * overall lifetime.
      */
-    InputSourceFile(FILE *_file);
+    InputSourceFile(int _fd);
     /**
      * Destructor, nothing fancy.  In particular, this does NOT
      * close the file provided.
@@ -32,7 +34,7 @@ namespace JLang::misc {
      */
     void yy_input(char *buf, int &result, int max_size);
   private:
-    FILE *file;
+    int fd;
   };
 
 };

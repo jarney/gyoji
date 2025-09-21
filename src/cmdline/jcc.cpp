@@ -58,8 +58,8 @@ int main(int argc, char **argv)
       exit(1);
     }
     
-    FILE *input = fopen(argv[1], "rb");
-    if (input == NULL) {
+    int input = open(argv[1], O_RDONLY);
+    if (input == -1) {
       fprintf(stderr, "Cannot open file %s\n", argv[1]);
       exit(1);
     }
@@ -72,7 +72,7 @@ int main(int argc, char **argv)
                       context,
                       input_source
                       );
-    fclose(input);
+    close(input);
     
     if (parse_result->has_errors()) {
       parse_result->get_errors().print();

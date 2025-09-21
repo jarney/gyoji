@@ -13,8 +13,8 @@ parse(std::string & path, CompilerContext & compiler_context, std::string base_f
 {
   std::string filename = path + std::string("/") + base_filename;
   
-  FILE *input = fopen(filename.c_str(), "rb");
-  if (input == NULL) {
+  int input = open(filename.c_str(), O_RDONLY);
+  if (input == -1) {
     fprintf(stderr, "Cannot open file %s\n", base_filename.c_str());
     return nullptr;
   }
@@ -24,6 +24,8 @@ parse(std::string & path, CompilerContext & compiler_context, std::string base_f
                   input_source
                   );
 
+  close(input);
+  
   return std::move(parse_result);
 }
 

@@ -39,8 +39,8 @@ parse_to_mir(std::string & path, CompilerContext & context, std::string base_fil
 {
   std::string filename = path + std::string("/") + base_filename;
   
-  FILE *input = fopen(filename.c_str(), "rb");
-  if (input == NULL) {
+  int input = open(filename.c_str(), O_RDONLY);
+  if (input == -1) {
     fprintf(stderr, "Cannot open file %s\n", base_filename.c_str());
     return nullptr;
   }
@@ -51,6 +51,6 @@ parse_to_mir(std::string & path, CompilerContext & context, std::string base_fil
                            context,
                            input_source
                            );
-
+  close(input);
   return std::move(mir);
 }

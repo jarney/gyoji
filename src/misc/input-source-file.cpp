@@ -1,24 +1,24 @@
 #include <jlang-misc/input-source-file.hpp>
 #include <errno.h>
+#include <unistd.h>
 
 using namespace JLang::misc;
 
-InputSourceFile::InputSourceFile(FILE *_file)
-  : file(_file)
+InputSourceFile::InputSourceFile(int _fd)
+  : fd(_fd)
 {}
 InputSourceFile::~InputSourceFile()
 {}
                                 
 void InputSourceFile::yy_input(char *buf, int &result, int max_size)
 {
-  errno=0;
-  while ( (result = (int) fread(buf, 1, (size_t) max_size, file)) == 0 && ferror(file)) {
+  errno = 0;
+  result = (int) read(fd, buf, (size_t) max_size);
+  if (result == -1) {
     if( errno != EINTR) {
-      fprintf(stderr, "Fatal error reading input buffer\n");
-      break;
+      fprintf(stderr, "Fatal error reading input buffer %d\n", errno);
     }
-    errno=0;
-    clearerr(file);
   }
+  errno=0;
 }
 

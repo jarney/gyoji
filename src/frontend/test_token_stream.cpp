@@ -21,8 +21,8 @@ static
 JLang::owned<ParseResult>
 parse(std::string & filename, CompilerContext & context)
 {
-  FILE *input = fopen(filename.c_str(), "rb");
-  if (input == NULL) {
+  int input = open(filename.c_str(), O_RDONLY);
+  if (input == -1) {
     fprintf(stderr, "Cannot open file %s\n", filename.c_str());
     return nullptr;
   }
@@ -33,6 +33,7 @@ parse(std::string & filename, CompilerContext & context)
                   context,
                   input_source
                   );
+  close(input);
   if (parse_result->has_errors()) {
     parse_result->get_errors().print();
     return nullptr;
