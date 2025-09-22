@@ -3,10 +3,7 @@
 
 using namespace llvm;
 using namespace llvm::sys;
-using namespace JLang::codegen::semantics;
-
-using namespace JLang::frontend;
-using namespace JLang::Backend::LLVM;
+using namespace JLang::codegen;
 
 JBackendLLVM::JBackendLLVM()
 {

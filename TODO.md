@@ -24,7 +24,7 @@
   to execute the same expression in C and Jlang
   to make sure we get the same results in both cases.
 
-## Compilation
+## Compilation: Resolve some design questions
 * Figure out how to handle header files and declarations/imports.
   Should we require a pre-processor, or can we do without?
   
@@ -42,6 +42,10 @@
 
 ## Code generation
 * Start building basic LLVM code generation capabilities.
+* Should be based on the MIR representation of basic blocks
+  in a graph structure (CFG) of basic blocks, flattened
+  control-structure, removing the heirarchy of scopes
+  and flattening into a linear instruction format.
 
 ## Syntax verifications
 * Build some unit-tests to verify that the syntax is what we expect and

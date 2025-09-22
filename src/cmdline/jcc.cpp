@@ -1,17 +1,12 @@
 #include <jlang-frontend.hpp>
 #include <jlang-misc/input-source-file.hpp>
 #include <jlang-analysis.hpp>
+#include <jlang-codegen.hpp>
 
-//#include <jlang-codegen/jbackend-llvm.hpp>
-//using namespace JLang::Backend::LLVM;
+using namespace JLang::codegen;
 using namespace JLang::context;
 using namespace JLang::frontend;
-//using namespace JLang::frontend::ast;
-//using namespace JLang::frontend::tree;
-//using namespace JLang::frontend::namespaces;
-
 using namespace JLang::mir;
-
 using namespace JLang::analysis;
 
 int main(int argc, char **argv)
@@ -81,7 +76,7 @@ int main(int argc, char **argv)
       return -1;
     }
 
-
+    generate_code(*mir);
 
     return 0;
 }
