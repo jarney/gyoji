@@ -1,50 +1,67 @@
-#include <jlang-frontend.hpp>
-#include <jlang-misc/input-source-file.hpp>
+#include "jformat-identity.hpp"
+#include <iostream>
 
-#include <jlang-backend/jbackend.hpp>
-#include <jlang-backend/jbackend-format-identity.hpp>
-#include <jlang-backend/jbackend-format-tree.hpp>
-
-using namespace JLang::context;
-using namespace JLang::frontend;
+using namespace JLang::frontend::ast;
 using namespace JLang::frontend::tree;
-using namespace JLang::frontend::namespaces;
-using namespace JLang::backend;
+using namespace JLang::cmdline;
 
-int main(int argc, char **argv)
+JFormatIdentity::JFormatIdentity()
+{}
+JFormatIdentity::~JFormatIdentity()
+{}
+
+static void print_whitespace(const TerminalNonSyntax & node)
 {
+  printf("%s", node.get_data().c_str());
+}
+static void print_comment_single_line(const TerminalNonSyntax & node)
+{
+  printf("%s", node.get_data().c_str());
+}
+static void print_comment_multi_line(const TerminalNonSyntax & node)
+{
+  printf("%s", node.get_data().c_str());
+}
+static void print_file_metadata(const TerminalNonSyntax & node)
+{
+  printf("%s", node.get_data().c_str());
+}
 
-    if (argc != 2) {
-      fprintf(stderr, "Invalid number of arguments %d\n", argc);
-      fprintf(stderr, "Usage: parser backend file\n");
-      exit(1);
+
+static void print_non_syntax(const TerminalNonSyntax & node)
+{
+  switch (node.get_type()) {
+  case TerminalNonSyntax::Type::EXTRA_COMMENT_MULTI_LINE:
+    print_comment_multi_line(node);
+    break;
+  case TerminalNonSyntax::Type::EXTRA_COMMENT_SINGLE_LINE:
+    print_comment_single_line(node);
+    break;
+  case TerminalNonSyntax::Type::EXTRA_WHITESPACE:
+    print_whitespace(node);
+    break;
+  case TerminalNonSyntax::Type::EXTRA_FILE_METADATA:
+    print_file_metadata(node);
+    break;
+  }
+}
+
+static void print_node(const SyntaxNode &node)
+{
+  if (node.has_data<Terminal>()) {
+    const Terminal & terminal = node.get_data<Terminal>();
+    for (const auto &non_syntax : terminal.non_syntax) {
+      print_non_syntax(*non_syntax);
     }
-    
-    int input = open(argv[1], O_RDONLY);
-    if (input == -1) {
-      fprintf(stderr, "Cannot open file %s\n", argv[1]);
-      exit(1);
-    }
+    printf("%s", terminal.get_value().c_str());
+  }
+  for (auto child : node.get_children()) {
+    print_node(child);
+  }
+}
 
-    CompilerContext context;
-    
-    JLang::misc::InputSourceFile input_source(input);
-
-    JLang::owned<ParseResult> parse_result = 
-        Parser::parse(
-                      context,
-                      input_source
-                      );
-    close(input);
-    if (parse_result->has_errors()) {
-      parse_result->get_errors().print();
-      return -1;
-    }
-
-    const TranslationUnit & translation_unit = parse_result->get_translation_unit();
-    
-    auto backend = std::make_shared<JBackendFormatIdentity>();
-    backend->process(translation_unit.get_syntax_node());
-
-    return 0;
+int JFormatIdentity::process(const SyntaxNode &file)
+{
+  print_node(file);
+  return 0;
 }

@@ -1,8 +1,8 @@
 #pragma once
 
-#include <jlang-backend/jbackend.hpp>
+#include <jlang-frontend.hpp>
 
-namespace JLang::backend {
+namespace JLang::cmdline {
   using namespace JLang::frontend::ast;
   using namespace JLang::frontend::tree;
   /**
@@ -10,7 +10,11 @@ namespace JLang::backend {
    * format the code exactly as it appeared in the input,
    * assuming that the input is a valid syntax tree.
    */
-  class JBackendFormatTree : public JBackend {
+  class JFormatTree {
+  public:
+    JFormatTree();
+    ~JFormatTree();
+    int process(const SyntaxNode & file);
   private:
     int indent;
     void print_non_syntax(const TerminalNonSyntax & non_syntax);
@@ -20,10 +24,6 @@ namespace JLang::backend {
     void print_whitespace(const TerminalNonSyntax & node);
     void print_file_metadata(const TerminalNonSyntax & node);
     
-  public:
-    JBackendFormatTree();
-    ~JBackendFormatTree();
-    virtual int process(const SyntaxNode & file);
   };
 
 };
