@@ -57,7 +57,7 @@ done
 
 let test_memory_scale=1
 if [ $test_memory_scale -ne 0 ] ; then
-    rm -f ${CMAKE_BINARY_DIR}/test-syntax-dir/memory_usage.csv
+    rm -f ${CMAKE_BINARY_DIR}/test-syntax-dir/memory_usage.csv.tmp
     for test_file in ${TEST_FILES} ; do
         echo ${test_file}
         valgrind --leak-check=full \
@@ -75,6 +75,7 @@ if [ $test_memory_scale -ne 0 ] ; then
     done
     cat ${CMAKE_BINARY_DIR}/test-syntax-dir/memory_usage.csv.tmp | \
         sort -n >${CMAKE_BINARY_DIR}/test-syntax-dir/memory_usage.csv
+    rm -f ${CMAKE_BINARY_DIR}/test-syntax-dir/memory_usage.csv.tmp
 fi
 
 if [ $failed -ne 0 ] ; then

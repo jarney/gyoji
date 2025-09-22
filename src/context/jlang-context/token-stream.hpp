@@ -158,8 +158,6 @@ namespace JLang::context {
   private:
     
     std::vector<JLang::owned<Token>> tokens;
-    std::vector<Token*> empty_list;
     std::map<size_t, std::vector<Token*>> tokens_by_lineno;
-    SourceReference zero_source_ref;
   };
 };

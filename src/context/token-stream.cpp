@@ -2,8 +2,10 @@
 
 using namespace JLang::context;
 
+static const SourceReference zero_source_ref("", 1, 0);
+
+
 TokenStream::TokenStream()
-  : zero_source_ref("", 1, 0)
 {}
 
 TokenStream::~TokenStream()
