@@ -17,6 +17,7 @@ set(FRONTEND_PUBLIC_HEADERS_BOTTOM
     jlang-frontend/forward.hpp
     jlang-frontend/parser.hpp
     jlang-frontend/type-resolver.hpp
+    jlang-frontend/function-resolver.hpp
 )
 
 set(FRONTEND_SOURCES
@@ -30,6 +31,7 @@ set(FRONTEND_SOURCES
     lex-context.cpp
     parser.cpp
     type-resolver.cpp
+    function-resolver.cpp
     ${FRONTEND_PUBLIC_HEADERS_TOP}
     ${FRONTEND_PUBLIC_HEADERS_BOTTOM}
 )

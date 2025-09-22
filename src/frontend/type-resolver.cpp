@@ -7,6 +7,25 @@ using namespace JLang::context;
 using namespace JLang::frontend;
 using namespace JLang::frontend::tree;
 
+TypeResolver::TypeResolver(
+                 JLang::context::CompilerContext & _compiler_context,
+                 const JLang::frontend::tree::TranslationUnit & _translation_unit,
+                 JLang::mir::MIR & _mir)
+  : compiler_context(_compiler_context)
+  , translation_unit(_translation_unit)
+  , types(_mir.get_types())
+{}
+TypeResolver::~TypeResolver()
+{}
+
+void TypeResolver::resolve()
+{
+  // To resolve the types, we need only iterate the
+  // input parse tree and pull out any type declarations,
+  // resolving them down to their primitive types.
+  extract_types(translation_unit.get_statements());
+}
+
 void
 TypeResolver::extract_from_class_declaration(const ClassDeclaration & declaration)
 {
@@ -40,14 +59,13 @@ TypeResolver::extract_from_type_specifier(const TypeSpecifier & type_specifier)
     if (type_name.is_expression()) {
       auto error = std::make_unique<JLang::context::Error>("Could not resolve type");
       error->add_message(type_name.get_name_source_ref(), "Specifying types from expressions is not yet supported.");
-      parse_result.get_compiler_context().get_errors().add_error(std::move(error));
+      compiler_context.get_errors().add_error(std::move(error));
       return nullptr;
     }
     std::string name = type_name.get_name();
     Type *type = types.get_type(name);
     if (type == nullptr) {
-      parse_result
-        .get_compiler_context()
+      compiler_context
         .get_errors()
         .add_simple_error(type_name.get_name_source_ref(),
                           "Could not find type",
@@ -59,8 +77,7 @@ TypeResolver::extract_from_type_specifier(const TypeSpecifier & type_specifier)
   }
   else if (std::holds_alternative<JLang::owned<TypeSpecifierTemplate>>(type_specifier_type)) {
     const auto & template_type = std::get<JLang::owned<TypeSpecifierTemplate>>(type_specifier_type);
-    parse_result
-      .get_compiler_context()
+    compiler_context
       .get_errors()
       .add_simple_error(template_type->get_source_ref(),
                         "Could not find type",
@@ -70,8 +87,7 @@ TypeResolver::extract_from_type_specifier(const TypeSpecifier & type_specifier)
   }
   else if (std::holds_alternative<JLang::owned<TypeSpecifierFunctionPointer>>(type_specifier_type)) {
     const auto & fptr_type = std::get<JLang::owned<TypeSpecifierFunctionPointer>>(type_specifier_type);
-    parse_result
-      .get_compiler_context()
+    compiler_context
       .get_errors()
       .add_simple_error(fptr_type->get_source_ref(),
                         "Could not find type",
@@ -83,8 +99,7 @@ TypeResolver::extract_from_type_specifier(const TypeSpecifier & type_specifier)
     const auto & type_specifier_pointer_to = std::get<JLang::owned<TypeSpecifierPointerTo>>(type_specifier_type);
     Type *pointer_target = extract_from_type_specifier(type_specifier_pointer_to->get_type_specifier());
     if (pointer_target == nullptr) {
-      parse_result
-        .get_compiler_context()
+      compiler_context
         .get_errors()
         .add_simple_error(type_specifier_pointer_to->get_source_ref(),
                           "Could not find type",
@@ -100,8 +115,7 @@ TypeResolver::extract_from_type_specifier(const TypeSpecifier & type_specifier)
     const auto & type_specifier_reference_to = std::get<JLang::owned<TypeSpecifierReferenceTo>>(type_specifier_type);
     Type *pointer_target = extract_from_type_specifier(type_specifier_reference_to->get_type_specifier());
     if (pointer_target == nullptr) {
-      parse_result
-        .get_compiler_context()
+      compiler_context
         .get_errors()
         .add_simple_error(type_specifier_reference_to->get_source_ref(),
                           "Could not find type",
@@ -114,8 +128,7 @@ TypeResolver::extract_from_type_specifier(const TypeSpecifier & type_specifier)
     return pointer_type;
   }
   
-  parse_result
-    .get_compiler_context()
+  compiler_context
     .get_errors()
     .add_simple_error(type_specifier.get_source_ref(),
                       "Compiler bug!  Please report this message",
@@ -138,8 +151,7 @@ TypeResolver::extract_from_class_members(Type & type, const ClassDefinition & de
 
       Type *member_type = extract_from_type_specifier(member_variable->get_type_specifier());
       if (member_type == nullptr) {
-        parse_result
-          .get_compiler_context()
+        compiler_context
           .get_errors()
           .add_simple_error(member_variable->get_type_specifier().get_source_ref(),
                             "Could not find type",
@@ -184,8 +196,7 @@ TypeResolver::extract_from_class_definition(const ClassDefinition & definition)
       error->add_message(definition.get_name_source_ref(),
                          "Re-declared here"
                          );
-      parse_result
-        .get_compiler_context()
+      compiler_context
         .get_errors()
         .add_error(std::move(error));
     }
@@ -214,8 +225,7 @@ TypeResolver::extract_from_enum(const EnumDefinition & enum_definition)
     error->add_message(enum_definition.get_name_source_ref(),
                        "Re-declared here"
                        );
-    parse_result
-      .get_compiler_context()
+    compiler_context
       .get_errors()
       .add_error(std::move(error));
   }
@@ -261,8 +271,7 @@ TypeResolver::extract_types(const std::vector<JLang::owned<FileStatement>> & sta
       // Nothing, no statements can be declared inside here.
     }
     else {
-      parse_result
-        .get_compiler_context()
+      compiler_context
         .get_errors()
         .add_simple_error(statement->get_source_ref(),
                           "Compiler bug!  Please report this message",
@@ -270,41 +279,5 @@ TypeResolver::extract_types(const std::vector<JLang::owned<FileStatement>> & sta
                           );
     }
   }
-}
-
-TypeResolver::TypeResolver(const JLang::frontend::ParseResult & _parse_result, Types & _types)
-  : parse_result(_parse_result)
-  , types(_types)
-{}
-TypeResolver::~TypeResolver()
-{}
-
-void TypeResolver::resolve_types()
-{
-  // To resolve the types, we need only iterate the
-  // input parse tree and pull out any type declarations,
-  // resolving them down to their primitive types.
-  const auto & translation_unit = parse_result.get_translation_unit();
-  extract_types(translation_unit.get_statements());
-}
-
-void
-JLang::frontend::resolve_types(
-                               Types & types,
-                               const JLang::frontend::ParseResult & parse_result
-                               )
-{
-  // We don't need to report an error at this point
-  // because lack of a translation unit means
-  // that our caller should not even have called us
-  // and should report a syntax error at the
-  // higher level.
-  if (!parse_result.has_translation_unit()) {
-    return;
-  }
-  
-  TypeResolver resolver(parse_result, types);
-
-  resolver.resolve_types();
 }
 

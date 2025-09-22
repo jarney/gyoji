@@ -20,6 +20,7 @@
 #include <jlang-frontend/parse-result.hpp>
 #include <jlang-frontend/parser.hpp>
 #include <jlang-frontend/type-resolver.hpp>
+#include <jlang-frontend/function-resolver.hpp>
 #undef _JLANG_INTERNAL
 
 

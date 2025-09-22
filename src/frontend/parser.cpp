@@ -48,16 +48,31 @@ Parser::parse_to_mir(
                      JLang::misc::InputSource & _input_source
                      )
 {
-  JLang::owned<MIR> mir = std::make_unique<MIR>();
 
-
+  // We don't need to report an error at this point
+  // because lack of a translation unit means
+  // that our caller should not even have called us
+  // and should report a syntax error at the
+  // higher level.
   JLang::owned<ParseResult> parse_result = parse(_compiler_context, _input_source);
+  JLang::owned<MIR> mir = std::make_unique<MIR>();
+  
+  if (!parse_result->has_translation_unit()) {
+    // It's harmless to return an empty mir
+    // to the next stages
+    return mir;
+  }
 
-  // Lowering for types.
-  resolve_types(mir->get_types(), *parse_result);
+  TypeResolver type_resolver(_compiler_context,
+                             parse_result->get_translation_unit(),
+                             *mir);
+  type_resolver.resolve();
 
-  // Lowering for functions (not done yet)
-  //resolve_functions(mir->get_functions(), *parse_result);
+  FunctionResolver function_resolver(_compiler_context,
+                                     parse_result->get_translation_unit(),
+                                     *mir,
+                                     type_resolver);
+  function_resolver.resolve();
 
   return std::move(mir);
 }

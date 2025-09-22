@@ -73,7 +73,6 @@ int main(int argc, char **argv)
                            );
     close(input);
     
-    //    mir->get_types().dump();
     AnalysisPassTypeResolution type_resolution(context);
     type_resolution.check(mir->get_types());
 
@@ -82,7 +81,7 @@ int main(int argc, char **argv)
       return -1;
     }
 
-    //fprintf(stderr, "TODO: code generation phase\n");
+
 
     return 0;
 }

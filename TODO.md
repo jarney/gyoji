@@ -10,13 +10,19 @@
   
   * Basic MIR lowering for functions/expressions.
 
+* Add GCOV support:
+  Try to make gcov optional so that we don't have
+  to add a required dependency to the README.md
+
+* Factor out the "docs" and valgrind tests so that
+  we can make doxygen, graphviz, and gcov into
+  optional dependencies.
 
 * Build some tests that verify compatibility with
   most of the expectations of the C-style
   expressions we know and love by using the preprocessor
   to execute the same expression in C and Jlang
   to make sure we get the same results in both cases.
-
 
 ## Compilation
 * Figure out how to handle header files and declarations/imports.
