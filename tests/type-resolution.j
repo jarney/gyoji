@@ -1,4 +1,6 @@
 
+class Unrelated;
+
 class Inner;
 
 class Outer {
@@ -12,13 +14,11 @@ class Outer {
     u32 &&u4;
 };
 
-//class Inner {
-//    public u32 unsigned_value;
-//    public f32 float_value;
-//};
-class Outer {
-    u32 other_def;
+class Inner {
+    public u32 unsigned_value;
+    public f32 float_value;
 };
+
 namespace epsilon {
     class SmallValue {
         f64 small_epsilon_value;

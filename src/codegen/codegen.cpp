@@ -3,13 +3,11 @@
 
 using namespace JLang::mir;
 
-void JLang::codegen::generate_code(MIR & _mir, std::string & _filename)
+void JLang::codegen::generate_code(const MIR & _mir, const std::string & _filename)
 {
-  CodeGeneratorLLVM generator;
-  generator.initialize();
-  
-  generator.generate(_mir);
-
+  CodeGeneratorLLVM generator(_mir);
+  generator.initialize();  
+  generator.generate();
   int rc = generator.output(_filename);
   
   fprintf(stderr, "Generating code\n");

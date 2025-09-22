@@ -177,6 +177,8 @@ namespace JLang::mir {
 
     const std::vector<TypeMember> & get_members() const;
     
+    const Type * get_pointer_target() const;
+    
     /**
      * Completes the definition of a composite type.
      */

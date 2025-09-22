@@ -12,41 +12,6 @@ using namespace JLang::analysis;
 int main(int argc, char **argv)
 {
 
-#if 0
-  //Desired pseuto-code:
-  auto options = Arguments::parse(argc, argv);
-
-  CompilerContext context;
-
-  // Parser gets access to context (token stream, errors)
-  Parser parser(context);
-  // Parser produces an MIR representation of the code.
-  // 
-  auto mir = parser.parse();
-  // Parser may now go out of scope, leaving only the MIR behind.
-  // Parse tree and namespaces can leave scope.
-  
-  // If errors are severe, we may jump to end without
-  // additional analysis or backend.
-
-  // Analysis receives an immutable reference to the MIR,
-  Analysis analysis(context, mir);
-  // Analyze MIR and possibly produce errors.
-  analysis.analyze();
-  // Analysis can now leave scope leaving the context and MIR live.
-
-  // Code generation receives context and
-  // immutable MIR.
-  CodeGeneration codegen(context, mir);
-  
-  // MIR goes out of scope after code generation.
-  // MIR may now be dropped.
-
-  // Report Errors
-  //
-  // Compiler context goes out of scope at end.
-#endif
-  
     if (argc != 3) {
       fprintf(stderr, "Invalid number of arguments %d\n", argc);
       fprintf(stderr, "Usage: jcc source-file object-file\n");

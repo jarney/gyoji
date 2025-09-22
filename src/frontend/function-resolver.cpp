@@ -71,7 +71,7 @@ FunctionResolver::extract_from_function_definition(const FileStatementFunctionDe
 void
 FunctionResolver::extract_from_class_definition(const ClassDefinition & definition)
 {
-  fprintf(stderr, "Extracting from class definition, constructors and destructors which are special-case functions.\n");
+  //fprintf(stderr, "Extracting from class definition, constructors and destructors which are special-case functions.\n");
   // These must be linked back to their corresponding type definitions
   // so that we can generate their code.
 }
@@ -80,7 +80,6 @@ void
 FunctionResolver::extract_types(const std::vector<JLang::owned<FileStatement>> & statements)
 {
   for (const auto & statement : statements) {
-    fprintf(stderr, "Extracting a statement\n");
     const auto & file_statement = statement->get_statement();
     if (std::holds_alternative<JLang::owned<FileStatementFunctionDeclaration>>(file_statement)) {
       // Nothing, no functions can exist here.

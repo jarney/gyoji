@@ -5,8 +5,8 @@ using namespace llvm::sys;
 using namespace JLang::codegen;
 using namespace JLang::mir;
 
-CodeGeneratorLLVM::CodeGeneratorLLVM()
-  : context(std::make_unique<CodeGeneratorLLVMContext>())
+CodeGeneratorLLVM::CodeGeneratorLLVM(const JLang::mir::MIR & _mir)
+  : context(std::make_unique<CodeGeneratorLLVMContext>(_mir))
 {}
 
 CodeGeneratorLLVM::~CodeGeneratorLLVM()
@@ -17,8 +17,8 @@ CodeGeneratorLLVM::initialize()
 { context->initialize(); }
 
 void
-CodeGeneratorLLVM::generate(const MIR & _mir)
-{ context->generate(_mir); }
+CodeGeneratorLLVM::generate()
+{ context->generate(); }
 
 int
 CodeGeneratorLLVM::output(const std::string & filename)
@@ -26,6 +26,11 @@ CodeGeneratorLLVM::output(const std::string & filename)
 /////////////////////////////////////
 // CodeGeneratorLLVMContext
 /////////////////////////////////////
+CodeGeneratorLLVMContext::CodeGeneratorLLVMContext(const JLang::mir::MIR & _mir)
+  : mir(_mir)
+{}
+CodeGeneratorLLVMContext::~CodeGeneratorLLVMContext()
+{}
 
 void
 CodeGeneratorLLVMContext::initialize()
@@ -83,19 +88,170 @@ llvm::AllocaInst *CodeGeneratorLLVMContext::CreateEntryBlockAlloca(
   return TmpB.CreateAlloca(llvm::Type::getDoubleTy(*TheContext), nullptr, VarName);
 }
 
+/**
+ * An enum type is "almost" a primitive type.
+ * It always resolves to a u32 on the physical host
+ * but carries some slightly different semantics.
+ */
+llvm::Type *
+CodeGeneratorLLVMContext::create_type_enum(const JLang::mir::Type *enumtype)
+{
+  return llvm::Type::getInt32Ty(*TheContext);
+}
+
+llvm::Type *
+CodeGeneratorLLVMContext::create_type_composite(const JLang::mir::Type *compositetype)
+{
+  std::vector<llvm::Type*> members;
+  for (const auto & member : compositetype->get_members()) {
+    members.push_back(create_type(member.get_type()));
+  }
+
+  return llvm::StructType::create(*TheContext, members, compositetype->get_name());
+}
+
+llvm::Type *
+CodeGeneratorLLVMContext::create_type_pointer(const JLang::mir::Type *pointertype)
+{
+  const JLang::mir::Type * pointer_target = pointertype->get_pointer_target();
+  llvm::Type * llvm_type =
+    llvm::PointerType::get(create_type(pointer_target),
+                           0 // Address space (default to 0?  This seems unclean, llvm!)
+                           );
+  return llvm_type;
+}
+
+llvm::Type *
+CodeGeneratorLLVMContext::create_type_reference(const JLang::mir::Type *referencetype)
+{
+  const JLang::mir::Type * pointer_target = referencetype->get_pointer_target();
+  llvm::Type * llvm_type =
+    llvm::PointerType::get(create_type(pointer_target),
+                           0 // Address space (default to 0?  This seems unclean, llvm!)
+                           );
+  return llvm_type;
+}
+
+/**
+ * These are the truly primitive types.
+ * They are defined in the language
+ * and have their basis in physical computing
+ * units (number of bits).
+ */
+llvm::Type *
+CodeGeneratorLLVMContext::create_type_primitive(const Type *primitive)
+{
+  llvm::Type *llvm_type;
+
+  if (primitive->get_name() == "u8") {
+    llvm_type = llvm::Type::getInt8Ty(*TheContext);
+  }
+  // Signed integer types
+  else if (primitive->get_name() == "i16") {
+    llvm_type = llvm::Type::getInt16Ty(*TheContext);
+  }
+  else if (primitive->get_name() == "i32") {
+    llvm_type = llvm::Type::getInt32Ty(*TheContext);
+  }
+  else if (primitive->get_name() == "i64") {
+    llvm_type = llvm::Type::getInt64Ty(*TheContext);
+  }
+  // Unsigned integer types
+  else if (primitive->get_name() == "u16") {
+    llvm_type = llvm::Type::getInt16Ty(*TheContext);
+  }
+  else if (primitive->get_name() == "u32") {
+    llvm_type = llvm::Type::getInt32Ty(*TheContext);
+  }
+  else if (primitive->get_name() == "u64") {
+    llvm_type = llvm::Type::getInt64Ty(*TheContext);
+  }
+  // Floating-point types.
+  else if (primitive->get_name() == "f32") {
+    llvm_type = llvm::Type::getFloatTy(*TheContext);
+  }
+  else if (primitive->get_name() == "f64") {
+    llvm_type = llvm::Type::getDoubleTy(*TheContext);
+  }
+  // "Special" types
+  else if (primitive->get_name() == "void") {
+    llvm_type = llvm::Type::getVoidTy(*TheContext);
+  }
+  // Other (unknown, this must be a bug)
+  else {
+    fprintf(stderr, "Compiler BUG!  Unknown primitive type passed to code generator\n");
+    exit(1);
+  }
+  
+  types.insert(std::pair<std::string, llvm::Type*>(
+                                                   primitive->get_name(),
+                                                   llvm_type
+                                                   )
+               );
+  return llvm_type;
+}
+
+llvm::Type *
+CodeGeneratorLLVMContext::create_type(const Type * type)
+{
+  // First, check if we have (recursively)
+  // defined this type already.  Skip it if we have.
+  // This is not a duplicate definition because the
+  // type resolver will already have checked for that
+  // case and reject any truly duplicate types.
+  const auto it = types.find(type->get_name());
+  if (it != types.end()) {
+    return it->second;
+  }
+    
+  printf("Defining type %s\n", type->get_name().c_str());
+  Type::TypeType t = type->get_type();
+  llvm::Type* llvm_type;
+  if (t == Type::TYPE_PRIMITIVE) {
+    return create_type_primitive(type);
+  }
+  else if (t == Type::TYPE_ENUM) {
+    return create_type_enum(type);
+  }
+  else if (t == Type::TYPE_COMPOSITE) {
+    return create_type_composite(type);
+  }
+  else if (t == Type::TYPE_POINTER) {
+    return create_type_pointer(type);
+  }
+  else if (t == Type::TYPE_REFERENCE) {
+    return create_type_reference(type);
+  }
+  fprintf(stderr, "Compiler BUG!  Unknown type type passed to code generator\n");
+  exit(1);
+  return nullptr;
+}
+
 void
 CodeGeneratorLLVMContext::create_types(const MIR & _mir)
 {
+  for (const auto & type_el : _mir.get_types().get_types()) {
+    const Type * type = type_el.second.get();
 
+    // We can safely skip generating incomplete
+    // types without raising an error because
+    // the analysis stage will alert us if there
+    // is an incomplete type that is used
+    // in another type or in a method/function.
+    if (!type->is_complete()) {
+      continue;
+    }
+    create_type(type);
+  }
 }
 
 
 void
-CodeGeneratorLLVMContext::generate(const MIR & _mir)
+CodeGeneratorLLVMContext::generate()
 {
-  create_types(_mir);
+  create_types(mir);
   
-  const Functions & functions = _mir.get_functions();
+  const Functions & functions = mir.get_functions();
   for (auto const & function : functions.get_functions()) {
     fprintf(stderr, "Generating for function %s\n", function->get_name().c_str());
     generate_function(*function);

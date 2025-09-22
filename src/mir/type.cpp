@@ -34,6 +34,11 @@ const std::vector<TypeMember> &
 Type::get_members() const
 { return members; }
 
+const Type *
+Type::get_pointer_target() const
+{ return pointer_or_ref; }
+
+
 void
 Type::complete_pointer_definition(Type *_type, const SourceReference & source_ref)
 {
