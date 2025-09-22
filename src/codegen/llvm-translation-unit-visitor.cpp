@@ -80,7 +80,8 @@ LLVMTranslationUnitVisitor::visit(FunctionDeclaration &functiondecl)
 /// CreateEntryBlockAlloca - Create an alloca instruction in the entry block of
 /// the function.  This is used for mutable variables etc.
 llvm::AllocaInst *LLVMTranslationUnitVisitor::CreateEntryBlockAlloca(llvm::Function *TheFunction,
-                                                llvm::StringRef VarName) {
+                                                                     llvm::StringRef VarName)
+{
   llvm::IRBuilder<> TmpB(&TheFunction->getEntryBlock(),
                          TheFunction->getEntryBlock().begin()
                          );

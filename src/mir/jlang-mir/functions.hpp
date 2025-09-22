@@ -84,6 +84,7 @@ namespace JLang::mir {
 
     const std::string & get_return_type() const;
     const std::string & get_name() const;
+    const std::vector<FunctionArgument> & get_arguments() const;
   private:
     std::string name;
     std::string return_type;

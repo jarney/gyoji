@@ -47,6 +47,9 @@ const std::string &
 Function::get_name() const
 { return name; }
 
+const std::vector<FunctionArgument> &
+Function::get_arguments() const
+{ return arguments; }
 /////////////////////////////////////
 // FunctionArgument
 /////////////////////////////////////

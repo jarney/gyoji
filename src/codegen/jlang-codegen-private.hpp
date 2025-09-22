@@ -27,6 +27,7 @@ namespace JLang::codegen {
     JLang::owned<llvm::LLVMContext> TheContext;
     JLang::owned<llvm::IRBuilder<>> Builder;
     JLang::owned<llvm::Module> TheModule;
+    std::map<std::string, llvm::Value *> NamedValues;
   };
     
 };
