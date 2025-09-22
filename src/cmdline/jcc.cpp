@@ -47,8 +47,9 @@ int main(int argc, char **argv)
   // Compiler context goes out of scope at end.
 #endif
   
-    if (argc != 2) {
+    if (argc != 3) {
       fprintf(stderr, "Invalid number of arguments %d\n", argc);
+      fprintf(stderr, "Usage: jcc source-file object-file\n");
       exit(1);
     }
     
@@ -76,7 +77,8 @@ int main(int argc, char **argv)
       return -1;
     }
 
-    generate_code(*mir);
+    std::string filename(argv[2]);
+    generate_code(*mir, filename);
 
     return 0;
 }

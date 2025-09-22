@@ -1,19 +1,10 @@
 set(CODEGEN_PUBLIC_HEADERS
-#        jlang-codegen/jbackend-llvm.hpp
-#        jlang-codegen/jbackend-llvm-operators.hpp
-#        jlang-codegen/jbackend-llvm-types.hpp
-#        jlang-codegen/jsemantics.hpp
          jlang-codegen.hpp
 )
 
 set(CODEGEN_SOURCES
         codegen.cpp
         jlang-codegen-llvm.cpp
-#        jbackend-llvm.cpp
-#        jbackend-llvm-operators.cpp
-#        jbackend-llvm-types.cpp
-#        jsemantics.cpp
-#        llvm-translation-unit-visitor.cpp
         ${CODEGEN_PUBLIC_HEADERS}
 )
 

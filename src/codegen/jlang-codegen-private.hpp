@@ -26,7 +26,7 @@ namespace JLang::codegen {
   public:
     void initialize();
     void generate(const JLang::mir::MIR & mir);
-    int output(std::string filename);
+    int output(const std::string & filename);
     
   private:
     JLang::owned<llvm::LLVMContext> TheContext;

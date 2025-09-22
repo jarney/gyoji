@@ -19,12 +19,12 @@ namespace JLang::codegen {
     ~CodeGeneratorLLVM();
     void initialize();
     void generate(const JLang::mir::MIR & mir);
-    int output(std::string filename);
+    int output(const std::string & filename);
   private:
 
     JLang::owned<CodeGeneratorLLVMContext> context;
 
   };
 
-  void generate_code(JLang::mir::MIR & _mir);
+  void generate_code(JLang::mir::MIR & _mir, std::string & _filename);
 };

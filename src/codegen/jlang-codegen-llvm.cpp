@@ -21,7 +21,7 @@ CodeGeneratorLLVM::generate(const MIR & _mir)
 { context->generate(_mir); }
 
 int
-CodeGeneratorLLVM::output(std::string filename)
+CodeGeneratorLLVM::output(const std::string & filename)
 { return context->output(filename); }
 /////////////////////////////////////
 // CodeGeneratorLLVMContext
@@ -172,7 +172,7 @@ CodeGeneratorLLVMContext::generate_function(const JLang::mir::Function & functio
 
 
 int
-CodeGeneratorLLVMContext::output(std::string filename)
+CodeGeneratorLLVMContext::output(const std::string & filename)
 {
   using namespace llvm;
   // Initialize the target registry etc.
