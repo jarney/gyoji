@@ -5,11 +5,6 @@ using namespace JLang::mir;
 using namespace JLang::context;
 using namespace JLang::analysis;
 
-void do_analysis(Types &)
-{
-  fprintf(stderr, "Doing some analysis...\n");
-}
-
 AnalysisPass::AnalysisPass(CompilerContext & _compiler_context)
   : compiler_context(_compiler_context)
 {}
@@ -21,7 +16,7 @@ JLang::context::CompilerContext &
 AnalysisPass::get_compiler_context() const
 { return compiler_context; }
 
-AnalysisPassTypeResolution::AnalysisPassTypeResolution(CompilerContext &_compiler_context)
+AnalysisPassTypeResolution::AnalysisPassTypeResolution(CompilerContext & _compiler_context)
   : AnalysisPass(_compiler_context)
 {}
 AnalysisPassTypeResolution::~AnalysisPassTypeResolution()
@@ -45,7 +40,19 @@ AnalysisPassTypeResolution::check_type(Type *type) const
   if (type->get_type() == Type::TYPE_COMPOSITE) {
     for (const auto & member : type->get_members()) {
       if (!member.second->is_complete()) {
+
+        //auto error = std::make_unique<JLang::context::Error>("Incomplete Type: Use of type that has been forward declard, but a full definition of the type was not found.");
+        // XXX Need to put declared source ref into Type.
+        //error->add_message(member.second->get_declared_source_ref(), "Declared here");
+        // XXX Need to put used source ref into member.
+        //error->add_message(member, "Used here");
+        //get_compiler_context()
+        //.get_errors()
+        //.add_error(std::move(error));
+        
         fprintf(stderr, "Incomplete type %s\n", member.second->get_name().c_str());
+
+        
         std::unique_ptr<JLang::context::Error> error = std::make_unique<JLang::context::Error>("Class contains incomplete type");
 
         JLang::context::SourceReference src_ref("asdf.h", 14, 19);

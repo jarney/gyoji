@@ -1,6 +1,7 @@
 #pragma once
 
 #include <jlang-misc/pointers.hpp>
+#include <jlang-context.hpp>
 #include <string>
 #include <map>
 #include <vector>
@@ -124,7 +125,7 @@ namespace JLang::mir {
      * This defines a primitive type of the given
      * type as a primitive type.
      */
-    Type(std::string _name, TypeType _type, bool _complete);
+    Type(std::string _name, TypeType _type, bool _complete, const JLang::context::SourceReference & _source_ref);
 
     /**
      * Destructor, nothing special.
@@ -150,30 +151,40 @@ namespace JLang::mir {
     /**
      * Completes the definition of a composite type.
      */
-    void complete_composite_definition(std::vector<std::pair<std::string, Type*>> _members);
+    void complete_composite_definition(std::vector<std::pair<std::string, Type*>> _members, const JLang::context::SourceReference & _source_ref);
 
     /**
      * Completes the definition of a pointer or reference.
      */
-    void complete_pointer_definition(Type *_type);
+    void complete_pointer_definition(Type *_type, const JLang::context::SourceReference & _source_ref);
     
     /**
      * Used for debugging purposes to dump the content
      * of the type database.
      */
     void dump();
+
+    /**
+     * Where the type was first declared.
+     */
+    const JLang::context::SourceReference & get_declared_source_ref();
+
+    /**
+     * Where the full definition of the type appeared.
+     */
+    const JLang::context::SourceReference & get_defined_source_ref();
+    
   private:
     bool complete;
     std::string name;
     TypeType type;
     Type *pointer_or_ref;
-
+    const JLang::context::SourceReference & declared_source_ref;
+    const JLang::context::SourceReference & defined_source_ref;
+    
     // TODO: This should be a vector of members
     // instead so we can also put the SourceRef into each of them.
     std::vector<std::pair<std::string, Type*>> members;
-    
-    // TODO   SourceRef & declared;
-    // TODO   SourceRef & defined;
   };
 
 };

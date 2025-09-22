@@ -21,7 +21,12 @@ namespace JLang::frontend {
     void extract_from_namespace(const JLang::frontend::tree::FileStatementNamespace & namespace_declaration);
     void extract_types(const std::vector<JLang::owned<JLang::frontend::tree::FileStatement>> & statements);
     
-    JLang::mir::Type *get_or_create(std::string pointer_name, JLang::mir::Type *pointer_target, JLang::mir::Type::TypeType type_type);
+    JLang::mir::Type *get_or_create(
+                                    std::string pointer_name,
+                                    JLang::mir::Type *pointer_target,
+                                    JLang::mir::Type::TypeType type_type,
+                                    const JLang::context::SourceReference & source_ref
+                                    );
 
     // Move to analysis
     void check_complete_type(JLang::mir::Type *type) const;

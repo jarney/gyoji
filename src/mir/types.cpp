@@ -2,31 +2,35 @@
 #include <variant>
 #include <stdio.h>
 
+using namespace JLang::context;
 using namespace JLang::mir;
 
 ////////////////////////////////////////
 // Types
 ////////////////////////////////////////
 
+static JLang::context::SourceReference builtin_source_ref("builtin", 0, 0);
+
 Types::Types()
 {
   // XXX Definitely not the place to do this, but
   // it's a good enough place for now that I don't care
   // until we have a type system we can plug into this
-  define_type(std::make_unique<Type>("u8", Type::TYPE_PRIMITIVE, true));
+  
+  define_type(std::make_unique<Type>("u8", Type::TYPE_PRIMITIVE, true, builtin_source_ref));
 
-  define_type(std::make_unique<Type>("i16", Type::TYPE_PRIMITIVE, true));
-  define_type(std::make_unique<Type>("i32", Type::TYPE_PRIMITIVE, true));
-  define_type(std::make_unique<Type>("i64", Type::TYPE_PRIMITIVE, true));
+  define_type(std::make_unique<Type>("i16", Type::TYPE_PRIMITIVE, true, builtin_source_ref));
+  define_type(std::make_unique<Type>("i32", Type::TYPE_PRIMITIVE, true, builtin_source_ref));
+  define_type(std::make_unique<Type>("i64", Type::TYPE_PRIMITIVE, true, builtin_source_ref));
 
-  define_type(std::make_unique<Type>("u16", Type::TYPE_PRIMITIVE, true));
-  define_type(std::make_unique<Type>("u32", Type::TYPE_PRIMITIVE, true));
-  define_type(std::make_unique<Type>("u64", Type::TYPE_PRIMITIVE, true));
+  define_type(std::make_unique<Type>("u16", Type::TYPE_PRIMITIVE, true, builtin_source_ref));
+  define_type(std::make_unique<Type>("u32", Type::TYPE_PRIMITIVE, true, builtin_source_ref));
+  define_type(std::make_unique<Type>("u64", Type::TYPE_PRIMITIVE, true, builtin_source_ref));
 
-  define_type(std::make_unique<Type>("f32", Type::TYPE_PRIMITIVE, true));
-  define_type(std::make_unique<Type>("f64", Type::TYPE_PRIMITIVE, true));
+  define_type(std::make_unique<Type>("f32", Type::TYPE_PRIMITIVE, true, builtin_source_ref));
+  define_type(std::make_unique<Type>("f64", Type::TYPE_PRIMITIVE, true, builtin_source_ref));
 
-  define_type(std::make_unique<Type>("void", Type::TYPE_PRIMITIVE, true));
+  define_type(std::make_unique<Type>("void", Type::TYPE_PRIMITIVE, true, builtin_source_ref));
 }
 
 Types::~Types()
@@ -62,10 +66,12 @@ Types::dump()
 ////////////////////////////////////////
 // Type
 ////////////////////////////////////////
-Type::Type(std::string _name, TypeType _type, bool _complete)
+Type::Type(std::string _name, TypeType _type, bool _complete, const SourceReference & _source_ref)
   : name(_name)
   , type(_type)
   , complete(_complete)
+  , defined_source_ref(_source_ref)
+  , declared_source_ref(_source_ref)
 {}
 
 Type::~Type()
@@ -87,18 +93,28 @@ Type::get_members() const
 { return members; }
 
 void
-Type::complete_pointer_definition(Type *_type)
+Type::complete_pointer_definition(Type *_type, const SourceReference & source_ref)
 {
   complete = true;
   pointer_or_ref = _type;
+  //  defined_source_ref = source_ref;
 }
 
 void
-Type::complete_composite_definition(std::vector<std::pair<std::string, Type*>> _members)
+Type::complete_composite_definition(std::vector<std::pair<std::string, Type*>> _members, const SourceReference & source_ref)
 {
   complete = true;
   members = _members;
+  //  defined_source_ref = source_ref;
 }
+
+const JLang::context::SourceReference &
+Type::get_declared_source_ref()
+{ return declared_source_ref; }
+
+const JLang::context::SourceReference &
+Type::get_defined_source_ref()
+{ return defined_source_ref; }
 
 void
 Type::dump()

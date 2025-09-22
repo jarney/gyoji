@@ -6,9 +6,10 @@
     so we don't cut off the error line as soon as the
     parse halts.
 
+  * More MIR for types : Enums and such.
+  
   * Basic MIR lowering for functions/expressions.
 
-  * More MIR for types : Enums and such.
 
 * Build some tests that verify compatibility with
   most of the expectations of the C-style

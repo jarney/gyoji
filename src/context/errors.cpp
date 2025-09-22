@@ -62,7 +62,7 @@ Error::print()
 }
 
 void
-Error::add_message(SourceReference & _src_ref,
+Error::add_message(const SourceReference & _src_ref,
                    std::string _errormsg)
 {
   JLang::owned<ErrorMessage> message = std::make_unique<ErrorMessage>(
@@ -70,6 +70,17 @@ Error::add_message(SourceReference & _src_ref,
                                                                       _errormsg
                                                                       );
   messages.push_back(std::move(message));
+}
+
+
+void
+Errors::add_simple_error(const SourceReference & _src_ref,
+                        std::string _error_title,
+                        std::string _error_message)
+{
+  auto error = std::make_unique<JLang::context::Error>(_error_title);
+  error->add_message(_src_ref, _error_message);
+  add_error(std::move(error));
 }
 
 const std::vector<JLang::owned<ErrorMessage>> &

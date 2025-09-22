@@ -112,6 +112,11 @@ namespace JLang::frontend {
      */
     const JLang::context::TokenStream & get_token_stream() const;
 
+    /**
+     * Returns the compiler context that this was parsed for.
+     */
+    const JLang::context::CompilerContext & get_compiler_context() const;
+    
     friend JLang::frontend::yacc::YaccParser;
     friend JLang::frontend::yacc::LexContext;
     friend JLang::frontend::Parser;

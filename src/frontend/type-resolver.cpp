@@ -10,20 +10,20 @@ using namespace JLang::frontend::tree;
 void
 TypeResolver::extract_from_class_declaration(const ClassDeclaration & declaration)
 {
-  JLang::owned<Type> type = std::make_unique<Type>(declaration.get_name(), Type::TYPE_COMPOSITE, false);
+  JLang::owned<Type> type = std::make_unique<Type>(declaration.get_name(), Type::TYPE_COMPOSITE, false, declaration.get_name_source_ref());
   types.define_type(std::move(type));
 }
 
 Type *
-TypeResolver::get_or_create(std::string pointer_name, Type *pointer_target, Type::TypeType type_type)
+TypeResolver::get_or_create(std::string pointer_name, Type *pointer_target, Type::TypeType type_type, const SourceReference & source_ref)
 {
     Type *pointer_type = types.get_type(pointer_name);
     if (pointer_type != nullptr) {
       return pointer_type;
     }
     else {
-      JLang::owned<Type> pointer_type_created = std::make_unique<Type>(pointer_name, type_type, true);
-      pointer_type_created->complete_pointer_definition(pointer_target);
+      JLang::owned<Type> pointer_type_created = std::make_unique<Type>(pointer_name, type_type, true, source_ref);
+      pointer_type_created->complete_pointer_definition(pointer_target, source_ref);
       pointer_type = pointer_type_created.get();
       types.define_type(std::move(pointer_type_created));
       return pointer_type;
@@ -38,13 +38,21 @@ TypeResolver::extract_from_type_specifier(const TypeSpecifier & type_specifier)
     const JLang::owned<TypeSpecifierSimple> & simple = std::get<JLang::owned<TypeSpecifierSimple>>(type_specifier_type);
     const auto & type_name = simple->get_type_name();
     if (type_name.is_expression()) {
-      fprintf(stderr, "Extracting types from expressions is not yet supported\n");
+      auto error = std::make_unique<JLang::context::Error>("Could not resolve type");
+      error->add_message(type_name.get_name_source_ref(), "Specifying types from expressions is not yet supported.");
+      parse_result.get_compiler_context().get_errors().add_error(std::move(error));
       return nullptr;
     }
     std::string name = type_name.get_name();
     Type *type = types.get_type(name);
     if (type == nullptr) {
-      fprintf(stderr, "Could not find type %s\n", name.c_str());
+      parse_result
+        .get_compiler_context()
+        .get_errors()
+        .add_simple_error(type_name.get_name_source_ref(),
+                          "Could not find type",
+                          std::string("Could not resolve type ") + name
+                          );
       return nullptr;
     }
     return type;
@@ -61,29 +69,45 @@ TypeResolver::extract_from_type_specifier(const TypeSpecifier & type_specifier)
     const auto & type_specifier_pointer_to = std::get<JLang::owned<TypeSpecifierPointerTo>>(type_specifier_type);
     Type *pointer_target = extract_from_type_specifier(type_specifier_pointer_to->get_type_specifier());
     if (pointer_target == nullptr) {
-      fprintf(stderr, "Could not find target of pointer\n");
+      parse_result
+        .get_compiler_context()
+        .get_errors()
+        .add_simple_error(type_specifier_pointer_to->get_source_ref(),
+                          "Could not find type",
+                          "Could not resolve target of pointer"
+                          );
       return nullptr;
     }
     std::string pointer_name = pointer_target->get_name() + std::string("*");
-    Type *pointer_type = get_or_create(pointer_name, pointer_target, Type::TYPE_POINTER);
+    Type *pointer_type = get_or_create(pointer_name, pointer_target, Type::TYPE_POINTER, type_specifier_pointer_to->get_source_ref());
     return pointer_type;
   }
   else if (std::holds_alternative<JLang::owned<TypeSpecifierReferenceTo>>(type_specifier_type)) {
     const auto & type_specifier_reference_to = std::get<JLang::owned<TypeSpecifierReferenceTo>>(type_specifier_type);
     Type *pointer_target = extract_from_type_specifier(type_specifier_reference_to->get_type_specifier());
     if (pointer_target == nullptr) {
-      fprintf(stderr, "Could not find target of reference\n");
+      parse_result
+        .get_compiler_context()
+        .get_errors()
+        .add_simple_error(type_specifier_reference_to->get_source_ref(),
+                          "Could not find type",
+                          "Could not resolve target of reference"
+                          );
       return nullptr;
     }
     std::string pointer_name = pointer_target->get_name() + std::string("&");
-    Type *pointer_type = get_or_create(pointer_name, pointer_target, Type::TYPE_REFERENCE);
+    Type *pointer_type = get_or_create(pointer_name, pointer_target, Type::TYPE_REFERENCE, type_specifier_reference_to->get_source_ref());
     return pointer_type;
   }
-  else {
-    fprintf(stderr, "Error: Un-handled type (compiler bug)\n");
-  }
   
-  fprintf(stderr, "Error: type not found\n");
+  parse_result
+    .get_compiler_context()
+    .get_errors()
+    .add_simple_error(type_specifier.get_source_ref(),
+                      "Compiler bug!  Please report this message",
+                      "Unknown TypeSpecifier type in variant (compiler bug)"
+                      );
+  
   return nullptr;
 }
 
@@ -100,16 +124,21 @@ TypeResolver::extract_from_class_members(Type & type, const ClassDefinition & de
 
       Type *member_type = extract_from_type_specifier(member_variable->get_type_specifier());
       if (member_type == nullptr) {
-        printf("Error: member variable type %s not resolved\n", member_variable->get_name().c_str());
+        parse_result
+          .get_compiler_context()
+          .get_errors()
+          .add_simple_error(member_variable->get_type_specifier().get_source_ref(),
+                            "Could not find type",
+                            "Could not extract type of member variable " + member_variable->get_name()
+                            );
       }
       else {
         members.push_back(std::pair<std::string, Type*>(member_variable->get_name(), member_type));
-        printf("Got member variable %s\n", member_variable->get_name().c_str());
       }
     }
   }
   
-  type.complete_composite_definition(members);
+  type.complete_composite_definition(members, definition.get_name_source_ref());
 }
 
 void
@@ -120,7 +149,7 @@ TypeResolver::extract_from_class_definition(const ClassDefinition & definition)
   if (it == types.type_map.end()) {
     // Case 1: No forward declaration exists, fill in the definition
     // from the class.
-    JLang::owned<Type> type = std::make_unique<Type>(definition.get_name(), Type::TYPE_COMPOSITE, true);
+    JLang::owned<Type> type = std::make_unique<Type>(definition.get_name(), Type::TYPE_COMPOSITE, true, definition.get_name_source_ref());
     extract_from_class_members(*type, definition);
     types.define_type(std::move(type));
   }
@@ -153,7 +182,6 @@ TypeResolver::extract_from_enum(const EnumDefinition & enum_definition)
 void
 TypeResolver::extract_from_namespace(const FileStatementNamespace & namespace_declaration)
 {
-  printf("Recursively handling namespace %s\n", namespace_declaration.get_declaration().get_name().get_value().c_str());
   const auto & statements = namespace_declaration.get_statement_list().get_statements();
   extract_types(statements);
 }
@@ -191,7 +219,13 @@ TypeResolver::extract_types(const std::vector<JLang::owned<FileStatement>> & sta
       // Nothing, no statements can be declared inside here.
     }
     else {
-      printf("Unknown statement type\n");
+      parse_result
+        .get_compiler_context()
+        .get_errors()
+        .add_simple_error(statement->get_source_ref(),
+                          "Compiler bug!  Please report this message",
+                          "Unknown statement type in variant, extracting statements from file (compiler bug)"
+                          );
     }
   }
 }
@@ -203,26 +237,6 @@ TypeResolver::TypeResolver(const JLang::frontend::ParseResult & _parse_result, T
 TypeResolver::~TypeResolver()
 {}
 
-void TypeResolver::check_complete_type(Type *type) const
-{
-  if (type->get_type() == Type::TYPE_COMPOSITE) {
-    for (const auto & member : type->get_members()) {
-      if (!member.second->is_complete()) {
-        fprintf(stderr, "Incomplete type %s\n", member.second->get_name().c_str());
-        
-        SourceReference src_ref("asdf.h", (size_t)0, (size_t)10);
-        std::unique_ptr<JLang::context::Error> error = std::make_unique<JLang::context::Error>("Class contains incomplete type");
-        error->add_message(src_ref, std::string("Incomplete type in member ") + member.first + std::string(" of type ") + type->get_name() + std::string("\n"));
-        parse_result.get_errors().add_error(std::move(error));
-      
-
-        
-      }
-      check_complete_type(member.second);
-    }
-  }
-}
-
 void TypeResolver::resolve_types()
 {
   // To resolve the types, we need only iterate the
@@ -230,14 +244,6 @@ void TypeResolver::resolve_types()
   // resolving them down to their primitive types.
   const auto & translation_unit = parse_result.get_translation_unit();
   extract_types(translation_unit.get_statements());
-
-  // TODO: Go back through all of the types and make sure that every type
-  // that is used in a structure 'inline' is actually complete.
-  // If not, produce a compile error to that effect.
-  // This needs to be recursive!
-  for (const auto & type : types.type_map) {
-    check_complete_type(type.second.get());
-  }
 }
 
 void

@@ -50,7 +50,7 @@ namespace JLang::context {
   public:
     Error(std::string _error_message);
     ~Error();
-    void add_message(SourceReference & _src_ref,
+    void add_message(const SourceReference & _src_ref,
                      std::string _errormsg);
     void print();
     size_t size() const;
@@ -68,6 +68,11 @@ namespace JLang::context {
     Errors(TokenStream & _token_stream);
     ~Errors();
     void add_error(JLang::owned<Error> error);
+    void add_simple_error(
+                          const SourceReference & src_ref,
+                          std::string _error_title,
+                          std::string _error_message
+                          );
     void print() const;
     size_t size() const;
     const Error & get(size_t n) const;

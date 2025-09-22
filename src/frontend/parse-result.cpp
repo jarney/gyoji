@@ -49,6 +49,9 @@ ParseResult::get_token_stream() const
 {
   return compiler_context.get_token_stream();
 }
+const JLang::context::CompilerContext &
+ParseResult::get_compiler_context() const
+{ return compiler_context; }
 
 void
 ParseResult::set_translation_unit(JLang::owned<TranslationUnit> _translation_unit)

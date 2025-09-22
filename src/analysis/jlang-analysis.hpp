@@ -27,4 +27,3 @@ namespace JLang::analysis {
 
 };
 
-void do_analysis();
