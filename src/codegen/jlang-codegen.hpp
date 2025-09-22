@@ -3,33 +3,25 @@
 #include <jlang-misc/pointers.hpp>
 #include <jlang-mir.hpp>
 
-// Hack, forward-declare llvm function.
-namespace llvm {
-  class Function;
-  class AllocaInst;
-  class StringRef;
-};
-
 namespace JLang::codegen {
   class CodeGeneratorLLVMContext;
-  
+
+  /**
+   * This is the public interface to the code generator.
+   * It is careful not to pollute the namespace
+   * by requiring inclusion of LLVM headers
+   * so that the caller need know nothing at all
+   * about how the code is actually generated.
+   */
   class CodeGeneratorLLVM {
   public:
     CodeGeneratorLLVM();
     ~CodeGeneratorLLVM();
     void initialize();
-
-    void generate_function(const JLang::mir::Function & function);
-    
-
+    void generate(const JLang::mir::MIR & mir);
     int output(std::string filename);
   private:
 
-    llvm::Function * create_function(const JLang::mir::Function & function);
-    llvm::AllocaInst *CreateEntryBlockAlloca(
-                                             llvm::Function *TheFunction,
-                                             const llvm::StringRef & VarName
-                                             );
     JLang::owned<CodeGeneratorLLVMContext> context;
 
   };

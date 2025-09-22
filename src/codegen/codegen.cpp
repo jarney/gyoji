@@ -8,12 +8,7 @@ void JLang::codegen::generate_code(MIR & _mir)
   CodeGeneratorLLVM generator;
   generator.initialize();
   
-
-  const Functions & functions = _mir.get_functions();
-  for (auto const & function : functions.get_functions()) {
-    fprintf(stderr, "Generating for function %s\n", function->get_name().c_str());
-    generator.generate_function(*function);
-  }
+  generator.generate(_mir);
 
   int rc = generator.output("output.o");
   

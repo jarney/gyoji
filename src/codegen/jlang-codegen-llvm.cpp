@@ -12,39 +12,53 @@ CodeGeneratorLLVM::CodeGeneratorLLVM()
 CodeGeneratorLLVM::~CodeGeneratorLLVM()
 {}
 
-
 void
 CodeGeneratorLLVM::initialize()
+{ context->initialize(); }
+
+void
+CodeGeneratorLLVM::generate(const MIR & _mir)
+{ context->generate(_mir); }
+
+int
+CodeGeneratorLLVM::output(std::string filename)
+{ return context->output(filename); }
+/////////////////////////////////////
+// CodeGeneratorLLVMContext
+/////////////////////////////////////
+
+void
+CodeGeneratorLLVMContext::initialize()
 {
   // Open a new context and module.
-  context->TheContext = std::make_unique<llvm::LLVMContext>();
-  context->TheModule = std::make_unique<llvm::Module>("jlang LLVM Code Generator", *context->TheContext);
+  TheContext = std::make_unique<llvm::LLVMContext>();
+  TheModule = std::make_unique<llvm::Module>("jlang LLVM Code Generator", *TheContext);
   // Create a new builder for the module.
-  context->Builder = std::make_unique<llvm::IRBuilder<>>(*context->TheContext);
+  Builder = std::make_unique<llvm::IRBuilder<>>(*TheContext);
 
   //  register_type_builtins();
   //  register_operator_builtins();
 }
 
 llvm::Function *
-CodeGeneratorLLVM::create_function(const JLang::mir::Function & function)
+CodeGeneratorLLVMContext::create_function(const Function & function)
 {
   // Make the function type:  double(double,double) etc.
   std::vector<llvm::Type *> llvm_arguments;
   const std::vector<FunctionArgument> & function_arguments = function.get_arguments();
   
   for (auto semantic_arg : function_arguments) {
-    llvm::Type *atype = llvm::Type::getDoubleTy(*context->TheContext);
+    llvm::Type *atype = llvm::Type::getDoubleTy(*TheContext);
     llvm_arguments.push_back(atype);
   }
 
-  llvm::Type* return_value_type = llvm::Type::getDoubleTy(*context->TheContext);
+  llvm::Type* return_value_type = llvm::Type::getDoubleTy(*TheContext);
   
   llvm::FunctionType *FT =
     llvm::FunctionType::get(return_value_type, llvm_arguments, false);
 
   llvm::Function *F =
-    llvm::Function::Create(FT, llvm::Function::ExternalLinkage, function.get_name(), context->TheModule.get());
+    llvm::Function::Create(FT, llvm::Function::ExternalLinkage, function.get_name(), TheModule.get());
 
   // Set names for all arguments.
   unsigned Idx = 0;
@@ -58,7 +72,7 @@ CodeGeneratorLLVM::create_function(const JLang::mir::Function & function)
 
 /// CreateEntryBlockAlloca - Create an alloca instruction in the entry block of
 /// the function.  This is used for mutable variables etc.
-llvm::AllocaInst *CodeGeneratorLLVM::CreateEntryBlockAlloca(
+llvm::AllocaInst *CodeGeneratorLLVMContext::CreateEntryBlockAlloca(
                                                             llvm::Function *TheFunction,
                                                             const llvm::StringRef & VarName
                                                             )
@@ -66,14 +80,29 @@ llvm::AllocaInst *CodeGeneratorLLVM::CreateEntryBlockAlloca(
   llvm::IRBuilder<> TmpB(&TheFunction->getEntryBlock(),
                          TheFunction->getEntryBlock().begin()
                          );
-  return TmpB.CreateAlloca(llvm::Type::getDoubleTy(*context->TheContext), nullptr, VarName);
+  return TmpB.CreateAlloca(llvm::Type::getDoubleTy(*TheContext), nullptr, VarName);
 }
 
 void
-CodeGeneratorLLVM::generate_function(const JLang::mir::Function & function)
+CodeGeneratorLLVMContext::create_types(const MIR & _mir)
+{}
+
+
+void
+CodeGeneratorLLVMContext::generate(const MIR & _mir)
 {
-  using namespace llvm;
+  create_types(_mir);
   
+  const Functions & functions = _mir.get_functions();
+  for (auto const & function : functions.get_functions()) {
+    fprintf(stderr, "Generating for function %s\n", function->get_name().c_str());
+    generate_function(*function);
+  }
+}
+
+void
+CodeGeneratorLLVMContext::generate_function(const JLang::mir::Function & function)
+{
   // Transfer ownership of the prototype to the FunctionProtos map, but keep a
   // reference to it for use below.
   llvm::Function *TheFunction = create_function(function);
@@ -82,17 +111,17 @@ CodeGeneratorLLVM::generate_function(const JLang::mir::Function & function)
   }
 
   // Create a new basic block to start insertion into.
-  llvm::BasicBlock *BB = llvm::BasicBlock::Create(*context->TheContext, "entry", TheFunction);
-  context->Builder->SetInsertPoint(BB);
+  llvm::BasicBlock *BB = llvm::BasicBlock::Create(*TheContext, "entry", TheFunction);
+  Builder->SetInsertPoint(BB);
 
   // Record the function arguments in the NamedValues map.
   //NamedValues.clear();
   for (auto &Arg : TheFunction->args()) {
     // Create an alloca for this variable.
-    AllocaInst *Alloca = CreateEntryBlockAlloca(TheFunction, Arg.getName());
+    llvm::AllocaInst *Alloca = CreateEntryBlockAlloca(TheFunction, Arg.getName());
 
     // Store the initial value into the alloca.
-    context->Builder->CreateStore(&Arg, Alloca);
+    Builder->CreateStore(&Arg, Alloca);
 
     // Add arguments to variable symbol table.
     //NamedValues[std::string(Arg.getName())] = Alloca;
@@ -120,9 +149,9 @@ CodeGeneratorLLVM::generate_function(const JLang::mir::Function & function)
   }
 #endif
   //  if (!block) {
-    llvm::Type *return_value_type = llvm::Type::getDoubleTy(*context->TheContext);
-    context->Builder->CreateRet(
-                       llvm::ConstantFP::get(*context->TheContext, llvm::APFloat(0.0))
+    llvm::Type *return_value_type = llvm::Type::getDoubleTy(*TheContext);
+    Builder->CreateRet(
+                       llvm::ConstantFP::get(*TheContext, llvm::APFloat(0.0))
                        );
     //  }
     //  else {
@@ -141,7 +170,7 @@ CodeGeneratorLLVM::generate_function(const JLang::mir::Function & function)
 
 
 int
-CodeGeneratorLLVM::output(std::string filename)
+CodeGeneratorLLVMContext::output(std::string filename)
 {
   using namespace llvm;
   // Initialize the target registry etc.
@@ -152,7 +181,7 @@ CodeGeneratorLLVM::output(std::string filename)
   InitializeAllAsmPrinters();
 
   auto TargetTriple = sys::getDefaultTargetTriple();
-  context->TheModule->setTargetTriple(TargetTriple);
+  TheModule->setTargetTriple(TargetTriple);
 
   std::string Error;
   auto Target = TargetRegistry::lookupTarget(TargetTriple, Error);
@@ -172,7 +201,7 @@ CodeGeneratorLLVM::output(std::string filename)
   auto TheTargetMachine = Target->createTargetMachine(
       TargetTriple, CPU, Features, opt, Reloc::PIC_);
 
-  context->TheModule->setDataLayout(TheTargetMachine->createDataLayout());
+  TheModule->setDataLayout(TheTargetMachine->createDataLayout());
 
   std::error_code EC;
   raw_fd_ostream dest(filename, EC, sys::fs::OF_None);
@@ -190,7 +219,7 @@ CodeGeneratorLLVM::output(std::string filename)
     return 1;
   }
 
-  pass.run(*context->TheModule);
+  pass.run(*TheModule);
   dest.flush();
 
   outs() << "Wrote " << filename << "\n";

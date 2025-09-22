@@ -24,10 +24,25 @@
 namespace JLang::codegen {
   class CodeGeneratorLLVMContext {
   public:
+    void initialize();
+    void generate(const JLang::mir::MIR & mir);
+    int output(std::string filename);
+    
+  private:
     JLang::owned<llvm::LLVMContext> TheContext;
     JLang::owned<llvm::IRBuilder<>> Builder;
     JLang::owned<llvm::Module> TheModule;
     std::map<std::string, llvm::Value *> NamedValues;
+
+    void create_types(const JLang::mir::MIR & mir);
+    void generate_function(const JLang::mir::Function & function);
+
+    llvm::Function * create_function(const JLang::mir::Function & function);
+    llvm::AllocaInst *CreateEntryBlockAlloca(
+                                             llvm::Function *TheFunction,
+                                             const llvm::StringRef & VarName
+                                             );
+
   };
     
 };

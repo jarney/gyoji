@@ -33,7 +33,10 @@ namespace JLang::mir {
   public:
     MIR();
     ~MIR();
+    const Types & get_types() const;
     Types & get_types();
+    
+    const Functions & get_functions() const;
     Functions & get_functions();
   private:
     Functions functions;
