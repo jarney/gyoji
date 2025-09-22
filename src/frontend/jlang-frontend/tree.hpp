@@ -2088,7 +2088,8 @@ namespace JLang::frontend::tree {
       } OperationType;
       ExpressionPostfixIncDec(
                               JLang::owned<Expression> _expression,
-                              JLang::owned<Terminal> _operator_token
+                              JLang::owned<Terminal> _operator_token,
+                              ExpressionPostfixIncDec::OperationType _type                              
                               );
     /**
      * Destructor, nothing special.
@@ -2116,7 +2117,8 @@ namespace JLang::frontend::tree {
       } OperationType;
       ExpressionUnaryPrefix(
                             JLang::owned<Terminal> _operator_token,
-                            JLang::owned<Expression> _expression
+                            JLang::owned<Expression> _expression,
+                            ExpressionUnaryPrefix::OperationType _type
                             );
     /**
      * Destructor, nothing special.
@@ -2221,7 +2223,8 @@ namespace JLang::frontend::tree {
       ExpressionBinary(
                        JLang::owned<Expression> _expression_a,
                        JLang::owned<Terminal> _operator_token,
-                       JLang::owned<Expression> _expression_b
+                       JLang::owned<Expression> _expression_b,
+                       ExpressionBinary::OperationType _type
                        );
       /**
        * This form of the constructor is introduced because
@@ -2239,7 +2242,8 @@ namespace JLang::frontend::tree {
                        JLang::owned<Expression> _expression_a,
                        JLang::owned<Terminal> _operator_token,
                        JLang::owned<Terminal> _operator_token2,
-                       JLang::owned<Expression> _expression_b
+                       JLang::owned<Expression> _expression_b,
+                       ExpressionBinary::OperationType _type
                        );
     /**
      * Destructor, nothing special.

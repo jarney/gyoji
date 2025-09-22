@@ -281,9 +281,18 @@ int visibility_from_modifier(JLang::frontend::tree::AccessModifier::AccessModifi
 %nterm <JLang::owned<JLang::frontend::tree::ClassMemberDeclarationList>> class_member_declaration_list;
 %nterm <JLang::owned<JLang::frontend::tree::ClassMemberDeclaration>> class_member_declaration;
 
-%nterm <JLang::owned<JLang::frontend::tree::Terminal>> operator_unary;
-%nterm <JLang::owned<JLang::frontend::tree::Terminal>> operator_assignment;
-
+%nterm <
+    std::pair<
+        JLang::frontend::tree::ExpressionUnaryPrefix::OperationType,
+        JLang::owned<JLang::frontend::tree::Terminal>
+    >
+  > operator_unary;
+%nterm <
+    std::pair<
+        JLang::frontend::tree::ExpressionBinary::OperationType,
+        JLang::owned<JLang::frontend::tree::Terminal>
+    >
+  > operator_assignment;
 %nterm <JLang::owned<JLang::frontend::tree::ArgumentExpressionList>> opt_argument_expression_list;
 %nterm <JLang::owned<JLang::frontend::tree::ArgumentExpressionList>> argument_expression_list;
 
@@ -1369,7 +1378,8 @@ expression_postfix_increment
         : expression_postfix INC_OP {
                 auto expr = std::make_unique<JLang::frontend::tree::ExpressionPostfixIncDec>(
                                                                                          std::move($1),
-                                                                                         std::move($2)
+                                                                                         std::move($2),
+                                                                                         JLang::frontend::tree::ExpressionPostfixIncDec::INCREMENT
                                                                                          );
                 const JLang::frontend::ast::SyntaxNode &sn = *(expr);
                 $$ = std::make_unique<JLang::frontend::tree::Expression>(std::move(expr), sn);
@@ -1381,7 +1391,8 @@ expression_postfix_decrement
         : expression_postfix DEC_OP {
                 auto expr = std::make_unique<JLang::frontend::tree::ExpressionPostfixIncDec>(
                                                                                          std::move($1),
-                                                                                         std::move($2)
+                                                                                         std::move($2),
+                                                                                         JLang::frontend::tree::ExpressionPostfixIncDec::DECREMENT
                                                                                          );
                 const JLang::frontend::ast::SyntaxNode &sn = *(expr);
                 $$ = std::make_unique<JLang::frontend::tree::Expression>(std::move(expr), sn);
@@ -1416,7 +1427,8 @@ expression_unary_increment
         : INC_OP expression_unary {
                 auto expr = std::make_unique<JLang::frontend::tree::ExpressionUnaryPrefix>(
                                                                                        std::move($1),
-                                                                                       std::move($2)
+                                                                                       std::move($2),
+                                                                                       JLang::frontend::tree::ExpressionUnaryPrefix::INCREMENT
                                                                                        );
                 const JLang::frontend::ast::SyntaxNode &sn = *(expr);
                 $$ = std::make_unique<JLang::frontend::tree::Expression>(std::move(expr), sn);
@@ -1427,7 +1439,8 @@ expression_unary_decrement
         : DEC_OP expression_unary {
                 auto expr = std::make_unique<JLang::frontend::tree::ExpressionUnaryPrefix>(
                                                                                        std::move($1),
-                                                                                       std::move($2)
+                                                                                       std::move($2),
+                                                                                       JLang::frontend::tree::ExpressionUnaryPrefix::DECREMENT
                                                                                        );
                 const JLang::frontend::ast::SyntaxNode &sn = *(expr);
                 $$ = std::make_unique<JLang::frontend::tree::Expression>(std::move(expr), sn);
@@ -1437,8 +1450,9 @@ expression_unary_decrement
 expression_unary_prefix
         : operator_unary expression_cast {
                 auto expr = std::make_unique<JLang::frontend::tree::ExpressionUnaryPrefix>(
-                                                                                       std::move($1),
-                                                                                       std::move($2)
+                                                                                       std::move($1.second),
+                                                                                       std::move($2),
+                                                                                       $1.first
                                                                                        );
                 const JLang::frontend::ast::SyntaxNode &sn = *(expr);
                 $$ = std::make_unique<JLang::frontend::tree::Expression>(std::move(expr), sn);
@@ -1463,28 +1477,46 @@ expression_unary_sizeof_type
 
 operator_unary
         : ANDPERSAND {
-                $$ = std::move($1);
-                PRINT_NONTERMINALS($$);
+                $$ = std::pair(
+                         JLang::frontend::tree::ExpressionUnaryPrefix::ADDRESSOF,
+                         std::move($1)
+                         );
+                PRINT_NONTERMINALS(($$.second));
         }
         | STAR {
-                $$ = std::move($1);
-                PRINT_NONTERMINALS($$);
+                $$ = std::pair(
+                               JLang::frontend::tree::ExpressionUnaryPrefix::DEREFERENCE,
+                               std::move($1)
+                               );
+                PRINT_NONTERMINALS(($$.second));
         }
         | PLUS {
-                $$ = std::move($1);
-                PRINT_NONTERMINALS($$);
+                $$ = std::pair(
+                               JLang::frontend::tree::ExpressionUnaryPrefix::PLUS,
+                               std::move($1)
+                               );
+                PRINT_NONTERMINALS(($$.second));
         }
         | MINUS {
-                $$ = std::move($1);
-                PRINT_NONTERMINALS($$);
+                $$ = std::pair(
+                               JLang::frontend::tree::ExpressionUnaryPrefix::MINUS,
+                               std::move($1)
+                               );
+                PRINT_NONTERMINALS(($$.second));
         }
         | TILDE {
-                $$ = std::move($1);
-                PRINT_NONTERMINALS($$);
+                $$ = std::pair(
+                               JLang::frontend::tree::ExpressionUnaryPrefix::BITWISE_NOT,
+                               std::move($1)
+                               );
+                PRINT_NONTERMINALS(($$.second));
         }
         | BANG {
-                $$ = std::move($1);
-                PRINT_NONTERMINALS($$);
+                $$ = std::pair(
+                               JLang::frontend::tree::ExpressionUnaryPrefix::LOGICAL_NOT,
+                               std::move($1)
+                               );
+                PRINT_NONTERMINALS(($$.second));
         }
 	;
 
@@ -1553,7 +1585,8 @@ expression_multiplicative_multiply
                 auto expr = std::make_unique<JLang::frontend::tree::ExpressionBinary>(
                                                                                          std::move($1),
                                                                                          std::move($2),
-                                                                                         std::move($3)
+                                                                                         std::move($3),
+                                                                                         JLang::frontend::tree::ExpressionBinary::MULTIPLY
                                                                                          );
                 const JLang::frontend::ast::SyntaxNode &sn = *(expr);
                 $$ = std::make_unique<JLang::frontend::tree::Expression>(std::move(expr), sn);
@@ -1565,7 +1598,8 @@ expression_multiplicative_divide
                 auto expr = std::make_unique<JLang::frontend::tree::ExpressionBinary>(
                                                                                          std::move($1),
                                                                                          std::move($2),
-                                                                                         std::move($3)
+                                                                                         std::move($3),
+                                                                                         JLang::frontend::tree::ExpressionBinary::DIVIDE
                                                                                          );
                 const JLang::frontend::ast::SyntaxNode &sn = *(expr);
                 $$ = std::make_unique<JLang::frontend::tree::Expression>(std::move(expr), sn);
@@ -1577,7 +1611,8 @@ expression_multiplicative_modulo
                 auto expr = std::make_unique<JLang::frontend::tree::ExpressionBinary>(
                                                                                          std::move($1),
                                                                                          std::move($2),
-                                                                                         std::move($3)
+                                                                                         std::move($3),
+                                                                                         JLang::frontend::tree::ExpressionBinary::MODULO
                                                                                          );
                 const JLang::frontend::ast::SyntaxNode &sn = *(expr);
                 $$ = std::make_unique<JLang::frontend::tree::Expression>(std::move(expr), sn);
@@ -1610,7 +1645,8 @@ expression_additive_plus
                 auto expr = std::make_unique<JLang::frontend::tree::ExpressionBinary>(
                                                                                          std::move($1),
                                                                                          std::move($2),
-                                                                                         std::move($3)
+                                                                                         std::move($3),
+                                                                                         JLang::frontend::tree::ExpressionBinary::ADD
                                                                                          );
                 const JLang::frontend::ast::SyntaxNode &sn = *(expr);
                 $$ = std::make_unique<JLang::frontend::tree::Expression>(std::move(expr), sn);
@@ -1622,7 +1658,8 @@ expression_additive_minus
                 auto expr = std::make_unique<JLang::frontend::tree::ExpressionBinary>(
                                                                                          std::move($1),
                                                                                          std::move($2),
-                                                                                         std::move($3)
+                                                                                         std::move($3),
+                                                                                         JLang::frontend::tree::ExpressionBinary::SUBTRACT
                                                                                          );
                 const JLang::frontend::ast::SyntaxNode &sn = *(expr);
                 $$ = std::make_unique<JLang::frontend::tree::Expression>(std::move(expr), sn);
@@ -1656,7 +1693,8 @@ expression_shift_left
                 auto expr = std::make_unique<JLang::frontend::tree::ExpressionBinary>(
                                                                                          std::move($1),
                                                                                          std::move($2),
-                                                                                         std::move($3)
+                                                                                         std::move($3),
+                                                                                         JLang::frontend::tree::ExpressionBinary::SHIFT_LEFT
                                                                                          );
                 const JLang::frontend::ast::SyntaxNode &sn = *(expr);
                 $$ = std::make_unique<JLang::frontend::tree::Expression>(std::move(expr), sn);
@@ -1668,7 +1706,8 @@ expression_shift_right
                 auto expr = std::make_unique<JLang::frontend::tree::ExpressionBinary>(
                                                                                          std::move($1),
                                                                                          std::move($2),
-                                                                                         std::move($3)
+                                                                                         std::move($3),
+                                                                                         JLang::frontend::tree::ExpressionBinary::SHIFT_RIGHT
                                                                                          );
                 const JLang::frontend::ast::SyntaxNode &sn = *(expr);
                 $$ = std::make_unique<JLang::frontend::tree::Expression>(std::move(expr), sn);
@@ -1711,7 +1750,8 @@ expression_relational_lt
                 auto expr = std::make_unique<JLang::frontend::tree::ExpressionBinary>(
                                                                                          std::move($1),
                                                                                          std::move($2),
-                                                                                         std::move($3)
+                                                                                         std::move($3),
+                                                                                         JLang::frontend::tree::ExpressionBinary::COMPARE_LT
                                                                                          );
                 const JLang::frontend::ast::SyntaxNode &sn = *(expr);
                 $$ = std::make_unique<JLang::frontend::tree::Expression>(std::move(expr), sn);
@@ -1723,7 +1763,8 @@ expression_relational_gt
                 auto expr = std::make_unique<JLang::frontend::tree::ExpressionBinary>(
                                                                                          std::move($1),
                                                                                          std::move($2),
-                                                                                         std::move($3)
+                                                                                         std::move($3),
+                                                                                         JLang::frontend::tree::ExpressionBinary::COMPARE_GT
                                                                                          );
                 const JLang::frontend::ast::SyntaxNode &sn = *(expr);
                 $$ = std::make_unique<JLang::frontend::tree::Expression>(std::move(expr), sn);
@@ -1735,7 +1776,8 @@ expression_relational_le
                 auto expr = std::make_unique<JLang::frontend::tree::ExpressionBinary>(
                                                                                          std::move($1),
                                                                                          std::move($2),
-                                                                                         std::move($3)
+                                                                                         std::move($3),
+                                                                                         JLang::frontend::tree::ExpressionBinary::COMPARE_LE
                                                                                          );
                 const JLang::frontend::ast::SyntaxNode &sn = *(expr);
                 $$ = std::make_unique<JLang::frontend::tree::Expression>(std::move(expr), sn);
@@ -1747,7 +1789,8 @@ expression_relational_ge
                 auto expr = std::make_unique<JLang::frontend::tree::ExpressionBinary>(
                                                                                          std::move($1),
                                                                                          std::move($2),
-                                                                                         std::move($3)
+                                                                                         std::move($3),
+                                                                                         JLang::frontend::tree::ExpressionBinary::COMPARE_GE
                                                                                          );
                 const JLang::frontend::ast::SyntaxNode &sn = *(expr);
                 $$ = std::make_unique<JLang::frontend::tree::Expression>(std::move(expr), sn);
@@ -1764,7 +1807,8 @@ expression_equality
                 auto expr = std::make_unique<JLang::frontend::tree::ExpressionBinary>(
                                                                                          std::move($1),
                                                                                          std::move($2),
-                                                                                         std::move($3)
+                                                                                         std::move($3),
+                                                                                         JLang::frontend::tree::ExpressionBinary::COMPARE_EQ
                                                                                          );
                 const JLang::frontend::ast::SyntaxNode &sn = *(expr);
                 $$ = std::make_unique<JLang::frontend::tree::Expression>(std::move(expr), sn);
@@ -1774,7 +1818,8 @@ expression_equality
                 auto expr = std::make_unique<JLang::frontend::tree::ExpressionBinary>(
                                                                                          std::move($1),
                                                                                          std::move($2),
-                                                                                         std::move($3)
+                                                                                         std::move($3),
+                                                                                         JLang::frontend::tree::ExpressionBinary::COMPARE_NE
                                                                                          );
                 const JLang::frontend::ast::SyntaxNode &sn = *(expr);
                 $$ = std::make_unique<JLang::frontend::tree::Expression>(std::move(expr), sn);
@@ -1791,7 +1836,8 @@ expression_and
                 auto expr = std::make_unique<JLang::frontend::tree::ExpressionBinary>(
                                                                                          std::move($1),
                                                                                          std::move($2),
-                                                                                         std::move($3)
+                                                                                         std::move($3),
+                                                                                         JLang::frontend::tree::ExpressionBinary::BITWISE_AND
                                                                                          );
                 const JLang::frontend::ast::SyntaxNode &sn = *(expr);
                 $$ = std::make_unique<JLang::frontend::tree::Expression>(std::move(expr), sn);
@@ -1808,7 +1854,8 @@ expression_exclusive_or
                 auto expr = std::make_unique<JLang::frontend::tree::ExpressionBinary>(
                                                                                          std::move($1),
                                                                                          std::move($2),
-                                                                                         std::move($3)
+                                                                                         std::move($3),
+                                                                                         JLang::frontend::tree::ExpressionBinary::BITWISE_XOR
                                                                                          );
                 const JLang::frontend::ast::SyntaxNode &sn = *(expr);
                 $$ = std::make_unique<JLang::frontend::tree::Expression>(std::move(expr), sn);
@@ -1825,7 +1872,8 @@ expression_inclusive_or
                 auto expr = std::make_unique<JLang::frontend::tree::ExpressionBinary>(
                                                                                          std::move($1),
                                                                                          std::move($2),
-                                                                                         std::move($3)
+                                                                                         std::move($3),
+                                                                                         JLang::frontend::tree::ExpressionBinary::BITWISE_OR
                                                                                          );
                 const JLang::frontend::ast::SyntaxNode &sn = *(expr);
                 $$ = std::make_unique<JLang::frontend::tree::Expression>(std::move(expr), sn);
@@ -1843,7 +1891,8 @@ expression_logical_and
                                                                                          std::move($1),
                                                                                          std::move($2),
                                                                                          std::move($3),
-                                                                                         std::move($4)
+                                                                                         std::move($4),
+                                                                                         JLang::frontend::tree::ExpressionBinary::LOGICAL_AND
                                                                                          );
                 const JLang::frontend::ast::SyntaxNode &sn = *(expr);
                 $$ = std::make_unique<JLang::frontend::tree::Expression>(std::move(expr), sn);
@@ -1860,7 +1909,8 @@ expression_logical_or
                 auto expr = std::make_unique<JLang::frontend::tree::ExpressionBinary>(
                                                                                          std::move($1),
                                                                                          std::move($2),
-                                                                                         std::move($3)
+                                                                                         std::move($3),
+                                                                                         JLang::frontend::tree::ExpressionBinary::LOGICAL_OR
                                                                                          );
                 const JLang::frontend::ast::SyntaxNode &sn = *(expr);
                 $$ = std::make_unique<JLang::frontend::tree::Expression>(std::move(expr), sn);
@@ -1895,8 +1945,9 @@ expression_assignment
         | expression_unary operator_assignment expression_assignment {
                 auto expr = std::make_unique<JLang::frontend::tree::ExpressionBinary>(
                                                                                          std::move($1),
-                                                                                         std::move($2),
-                                                                                         std::move($3)
+                                                                                         std::move($2.second),
+                                                                                         std::move($3),
+                                                                                         $2.first
                                                                                          );
                 const JLang::frontend::ast::SyntaxNode &sn = *(expr);
                 $$ = std::make_unique<JLang::frontend::tree::Expression>(std::move(expr), sn);
@@ -1906,48 +1957,81 @@ expression_assignment
 
 operator_assignment
         : EQUALS {
-                $$ = std::move($1);
-                PRINT_NONTERMINALS($$);
+                $$ = std::pair(
+                               JLang::frontend::tree::ExpressionBinary::EQUALS,
+                               std::move($1)
+                               );
+                PRINT_NONTERMINALS(($$.second));
         }
 	| MUL_ASSIGN {
-                $$ = std::move($1);
-                PRINT_NONTERMINALS($$);
+                $$ = std::pair(
+                               JLang::frontend::tree::ExpressionBinary::MUL_ASSIGN,
+                               std::move($1)
+                               );
+                PRINT_NONTERMINALS(($$.second));
         }
 	| DIV_ASSIGN {
-                $$ = std::move($1);
-                PRINT_NONTERMINALS($$);
+                $$ = std::pair(
+                               JLang::frontend::tree::ExpressionBinary::DIV_ASSIGN,
+                               std::move($1)
+                               );
+                PRINT_NONTERMINALS(($$.second));
         }
 	| MOD_ASSIGN {
-                $$ = std::move($1);
-                PRINT_NONTERMINALS($$);
+                $$ = std::pair(
+                               JLang::frontend::tree::ExpressionBinary::MOD_ASSIGN,
+                               std::move($1)
+                               );
+                PRINT_NONTERMINALS(($$.second));
         }
 	| ADD_ASSIGN {
-                $$ = std::move($1);
-                PRINT_NONTERMINALS($$);
+                $$ = std::pair(
+                               JLang::frontend::tree::ExpressionBinary::ADD_ASSIGN,
+                               std::move($1)
+                               );
+                PRINT_NONTERMINALS(($$.second));
         }
 	| SUB_ASSIGN {
-                $$ = std::move($1);
-                PRINT_NONTERMINALS($$);
+                $$ = std::pair(
+                               JLang::frontend::tree::ExpressionBinary::SUB_ASSIGN,
+                               std::move($1)
+                               );
+                PRINT_NONTERMINALS(($$.second));
         }
 	| LEFT_ASSIGN {
-                $$ = std::move($1);
-                PRINT_NONTERMINALS($$);
+                $$ = std::pair(
+                               JLang::frontend::tree::ExpressionBinary::LEFT_ASSIGN,
+                               std::move($1)
+                               );
+                PRINT_NONTERMINALS(($$.second));
         }
 	| RIGHT_ASSIGN {
-                $$ = std::move($1);
-                PRINT_NONTERMINALS($$);
+                $$ = std::pair(
+                               JLang::frontend::tree::ExpressionBinary::RIGHT_ASSIGN,
+                               std::move($1)
+                               );
+                PRINT_NONTERMINALS(($$.second));
         }
 	| AND_ASSIGN {
-                $$ = std::move($1);
-                PRINT_NONTERMINALS($$);
+                $$ = std::pair(
+                               JLang::frontend::tree::ExpressionBinary::AND_ASSIGN,
+                               std::move($1)
+                               );
+                PRINT_NONTERMINALS(($$.second));
         } 
 	| XOR_ASSIGN {
-                $$ = std::move($1);
-                PRINT_NONTERMINALS($$);
+                $$ = std::pair(
+                               JLang::frontend::tree::ExpressionBinary::XOR_ASSIGN,
+                               std::move($1)
+                               );
+                PRINT_NONTERMINALS(($$.second));
         }
 	| OR_ASSIGN {
-                $$ = std::move($1);
-                PRINT_NONTERMINALS($$);
+                $$ = std::pair(
+                               JLang::frontend::tree::ExpressionBinary::OR_ASSIGN,
+                               std::move($1)
+                               );
+                PRINT_NONTERMINALS(($$.second));
         }
 	;
 

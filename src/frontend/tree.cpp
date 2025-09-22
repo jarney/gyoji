@@ -1768,13 +1768,13 @@ ExpressionPostfixArrow::get_identifier_source_ref() const
 ///////////////////////////////////////////////////
 ExpressionPostfixIncDec::ExpressionPostfixIncDec(
                                                  JLang::owned<Expression> _expression,
-                                                 JLang::owned<Terminal> _operator_token
+                                                 JLang::owned<Terminal> _operator_token,
+                                                 OperationType _type
                                                  )
   : SyntaxNode("expression_postfix_incdec", this, _expression->get_source_ref())
   , expression(std::move(_expression))
   , operator_token(std::move(_operator_token))
-    // TODO XXX derive this from the operator.
-  , type(ExpressionPostfixIncDec::OperationType::INCREMENT)
+  , type(_type)
 {
   add_child(*expression);
   add_child(*operator_token);
@@ -1790,15 +1790,14 @@ ExpressionPostfixIncDec::get_expression()
 ///////////////////////////////////////////////////
 ExpressionUnaryPrefix::ExpressionUnaryPrefix(
                                              JLang::owned<Terminal> _operator_token,
-                                             JLang::owned<Expression> _expression
+                                             JLang::owned<Expression> _expression,
+                                             OperationType _type
                                              )
   : SyntaxNode("expression_unary_prefix", this, _operator_token->get_source_ref())
   , operator_token(std::move(_operator_token))
   , expression(std::move(_expression))
-  , type(ExpressionUnaryPrefix::OperationType::INCREMENT)
+  , type(_type)
 {
-  // TODO: Calculate this from the operator given.
-  //type(ExpressionUnaryPrefix::OperationType::INCREMENT)
   add_child(*operator_token);
   add_child(*expression);
 }
@@ -1865,9 +1864,11 @@ ExpressionCast::get_expression() const
 ExpressionBinary::ExpressionBinary(
                        JLang::owned<Expression> _expression_a,
                        JLang::owned<Terminal> _operator_token,
-                       JLang::owned<Expression> _expression_b
+                       JLang::owned<Expression> _expression_b,
+                       OperationType _type
                        )
   : SyntaxNode("expression_binary", this, _expression_a->get_source_ref())
+  , type(_type)
   , expression_a(std::move(_expression_a))
   , operator_token(std::move(_operator_token))
   , operator_token2(nullptr)
@@ -1876,15 +1877,16 @@ ExpressionBinary::ExpressionBinary(
   add_child(*expression_a);
   add_child(*operator_token);
   add_child(*expression_b);
-  type = OperationType::LOGICAL_AND; // XXX TODO: get these from the tokens.
 }
 ExpressionBinary::ExpressionBinary(
                        JLang::owned<Expression> _expression_a,
                        JLang::owned<Terminal> _operator_token,
                        JLang::owned<Terminal> _operator_token2,
-                       JLang::owned<Expression> _expression_b
+                       JLang::owned<Expression> _expression_b,
+                       OperationType _type
                        )
   : SyntaxNode("expression_binary", this, _expression_a->get_source_ref())
+  , type(_type)
   , expression_a(std::move(_expression_a))
   , operator_token(std::move(_operator_token))
   , operator_token2(std::move(_operator_token2))
@@ -1894,7 +1896,6 @@ ExpressionBinary::ExpressionBinary(
   add_child(*operator_token);
   add_child(*operator_token2);
   add_child(*expression_b);
-  type = OperationType::LOGICAL_AND; // XXX TODO: get these from the tokens.
 }
 ExpressionBinary::~ExpressionBinary()
 {}
