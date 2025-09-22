@@ -59,10 +59,24 @@ TypeResolver::extract_from_type_specifier(const TypeSpecifier & type_specifier)
   }
   else if (std::holds_alternative<JLang::owned<TypeSpecifierTemplate>>(type_specifier_type)) {
     const auto & template_type = std::get<JLang::owned<TypeSpecifierTemplate>>(type_specifier_type);
+    parse_result
+      .get_compiler_context()
+      .get_errors()
+      .add_simple_error(template_type->get_source_ref(),
+                        "Could not find type",
+                        "Template types are not supported yet."
+                        );
     return nullptr;
   }
   else if (std::holds_alternative<JLang::owned<TypeSpecifierFunctionPointer>>(type_specifier_type)) {
     const auto & fptr_type = std::get<JLang::owned<TypeSpecifierFunctionPointer>>(type_specifier_type);
+    parse_result
+      .get_compiler_context()
+      .get_errors()
+      .add_simple_error(fptr_type->get_source_ref(),
+                        "Could not find type",
+                        "Function pointer types are not supported yet."
+                        );
     return nullptr;
   }
   else if (std::holds_alternative<JLang::owned<TypeSpecifierPointerTo>>(type_specifier_type)) {
@@ -161,23 +175,50 @@ TypeResolver::extract_from_class_definition(const ClassDefinition & definition)
       extract_from_class_members(type, definition);
     }
     else {
-      SourceReference src_ref("asdf.h", (size_t)0, (size_t)10);
-      
-      std::unique_ptr<JLang::context::Error> error = std::make_unique<JLang::context::Error>("Type Resolution Error");
-      error->add_message(src_ref, "Duplicate type");      
-      parse_result.get_errors().add_error(std::move(error));
-      
+      // Case 3: Class is declared and complete, but does not match our current definition,
+      // so this is a duplicate.  Raise an error to avoid ambiguity.
+      std::unique_ptr<JLang::context::Error> error = std::make_unique<JLang::context::Error>(std::string("Duplicate class definition: ") + definition.get_name());
+      error->add_message(type.get_defined_source_ref(),
+                         "Originally defined here"
+                         );
+      error->add_message(definition.get_name_source_ref(),
+                         "Re-declared here"
+                         );
+      parse_result
+        .get_compiler_context()
+        .get_errors()
+        .add_error(std::move(error));
     }
 
-    // Case 3: Class is declared and complete, but does not match our current definition,
-    // so this is a duplicate.  Raise an error to avoid ambiguity.
-    
   }
 }
 
 void
 TypeResolver::extract_from_enum(const EnumDefinition & enum_definition)
 {
+  auto it = types.type_map.find(enum_definition.get_name());
+  if (it == types.type_map.end()) {
+    // No definition exists, create it.
+    JLang::owned<Type> type = std::make_unique<Type>(enum_definition.get_name(), Type::TYPE_ENUM, true, enum_definition.get_name_source_ref());
+    types.define_type(std::move(type));
+  }
+  else {
+    // This is a duplicate, reference the original definition.
+    // Case 3: Class is declared and complete, but does not match our current definition,
+    // so this is a duplicate.  Raise an error to avoid ambiguity.
+    auto & type = *it->second;
+    std::unique_ptr<JLang::context::Error> error = std::make_unique<JLang::context::Error>(std::string("Duplicate enum definition: ") + enum_definition.get_name());
+    error->add_message(type.get_defined_source_ref(),
+                       "Originally defined here"
+                       );
+    error->add_message(enum_definition.get_name_source_ref(),
+                       "Re-declared here"
+                       );
+    parse_result
+      .get_compiler_context()
+      .get_errors()
+      .add_error(std::move(error));
+  }
 }
 
 void

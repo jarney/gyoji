@@ -1506,16 +1506,16 @@ const AccessModifier &
 EnumDefinition::get_access_modifier() const
 { return *access_modifier; }
 const std::string &
-EnumDefinition::type_name() const
+EnumDefinition::get_type_name() const
 { return type_name_token->get_value(); }
 const SourceReference &
 EnumDefinition::get_type_name_source_ref() const
 { return type_name_token->get_source_ref(); }
 const std::string &
-EnumDefinition::enum_name() const
+EnumDefinition::get_name() const
 { return identifier_token->get_value(); }
 const SourceReference &
-EnumDefinition::get_enum_name_source_ref() const
+EnumDefinition::get_name_source_ref() const
 { return identifier_token->get_source_ref(); }
 const EnumDefinitionValueList &
 EnumDefinition::get_value_list() const

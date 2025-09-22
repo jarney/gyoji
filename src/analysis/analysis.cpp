@@ -51,8 +51,6 @@ AnalysisPassTypeResolution::check_type(const Type *type) const
         //.add_error(std::move(error));
         
         std::unique_ptr<JLang::context::Error> error = std::make_unique<JLang::context::Error>("Class contains incomplete type");
-
-        JLang::context::SourceReference src_ref("asdf.h", 14, 19);
         error->add_message(member.get_source_ref(),
                            std::string("Incomplete type in member ") + member.get_name() + std::string(" of type ") + type->get_name());
         error->add_message(member.get_type()->get_declared_source_ref(),

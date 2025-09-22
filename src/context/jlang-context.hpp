@@ -10,6 +10,7 @@ namespace JLang::context {
     CompilerContext();
     ~CompilerContext();
 
+    bool has_errors() const;
     Errors & get_errors() const;
     TokenStream & get_token_stream() const;
   private:

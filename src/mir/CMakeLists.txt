@@ -8,6 +8,8 @@ set(TYPES_SOURCES
     mir.cpp
     functions.cpp
     types.cpp
+    type.cpp
+    type-member.cpp
     ${TYPES_PUBLIC_HEADERS}
 )
 

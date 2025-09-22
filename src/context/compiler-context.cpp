@@ -10,6 +10,9 @@ CompilerContext::CompilerContext()
 CompilerContext::~CompilerContext()
 {}
 
+bool
+CompilerContext::has_errors() const
+{ return errors->size(); }
 
 Errors &
 CompilerContext::get_errors() const

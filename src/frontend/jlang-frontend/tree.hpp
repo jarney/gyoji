@@ -1858,11 +1858,11 @@ namespace JLang::frontend::tree {
      */
       ~EnumDefinition();
       const AccessModifier & get_access_modifier() const;
-      const std::string & type_name() const;
+      const std::string & get_type_name() const;
       const JLang::context::SourceReference & get_type_name_source_ref() const;
       
-      const std::string & enum_name() const;
-      const JLang::context::SourceReference & get_enum_name_source_ref() const;
+      const std::string & get_name() const;
+      const JLang::context::SourceReference & get_name_source_ref() const;
       
       const EnumDefinitionValueList & get_value_list() const;
     private:

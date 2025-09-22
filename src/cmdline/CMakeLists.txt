@@ -1,5 +1,6 @@
 set(CMDLINE_LINK_LIBRARIES
         jlang-frontend
+        jlang-analysis
         jlang-mir
         jlang-context
         jlang-misc
@@ -12,6 +13,7 @@ set(CMDLINE_INCLUDE_DIRECTORIES
         context
         frontend
         codegen
+        analysis
 	/usr/include/llvm-18
 	/usr/include/llvm-c-18
 )
