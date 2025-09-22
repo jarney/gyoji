@@ -29,7 +29,7 @@ AnalysisPassTypeResolution::check(const Types & types) const
   // that is used in a structure 'inline' is actually complete.
   // If not, produce a compile error to that effect.
   // This needs to be recursive!
-  for (const auto & type : types.type_map) {
+  for (const auto & type : types.get_types()) {
     check_type(type.second.get());
   }
 }

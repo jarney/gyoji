@@ -53,6 +53,9 @@ Types::define_type(JLang::owned<Type> type)
   type_map.insert(std::pair<std::string, JLang::owned<Type>>(type_name, std::move(type)));
 }
 
+const std::map<std::string, JLang::owned<Type>> &
+Types::get_types() const
+{ return type_map; }
 
 
 void

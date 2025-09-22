@@ -85,7 +85,9 @@ llvm::AllocaInst *CodeGeneratorLLVMContext::CreateEntryBlockAlloca(
 
 void
 CodeGeneratorLLVMContext::create_types(const MIR & _mir)
-{}
+{
+
+}
 
 
 void

@@ -278,7 +278,16 @@ TypeSpecifierFunctionPointer::TypeSpecifierFunctionPointer(
   , paren_l2_token(std::move(_paren_l2_token))
   , function_definition_arg_list(std::move(_function_definition_arg_list))
   , paren_r2_token(std::move(_paren_r2_token))
-{}
+{
+  add_child(*type_specifier);
+  add_child(*paren_l1_token);
+  add_child(*star_token);
+  add_child(*identifier_token);
+  add_child(*paren_r1_token);
+  add_child(*paren_l2_token);
+  add_child(*function_definition_arg_list);
+  add_child(*paren_r2_token);
+}
 TypeSpecifierFunctionPointer::~TypeSpecifierFunctionPointer()
 {}
 const TypeSpecifier & TypeSpecifierFunctionPointer::get_return_type() const
@@ -466,11 +475,11 @@ StatementVariableDeclaration::StatementVariableDeclaration(
   , global_initializer(std::move(_global_initializer))
   , semicolon_token(std::move(_semicolon_token))
 {
-  //  add_child(*type_specifier);
-  //  add_child(*identifier_token);
-  //  add_child(*array_length);
-  //  add_child(*global_initializer);
-  //  add_child(*semicolon_token);
+  add_child(*type_specifier);
+  add_child(*identifier_token);
+  add_child(*array_length);
+  add_child(*global_initializer);
+  add_child(*semicolon_token);
 }
 StatementVariableDeclaration::~StatementVariableDeclaration()
 {}
@@ -760,7 +769,11 @@ StatementSwitchContent::get_blocks() const
 { return blocks; }
 void
 StatementSwitchContent::add_block(JLang::owned<StatementSwitchBlock> _block)
-{ blocks.push_back(std::move(_block)); }
+{
+  add_child(*_block.get());
+  blocks.push_back(std::move(_block));
+}
+
 ///////////////////////////////////////////////////
 StatementSwitch::StatementSwitch(
                       JLang::owned<Terminal> _switch_token,
@@ -781,7 +794,6 @@ StatementSwitch::StatementSwitch(
   , brace_r_token(std::move(_brace_r_token))
 {
   add_child(*switch_token);
-  add_child(*expression);
   add_child(*paren_l_token);
   add_child(*expression);
   add_child(*paren_r_token);
@@ -1851,7 +1863,14 @@ ExpressionCast::ExpressionCast(
   , comma_token(std::move(_comma_token))
   , expression(std::move(_expression))
   , paren_r_token(std::move(_paren_r_token))
-{}
+{
+  add_child(*cast_token);
+  add_child(*paren_l_token);
+  add_child(*type_specifier);
+  add_child(*comma_token);
+  add_child(*expression);
+  add_child(*paren_r_token);
+}
 ExpressionCast::~ExpressionCast()
 {}
 const TypeSpecifier &

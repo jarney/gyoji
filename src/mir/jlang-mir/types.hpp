@@ -60,9 +60,10 @@ namespace JLang::mir {
      * the content of the type database.
      */
     void dump();
-    
-    std::map<std::string, JLang::owned<Type>> type_map;
+
+    const std::map<std::string, JLang::owned<Type>> & get_types() const;
   private:
+    std::map<std::string, JLang::owned<Type>> type_map;
   };
 
   //! This represents a typed member variable of a class.

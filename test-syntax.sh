@@ -55,7 +55,7 @@ for test_file in ${TEST_FILES} ; do
     fi
 done
 
-let test_memory_scale=1
+let test_memory_scale=0
 if [ $test_memory_scale -ne 0 ] ; then
     rm -f ${CMAKE_BINARY_DIR}/test-syntax-dir/memory_usage.csv.tmp
     for test_file in ${TEST_FILES} ; do

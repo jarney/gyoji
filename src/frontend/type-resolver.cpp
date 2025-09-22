@@ -171,9 +171,9 @@ TypeResolver::extract_from_class_members(Type & type, const ClassDefinition & de
 void
 TypeResolver::extract_from_class_definition(const ClassDefinition & definition)
 {
-  auto it = types.type_map.find(definition.get_name());
+  const auto it = types.get_types().find(definition.get_name());
   
-  if (it == types.type_map.end()) {
+  if (it == types.get_types().end()) {
     // Case 1: No forward declaration exists, fill in the definition
     // from the class.
     JLang::owned<Type> type = std::make_unique<Type>(definition.get_name(), Type::TYPE_COMPOSITE, true, definition.get_name_source_ref());
@@ -207,8 +207,8 @@ TypeResolver::extract_from_class_definition(const ClassDefinition & definition)
 void
 TypeResolver::extract_from_enum(const EnumDefinition & enum_definition)
 {
-  auto it = types.type_map.find(enum_definition.get_name());
-  if (it == types.type_map.end()) {
+  const auto it = types.get_types().find(enum_definition.get_name());
+  if (it == types.get_types().end()) {
     // No definition exists, create it.
     JLang::owned<Type> type = std::make_unique<Type>(enum_definition.get_name(), Type::TYPE_ENUM, true, enum_definition.get_name_source_ref());
     types.define_type(std::move(type));
