@@ -20,9 +20,9 @@ namespace JLang::analysis {
     AnalysisPassTypeResolution(JLang::context::CompilerContext & _compiler_context);
     ~AnalysisPassTypeResolution();
     
-    void check(JLang::mir::Types & types) const;
+    void check(const JLang::mir::Types & types) const;
   private:
-    void check_type(JLang::mir::Type *type) const;
+    void check_type(const JLang::mir::Type *type) const;
   };
 
 };

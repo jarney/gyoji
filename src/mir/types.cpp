@@ -70,8 +70,8 @@ Type::Type(std::string _name, TypeType _type, bool _complete, const SourceRefere
   : name(_name)
   , type(_type)
   , complete(_complete)
-  , defined_source_ref(_source_ref)
-  , declared_source_ref(_source_ref)
+  , defined_source_ref(&_source_ref)
+  , declared_source_ref(&_source_ref)
 {}
 
 Type::~Type()
@@ -88,7 +88,7 @@ const std::string &
 Type::get_name() const
 { return name; }
 
-const std::vector<std::pair<std::string, Type*>> &
+const std::vector<TypeMember> &
 Type::get_members() const
 { return members; }
 
@@ -97,27 +97,27 @@ Type::complete_pointer_definition(Type *_type, const SourceReference & source_re
 {
   complete = true;
   pointer_or_ref = _type;
-  //  defined_source_ref = source_ref;
+  defined_source_ref = &source_ref;
 }
 
 void
-Type::complete_composite_definition(std::vector<std::pair<std::string, Type*>> _members, const SourceReference & source_ref)
+Type::complete_composite_definition(std::vector<TypeMember> _members, const SourceReference & source_ref)
 {
   complete = true;
   members = _members;
-  //  defined_source_ref = source_ref;
+  defined_source_ref = &source_ref;
 }
 
 const JLang::context::SourceReference &
-Type::get_declared_source_ref()
-{ return declared_source_ref; }
+Type::get_declared_source_ref() const
+{ return *declared_source_ref; }
 
 const JLang::context::SourceReference &
-Type::get_defined_source_ref()
-{ return defined_source_ref; }
+Type::get_defined_source_ref() const
+{ return *defined_source_ref; }
 
 void
-Type::dump()
+Type::dump() const
 {
   std::string type_desc("unknown");
   
@@ -149,7 +149,7 @@ Type::dump()
 
     fprintf(stderr, "{\n");
     for (const auto & m : members) {
-      fprintf(stderr, "    %s %s\n", m.second->get_name().c_str(), m.first.c_str());
+      fprintf(stderr, "    %s %s\n", m.get_type()->get_name().c_str(), m.get_name().c_str());
     }
     fprintf(stderr, "}\n");
   }
@@ -162,3 +162,43 @@ Type::dump()
             name.c_str(), type_desc.c_str(), pointer_or_ref->get_name().c_str());
   }
 }
+
+
+
+TypeMember::TypeMember(
+                       std::string _member_name,
+                       Type *_member_type,
+                       const JLang::context::SourceReference & _source_ref
+                       )
+  : member_name(_member_name)
+  , member_type(_member_type)
+  , source_ref(&_source_ref)
+{}
+TypeMember::TypeMember(const TypeMember & other)
+  : member_name(other.member_name)
+  , member_type(other.member_type)
+  , source_ref(other.source_ref)
+{}
+
+TypeMember &
+TypeMember::operator=(const TypeMember & other)
+{
+  member_name = other.member_name;
+  member_type = other.member_type;
+  source_ref = other.source_ref;
+  return *this;
+}
+
+TypeMember::~TypeMember()
+{}
+
+const std::string &
+TypeMember::get_name() const
+{ return member_name; }
+const Type *
+TypeMember::get_type() const
+{ return member_type; }
+const JLang::context::SourceReference &
+TypeMember::get_source_ref() const
+{ return *source_ref; }
+

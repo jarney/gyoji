@@ -65,6 +65,34 @@ namespace JLang::mir {
   private:
   };
 
+  //! This represents a typed member variable of a class.
+  /**
+   * A member variable for a class consists of a name
+   * and a type.  The name is the alias that is used
+   * when referring to this memory and the type is
+   * the type of that data.  This also contains a source
+   * reference so that errors can be correctly
+   * attributed to their origin.
+   */
+  class TypeMember {
+  public:
+    TypeMember(
+               std::string _member_name,
+               Type *_member_type,
+               const JLang::context::SourceReference & _source_ref
+               );
+    TypeMember(const TypeMember & other);
+    TypeMember & operator=(const TypeMember & other);
+    ~TypeMember();
+    const std::string & get_name() const;
+    const Type *get_type() const;
+    const JLang::context::SourceReference & get_source_ref() const;
+  private:
+    std::string member_name;
+    Type *member_type;
+    const JLang::context::SourceReference *source_ref;
+  };
+  
   //! This represents a type as declared in a translation unit.
   /**
    * A type consists of several aspects:
@@ -146,12 +174,12 @@ namespace JLang::mir {
 
     TypeType get_type() const;
 
-    const std::vector<std::pair<std::string, Type*>> & get_members() const;
+    const std::vector<TypeMember> & get_members() const;
     
     /**
      * Completes the definition of a composite type.
      */
-    void complete_composite_definition(std::vector<std::pair<std::string, Type*>> _members, const JLang::context::SourceReference & _source_ref);
+    void complete_composite_definition(std::vector<TypeMember> _members, const JLang::context::SourceReference & _source_ref);
 
     /**
      * Completes the definition of a pointer or reference.
@@ -162,29 +190,30 @@ namespace JLang::mir {
      * Used for debugging purposes to dump the content
      * of the type database.
      */
-    void dump();
+    void dump() const;
 
     /**
      * Where the type was first declared.
      */
-    const JLang::context::SourceReference & get_declared_source_ref();
+    const JLang::context::SourceReference & get_declared_source_ref() const;
 
     /**
      * Where the full definition of the type appeared.
      */
-    const JLang::context::SourceReference & get_defined_source_ref();
+    const JLang::context::SourceReference & get_defined_source_ref() const;
     
   private:
     bool complete;
     std::string name;
     TypeType type;
     Type *pointer_or_ref;
-    const JLang::context::SourceReference & declared_source_ref;
-    const JLang::context::SourceReference & defined_source_ref;
+    const JLang::context::SourceReference *declared_source_ref;
+    const JLang::context::SourceReference *defined_source_ref;
     
     // TODO: This should be a vector of members
     // instead so we can also put the SourceRef into each of them.
-    std::vector<std::pair<std::string, Type*>> members;
+    std::vector<TypeMember> members;
   };
+
 
 };

@@ -23,7 +23,7 @@ AnalysisPassTypeResolution::~AnalysisPassTypeResolution()
 {}
 
 void
-AnalysisPassTypeResolution::check(Types & types) const
+AnalysisPassTypeResolution::check(const Types & types) const
 {
   // TODO: Go back through all of the types and make sure that every type
   // that is used in a structure 'inline' is actually complete.
@@ -35,11 +35,11 @@ AnalysisPassTypeResolution::check(Types & types) const
 }
 
 void
-AnalysisPassTypeResolution::check_type(Type *type) const
+AnalysisPassTypeResolution::check_type(const Type *type) const
 {
   if (type->get_type() == Type::TYPE_COMPOSITE) {
     for (const auto & member : type->get_members()) {
-      if (!member.second->is_complete()) {
+      if (!member.get_type()->is_complete()) {
 
         //auto error = std::make_unique<JLang::context::Error>("Incomplete Type: Use of type that has been forward declard, but a full definition of the type was not found.");
         // XXX Need to put declared source ref into Type.
@@ -50,17 +50,16 @@ AnalysisPassTypeResolution::check_type(Type *type) const
         //.get_errors()
         //.add_error(std::move(error));
         
-        fprintf(stderr, "Incomplete type %s\n", member.second->get_name().c_str());
-
-        
         std::unique_ptr<JLang::context::Error> error = std::make_unique<JLang::context::Error>("Class contains incomplete type");
 
         JLang::context::SourceReference src_ref("asdf.h", 14, 19);
-        error->add_message(src_ref,
-                           std::string("Incomplete type in member ") + member.first + std::string(" of type ") + type->get_name() + std::string("\n"));
+        error->add_message(member.get_source_ref(),
+                           std::string("Incomplete type in member ") + member.get_name() + std::string(" of type ") + type->get_name());
+        error->add_message(member.get_type()->get_declared_source_ref(),
+                           "Forward declaration is here.");
         get_compiler_context().get_errors().add_error(std::move(error));
       }
-      check_type(member.second);
+      check_type(member.get_type());
     }
   }
 }

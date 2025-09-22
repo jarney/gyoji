@@ -114,7 +114,7 @@ TypeResolver::extract_from_type_specifier(const TypeSpecifier & type_specifier)
 void
 TypeResolver::extract_from_class_members(Type & type, const ClassDefinition & definition)
 {
-  std::vector<std::pair<std::string, Type *>> members;
+  std::vector<TypeMember> members;
 
   const auto & class_members = definition.get_members();
   for (const auto & class_member : class_members) {
@@ -133,7 +133,8 @@ TypeResolver::extract_from_class_members(Type & type, const ClassDefinition & de
                             );
       }
       else {
-        members.push_back(std::pair<std::string, Type*>(member_variable->get_name(), member_type));
+        TypeMember add_member(member_variable->get_name(), member_type, class_member->get_source_ref());
+        members.push_back(add_member);
       }
     }
   }
