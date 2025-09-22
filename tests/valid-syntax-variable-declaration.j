@@ -10,13 +10,8 @@ enum u8 Choice {
     INVALID = 3;
 };
 
-public class q(somename, othername) {
+public class q {
     typedef u8 my_inner_type_t;
-
-    private somename* field_from_generic;
-    somename* another_member_poi32er;
-
-    const othername *p;
 
     my_type_t x[32];
     private my_inner_type_t zzz;

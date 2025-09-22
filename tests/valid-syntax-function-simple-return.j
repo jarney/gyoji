@@ -1,6 +1,6 @@
 
 
-int do_something(int variable)
+u32 do_something(u32 variable)
 {
         return variable;
 }

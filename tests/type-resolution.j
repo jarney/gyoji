@@ -16,7 +16,9 @@ class Outer {
 //    public u32 unsigned_value;
 //    public f32 float_value;
 //};
-
+class Outer {
+    u32 other_def;
+};
 namespace epsilon {
     class SmallValue {
         f64 small_epsilon_value;

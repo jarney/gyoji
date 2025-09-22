@@ -1,19 +1,17 @@
 namespace std {
           class string {
-              public class u8 int;    // Define u8 to be of type 'int'.
+              public class int {
+                        u32 val;
+              };    // Define u8 to be of type 'int'.
               
-              public static u8 nstrings; // Define a static string in the namespace of 'std::string' to be the variable nstrings.
+              public u8 nstrings; // Define a static string in the namespace of 'std::string' to be the variable nstrings.
               u8 foo;
           };
 };
 
-// In this case, it's just a re-naming of string, not a composite type.
-// We don't actually need a separate keyword here.
-class mystring std::string; 
-
-int do_something(char a)
+std::string::int do_something(u8 a)
 {
-        std::string::u8 ns = std::strings::nstrings;
+        std::string::int ns = std::strings::nstrings;
         
         // Rule when parsing:
 

@@ -13,6 +13,9 @@ Errors::~Errors()
 void
 Errors::print() const
 {
+  // TODO: Sort errors in ascending order by
+  // source reference line number, not by
+  // order of occurrence.
   for (const auto & error : errors) {
     error->print();
   }

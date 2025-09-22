@@ -1,14 +1,14 @@
 namespace std {
 
-          typedef int u8_t;
+          typedef u8 int;
 
-          public u8_t my_standard_global;
+          public u8 my_standard_global;
 
-u8_t doit(int a, char p, const char*q)
+int doit(u32 a, u8 p, const u8 * q)
 {
-        u8_t *const *some_var;
+        int *const *some_var;
         
-    return '0';
+        return '0';
 }
 
 };

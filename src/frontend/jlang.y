@@ -699,8 +699,8 @@ opt_class_argument_list
                 PRINT_NONTERMINALS($$);
         }
         | PAREN_L class_argument_list PAREN_R {
-          $$ = std::move($2);
-          $$->add_parens(std::move($1), std::move($3));
+                $$ = std::move($2);
+                $$->add_parens(std::move($1), std::move($3));
                 PRINT_NONTERMINALS($$);
         }
         ;

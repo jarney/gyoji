@@ -1,4 +1,4 @@
-int do_something(char a)
+u8 do_something(u32 a)
 {
         if (a == b) {
         }
