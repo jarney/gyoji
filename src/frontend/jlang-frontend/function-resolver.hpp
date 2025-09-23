@@ -31,6 +31,21 @@ namespace JLang::frontend {
     JLang::mir::MIR & mir;
     TypeResolver & type_resolver;
 
+    void extract_from_expression_primary(const JLang::frontend::tree::ExpressionPrimary & expression);
+    void extract_from_expression_primary(const JLang::frontend::tree::ExpressionPostfixArrayIndex & expression);
+    void extract_from_expression_primary(const JLang::frontend::tree::ExpressionPostfixFunctionCall & expression);
+    void extract_from_expression_primary(const JLang::frontend::tree::ExpressionPostfixDot & expression);
+    void extract_from_expression_primary(const JLang::frontend::tree::ExpressionPostfixArrow & expression);
+    void extract_from_expression_primary(const JLang::frontend::tree::ExpressionPostfixIncDec & expression);
+    void extract_from_expression_primary(const JLang::frontend::tree::ExpressionUnaryPrefix & expression);
+    void extract_from_expression_primary(const JLang::frontend::tree::ExpressionUnarySizeofType & expression);
+    void extract_from_expression_primary(const JLang::frontend::tree::ExpressionBinary & expression);
+    void extract_from_expression_primary(const JLang::frontend::tree::ExpressionTrinary & expression);
+    void extract_from_expression_primary(const JLang::frontend::tree::ExpressionCast & expression);
+
+    void extract_from_expression(const JLang::frontend::tree::Expression & expression);
+    void extract_from_statement_list(const JLang::frontend::tree::StatementList & statement_list);
+    
     void extract_from_function_definition(const JLang::frontend::tree::FileStatementFunctionDefinition & function_definition);
     void extract_from_class_definition(const JLang::frontend::tree::ClassDefinition & definition);
     void extract_from_namespace(const JLang::frontend::tree::FileStatementNamespace & namespace_declaration);

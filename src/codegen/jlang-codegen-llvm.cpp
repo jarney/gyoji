@@ -52,12 +52,14 @@ CodeGeneratorLLVMContext::create_function(const Function & function)
   std::vector<llvm::Type *> llvm_arguments;
   const std::vector<FunctionArgument> & function_arguments = function.get_arguments();
   
-  for (auto semantic_arg : function_arguments) {
-    llvm::Type *atype = llvm::Type::getDoubleTy(*TheContext);
+  for (const auto & semantic_arg : function_arguments) {
+    printf("Looking up type %s\n", semantic_arg.get_type().c_str());
+    llvm::Type *atype = types[semantic_arg.get_type()];
+    printf("Found type at %p\n", atype);
     llvm_arguments.push_back(atype);
   }
 
-  llvm::Type* return_value_type = llvm::Type::getDoubleTy(*TheContext);
+  llvm::Type* return_value_type = types[function.get_return_type()];
   
   llvm::FunctionType *FT =
     llvm::FunctionType::get(return_value_type, llvm_arguments, false);
@@ -107,7 +109,13 @@ CodeGeneratorLLVMContext::create_type_composite(const JLang::mir::Type *composit
     members.push_back(create_type(member.get_type()));
   }
 
-  return llvm::StructType::create(*TheContext, members, compositetype->get_name());
+  llvm::Type *llvm_type = llvm::StructType::create(*TheContext, members, compositetype->get_name());
+  types.insert(std::pair<std::string, llvm::Type*>(
+                                                   compositetype->get_name(),
+                                                   llvm_type
+                                                   )
+               );
+  return llvm_type;
 }
 
 llvm::Type *
@@ -118,6 +126,11 @@ CodeGeneratorLLVMContext::create_type_pointer(const JLang::mir::Type *pointertyp
     llvm::PointerType::get(create_type(pointer_target),
                            0 // Address space (default to 0?  This seems unclean, llvm!)
                            );
+  types.insert(std::pair<std::string, llvm::Type*>(
+                                                   pointertype->get_name(),
+                                                   llvm_type
+                                                   )
+               );
   return llvm_type;
 }
 
@@ -129,7 +142,12 @@ CodeGeneratorLLVMContext::create_type_reference(const JLang::mir::Type *referenc
     llvm::PointerType::get(create_type(pointer_target),
                            0 // Address space (default to 0?  This seems unclean, llvm!)
                            );
-  return llvm_type;
+  types.insert(std::pair<std::string, llvm::Type*>(
+                                                   referencetype->get_name(),
+                                                   llvm_type
+                                                   )
+               );
+  return llvm_type;  return llvm_type;
 }
 
 /**
