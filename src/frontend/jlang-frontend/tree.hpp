@@ -2096,7 +2096,7 @@ namespace JLang::frontend::tree {
      */
       ~ExpressionPostfixIncDec();
       const ExpressionPostfixIncDec::OperationType & get_type();
-      const Expression & get_expression();
+      const Expression & get_expression() const;
     private:
       ExpressionPostfixIncDec::OperationType type;
       JLang::owned<Terminal> operator_token;
@@ -2124,9 +2124,9 @@ namespace JLang::frontend::tree {
      * Destructor, nothing special.
      */
       ~ExpressionUnaryPrefix();
-      const ExpressionUnaryPrefix::OperationType & get_type();
+      const ExpressionUnaryPrefix::OperationType & get_type() const;
       const JLang::context::SourceReference & get_operator_source_ref() const;
-      const Expression & get_expression();
+      const Expression & get_expression() const;
     private:
       ExpressionUnaryPrefix::OperationType type;
       JLang::owned<Terminal> operator_token;
@@ -2190,7 +2190,6 @@ namespace JLang::frontend::tree {
         // Logical
         LOGICAL_AND,
         LOGICAL_OR,
-        LOGICAL_XOR,
 
         // Bitwise
         BITWISE_AND,

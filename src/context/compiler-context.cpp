@@ -4,8 +4,8 @@ using namespace JLang::context;
 
 CompilerContext::CompilerContext()
 {
-  token_stream = std::make_unique<TokenStream>();
-  errors = std::make_unique<Errors>(*token_stream);
+    token_stream = std::make_unique<TokenStream>();
+    errors = std::make_unique<Errors>(*token_stream);
 }
 CompilerContext::~CompilerContext()
 {}

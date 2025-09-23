@@ -6,18 +6,18 @@ using namespace JLang::context;
 
 
 SourceReference::SourceReference(
-                                 std::string _filename,
-                                 size_t _line,
-                                 size_t _column
-                                 )
-  : filename(_filename)
-  , line(_line)
-  , column(_column)
+    std::string _filename,
+    size_t _line,
+    size_t _column
+    )
+    : filename(_filename)
+    , line(_line)
+    , column(_column)
 {}
 SourceReference::SourceReference(const SourceReference & _other)
-  : filename(_other.filename)
-  , line(_other.line)
-  , column(_other.column)
+    : filename(_other.filename)
+    , line(_other.line)
+    , column(_other.column)
 {}
 SourceReference::~SourceReference()
 {}

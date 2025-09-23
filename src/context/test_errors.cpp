@@ -5,22 +5,22 @@ using namespace JLang::context;
 
 int main(int argc, char **argv)
 {
-
-  TokenStream token_stream;
-  size_t lineno = 1;
-  token_stream.add_token("none", "{",           "foo.j", lineno++, 0);
-  token_stream.add_token("none", "    x = 12;", "foo.j", lineno++, 0);
-  token_stream.add_token("none", "    a = asdfasdf::23;", "foo.j", lineno++, 0);
-  token_stream.add_token("none", "123456789", "foo.j", lineno++, 0);
-  token_stream.add_token("none", "    y = 14;", "foo.j", lineno++, 0);
-  token_stream.add_token("none", "    p = x + y;", "foo.j", lineno++, 0);
-  
-  Errors errors(token_stream);
-
-  SourceReference src_ref(std::string("asdf.h"), (size_t)3, (size_t)9);
-  std::unique_ptr<Error> error = std::make_unique<Error>("Syntax Error");
-  error->add_message(src_ref, "Invalid namespace asdfsdf");
-  errors.add_error(std::move(error));
-  
-  errors.print();
+    
+    TokenStream token_stream;
+    size_t lineno = 1;
+    token_stream.add_token("none", "{",           "foo.j", lineno++, 0);
+    token_stream.add_token("none", "    x = 12;", "foo.j", lineno++, 0);
+    token_stream.add_token("none", "    a = asdfasdf::23;", "foo.j", lineno++, 0);
+    token_stream.add_token("none", "123456789", "foo.j", lineno++, 0);
+    token_stream.add_token("none", "    y = 14;", "foo.j", lineno++, 0);
+    token_stream.add_token("none", "    p = x + y;", "foo.j", lineno++, 0);
+    
+    Errors errors(token_stream);
+    
+    SourceReference src_ref(std::string("asdf.h"), (size_t)3, (size_t)9);
+    std::unique_ptr<Error> error = std::make_unique<Error>("Syntax Error");
+    error->add_message(src_ref, "Invalid namespace asdfsdf");
+    errors.add_error(std::move(error));
+    
+    errors.print();
 }

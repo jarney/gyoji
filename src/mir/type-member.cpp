@@ -6,27 +6,27 @@ using namespace JLang::context;
 using namespace JLang::mir;
 
 TypeMember::TypeMember(
-                       std::string _member_name,
-                       Type *_member_type,
-                       const SourceReference & _source_ref
-                       )
-  : member_name(_member_name)
-  , member_type(_member_type)
-  , source_ref(&_source_ref)
+    std::string _member_name,
+    Type *_member_type,
+    const SourceReference & _source_ref
+    )
+    : member_name(_member_name)
+    , member_type(_member_type)
+    , source_ref(&_source_ref)
 {}
 TypeMember::TypeMember(const TypeMember & other)
-  : member_name(other.member_name)
-  , member_type(other.member_type)
-  , source_ref(other.source_ref)
+    : member_name(other.member_name)
+    , member_type(other.member_type)
+    , source_ref(other.source_ref)
 {}
 
 TypeMember &
 TypeMember::operator=(const TypeMember & other)
 {
-  member_name = other.member_name;
-  member_type = other.member_type;
-  source_ref = other.source_ref;
-  return *this;
+    member_name = other.member_name;
+    member_type = other.member_type;
+    source_ref = other.source_ref;
+    return *this;
 }
 
 TypeMember::~TypeMember()

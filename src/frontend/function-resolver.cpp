@@ -8,15 +8,15 @@ using namespace JLang::frontend;
 using namespace JLang::frontend::tree;
 
 FunctionResolver::FunctionResolver(
-                                   JLang::context::CompilerContext & _compiler_context,
-                                   const JLang::frontend::tree::TranslationUnit & _translation_unit,
-                                   JLang::mir::MIR & _mir,
-                                   JLang::frontend::TypeResolver & _type_resolver
-                                   )
-  : compiler_context(_compiler_context)
-  , translation_unit(_translation_unit)
-  , mir(_mir)
-  , type_resolver(_type_resolver)
+    JLang::context::CompilerContext & _compiler_context,
+    const JLang::frontend::tree::TranslationUnit & _translation_unit,
+    JLang::mir::MIR & _mir,
+    JLang::frontend::TypeResolver & _type_resolver
+    )
+    : compiler_context(_compiler_context)
+    , translation_unit(_translation_unit)
+    , mir(_mir)
+    , type_resolver(_type_resolver)
 {}
 
 FunctionResolver::~FunctionResolver()
@@ -28,104 +28,122 @@ void FunctionResolver::resolve()
   // input parse tree and pull out any type declarations,
   // resolving them down to their primitive types.
 
+  // TODO: Split the type extraction
+  // out away from the function extraction(?).
   extract_types(translation_unit.get_statements());
-  fprintf(stderr, "Resolving functions...\n");
 }
 
 void
-FunctionResolver::extract_from_namespace(const FileStatementNamespace & namespace_declaration)
+FunctionResolver::extract_from_namespace(
+    const FileStatementNamespace & namespace_declaration)
 {
-  const auto & statements = namespace_declaration.get_statement_list().get_statements();
-  extract_types(statements);
+    const auto & statements = namespace_declaration.get_statement_list().get_statements();
+    extract_types(statements);
 }
 
 static int blockid = 0;
-int tmpvar = 0;
+
+static int tmpvar = 0;
+
 void
-FunctionResolver::extract_from_expression_primary(const ExpressionPrimary & expression)
+FunctionResolver::extract_from_expression_primary_identifier(
+    JLang::mir::Function & function,
+    size_t & current_block,
+    const JLang::frontend::tree::ExpressionPrimaryIdentifier & expression)
 {
-  
+    function.get_basic_block(current_block).add_statement(
+	std::string("identifier ") + expression.get_identifier()
+	);
 }
 
 void
-FunctionResolver::extract_from_expression_primary(const ExpressionPostfixArrayIndex & expression)
+FunctionResolver::extract_from_expression_primary_nested(
+    JLang::mir::Function & function,
+    size_t & current_block,
+    const JLang::frontend::tree::ExpressionPrimaryNested & expression)
 {
-}
-void
-FunctionResolver::extract_from_expression_primary(const ExpressionPostfixFunctionCall & expression)
-{
-}
-void
-FunctionResolver::extract_from_expression_primary(const ExpressionPostfixDot & expression)
-{
-}
-void
-FunctionResolver::extract_from_expression_primary(const ExpressionPostfixArrow & expression)
-{
-}
-void
-FunctionResolver::extract_from_expression_primary(const ExpressionPostfixIncDec & expression)
-{
-}
-void
-FunctionResolver::extract_from_expression_primary(const ExpressionUnaryPrefix & expression)
-{
-}
-void
-FunctionResolver::extract_from_expression_primary(const ExpressionUnarySizeofType & expression)
-{
-}
-void
-FunctionResolver::extract_from_expression_primary(const ExpressionBinary & expression)
-{
-}
-void
-FunctionResolver::extract_from_expression_primary(const ExpressionTrinary & expression)
-{
-}
-void
-FunctionResolver::extract_from_expression_primary(const ExpressionCast & expression)
-{
+    extract_from_expression(function, current_block, expression.get_expression());
+    function
+	.get_basic_block(current_block)
+	.add_statement("(expression)");
 }
 
+void
+FunctionResolver::extract_from_expression_primary_literal_char(
+    JLang::mir::Function & function,
+    size_t & current_block,
+    const JLang::frontend::tree::ExpressionPrimaryLiteralChar & expression)
+{
+    function
+	.get_basic_block(current_block)
+	.add_statement(
+	    std::string("char literal ") + expression.get_value()
+	    );
+}
 
 void
-FunctionResolver::extract_from_expression(const Expression & expression_container)
+FunctionResolver::extract_from_expression_primary_literal_string(
+                                 JLang::mir::Function & function,
+                                 size_t & current_block,
+                                 const JLang::frontend::tree::ExpressionPrimaryLiteralString & expression)
 {
-  fprintf(stderr, "    Expression\n");
+    function
+	.get_basic_block(current_block)
+	.add_statement(std::string("string literal ") + expression.get_value());
+}
+
+void
+FunctionResolver::extract_from_expression_primary_literal_int(
+                                 JLang::mir::Function & function,
+                                 size_t & current_block,
+                                 const JLang::frontend::tree::ExpressionPrimaryLiteralInt & expression)
+{
+    function
+	.get_basic_block(current_block)
+	.add_statement(std::string("int literal ") + expression.get_value());
+}
+
+void
+FunctionResolver::extract_from_expression_primary_literal_float(
+                                 JLang::mir::Function & function,
+                                 size_t & current_block,
+                                 const JLang::frontend::tree::ExpressionPrimaryLiteralFloat & expression)
+{
+    function
+	.get_basic_block(current_block)
+	.add_statement(std::string("float literal ") + expression.get_value());
+}
+
+void
+FunctionResolver::extract_from_expression_primary(
+                                 JLang::mir::Function & function,
+                                 size_t & current_block,
+                                 const ExpressionPrimary & expression_container)
+{
   const auto & expression_type = expression_container.get_expression();
-  if (std::holds_alternative<JLang::owned<ExpressionPrimary>>(expression_type)) {
-    const auto & expression = std::get<JLang::owned<ExpressionPrimary>>(expression_type);
+  if (std::holds_alternative<JLang::owned<ExpressionPrimaryIdentifier>>(expression_type)) {
+    const auto & expression = std::get<JLang::owned<ExpressionPrimaryIdentifier>>(expression_type);
+    extract_from_expression_primary_identifier(function, current_block, *expression);
   }
-  else if (std::holds_alternative<JLang::owned<ExpressionPostfixArrayIndex>>(expression_type)) {
-    const auto & expression = std::get<JLang::owned<ExpressionPostfixArrayIndex>>(expression_type);
+  else if (std::holds_alternative<JLang::owned<ExpressionPrimaryNested>>(expression_type)) {
+    const auto & expression = std::get<JLang::owned<ExpressionPrimaryNested>>(expression_type);
+    extract_from_expression(function, current_block, expression->get_expression());
   }
-  else if (std::holds_alternative<JLang::owned<ExpressionPostfixFunctionCall>>(expression_type)) {
-    const auto & expression = std::get<JLang::owned<ExpressionPostfixFunctionCall>>(expression_type);
+  else if (std::holds_alternative<JLang::owned<ExpressionPrimaryLiteralChar>>(expression_type)) {
+    const auto & expression = std::get<JLang::owned<ExpressionPrimaryLiteralChar>>(expression_type);
+    extract_from_expression_primary_literal_char(function, current_block, *expression);
   }
-  else if (std::holds_alternative<JLang::owned<ExpressionPostfixDot>>(expression_type)) {
-    const auto & expression = std::get<JLang::owned<ExpressionPostfixDot>>(expression_type);
+  else if (std::holds_alternative<JLang::owned<ExpressionPrimaryLiteralString>>(expression_type)) {
+    const auto & expression = std::get<JLang::owned<ExpressionPrimaryLiteralString>>(expression_type);
+    extract_from_expression_primary_literal_string(function, current_block, *expression);
   }
-  else if (std::holds_alternative<JLang::owned<ExpressionPostfixArrow>>(expression_type)) {
-    const auto & expression = std::get<JLang::owned<ExpressionPostfixArrow>>(expression_type);
+  else if (std::holds_alternative<JLang::owned<ExpressionPrimaryLiteralInt>>(expression_type)) {
+    const auto & expression = std::get<JLang::owned<ExpressionPrimaryLiteralInt>>(expression_type);
+    extract_from_expression_primary_literal_int(function, current_block, *expression);
   }
-  else if (std::holds_alternative<JLang::owned<ExpressionPostfixIncDec>>(expression_type)) {
-    const auto & expression = std::get<JLang::owned<ExpressionPostfixIncDec>>(expression_type);
-  }
-  else if (std::holds_alternative<JLang::owned<ExpressionUnaryPrefix>>(expression_type)) {
-    const auto & expression = std::get<JLang::owned<ExpressionUnaryPrefix>>(expression_type);
-  }
-  else if (std::holds_alternative<JLang::owned<ExpressionUnarySizeofType>>(expression_type)) {
-    const auto & expression = std::get<JLang::owned<ExpressionUnarySizeofType>>(expression_type);
-  }
-  else if (std::holds_alternative<JLang::owned<ExpressionBinary>>(expression_type)) {
-    const auto & expression = std::get<JLang::owned<ExpressionBinary>>(expression_type);
-  }
-  else if (std::holds_alternative<JLang::owned<ExpressionTrinary>>(expression_type)) {
-    const auto & expression = std::get<JLang::owned<ExpressionTrinary>>(expression_type);
-  }
-  else if (std::holds_alternative<JLang::owned<ExpressionCast>>(expression_type)) {
-    const auto & expression = std::get<JLang::owned<ExpressionCast>>(expression_type);
+  else if (std::holds_alternative<JLang::owned<ExpressionPrimaryLiteralFloat>>(expression_type)) {
+    const auto & expression = std::get<JLang::owned<ExpressionPrimaryLiteralFloat>>(expression_type);
+    extract_from_expression_primary_literal_float(function, current_block, *expression);
   }
   else {
     fprintf(stderr, "Compiler bug, invalid expression type\n");
@@ -134,75 +152,400 @@ FunctionResolver::extract_from_expression(const Expression & expression_containe
 }
 
 void
-FunctionResolver::extract_from_statement_list(const StatementList & statement_list)
+FunctionResolver::extract_from_expression_postfix_array_index(
+                                 JLang::mir::Function & function,
+                                 size_t & current_block,
+                                 const ExpressionPostfixArrayIndex & expression)
 {
-  for (const auto & statement_el : statement_list.get_statements()) {
-    const auto & statement_type = statement_el->get_statement();
-    if (std::holds_alternative<JLang::owned<StatementVariableDeclaration>>(statement_type)) {
-      const auto & statement = std::get<JLang::owned<StatementVariableDeclaration>>(statement_type);
-      fprintf(stderr, "    Var decl\n");
-    }
-    else if (std::holds_alternative<JLang::owned<StatementBlock>>(statement_type)) {
-      const auto & statement = std::get<JLang::owned<StatementBlock>>(statement_type);
-      blockid++;
-      fprintf(stderr, "BB%d\n", blockid);
+  extract_from_expression(function, current_block, expression.get_array());
+  extract_from_expression(function, current_block, expression.get_index());
+  function
+      .get_basic_block(current_block)
+      .add_statement("arrayindex[]");
+}
+void
+FunctionResolver::extract_from_expression_postfix_function_call(
+                                 JLang::mir::Function & function,
+                                 size_t & current_block,
+                                 const ExpressionPostfixFunctionCall & expression)
+{
+  // We should skip the expression evaluation
+  // if we can extract a name directly and differentiate
+  // between direct and indirect function calls.
+  //
+  // Case: ordinary function call that can be resolved at compile-time.
+  // Case: method call that can be resolved at compile-time.
+  // Case: Indirect method call that requires further expression evaluation.
+  //
+  // This one is actually pretty complicated.
+  extract_from_expression(function, current_block, expression.get_function());
+  function
+      .get_basic_block(current_block)
+      .add_statement(std::string("function-call"));
+}
 
-      extract_from_statement_list(statement->get_scope_body().get_statements());
+void
+FunctionResolver::extract_from_expression_postfix_dot(
+                                 JLang::mir::Function & function,
+                                 size_t & current_block,
+                                 const ExpressionPostfixDot & expression)
+{
+  extract_from_expression(function, current_block, expression.get_expression());
+  function
+      .get_basic_block(current_block)
+      .add_statement(std::string("dot ") + expression.get_identifier());
+}
+void
+FunctionResolver::extract_from_expression_postfix_arrow(
+                                 JLang::mir::Function & function,
+                                 size_t & current_block,
+                                 const ExpressionPostfixArrow & expression)
+{
+  extract_from_expression(function, current_block, expression.get_expression());
+  function
+      .get_basic_block(current_block)
+      .add_statement(std::string("arrow ") + expression.get_identifier());
+}
+void
+FunctionResolver::extract_from_expression_postfix_incdec(
+    JLang::mir::Function & function,
+    size_t & current_block,
+    const ExpressionPostfixIncDec & expression)
+{
+    extract_from_expression(function, current_block, expression.get_expression());
+    function
+	.get_basic_block(current_block)
+	.add_statement(std::string("++/-- "));
+}
 
-      blockid++;
-      fprintf(stderr, "BB%d\n", blockid);
+void
+FunctionResolver::extract_from_expression_unary_prefix(
+    JLang::mir::Function & function,
+    size_t & current_block,
+    const ExpressionUnaryPrefix & expression)
+{
+    std::string op = "";
+    switch (expression.get_type()) {
+    case ExpressionUnaryPrefix::INCREMENT:
+	op = "++";
+	break;
+    case ExpressionUnaryPrefix::DECREMENT:
+	op = "--";
+	break;
+    case ExpressionUnaryPrefix::ADDRESSOF:
+	op = "&";
+	break;
+    case ExpressionUnaryPrefix::DEREFERENCE:
+	op = "*";
+	break;
+    case ExpressionUnaryPrefix::PLUS:
+	op = "+";
+	break;
+    case ExpressionUnaryPrefix::MINUS:
+	op = "-";
+	break;
+    case ExpressionUnaryPrefix::BITWISE_NOT:
+	op = "~";
+	break;
+    case ExpressionUnaryPrefix::LOGICAL_NOT:
+	op = "!";
+	break;
+    default:
+	fprintf(stderr, "Compiler bug! unknown unary operator\n");
+	exit(1);
+	break;
     }
-    else if (std::holds_alternative<JLang::owned<StatementExpression>>(statement_type)) {
-      const auto & statement = std::get<JLang::owned<StatementExpression>>(statement_type);
-      extract_from_expression(statement->get_expression());
+    function
+	.get_basic_block(current_block)
+	.add_statement(std::string("unary ") + op);
+  
+}
+void
+FunctionResolver::extract_from_expression_unary_sizeof_type(
+                                 JLang::mir::Function & function,
+                                 size_t & current_block,
+                                 const ExpressionUnarySizeofType & expression)
+{
+    function
+	.get_basic_block(current_block)
+	.add_statement("sizeof");
+}
+void
+FunctionResolver::extract_from_expression_binary(
+    JLang::mir::Function & function,
+    size_t & current_block,
+    const ExpressionBinary & expression)
+{
+    std::string op = "";
+    switch (expression.get_operator()) {
+    case ExpressionBinary::ADD:
+	op = "+";
+	break;
+    case ExpressionBinary::SUBTRACT:
+	op = "-";
+	break;
+    case ExpressionBinary::MULTIPLY:
+	op = "*";
+	break;
+    case ExpressionBinary::DIVIDE:
+	op = "/";
+	break;
+    case ExpressionBinary::MODULO:
+	op = "%";
+	break;
+    case ExpressionBinary::LOGICAL_AND:
+	op = "&&";
+	break;
+    case ExpressionBinary::LOGICAL_OR:
+	op = "||";
+	break;
+	
+    case ExpressionBinary::BITWISE_AND:
+	op = "&";
+	break;
+    case ExpressionBinary::BITWISE_OR:
+	op = "|";
+	break;
+    case ExpressionBinary::BITWISE_XOR:
+	op = "^";
+	break;
+    case ExpressionBinary::SHIFT_LEFT:
+	op = "<<";
+	break;
+    case ExpressionBinary::SHIFT_RIGHT:
+	op = ">>";
+	break;
+	
+    case ExpressionBinary::COMPARE_LT:
+	op = "<";
+	break;
+    case ExpressionBinary::COMPARE_GT:
+	op = ">";
+	break;
+    case ExpressionBinary::COMPARE_LE:
+	op = "<=";
+	break;
+    case ExpressionBinary::COMPARE_GE:
+	op = ">=";
+	break;
+    case ExpressionBinary::COMPARE_EQ:
+	op = "==";
+	break;
+    case ExpressionBinary::COMPARE_NE:
+	op = "!=";
+	break;
+	
+    case ExpressionBinary::EQUALS:
+	op = "=";
+	break;
+    case ExpressionBinary::MUL_ASSIGN:
+	op = "*=";
+	break;
+    case ExpressionBinary::DIV_ASSIGN:
+	op = "/=";
+	break;
+    case ExpressionBinary::MOD_ASSIGN:
+	op = "%=";
+	break;
+    case ExpressionBinary::ADD_ASSIGN:
+	op = "+=";
+	break;
+    case ExpressionBinary::SUB_ASSIGN:
+	op = "-=";
+	break;
+    case ExpressionBinary::LEFT_ASSIGN:
+	op = "<<=";
+	break;
+    case ExpressionBinary::RIGHT_ASSIGN:
+	op = ">>=";
+	break;
+    case ExpressionBinary::AND_ASSIGN:
+	op = "&=";
+	break;
+    case ExpressionBinary::OR_ASSIGN:
+	op = "|=";
+	break;
+    case ExpressionBinary::XOR_ASSIGN:
+	op = "^=";
+	break;
+    default:
+	fprintf(stderr, "Compiler bug! unknown binary operator\n");
+	exit(1);
+	break;
     }
-    else if (std::holds_alternative<JLang::owned<StatementIfElse>>(statement_type)) {
-      const auto & statement = std::get<JLang::owned<StatementIfElse>>(statement_type);
-      fprintf(stderr, "    expression\n");
-      fprintf(stderr, "    jne BB-??\n");
-      blockid++;
-      fprintf(stderr, "BB%d\n", blockid);
-      extract_from_statement_list(statement->get_if_scope_body().get_statements());
-      if (statement->has_else()) {
-        blockid++;
-        fprintf(stderr, "BB%d\n", blockid);
-        extract_from_statement_list(statement->get_else_scope_body().get_statements());
-      }
-      
-    }
-    else if (std::holds_alternative<JLang::owned<StatementWhile>>(statement_type)) {
-      const auto & statement = std::get<JLang::owned<StatementWhile>>(statement_type);
-      fprintf(stderr, "while\n");
-    }
-    else if (std::holds_alternative<JLang::owned<StatementFor>>(statement_type)) {
-      const auto & statement = std::get<JLang::owned<StatementFor>>(statement_type);
-      fprintf(stderr, "for\n");
-    }
-    else if (std::holds_alternative<JLang::owned<StatementLabel>>(statement_type)) {
-      const auto & statement = std::get<JLang::owned<StatementLabel>>(statement_type);
-      fprintf(stderr, "label\n");
-    }
-    else if (std::holds_alternative<JLang::owned<StatementGoto>>(statement_type)) {
-      const auto & statement = std::get<JLang::owned<StatementGoto>>(statement_type);
-      fprintf(stderr, "goto\n");
-    }
-    else if (std::holds_alternative<JLang::owned<StatementBreak>>(statement_type)) {
-      const auto & statement = std::get<JLang::owned<StatementBreak>>(statement_type);
-      fprintf(stderr, "break\n");
-    }
-    else if (std::holds_alternative<JLang::owned<StatementContinue>>(statement_type)) {
-      const auto & statement = std::get<JLang::owned<StatementContinue>>(statement_type);
-      fprintf(stderr, "continue\n");
-    }
-    else if (std::holds_alternative<JLang::owned<StatementReturn>>(statement_type)) {
-      const auto & statement = std::get<JLang::owned<StatementReturn>>(statement_type);
-      fprintf(stderr, "return\n");
-    }
-    else {
-      fprintf(stderr, "Compiler bug, invalid statement type\n");
-      exit(1);
-    }
+    extract_from_expression(function, current_block, expression.get_a());
+    extract_from_expression(function, current_block, expression.get_b());
+    
+    function
+	.get_basic_block(current_block)
+	.add_statement(std::string("binary operator ") + op);
+}
+void
+FunctionResolver::extract_from_expression_trinary(
+                                 JLang::mir::Function & function,
+                                 size_t & current_block,
+                                 const ExpressionTrinary & expression)
+{
+    function
+	.get_basic_block(current_block)
+	.add_statement(std::string("trinary operator "));
+}
+void
+FunctionResolver::extract_from_expression_cast(
+                                 JLang::mir::Function & function,
+                                 size_t & current_block,
+                                 const ExpressionCast & expression)
+{
+    function
+	.get_basic_block(current_block)
+	.add_statement(std::string("cast"));
+}
+
+
+void
+FunctionResolver::extract_from_expression(
+                                 JLang::mir::Function & function,
+                                 size_t & current_block,
+                                 const Expression & expression_container)
+{
+  //  fprintf(stderr, "    Expression\n");
+  const auto & expression_type = expression_container.get_expression();
+  if (std::holds_alternative<JLang::owned<ExpressionPrimary>>(expression_type)) {
+    const auto & expression = std::get<JLang::owned<ExpressionPrimary>>(expression_type);
+    extract_from_expression_primary(function, current_block, *expression);
   }
+  else if (std::holds_alternative<JLang::owned<ExpressionPostfixArrayIndex>>(expression_type)) {
+    const auto & expression = std::get<JLang::owned<ExpressionPostfixArrayIndex>>(expression_type);
+    extract_from_expression_postfix_array_index(function, current_block, *expression);
+  }
+  else if (std::holds_alternative<JLang::owned<ExpressionPostfixFunctionCall>>(expression_type)) {
+    const auto & expression = std::get<JLang::owned<ExpressionPostfixFunctionCall>>(expression_type);
+    extract_from_expression_postfix_function_call(function, current_block, *expression);
+  }
+  else if (std::holds_alternative<JLang::owned<ExpressionPostfixDot>>(expression_type)) {
+    const auto & expression = std::get<JLang::owned<ExpressionPostfixDot>>(expression_type);
+    extract_from_expression_postfix_dot(function, current_block, *expression);
+  }
+  else if (std::holds_alternative<JLang::owned<ExpressionPostfixArrow>>(expression_type)) {
+    const auto & expression = std::get<JLang::owned<ExpressionPostfixArrow>>(expression_type);
+    extract_from_expression_postfix_arrow(function, current_block, *expression);
+  }
+  else if (std::holds_alternative<JLang::owned<ExpressionPostfixIncDec>>(expression_type)) {
+    const auto & expression = std::get<JLang::owned<ExpressionPostfixIncDec>>(expression_type);
+    extract_from_expression_postfix_incdec(function, current_block, *expression);
+  }
+  else if (std::holds_alternative<JLang::owned<ExpressionUnaryPrefix>>(expression_type)) {
+    const auto & expression = std::get<JLang::owned<ExpressionUnaryPrefix>>(expression_type);
+    extract_from_expression_unary_prefix(function, current_block, *expression);
+  }
+  else if (std::holds_alternative<JLang::owned<ExpressionUnarySizeofType>>(expression_type)) {
+    const auto & expression = std::get<JLang::owned<ExpressionUnarySizeofType>>(expression_type);
+    extract_from_expression_unary_sizeof_type(function, current_block, *expression);
+  }
+  else if (std::holds_alternative<JLang::owned<ExpressionBinary>>(expression_type)) {
+    const auto & expression = std::get<JLang::owned<ExpressionBinary>>(expression_type);
+    extract_from_expression_binary(function, current_block, *expression);
+  }
+  else if (std::holds_alternative<JLang::owned<ExpressionTrinary>>(expression_type)) {
+    const auto & expression = std::get<JLang::owned<ExpressionTrinary>>(expression_type);
+    extract_from_expression_trinary(function, current_block, *expression);
+  }
+  else if (std::holds_alternative<JLang::owned<ExpressionCast>>(expression_type)) {
+    const auto & expression = std::get<JLang::owned<ExpressionCast>>(expression_type);
+    extract_from_expression_cast(function, current_block, *expression);
+  }
+  else {
+    fprintf(stderr, "Compiler bug, invalid expression type\n");
+    exit(1);
+  }
+}
+
+void
+FunctionResolver::extract_from_statement_list(
+                                              JLang::mir::Function & function,
+                                              size_t & start_block,
+                                              const StatementList & statement_list)
+{
+    std::vector<std::string> unwind;
+    
+    size_t current_block = start_block;
+    
+    for (const auto & statement_el : statement_list.get_statements()) {
+	const auto & statement_type = statement_el->get_statement();
+	if (std::holds_alternative<JLang::owned<StatementVariableDeclaration>>(statement_type)) {
+	    const auto & statement = std::get<JLang::owned<StatementVariableDeclaration>>(statement_type);
+	    function.get_basic_block(current_block).add_statement(std::string("declare ") + statement->get_name());
+	    unwind.push_back(statement->get_name());
+	}
+	else if (std::holds_alternative<JLang::owned<StatementBlock>>(statement_type)) {
+	    const auto & statement = std::get<JLang::owned<StatementBlock>>(statement_type);
+	    extract_from_statement_list(function, current_block, statement->get_scope_body().get_statements());
+	}
+	else if (std::holds_alternative<JLang::owned<StatementExpression>>(statement_type)) {
+	    const auto & statement = std::get<JLang::owned<StatementExpression>>(statement_type);
+	    extract_from_expression(function, current_block, statement->get_expression());
+	}
+	else if (std::holds_alternative<JLang::owned<StatementIfElse>>(statement_type)) {
+	    const auto & statement = std::get<JLang::owned<StatementIfElse>>(statement_type);
+	    extract_from_expression(function, current_block, statement->get_expression());
+	    
+	    size_t blockid_if = function.add_block();
+	    size_t blockid_else = function.add_block();
+	    size_t blockid_done = function.add_block();
+	    function.get_basic_block(current_block).add_statement(std::string("jne BB") + std::to_string(blockid_else));
+	    extract_from_statement_list(
+		function,
+		blockid_if,
+		statement->get_if_scope_body().get_statements()
+		);
+	    function.get_basic_block(blockid_if).add_statement(std::string("jmp BB") + std::to_string(blockid_done));
+	    if (statement->has_else()) {
+		extract_from_statement_list(
+		    function,
+		    blockid_else,
+		    statement->get_else_scope_body().get_statements()
+		    );
+	    }
+	    current_block = blockid_done;
+	}
+	else if (std::holds_alternative<JLang::owned<StatementWhile>>(statement_type)) {
+	    const auto & statement = std::get<JLang::owned<StatementWhile>>(statement_type);
+	    fprintf(stderr, "while\n");
+	}
+	else if (std::holds_alternative<JLang::owned<StatementFor>>(statement_type)) {
+	    const auto & statement = std::get<JLang::owned<StatementFor>>(statement_type);
+	    fprintf(stderr, "for\n");
+	}
+	else if (std::holds_alternative<JLang::owned<StatementLabel>>(statement_type)) {
+	    const auto & statement = std::get<JLang::owned<StatementLabel>>(statement_type);
+	    fprintf(stderr, "label\n");
+	}
+	else if (std::holds_alternative<JLang::owned<StatementGoto>>(statement_type)) {
+	    const auto & statement = std::get<JLang::owned<StatementGoto>>(statement_type);
+	    fprintf(stderr, "goto\n");
+	}
+	else if (std::holds_alternative<JLang::owned<StatementBreak>>(statement_type)) {
+	    const auto & statement = std::get<JLang::owned<StatementBreak>>(statement_type);
+	    fprintf(stderr, "break\n");
+	}
+	else if (std::holds_alternative<JLang::owned<StatementContinue>>(statement_type)) {
+	    const auto & statement = std::get<JLang::owned<StatementContinue>>(statement_type);
+	    fprintf(stderr, "continue\n");
+	}
+	else if (std::holds_alternative<JLang::owned<StatementReturn>>(statement_type)) {
+	    const auto & statement = std::get<JLang::owned<StatementReturn>>(statement_type);
+	    fprintf(stderr, "return\n");
+	}
+	else {
+	    fprintf(stderr, "Compiler bug, invalid statement type\n");
+	    exit(1);
+	}
+    }
+    for (const auto & undecl : unwind) {
+	fprintf(stderr, "Undeclaring %s in block %ld\n", undecl.c_str(), current_block);
+	function.get_basic_block(current_block).add_statement(std::string("undeclare ") + undecl);
+    }
+    start_block = current_block;
 }
 
 
@@ -227,11 +570,6 @@ FunctionResolver::extract_from_function_definition(const FileStatementFunctionDe
 
   }
 
-  fprintf(stderr, "START BBlocks\n");
-  fprintf(stderr, "BB0:\n");
-  extract_from_statement_list(function_definition.get_scope_body().get_statements());
-  fprintf(stderr, "END BBlocks\n");
-  
   std::vector<FunctionArgument> arguments;
   const auto & function_argument_list = function_definition.get_arguments();
   const auto & function_definition_args = function_argument_list.get_arguments();
@@ -248,8 +586,19 @@ FunctionResolver::extract_from_function_definition(const FileStatementFunctionDe
                                                          fully_qualified_function_name,
                                                          type->get_name(),
                                                          arguments);
+
+  // Create a new basic block for the start
+  
+  fprintf(stderr, "START BBlocks\n");
+  fprintf(stderr, "BB0:\n");
+  size_t start_block = fn->add_block();
+    
+  extract_from_statement_list(*fn, start_block, function_definition.get_scope_body().get_statements());
+
+  // Debug dump basic blocks.
+  fn->dump();
+  
   mir.get_functions().add_function(std::move(fn));
-  fprintf(stderr, "Return value %s\n", type->get_name().c_str());
   
 }
 void

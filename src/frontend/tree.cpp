@@ -1797,7 +1797,7 @@ const ExpressionPostfixIncDec::OperationType &
 ExpressionPostfixIncDec::get_type()
 { return type; }
 const Expression &
-ExpressionPostfixIncDec::get_expression()
+ExpressionPostfixIncDec::get_expression() const
 { return *expression; }
 ///////////////////////////////////////////////////
 ExpressionUnaryPrefix::ExpressionUnaryPrefix(
@@ -1816,13 +1816,13 @@ ExpressionUnaryPrefix::ExpressionUnaryPrefix(
 ExpressionUnaryPrefix::~ExpressionUnaryPrefix()
 {}
 const ExpressionUnaryPrefix::OperationType &
-ExpressionUnaryPrefix::get_type()
+ExpressionUnaryPrefix::get_type() const
 { return type; }
 const JLang::context::SourceReference &
 ExpressionUnaryPrefix::get_operator_source_ref() const
 { return operator_token->get_source_ref(); }
 const Expression &
-ExpressionUnaryPrefix::get_expression()
+ExpressionUnaryPrefix::get_expression() const
 { return *expression; }
 ///////////////////////////////////////////////////
 ExpressionUnarySizeofType::ExpressionUnarySizeofType(
@@ -1920,7 +1920,7 @@ ExpressionBinary::~ExpressionBinary()
 {}
 const Expression &
 ExpressionBinary::get_a() const
-{ return *expression_b; }
+{ return *expression_a; }
 const ExpressionBinary::OperationType &
 ExpressionBinary::get_operator() const
 { return type; }
@@ -1929,7 +1929,7 @@ ExpressionBinary::get_operator_source_ref() const
 { return operator_token->get_source_ref(); }
 const Expression &
 ExpressionBinary::get_b() const
-{ return *expression_a; }
+{ return *expression_b; }
 ///////////////////////////////////////////////////
 ExpressionTrinary::ExpressionTrinary(
                         JLang::owned<Expression> _condition,

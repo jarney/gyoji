@@ -22,42 +22,42 @@
 #include "llvm/TargetParser/Host.h"
 
 namespace JLang::codegen {
-  class CodeGeneratorLLVMContext {
-  public:
-    CodeGeneratorLLVMContext(const JLang::mir::MIR & _mir);
-    ~CodeGeneratorLLVMContext();
-    void initialize();
-    void generate();
-    int output(const std::string & filename);
-    
-  private:
-    JLang::owned<llvm::LLVMContext> TheContext;
-    JLang::owned<llvm::IRBuilder<>> Builder;
-    JLang::owned<llvm::Module> TheModule;
-
-    const JLang::mir::MIR & mir;
-    
-    std::map<std::string, llvm::Type *> types;
-    
-    std::map<std::string, llvm::Value *> NamedValues;
-
-    void create_types(const JLang::mir::MIR & mir);
-      llvm::Type *create_type(const JLang::mir::Type * type);
+    class CodeGeneratorLLVMContext {
+    public:
+	CodeGeneratorLLVMContext(const JLang::mir::MIR & _mir);
+	~CodeGeneratorLLVMContext();
+	void initialize();
+	void generate();
+	int output(const std::string & filename);
+	
+    private:
+	JLang::owned<llvm::LLVMContext> TheContext;
+	JLang::owned<llvm::IRBuilder<>> Builder;
+	JLang::owned<llvm::Module> TheModule;
+	
+	const JLang::mir::MIR & mir;
+	
+	std::map<std::string, llvm::Type *> types;
+	
+	std::map<std::string, llvm::Value *> NamedValues;
+	
+	void create_types(const JLang::mir::MIR & mir);
+	llvm::Type *create_type(const JLang::mir::Type * type);
         llvm::Type *create_type_primitive(const JLang::mir::Type *primitive);
         llvm::Type *create_type_enum(const JLang::mir::Type *enumtype);
         llvm::Type *create_type_composite(const JLang::mir::Type *compositetype);
         llvm::Type *create_type_pointer(const JLang::mir::Type *pointertype);
         llvm::Type *create_type_reference(const JLang::mir::Type *referencetype);
-
-    
-    void generate_function(const JLang::mir::Function & function);
-
-    llvm::Function * create_function(const JLang::mir::Function & function);
-    llvm::AllocaInst *CreateEntryBlockAlloca(
-                                             llvm::Function *TheFunction,
-                                             const llvm::StringRef & VarName
-                                             );
-
-  };
+	
+	
+	void generate_function(const JLang::mir::Function & function);
+	
+	llvm::Function * create_function(const JLang::mir::Function & function);
+	llvm::AllocaInst *CreateEntryBlockAlloca(
+	    llvm::Function *TheFunction,
+	    const llvm::StringRef & VarName
+	    );
+	
+    };
     
 };
