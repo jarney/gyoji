@@ -9,8 +9,8 @@ using namespace JLang::frontend::tree;
 // Terminal
 ///////////////////////////////////////////////////
 Terminal::Terminal(const Token & _token)
-  : SyntaxNode("terminal", this, _token.get_source_ref())
-  , token(_token)
+    : SyntaxNode("terminal", this, _token.get_source_ref())
+    , token(_token)
 {}
 Terminal::~Terminal()
 {}
@@ -41,44 +41,44 @@ Terminal::set_fully_qualified_name(std::string _name)
 // TerminalNonSyntax
 ///////////////////////////////////////////////////
 TerminalNonSyntax::TerminalNonSyntax(TerminalNonSyntax::Type _type, const Token & _token)
-  : type(_type)
-  , token(_token)
+    : type(_type)
+    , token(_token)
 {}
 TerminalNonSyntax::~TerminalNonSyntax()
 {}
 const TerminalNonSyntax::Type &
 TerminalNonSyntax::get_type() const
 {
-  return type;
+    return type;
 }
 const std::string &
 TerminalNonSyntax::get_data() const
 {
-  return token.get_value();
+    return token.get_value();
 }
 
 ///////////////////////////////////////////////////
 // AccessQualifier
 ///////////////////////////////////////////////////
 AccessQualifier::AccessQualifier(const JLang::context::SourceReference & _source_ref)
-  : SyntaxNode("access_qualifier", this, _source_ref)
-  , type(JLang::frontend::tree::AccessQualifier::AccessQualifierType::UNSPECIFIED)
-  , qualifier(nullptr)
+    : SyntaxNode("access_qualifier", this, _source_ref)
+    , type(JLang::frontend::tree::AccessQualifier::AccessQualifierType::UNSPECIFIED)
+    , qualifier(nullptr)
 {}
 AccessQualifier::AccessQualifier(JLang::owned<Terminal> _qualifier)
-  : SyntaxNode("access_qualifier", this, _qualifier->get_source_ref())
-  , qualifier(std::move(_qualifier))
+    : SyntaxNode("access_qualifier", this, _qualifier->get_source_ref())
+    , qualifier(std::move(_qualifier))
 {
-  if (qualifier->get_value() == "volatile") {
-    type = JLang::frontend::tree::AccessQualifier::AccessQualifierType::VOLATILE;
-  }
-  else if (qualifier->get_value() == "const") {
-    type = JLang::frontend::tree::AccessQualifier::AccessQualifierType::CONST;
-  }
-  else {
-    type = JLang::frontend::tree::AccessQualifier::AccessQualifierType::UNSPECIFIED;
-  }
-  add_child(*qualifier);
+    if (qualifier->get_value() == "volatile") {
+	type = JLang::frontend::tree::AccessQualifier::AccessQualifierType::VOLATILE;
+    }
+    else if (qualifier->get_value() == "const") {
+	type = JLang::frontend::tree::AccessQualifier::AccessQualifierType::CONST;
+    }
+    else {
+	type = JLang::frontend::tree::AccessQualifier::AccessQualifierType::UNSPECIFIED;
+    }
+    add_child(*qualifier);
 }
 AccessQualifier::~AccessQualifier()
 {}
@@ -90,87 +90,87 @@ AccessQualifier::get_type() const
 // AccessModifier
 ///////////////////////////////////////////////////
 AccessModifier::AccessModifier(JLang::owned<Terminal> _modifier)
-  : SyntaxNode("access_modifier", this, _modifier->get_source_ref())
-  , modifier(std::move(_modifier))
+    : SyntaxNode("access_modifier", this, _modifier->get_source_ref())
+    , modifier(std::move(_modifier))
 {
-  if (modifier->get_value() == "public") {
-    type = JLang::frontend::tree::AccessModifier::AccessModifierType::PUBLIC;
-  }
-  else if (modifier->get_value() == "protected") {
-    type = JLang::frontend::tree::AccessModifier::AccessModifierType::PROTECTED;
-  }
-  else if (modifier->get_value() == "private") {
-    type = JLang::frontend::tree::AccessModifier::AccessModifierType::PRIVATE;
-  }
-  else {
-    type = JLang::frontend::tree::AccessModifier::AccessModifierType::PUBLIC;
-  }
-  add_child(*modifier);
+    if (modifier->get_value() == "public") {
+	type = JLang::frontend::tree::AccessModifier::AccessModifierType::PUBLIC;
+    }
+    else if (modifier->get_value() == "protected") {
+	type = JLang::frontend::tree::AccessModifier::AccessModifierType::PROTECTED;
+    }
+    else if (modifier->get_value() == "private") {
+	type = JLang::frontend::tree::AccessModifier::AccessModifierType::PRIVATE;
+    }
+    else {
+	type = JLang::frontend::tree::AccessModifier::AccessModifierType::PUBLIC;
+    }
+    add_child(*modifier);
 }
 AccessModifier::AccessModifier(const JLang::context::SourceReference & _source_ref)
-  : SyntaxNode("access_modifier", this, _source_ref)
-  , modifier(nullptr)
-  , type(JLang::frontend::tree::AccessModifier::AccessModifierType::PUBLIC)
+    : SyntaxNode("access_modifier", this, _source_ref)
+    , modifier(nullptr)
+    , type(JLang::frontend::tree::AccessModifier::AccessModifierType::PUBLIC)
 {}
 AccessModifier::~AccessModifier()
 {}
 const AccessModifier::AccessModifierType &
 AccessModifier::get_type() const
 {
-  return type;
+    return type;
 }
 ///////////////////////////////////////////////////
 // UnsafeModifier
 ///////////////////////////////////////////////////
 UnsafeModifier::UnsafeModifier(const JLang::context::SourceReference & _source_ref)
-  : SyntaxNode("unsafe_modifier", this, _source_ref)
-  , unsafe_token(nullptr)
+    : SyntaxNode("unsafe_modifier", this, _source_ref)
+    , unsafe_token(nullptr)
 {}
 UnsafeModifier::UnsafeModifier(JLang::owned<Terminal> _unsafe_token)
-  : SyntaxNode("unsafe_modifier", this, _unsafe_token->get_source_ref())
-  , unsafe_token(std::move(_unsafe_token))
+    : SyntaxNode("unsafe_modifier", this, _unsafe_token->get_source_ref())
+    , unsafe_token(std::move(_unsafe_token))
 {
-  add_child(*unsafe_token);
+    add_child(*unsafe_token);
 }
 UnsafeModifier::~UnsafeModifier()
 {}
 bool
 UnsafeModifier::is_unsafe() const
 {
-  return unsafe_token.get() != nullptr;
+    return unsafe_token.get() != nullptr;
 }
 
 ///////////////////////////////////////////////////
 // TypeName
 ///////////////////////////////////////////////////
 TypeName::TypeName(JLang::owned<Terminal> _type_name)
-  : SyntaxNode("type_name", this, _type_name->get_source_ref())
-  , m_is_expression(false)
-  , type_name(std::move(_type_name))
-  , typeof_token(nullptr)
-  , paren_l_token(nullptr)
-  , expression(nullptr)
-  , paren_r_token(nullptr)
+    : SyntaxNode("type_name", this, _type_name->get_source_ref())
+    , m_is_expression(false)
+    , type_name(std::move(_type_name))
+    , typeof_token(nullptr)
+    , paren_l_token(nullptr)
+    , expression(nullptr)
+    , paren_r_token(nullptr)
 {
-  add_child(*type_name);
+    add_child(*type_name);
 }
 TypeName::TypeName(JLang::owned<Terminal> _typeof_token,
-               JLang::owned<Terminal> _paren_l_token,
-               JLang::owned<Expression> _expression,
-               JLang::owned<Terminal> _paren_r_token
-               )
-  : SyntaxNode("type_name", this, _typeof_token->get_source_ref())
-  , m_is_expression(true)
-  , type_name(nullptr)
-  , typeof_token(std::move(_typeof_token))
-  , paren_l_token(std::move(_paren_l_token))
-  , expression(std::move(_expression))
-  , paren_r_token(std::move(_paren_r_token))
+		   JLang::owned<Terminal> _paren_l_token,
+		   JLang::owned<Expression> _expression,
+		   JLang::owned<Terminal> _paren_r_token
+    )
+    : SyntaxNode("type_name", this, _typeof_token->get_source_ref())
+    , m_is_expression(true)
+    , type_name(nullptr)
+    , typeof_token(std::move(_typeof_token))
+    , paren_l_token(std::move(_paren_l_token))
+    , expression(std::move(_expression))
+    , paren_r_token(std::move(_paren_r_token))
 {
-  add_child(*typeof_token);
-  add_child(*paren_l_token);
-  add_child(*expression);
-  add_child(*paren_r_token);
+    add_child(*typeof_token);
+    add_child(*paren_l_token);
+    add_child(*expression);
+    add_child(*paren_r_token);
 }
 TypeName::~TypeName()
 {}
@@ -190,23 +190,23 @@ TypeName::get_expression() const
 // TypeName
 ///////////////////////////////////////////////////
 TypeSpecifierCallArgs::TypeSpecifierCallArgs(const JLang::context::SourceReference & _source_ref)
-  : SyntaxNode("type_specifier_call_args", this, _source_ref)
+    : SyntaxNode("type_specifier_call_args", this, _source_ref)
 {}
 TypeSpecifierCallArgs::~TypeSpecifierCallArgs()
 {}
 void
 TypeSpecifierCallArgs::add_argument(JLang::owned<TypeSpecifier> _argument)
 {
-  add_child(*_argument);
-  arguments.push_back(std::move(_argument));
+    add_child(*_argument);
+    arguments.push_back(std::move(_argument));
 }
 void
 TypeSpecifierCallArgs::add_argument(JLang::owned<Terminal> _comma_token, JLang::owned<TypeSpecifier> _argument)
 {
-  add_child(*_comma_token);
-  add_child(*_argument);
-  comma_list.push_back(std::move(_comma_token));
-  arguments.push_back(std::move(_argument));
+    add_child(*_comma_token);
+    add_child(*_argument);
+    comma_list.push_back(std::move(_comma_token));
+    arguments.push_back(std::move(_argument));
 }
 const std::vector<JLang::owned<TypeSpecifier>> &
 TypeSpecifierCallArgs::get_arguments() const
@@ -214,15 +214,15 @@ TypeSpecifierCallArgs::get_arguments() const
 
 ///////////////////////////////////////////////////
 TypeSpecifierSimple::TypeSpecifierSimple(
-                                         JLang::owned<AccessQualifier> _access_qualifier,
-                                         JLang::owned<TypeName> _type_name
-                                         )
-  : SyntaxNode("type_specifier_simple", this, _access_qualifier->get_source_ref())
-  , access_qualifier(std::move(_access_qualifier))
-  , type_name(std::move(_type_name))
+    JLang::owned<AccessQualifier> _access_qualifier,
+    JLang::owned<TypeName> _type_name
+    )
+    : SyntaxNode("type_specifier_simple", this, _access_qualifier->get_source_ref())
+    , access_qualifier(std::move(_access_qualifier))
+    , type_name(std::move(_type_name))
 {
-  add_child(*access_qualifier);
-  add_child(*type_name);
+    add_child(*access_qualifier);
+    add_child(*type_name);
 }
 TypeSpecifierSimple::~TypeSpecifierSimple()
 {}
@@ -234,21 +234,21 @@ TypeSpecifierSimple::get_type_name() const
 { return *type_name; }
 ///////////////////////////////////////////////////
 TypeSpecifierTemplate::TypeSpecifierTemplate(
-                                             JLang::owned<TypeSpecifier> _type_specifier,
-                                             JLang::owned<Terminal> _paren_l_token,
-                                             JLang::owned<TypeSpecifierCallArgs> _type_specifier_call_args,
-                                             JLang::owned<Terminal> _paren_r_token
-                                             )
-  : SyntaxNode("type_specifier_template", this, _type_specifier->get_source_ref())
-  , type_specifier(std::move(_type_specifier))
-  , paren_l_token(std::move(_paren_l_token))
-  , type_specifier_call_args(std::move(_type_specifier_call_args))
-  , paren_r_token(std::move(_paren_r_token))
+    JLang::owned<TypeSpecifier> _type_specifier,
+    JLang::owned<Terminal> _paren_l_token,
+    JLang::owned<TypeSpecifierCallArgs> _type_specifier_call_args,
+    JLang::owned<Terminal> _paren_r_token
+    )
+    : SyntaxNode("type_specifier_template", this, _type_specifier->get_source_ref())
+    , type_specifier(std::move(_type_specifier))
+    , paren_l_token(std::move(_paren_l_token))
+    , type_specifier_call_args(std::move(_type_specifier_call_args))
+    , paren_r_token(std::move(_paren_r_token))
 {
-  add_child(*type_specifier);
-  add_child(*paren_l_token);
-  add_child(*type_specifier_call_args);
-  add_child(*paren_r_token);
+    add_child(*type_specifier);
+    add_child(*paren_l_token);
+    add_child(*type_specifier_call_args);
+    add_child(*paren_r_token);
 }
 TypeSpecifierTemplate::~TypeSpecifierTemplate()
 {}
@@ -260,33 +260,33 @@ TypeSpecifierTemplate::get_args() const
 { return *type_specifier_call_args; }
 ///////////////////////////////////////////////////
 TypeSpecifierFunctionPointer::TypeSpecifierFunctionPointer(
-                                   JLang::owned<TypeSpecifier> _type_specifier,
-                                   JLang::owned<Terminal> _paren_l1_token,
-                                   JLang::owned<Terminal> _star_token,
-                                   JLang::owned<Terminal> _identifier_token,
-                                   JLang::owned<Terminal> _paren_r1_token,
-                                   JLang::owned<Terminal> _paren_l2_token,
-                                   JLang::owned<FunctionDefinitionArgList> _function_definition_arg_list,
-                                   JLang::owned<Terminal> _paren_r2_token
-                                   )
-  : SyntaxNode("type_specifier_function_pointer", this, _type_specifier->get_source_ref())
-  , type_specifier(std::move(_type_specifier))
-  , paren_l1_token(std::move(_paren_l1_token))
-  , star_token(std::move(_star_token))
-  , identifier_token(std::move(_identifier_token))
-  , paren_r1_token(std::move(_paren_r1_token))
-  , paren_l2_token(std::move(_paren_l2_token))
-  , function_definition_arg_list(std::move(_function_definition_arg_list))
-  , paren_r2_token(std::move(_paren_r2_token))
+    JLang::owned<TypeSpecifier> _type_specifier,
+    JLang::owned<Terminal> _paren_l1_token,
+    JLang::owned<Terminal> _star_token,
+    JLang::owned<Terminal> _identifier_token,
+    JLang::owned<Terminal> _paren_r1_token,
+    JLang::owned<Terminal> _paren_l2_token,
+    JLang::owned<FunctionDefinitionArgList> _function_definition_arg_list,
+    JLang::owned<Terminal> _paren_r2_token
+    )
+    : SyntaxNode("type_specifier_function_pointer", this, _type_specifier->get_source_ref())
+    , type_specifier(std::move(_type_specifier))
+    , paren_l1_token(std::move(_paren_l1_token))
+    , star_token(std::move(_star_token))
+    , identifier_token(std::move(_identifier_token))
+    , paren_r1_token(std::move(_paren_r1_token))
+    , paren_l2_token(std::move(_paren_l2_token))
+    , function_definition_arg_list(std::move(_function_definition_arg_list))
+    , paren_r2_token(std::move(_paren_r2_token))
 {
-  add_child(*type_specifier);
-  add_child(*paren_l1_token);
-  add_child(*star_token);
-  add_child(*identifier_token);
-  add_child(*paren_r1_token);
-  add_child(*paren_l2_token);
-  add_child(*function_definition_arg_list);
-  add_child(*paren_r2_token);
+    add_child(*type_specifier);
+    add_child(*paren_l1_token);
+    add_child(*star_token);
+    add_child(*identifier_token);
+    add_child(*paren_r1_token);
+    add_child(*paren_l2_token);
+    add_child(*function_definition_arg_list);
+    add_child(*paren_r2_token);
 }
 TypeSpecifierFunctionPointer::~TypeSpecifierFunctionPointer()
 {}
@@ -303,18 +303,18 @@ TypeSpecifierFunctionPointer::get_args() const
 { return *function_definition_arg_list; }
 ///////////////////////////////////////////////////
 TypeSpecifierPointerTo::TypeSpecifierPointerTo(
-                             JLang::owned<TypeSpecifier> _type_specifier,
-                             JLang::owned<Terminal> _star_token,
-                             JLang::owned<AccessQualifier> _access_qualifier
-                             )
-  : SyntaxNode("type_specifier_pointer_to", this, _type_specifier->get_source_ref())
-  , type_specifier(std::move(_type_specifier))
-  , star_token(std::move(_star_token))
-  , access_qualifier(std::move(_access_qualifier))
+    JLang::owned<TypeSpecifier> _type_specifier,
+    JLang::owned<Terminal> _star_token,
+    JLang::owned<AccessQualifier> _access_qualifier
+    )
+    : SyntaxNode("type_specifier_pointer_to", this, _type_specifier->get_source_ref())
+    , type_specifier(std::move(_type_specifier))
+    , star_token(std::move(_star_token))
+    , access_qualifier(std::move(_access_qualifier))
 {
-  add_child(*type_specifier);
-  add_child(*star_token);
-  add_child(*access_qualifier);
+    add_child(*type_specifier);
+    add_child(*star_token);
+    add_child(*access_qualifier);
 }
 TypeSpecifierPointerTo::~TypeSpecifierPointerTo()
 {}
@@ -326,18 +326,18 @@ TypeSpecifierPointerTo::get_access_qualifier() const
 { return *access_qualifier; }
 ///////////////////////////////////////////////////
 TypeSpecifierReferenceTo::TypeSpecifierReferenceTo(
-                                                   JLang::owned<TypeSpecifier> _type_specifier,
-                                                   JLang::owned<Terminal> _andpersand_token,
-                                                   JLang::owned<AccessQualifier> _access_qualifier
-                                                   )
-  : SyntaxNode("type_specifier_reference_to", this, _type_specifier->get_source_ref())
-  , type_specifier(std::move(_type_specifier))
-  , andpersand_token(std::move(_andpersand_token))
-  , access_qualifier(std::move(_access_qualifier))
+    JLang::owned<TypeSpecifier> _type_specifier,
+    JLang::owned<Terminal> _andpersand_token,
+    JLang::owned<AccessQualifier> _access_qualifier
+    )
+    : SyntaxNode("type_specifier_reference_to", this, _type_specifier->get_source_ref())
+    , type_specifier(std::move(_type_specifier))
+    , andpersand_token(std::move(_andpersand_token))
+    , access_qualifier(std::move(_access_qualifier))
 {
-  add_child(*type_specifier);
-  add_child(*andpersand_token);
-  add_child(*access_qualifier);
+    add_child(*type_specifier);
+    add_child(*andpersand_token);
+    add_child(*access_qualifier);
 }
 TypeSpecifierReferenceTo::~TypeSpecifierReferenceTo()
 {}
@@ -349,10 +349,10 @@ TypeSpecifierReferenceTo::get_access_qualifier() const
 { return *access_qualifier; }
 ///////////////////////////////////////////////////
 TypeSpecifier::TypeSpecifier(TypeSpecifier::TypeSpecifierType _type, const SyntaxNode & _sn)
-  : SyntaxNode("type_specifier", this, _sn.get_source_ref())
-  , type(std::move(_type))
+    : SyntaxNode("type_specifier", this, _sn.get_source_ref())
+    , type(std::move(_type))
 {
-  add_child(_sn);
+    add_child(_sn);
 }
 TypeSpecifier::~TypeSpecifier()
 {}
@@ -361,15 +361,16 @@ TypeSpecifier::get_type() const
 { return type; }
 
 ///////////////////////////////////////////////////
-FunctionDefinitionArg::FunctionDefinitionArg(JLang::owned<TypeSpecifier> _type_specifier,
-                                             JLang::owned<Terminal> _identifier_token
-                                             )
-  : SyntaxNode("function_definition_arg", this, _type_specifier->get_source_ref())
-  , type_specifier(std::move(_type_specifier))
-  , identifier_token(std::move(_identifier_token))
+FunctionDefinitionArg::FunctionDefinitionArg(
+    JLang::owned<TypeSpecifier> _type_specifier,
+    JLang::owned<Terminal> _identifier_token
+    )
+    : SyntaxNode("function_definition_arg", this, _type_specifier->get_source_ref())
+    , type_specifier(std::move(_type_specifier))
+    , identifier_token(std::move(_identifier_token))
 {
-  add_child(*type_specifier);
-  add_child(*identifier_token);
+    add_child(*type_specifier);
+    add_child(*identifier_token);
 }
 FunctionDefinitionArg::~FunctionDefinitionArg()
 {}
@@ -385,7 +386,7 @@ FunctionDefinitionArg::get_name_source_ref() const
 
 ///////////////////////////////////////////////////
 FunctionDefinitionArgList::FunctionDefinitionArgList(const JLang::context::SourceReference & _source_ref)
-  : SyntaxNode("function_definition_arg_list", this, _source_ref)
+    : SyntaxNode("function_definition_arg_list", this, _source_ref)
 {}
 FunctionDefinitionArgList::~FunctionDefinitionArgList()
 {}
@@ -395,14 +396,14 @@ FunctionDefinitionArgList::get_arguments() const
 void
 FunctionDefinitionArgList::add_argument(JLang::owned<FunctionDefinitionArg> _argument)
 {
-  add_child(*_argument);
-  arguments.push_back(std::move(_argument));
+    add_child(*_argument);
+    arguments.push_back(std::move(_argument));
 }
 void
 FunctionDefinitionArgList::add_comma(JLang::owned<Terminal> _comma)
 {
-  add_child(*_comma);
-  commas.push_back(std::move(_comma));
+    add_child(*_comma);
+    commas.push_back(std::move(_comma));
 }
 
 
@@ -417,25 +418,25 @@ FileStatementFunctionDeclaration::FileStatementFunctionDeclaration(
     JLang::owned<FunctionDefinitionArgList> _arguments,
     JLang::owned<Terminal> _paren_r,
     JLang::owned<Terminal> _semicolon
-)
-  : SyntaxNode("file_statement_function_declaration", this, _access_modifier->get_source_ref())
-  , access_modifier(std::move(_access_modifier))
-  , unsafe_modifier(std::move(_unsafe_modifier))
-  , type_specifier(std::move(_type_specifier))
-  , name(std::move(_name))
-  , paren_l(std::move(_paren_l))
-  , arguments(std::move(_arguments))
-  , paren_r(std::move(_paren_r))
-  , semicolon(std::move(_semicolon))
+    )
+    : SyntaxNode("file_statement_function_declaration", this, _access_modifier->get_source_ref())
+    , access_modifier(std::move(_access_modifier))
+    , unsafe_modifier(std::move(_unsafe_modifier))
+    , type_specifier(std::move(_type_specifier))
+    , name(std::move(_name))
+    , paren_l(std::move(_paren_l))
+    , arguments(std::move(_arguments))
+    , paren_r(std::move(_paren_r))
+    , semicolon(std::move(_semicolon))
 {
-  add_child(*access_modifier);
-  add_child(*unsafe_modifier);
-  add_child(*type_specifier);
-  add_child(*name);
-  add_child(*paren_l);
-  add_child(*arguments);
-  add_child(*paren_r);
-  add_child(*semicolon);
+    add_child(*access_modifier);
+    add_child(*unsafe_modifier);
+    add_child(*type_specifier);
+    add_child(*name);
+    add_child(*paren_l);
+    add_child(*arguments);
+    add_child(*paren_r);
+    add_child(*semicolon);
 }
 FileStatementFunctionDeclaration::~FileStatementFunctionDeclaration()
 {}
@@ -454,7 +455,7 @@ FileStatementFunctionDeclaration::get_name() const
 const SourceReference &
 FileStatementFunctionDeclaration::get_name_source_ref() const
 { return name->get_source_ref(); }
- 
+
 const FunctionDefinitionArgList &
 FileStatementFunctionDeclaration::get_arguments() const
 { return *arguments; }
@@ -462,24 +463,24 @@ FileStatementFunctionDeclaration::get_arguments() const
 
 ///////////////////////////////////////////////////
 StatementVariableDeclaration::StatementVariableDeclaration(
-                                   JLang::owned<TypeSpecifier> _type_specifier,
-                                   JLang::owned<Terminal> _identifier_token,
-                                   JLang::owned<ArrayLength> _array_length,
-                                   JLang::owned<GlobalInitializer> _global_initializer,
-                                   JLang::owned<Terminal> _semicolon_token
-)
-  : SyntaxNode("statement_variable_declaration", this, _type_specifier->get_source_ref())
-  , type_specifier(std::move(_type_specifier))
-  , identifier_token(std::move(_identifier_token))
-  , array_length(std::move(_array_length))
-  , global_initializer(std::move(_global_initializer))
-  , semicolon_token(std::move(_semicolon_token))
+    JLang::owned<TypeSpecifier> _type_specifier,
+    JLang::owned<Terminal> _identifier_token,
+    JLang::owned<ArrayLength> _array_length,
+    JLang::owned<GlobalInitializer> _global_initializer,
+    JLang::owned<Terminal> _semicolon_token
+    )
+    : SyntaxNode("statement_variable_declaration", this, _type_specifier->get_source_ref())
+    , type_specifier(std::move(_type_specifier))
+    , identifier_token(std::move(_identifier_token))
+    , array_length(std::move(_array_length))
+    , global_initializer(std::move(_global_initializer))
+    , semicolon_token(std::move(_semicolon_token))
 {
-  add_child(*type_specifier);
-  add_child(*identifier_token);
-  add_child(*array_length);
-  add_child(*global_initializer);
-  add_child(*semicolon_token);
+    add_child(*type_specifier);
+    add_child(*identifier_token);
+    add_child(*array_length);
+    add_child(*global_initializer);
+    add_child(*semicolon_token);
 }
 StatementVariableDeclaration::~StatementVariableDeclaration()
 {}
@@ -500,15 +501,15 @@ StatementVariableDeclaration::get_initializer() const
 { return *global_initializer;}
 ///////////////////////////////////////////////////
 StatementBlock::StatementBlock(
-                     JLang::owned<UnsafeModifier> _unsafe_modifier,
-                     JLang::owned<ScopeBody> _scope_body
-                     )
-  : SyntaxNode("statement_block", this, _unsafe_modifier->get_source_ref())
-  , unsafe_modifier(std::move(_unsafe_modifier))
-  , scope_body(std::move(_scope_body))
+    JLang::owned<UnsafeModifier> _unsafe_modifier,
+    JLang::owned<ScopeBody> _scope_body
+    )
+    : SyntaxNode("statement_block", this, _unsafe_modifier->get_source_ref())
+    , unsafe_modifier(std::move(_unsafe_modifier))
+    , scope_body(std::move(_scope_body))
 {
-  add_child(*unsafe_modifier);
-  add_child(*scope_body);
+    add_child(*unsafe_modifier);
+    add_child(*scope_body);
 }
 StatementBlock::~StatementBlock()
 {}
@@ -520,15 +521,15 @@ StatementBlock::get_scope_body() const
 { return *scope_body; }
 ///////////////////////////////////////////////////
 StatementExpression::StatementExpression(
-                          JLang::owned<Expression> _expression,
-                          JLang::owned<Terminal> _semicolon_token
-                          )
-  : SyntaxNode("statement_expression", this, _expression->get_source_ref())
-  , expression(std::move(_expression))
-  , semicolon_token(std::move(_semicolon_token))
+    JLang::owned<Expression> _expression,
+    JLang::owned<Terminal> _semicolon_token
+    )
+    : SyntaxNode("statement_expression", this, _expression->get_source_ref())
+    , expression(std::move(_expression))
+    , semicolon_token(std::move(_semicolon_token))
 {
-  add_child(*expression);
-  add_child(*semicolon_token);
+    add_child(*expression);
+    add_child(*semicolon_token);
 }
 StatementExpression::~StatementExpression()
 {}
@@ -537,85 +538,85 @@ StatementExpression::get_expression() const
 { return *expression; }
 ///////////////////////////////////////////////////
 StatementIfElse::StatementIfElse(
-                                 JLang::owned<Terminal> _if_token,
-                                 JLang::owned<Terminal> _paren_l_token,
-                                 JLang::owned<Expression> _expression,
-                                 JLang::owned<Terminal> _paren_r_token,
-                                 JLang::owned<ScopeBody> _if_scope_body,
-                                 JLang::owned<Terminal> _else_token,
-                                 JLang::owned<ScopeBody> _else_scope_body
-                                 )
-  : SyntaxNode("statement_ifelse", this, _if_token->get_source_ref())
-  , m_has_else(true)
-  , m_has_else_if(false)
-  , if_token(std::move(_if_token))
-  , paren_l_token(std::move(_paren_l_token))
-  , expression(std::move(_expression))
-  , paren_r_token(std::move(_paren_r_token))
-  , if_scope_body(std::move(_if_scope_body))
-  , else_token(std::move(_else_token))
-  , else_scope_body(std::move(_else_scope_body))
+    JLang::owned<Terminal> _if_token,
+    JLang::owned<Terminal> _paren_l_token,
+    JLang::owned<Expression> _expression,
+    JLang::owned<Terminal> _paren_r_token,
+    JLang::owned<ScopeBody> _if_scope_body,
+    JLang::owned<Terminal> _else_token,
+    JLang::owned<ScopeBody> _else_scope_body
+    )
+    : SyntaxNode("statement_ifelse", this, _if_token->get_source_ref())
+    , m_has_else(true)
+    , m_has_else_if(false)
+    , if_token(std::move(_if_token))
+    , paren_l_token(std::move(_paren_l_token))
+    , expression(std::move(_expression))
+    , paren_r_token(std::move(_paren_r_token))
+    , if_scope_body(std::move(_if_scope_body))
+    , else_token(std::move(_else_token))
+    , else_scope_body(std::move(_else_scope_body))
 {
-  add_child(*if_token);
-  add_child(*paren_l_token);
-  add_child(*expression);
-  add_child(*paren_r_token);
-  add_child(*if_scope_body);
-  add_child(*else_token);
-  add_child(*else_scope_body);
+    add_child(*if_token);
+    add_child(*paren_l_token);
+    add_child(*expression);
+    add_child(*paren_r_token);
+    add_child(*if_scope_body);
+    add_child(*else_token);
+    add_child(*else_scope_body);
 }
 StatementIfElse::StatementIfElse(
-                      JLang::owned<Terminal> _if_token,
-                      JLang::owned<Terminal> _paren_l_token,
-                      JLang::owned<Expression> _expression,
-                      JLang::owned<Terminal> _paren_r_token,
-                      JLang::owned<ScopeBody> _if_scope_body,
-                      JLang::owned<Terminal> _else_token,
-                      JLang::owned<StatementIfElse> _else_if
-                                 )
-  : SyntaxNode("statement_ifelse", this, _if_token->get_source_ref())
-  , m_has_else(false)
-  , m_has_else_if(true)
-  , if_token(std::move(_if_token))
-  , paren_l_token(std::move(_paren_l_token))
-  , expression(std::move(_expression))
-  , paren_r_token(std::move(_paren_r_token))
-  , if_scope_body(std::move(_if_scope_body))
-  , else_token(std::move(_else_token))
-  , else_scope_body(nullptr)
-  , else_if(std::move(_else_if))
+    JLang::owned<Terminal> _if_token,
+    JLang::owned<Terminal> _paren_l_token,
+    JLang::owned<Expression> _expression,
+    JLang::owned<Terminal> _paren_r_token,
+    JLang::owned<ScopeBody> _if_scope_body,
+    JLang::owned<Terminal> _else_token,
+    JLang::owned<StatementIfElse> _else_if
+    )
+    : SyntaxNode("statement_ifelse", this, _if_token->get_source_ref())
+    , m_has_else(false)
+    , m_has_else_if(true)
+    , if_token(std::move(_if_token))
+    , paren_l_token(std::move(_paren_l_token))
+    , expression(std::move(_expression))
+    , paren_r_token(std::move(_paren_r_token))
+    , if_scope_body(std::move(_if_scope_body))
+    , else_token(std::move(_else_token))
+    , else_scope_body(nullptr)
+    , else_if(std::move(_else_if))
 {
-  add_child(*if_token);
-  add_child(*paren_l_token);
-  add_child(*expression);
-  add_child(*paren_r_token);
-  add_child(*if_scope_body);
-  add_child(*else_token);
-  add_child(*else_if);
+    add_child(*if_token);
+    add_child(*paren_l_token);
+    add_child(*expression);
+    add_child(*paren_r_token);
+    add_child(*if_scope_body);
+    add_child(*else_token);
+    add_child(*else_if);
 }
 StatementIfElse::StatementIfElse(
-                      JLang::owned<Terminal> _if_token,
-                      JLang::owned<Terminal> _paren_l_token,
-                      JLang::owned<Expression> _expression,
-                      JLang::owned<Terminal> _paren_r_token,
-                      JLang::owned<ScopeBody> _if_scope_body
-                                 )
-  : SyntaxNode("statement_ifelse", this, _if_token->get_source_ref())
-  , m_has_else(false)
-  , m_has_else_if(false)
-  , if_token(std::move(_if_token))
-  , paren_l_token(std::move(_paren_l_token))
-  , expression(std::move(_expression))
-  , paren_r_token(std::move(_paren_r_token))
-  , if_scope_body(std::move(_if_scope_body))
-  , else_token(nullptr)
-  , else_scope_body(nullptr)
+    JLang::owned<Terminal> _if_token,
+    JLang::owned<Terminal> _paren_l_token,
+    JLang::owned<Expression> _expression,
+    JLang::owned<Terminal> _paren_r_token,
+    JLang::owned<ScopeBody> _if_scope_body
+    )
+    : SyntaxNode("statement_ifelse", this, _if_token->get_source_ref())
+    , m_has_else(false)
+    , m_has_else_if(false)
+    , if_token(std::move(_if_token))
+    , paren_l_token(std::move(_paren_l_token))
+    , expression(std::move(_expression))
+    , paren_r_token(std::move(_paren_r_token))
+    , if_scope_body(std::move(_if_scope_body))
+    , else_token(nullptr)
+    , else_scope_body(nullptr)
 {
-  add_child(*if_token);
-  add_child(*paren_l_token);
-  add_child(*expression);
-  add_child(*paren_r_token);
-  add_child(*if_scope_body);
+    add_child(*if_token);
+    add_child(*paren_l_token);
+    add_child(*expression);
+    add_child(*paren_r_token);
+    add_child(*if_scope_body);
 }  
 StatementIfElse::~StatementIfElse()
 {}
@@ -637,24 +638,24 @@ StatementIfElse::get_else_scope_body() const
 
 ///////////////////////////////////////////////////
 StatementWhile::StatementWhile(
-                     JLang::owned<Terminal> _while_token,
-                     JLang::owned<Terminal> _paren_l_token,
-                     JLang::owned<Expression> _expression,
-                     JLang::owned<Terminal> _paren_r_token,
-                     JLang::owned<ScopeBody> _scope_body
-                     )
-  : SyntaxNode("statement_while", this, _while_token->get_source_ref())
-  , while_token(std::move(_while_token))
-  , paren_l_token(std::move(_paren_l_token))
-  , expression(std::move(_expression))
-  , paren_r_token(std::move(_paren_r_token))
-  , scope_body(std::move(_scope_body))
+    JLang::owned<Terminal> _while_token,
+    JLang::owned<Terminal> _paren_l_token,
+    JLang::owned<Expression> _expression,
+    JLang::owned<Terminal> _paren_r_token,
+    JLang::owned<ScopeBody> _scope_body
+    )
+    : SyntaxNode("statement_while", this, _while_token->get_source_ref())
+    , while_token(std::move(_while_token))
+    , paren_l_token(std::move(_paren_l_token))
+    , expression(std::move(_expression))
+    , paren_r_token(std::move(_paren_r_token))
+    , scope_body(std::move(_scope_body))
 {
-  add_child(*while_token);
-  add_child(*paren_l_token);
-  add_child(*expression);
-  add_child(*paren_r_token);
-  add_child(*scope_body);
+    add_child(*while_token);
+    add_child(*paren_l_token);
+    add_child(*expression);
+    add_child(*paren_r_token);
+    add_child(*scope_body);
 }
 StatementWhile::~StatementWhile()
 {}
@@ -666,36 +667,36 @@ StatementWhile::get_scope_body() const
 { return *scope_body; }
 ///////////////////////////////////////////////////
 StatementFor::StatementFor(
-                   JLang::owned<Terminal> _for_token,
-                   JLang::owned<Terminal> _paren_l_token,
-                   JLang::owned<Expression> _expression_initial,
-                   JLang::owned<Terminal> _semicolon_initial,
-                   JLang::owned<Expression> _expression_termination,
-                   JLang::owned<Terminal> _semicolon_termination,
-                   JLang::owned<Expression> _expression_increment,
-                   JLang::owned<Terminal> _paren_r_token,
-                   JLang::owned<ScopeBody> _scope_body
-  )
-  : SyntaxNode("statement_for", this, _for_token->get_source_ref())
-  , for_token(std::move(_for_token))
-  , paren_l_token(std::move(_paren_l_token))
-  , expression_initial(std::move(_expression_initial))
-  , semicolon_initial(std::move(_semicolon_initial))
-  , expression_termination(std::move(_expression_termination))
-  , semicolon_termination(std::move(_semicolon_termination))
-  , expression_increment(std::move(_expression_increment))
-  , paren_r_token(std::move(_paren_r_token))
-  , scope_body(std::move(_scope_body))
+    JLang::owned<Terminal> _for_token,
+    JLang::owned<Terminal> _paren_l_token,
+    JLang::owned<Expression> _expression_initial,
+    JLang::owned<Terminal> _semicolon_initial,
+    JLang::owned<Expression> _expression_termination,
+    JLang::owned<Terminal> _semicolon_termination,
+    JLang::owned<Expression> _expression_increment,
+    JLang::owned<Terminal> _paren_r_token,
+    JLang::owned<ScopeBody> _scope_body
+    )
+    : SyntaxNode("statement_for", this, _for_token->get_source_ref())
+    , for_token(std::move(_for_token))
+    , paren_l_token(std::move(_paren_l_token))
+    , expression_initial(std::move(_expression_initial))
+    , semicolon_initial(std::move(_semicolon_initial))
+    , expression_termination(std::move(_expression_termination))
+    , semicolon_termination(std::move(_semicolon_termination))
+    , expression_increment(std::move(_expression_increment))
+    , paren_r_token(std::move(_paren_r_token))
+    , scope_body(std::move(_scope_body))
 {
-  add_child(*for_token);
-  add_child(*paren_l_token);
-  add_child(*expression_initial);
-  add_child(*semicolon_initial);
-  add_child(*expression_termination);
-  add_child(*semicolon_termination);
-  add_child(*expression_increment);
-  add_child(*paren_r_token);
-  add_child(*scope_body);
+    add_child(*for_token);
+    add_child(*paren_l_token);
+    add_child(*expression_initial);
+    add_child(*semicolon_initial);
+    add_child(*expression_termination);
+    add_child(*semicolon_termination);
+    add_child(*expression_increment);
+    add_child(*paren_r_token);
+    add_child(*scope_body);
 }
 StatementFor::~StatementFor()
 {}
@@ -713,37 +714,37 @@ StatementFor::get_scope_body() const
 { return *scope_body; }
 ///////////////////////////////////////////////////
 StatementSwitchBlock::StatementSwitchBlock(
-                           JLang::owned<Terminal> _default_token,
-                           JLang::owned<Terminal> _colon_token,
-                           JLang::owned<ScopeBody> _scope_body
-                           )
-  : SyntaxNode("statement_switch_block", this, _default_token->get_source_ref())
-  , m_is_default(true)
-  , default_token(std::move(_default_token))
-  , colon_token(std::move(_colon_token))
-  , scope_body(std::move(_scope_body))
+    JLang::owned<Terminal> _default_token,
+    JLang::owned<Terminal> _colon_token,
+    JLang::owned<ScopeBody> _scope_body
+    )
+    : SyntaxNode("statement_switch_block", this, _default_token->get_source_ref())
+    , m_is_default(true)
+    , default_token(std::move(_default_token))
+    , colon_token(std::move(_colon_token))
+    , scope_body(std::move(_scope_body))
 {
-  add_child(*default_token);
-  add_child(*colon_token);
-  add_child(*scope_body);
+    add_child(*default_token);
+    add_child(*colon_token);
+    add_child(*scope_body);
 }
 StatementSwitchBlock::StatementSwitchBlock(
-                           JLang::owned<Terminal> _case_token,
-                           JLang::owned<Expression> _expression,
-                           JLang::owned<Terminal> _colon_token,
-                           JLang::owned<ScopeBody> _scope_body
-                           )
-  : SyntaxNode("statement_switch_block", this, _case_token->get_source_ref())
-  , m_is_default(false)
-  , case_token(std::move(_case_token))
-  , expression(std::move(_expression))
-  , colon_token(std::move(_colon_token))
-  , scope_body(std::move(_scope_body))
+    JLang::owned<Terminal> _case_token,
+    JLang::owned<Expression> _expression,
+    JLang::owned<Terminal> _colon_token,
+    JLang::owned<ScopeBody> _scope_body
+    )
+    : SyntaxNode("statement_switch_block", this, _case_token->get_source_ref())
+    , m_is_default(false)
+    , case_token(std::move(_case_token))
+    , expression(std::move(_expression))
+    , colon_token(std::move(_colon_token))
+    , scope_body(std::move(_scope_body))
 {
-  add_child(*case_token);
-  add_child(*expression);
-  add_child(*colon_token);
-  add_child(*scope_body);
+    add_child(*case_token);
+    add_child(*expression);
+    add_child(*colon_token);
+    add_child(*scope_body);
 }
 StatementSwitchBlock::~StatementSwitchBlock()
 {}
@@ -760,7 +761,7 @@ StatementSwitchBlock::get_scope_body()
 ///////////////////////////////////////////////////
 
 StatementSwitchContent::StatementSwitchContent(const JLang::context::SourceReference & _source_ref)
-  : SyntaxNode("statement_switch_content", this, _source_ref)
+    : SyntaxNode("statement_switch_content", this, _source_ref)
 {}
 StatementSwitchContent::~StatementSwitchContent()
 {}
@@ -770,36 +771,36 @@ StatementSwitchContent::get_blocks() const
 void
 StatementSwitchContent::add_block(JLang::owned<StatementSwitchBlock> _block)
 {
-  add_child(*_block.get());
-  blocks.push_back(std::move(_block));
+    add_child(*_block.get());
+    blocks.push_back(std::move(_block));
 }
 
 ///////////////////////////////////////////////////
 StatementSwitch::StatementSwitch(
-                      JLang::owned<Terminal> _switch_token,
-                      JLang::owned<Terminal> _paren_l_token,
-                      JLang::owned<Expression> _expression,
-                      JLang::owned<Terminal> _paren_r_token,
-                      JLang::owned<Terminal> _brace_l_token,
-                      JLang::owned<StatementSwitchContent> _switch_content,
-                      JLang::owned<Terminal> _brace_r_token
-                      )
-  : SyntaxNode("statement_switch", this, _switch_token->get_source_ref())
-  , switch_token(std::move(_switch_token))
-  , paren_l_token(std::move(_paren_l_token))
-  , expression(std::move(_expression))
-  , paren_r_token(std::move(_paren_r_token))
-  , brace_l_token(std::move(_brace_l_token))
-  , switch_content(std::move(_switch_content))
-  , brace_r_token(std::move(_brace_r_token))
+    JLang::owned<Terminal> _switch_token,
+    JLang::owned<Terminal> _paren_l_token,
+    JLang::owned<Expression> _expression,
+    JLang::owned<Terminal> _paren_r_token,
+    JLang::owned<Terminal> _brace_l_token,
+    JLang::owned<StatementSwitchContent> _switch_content,
+    JLang::owned<Terminal> _brace_r_token
+    )
+    : SyntaxNode("statement_switch", this, _switch_token->get_source_ref())
+    , switch_token(std::move(_switch_token))
+    , paren_l_token(std::move(_paren_l_token))
+    , expression(std::move(_expression))
+    , paren_r_token(std::move(_paren_r_token))
+    , brace_l_token(std::move(_brace_l_token))
+    , switch_content(std::move(_switch_content))
+    , brace_r_token(std::move(_brace_r_token))
 {
-  add_child(*switch_token);
-  add_child(*paren_l_token);
-  add_child(*expression);
-  add_child(*paren_r_token);
-  add_child(*brace_l_token);
-  add_child(*switch_content);
-  add_child(*brace_r_token);
+    add_child(*switch_token);
+    add_child(*paren_l_token);
+    add_child(*expression);
+    add_child(*paren_r_token);
+    add_child(*brace_l_token);
+    add_child(*switch_content);
+    add_child(*brace_r_token);
 }
 StatementSwitch::~StatementSwitch()
 {}
@@ -811,18 +812,18 @@ StatementSwitch::get_switch_content() const
 { return *switch_content; }
 ///////////////////////////////////////////////////
 StatementLabel::StatementLabel(
-                               JLang::owned<Terminal> _label_token,
-                               JLang::owned<Terminal> _identifier_token,
-                               JLang::owned<Terminal> _colon_token
-                               )
-  : SyntaxNode("statement_label", this, _label_token->get_source_ref())
-  , label_token(std::move(_label_token))
-  , identifier_token(std::move(_identifier_token))
-  , colon_token(std::move(_colon_token))
+    JLang::owned<Terminal> _label_token,
+    JLang::owned<Terminal> _identifier_token,
+    JLang::owned<Terminal> _colon_token
+    )
+    : SyntaxNode("statement_label", this, _label_token->get_source_ref())
+    , label_token(std::move(_label_token))
+    , identifier_token(std::move(_identifier_token))
+    , colon_token(std::move(_colon_token))
 {
-  add_child(*label_token);
-  add_child(*identifier_token);
-  add_child(*colon_token);
+    add_child(*label_token);
+    add_child(*identifier_token);
+    add_child(*colon_token);
 }
 StatementLabel::~StatementLabel()
 {}
@@ -835,18 +836,18 @@ StatementLabel::get_name_source_ref() const
 
 ///////////////////////////////////////////////////
 StatementGoto::StatementGoto(
-                    JLang::owned<Terminal> _goto_token,
-                    JLang::owned<Terminal> _identifier_token,
-                    JLang::owned<Terminal> _semicolon_token
-                    )
-  : SyntaxNode("statement_goto", this, _goto_token->get_source_ref())
-  , goto_token(std::move(_goto_token))
-  , identifier_token(std::move(_identifier_token))
-  , semicolon_token(std::move(_semicolon_token))
+    JLang::owned<Terminal> _goto_token,
+    JLang::owned<Terminal> _identifier_token,
+    JLang::owned<Terminal> _semicolon_token
+    )
+    : SyntaxNode("statement_goto", this, _goto_token->get_source_ref())
+    , goto_token(std::move(_goto_token))
+    , identifier_token(std::move(_identifier_token))
+    , semicolon_token(std::move(_semicolon_token))
 {
-  add_child(*goto_token);
-  add_child(*identifier_token);
-  add_child(*semicolon_token);
+    add_child(*goto_token);
+    add_child(*identifier_token);
+    add_child(*semicolon_token);
 }
 StatementGoto::~StatementGoto()
 {}
@@ -858,46 +859,46 @@ StatementGoto::get_label_source_ref() const
 { return identifier_token->get_source_ref(); }
 ///////////////////////////////////////////////////
 StatementBreak::StatementBreak(
-                               JLang::owned<Terminal> _break_token,
-                               JLang::owned<Terminal> _semicolon_token
-                               )
-  : SyntaxNode("StatementBreak();", this, _break_token->get_source_ref())
-  , break_token(std::move(_break_token))
-  , semicolon_token(std::move(_semicolon_token))
+    JLang::owned<Terminal> _break_token,
+    JLang::owned<Terminal> _semicolon_token
+    )
+    : SyntaxNode("StatementBreak();", this, _break_token->get_source_ref())
+    , break_token(std::move(_break_token))
+    , semicolon_token(std::move(_semicolon_token))
 {
-  add_child(*break_token);
-  add_child(*semicolon_token);
+    add_child(*break_token);
+    add_child(*semicolon_token);
 }
 StatementBreak::~StatementBreak()
 {}
 ///////////////////////////////////////////////////
 StatementContinue::StatementContinue(
-                                     JLang::owned<Terminal> _continue_token,
-                                     JLang::owned<Terminal> _semicolon_token
-                                     )
-  : SyntaxNode("statement_continue", this, _continue_token->get_source_ref())
-  , continue_token(std::move(_continue_token))
-  , semicolon_token(std::move(_semicolon_token))
+    JLang::owned<Terminal> _continue_token,
+    JLang::owned<Terminal> _semicolon_token
+    )
+    : SyntaxNode("statement_continue", this, _continue_token->get_source_ref())
+    , continue_token(std::move(_continue_token))
+    , semicolon_token(std::move(_semicolon_token))
 {
-  add_child(*continue_token);
-  add_child(*semicolon_token);
+    add_child(*continue_token);
+    add_child(*semicolon_token);
 }
 StatementContinue::~StatementContinue()
 {}
 ///////////////////////////////////////////////////
 StatementReturn::StatementReturn(
-                                 JLang::owned<Terminal> _return_token,
-                                 JLang::owned<Expression> _expression,
-                                 JLang::owned<Terminal> _semicolon_token
-                                 )
-  : SyntaxNode("statement_return", this, _return_token->get_source_ref())
-  , return_token(std::move(_return_token))
-  , expression(std::move(_expression))
-  , semicolon_token(std::move(_semicolon_token))
+    JLang::owned<Terminal> _return_token,
+    JLang::owned<Expression> _expression,
+    JLang::owned<Terminal> _semicolon_token
+    )
+    : SyntaxNode("statement_return", this, _return_token->get_source_ref())
+    , return_token(std::move(_return_token))
+    , expression(std::move(_expression))
+    , semicolon_token(std::move(_semicolon_token))
 {
-  add_child(*return_token);
-  add_child(*expression);
-  add_child(*semicolon_token);
+    add_child(*return_token);
+    add_child(*expression);
+    add_child(*semicolon_token);
 }
 StatementReturn::~StatementReturn()
 {}
@@ -906,10 +907,10 @@ StatementReturn::get_expression() const
 { return *expression; }
 ///////////////////////////////////////////////////
 Statement::Statement(StatementType _statement, const SyntaxNode & _sn)
-  : SyntaxNode("statement", this, _sn.get_source_ref())
-  , statement(std::move(_statement))
+    : SyntaxNode("statement", this, _sn.get_source_ref())
+    , statement(std::move(_statement))
 {
-  add_child(_sn);
+    add_child(_sn);
 }
 Statement::~Statement()
 {}
@@ -919,15 +920,15 @@ Statement::get_statement() const
 
 ///////////////////////////////////////////////////
 StatementList::StatementList(const JLang::context::SourceReference & _source_ref)
-  : SyntaxNode("statement_list", this, _source_ref)
+    : SyntaxNode("statement_list", this, _source_ref)
 {}
 StatementList::~StatementList()
 {}
 void
 StatementList::add_statement(JLang::owned<Statement> _statement)
 {
-  add_child(*_statement);
-  statements.push_back(std::move(_statement));
+    add_child(*_statement);
+    statements.push_back(std::move(_statement));
 }
 const std::vector<JLang::owned<Statement>> &
 StatementList::get_statements() const
@@ -935,18 +936,18 @@ StatementList::get_statements() const
 
 ///////////////////////////////////////////////////
 ScopeBody::ScopeBody(
-                     JLang::owned<Terminal> _brace_l_token,
-                     JLang::owned<StatementList> _statement_list,
-                     JLang::owned<Terminal> _brace_r_token
-                )
-  : SyntaxNode("scope_body", this, _brace_l_token->get_source_ref())
-  , brace_l_token(std::move(_brace_l_token))
-  , statement_list(std::move(_statement_list))
-  , brace_r_token(std::move(_brace_r_token))
+    JLang::owned<Terminal> _brace_l_token,
+    JLang::owned<StatementList> _statement_list,
+    JLang::owned<Terminal> _brace_r_token
+    )
+    : SyntaxNode("scope_body", this, _brace_l_token->get_source_ref())
+    , brace_l_token(std::move(_brace_l_token))
+    , statement_list(std::move(_statement_list))
+    , brace_r_token(std::move(_brace_r_token))
 {
-  add_child(*brace_l_token);
-  add_child(*statement_list);
-  add_child(*brace_r_token);
+    add_child(*brace_l_token);
+    add_child(*statement_list);
+    add_child(*brace_r_token);
 }
 ScopeBody::~ScopeBody()
 {}
@@ -963,46 +964,46 @@ FileStatementFunctionDefinition::FileStatementFunctionDefinition(
     JLang::owned<FunctionDefinitionArgList> _arguments,
     JLang::owned<Terminal> _paren_r,
     JLang::owned<ScopeBody> _scope_body
-)
-  : SyntaxNode("file_statement_function_declaration", this, _access_modifier->get_source_ref())
-  , access_modifier(std::move(_access_modifier))
-  , unsafe_modifier(std::move(_unsafe_modifier))
-  , type_specifier(std::move(_type_specifier))
-  , name(std::move(_name))
-  , paren_l(std::move(_paren_l))
-  , arguments(std::move(_arguments))
-  , paren_r(std::move(_paren_r))
-  , scope_body(std::move(_scope_body))
+    )
+    : SyntaxNode("file_statement_function_declaration", this, _access_modifier->get_source_ref())
+    , access_modifier(std::move(_access_modifier))
+    , unsafe_modifier(std::move(_unsafe_modifier))
+    , type_specifier(std::move(_type_specifier))
+    , name(std::move(_name))
+    , paren_l(std::move(_paren_l))
+    , arguments(std::move(_arguments))
+    , paren_r(std::move(_paren_r))
+    , scope_body(std::move(_scope_body))
 {
-  add_child(*access_modifier);
-  add_child(*unsafe_modifier);
-  add_child(*type_specifier);
-  add_child(*name);
-  add_child(*paren_l);
-  add_child(*arguments);
-  add_child(*paren_r);
-  add_child(*scope_body);
+    add_child(*access_modifier);
+    add_child(*unsafe_modifier);
+    add_child(*type_specifier);
+    add_child(*name);
+    add_child(*paren_l);
+    add_child(*arguments);
+    add_child(*paren_r);
+    add_child(*scope_body);
 }
 FileStatementFunctionDefinition::~FileStatementFunctionDefinition()
 {}
 const AccessModifier &
 FileStatementFunctionDefinition::get_access_modifier() const
 {
-  return *access_modifier;
+    return *access_modifier;
 }
 const UnsafeModifier &
 FileStatementFunctionDefinition::get_unsafe_modifier() const
 {
-  return *unsafe_modifier;
+    return *unsafe_modifier;
 }
 const TypeSpecifier &
 FileStatementFunctionDefinition::get_type_specifier() const
 {
-  return *type_specifier;
+    return *type_specifier;
 }
 const Terminal &
 FileStatementFunctionDefinition::get_name() const { return *name; }
- 
+
 const FunctionDefinitionArgList &
 FileStatementFunctionDefinition::get_arguments() const
 { return *arguments; }
@@ -1014,32 +1015,32 @@ FileStatementFunctionDefinition::get_scope_body() const
 ///////////////////////////////////////////////////
 
 ArrayLength::ArrayLength(const JLang::context::SourceReference & _source_ref)
-  : SyntaxNode("array_length", this, _source_ref)
-  , bracket_l_token(nullptr)
-  , literal_int_token(nullptr)
-  , bracket_r_token(nullptr)
+    : SyntaxNode("array_length", this, _source_ref)
+    , bracket_l_token(nullptr)
+    , literal_int_token(nullptr)
+    , bracket_r_token(nullptr)
 {}
 
 ArrayLength::ArrayLength(
-                  JLang::owned<Terminal> _bracket_l_token,
-                  JLang::owned<Terminal> _literal_int_token,
-                  JLang::owned<Terminal> _bracket_r_token
-                  )
-  : SyntaxNode("array_length", this, _bracket_l_token->get_source_ref())
-  , bracket_l_token(std::move(_bracket_l_token))
-  , literal_int_token(std::move(_literal_int_token))
-  , bracket_r_token(std::move(_bracket_r_token))
+    JLang::owned<Terminal> _bracket_l_token,
+    JLang::owned<Terminal> _literal_int_token,
+    JLang::owned<Terminal> _bracket_r_token
+    )
+    : SyntaxNode("array_length", this, _bracket_l_token->get_source_ref())
+    , bracket_l_token(std::move(_bracket_l_token))
+    , literal_int_token(std::move(_literal_int_token))
+    , bracket_r_token(std::move(_bracket_r_token))
 {
-  add_child(*bracket_l_token);
-  add_child(*literal_int_token);
-  add_child(*bracket_r_token);
+    add_child(*bracket_l_token);
+    add_child(*literal_int_token);
+    add_child(*bracket_r_token);
 }
 ArrayLength::~ArrayLength()
 {}
 bool
 ArrayLength::is_array() const
 {
-  return literal_int_token.get() != nullptr;
+    return literal_int_token.get() != nullptr;
 }
 size_t
 ArrayLength::get_size() const
@@ -1050,34 +1051,34 @@ ArrayLength::get_size_source_ref() const
 
 ///////////////////////////////////////////////////
 ClassDeclStart::ClassDeclStart(
-                     JLang::owned<AccessModifier> _access_modifier,
-                     JLang::owned<Terminal> _class_token,
-                     JLang::owned<Terminal> _identifier_token,
-                     JLang::owned<ClassArgumentList> _class_argument_list,
-                     bool is_identifier
-)
-  : SyntaxNode("class_decl_start", this, _access_modifier->get_source_ref())
-  , access_modifier(std::move(_access_modifier))
-  , class_token(std::move(_class_token))
-  , identifier_token(std::move(_identifier_token))
-  , class_argument_list(std::move(_class_argument_list))
+    JLang::owned<AccessModifier> _access_modifier,
+    JLang::owned<Terminal> _class_token,
+    JLang::owned<Terminal> _identifier_token,
+    JLang::owned<ClassArgumentList> _class_argument_list,
+    bool is_identifier
+    )
+    : SyntaxNode("class_decl_start", this, _access_modifier->get_source_ref())
+    , access_modifier(std::move(_access_modifier))
+    , class_token(std::move(_class_token))
+    , identifier_token(std::move(_identifier_token))
+    , class_argument_list(std::move(_class_argument_list))
 {
-  add_child(*access_modifier);
-  add_child(*class_token);
-  add_child(*identifier_token);
-  add_child(*class_argument_list);
-  if (is_identifier) {
-    std::string nsn = identifier_token->get_fully_qualified_name();
-    if (nsn.size() > 0) {
-      name = nsn + "::" + identifier_token->get_value();
+    add_child(*access_modifier);
+    add_child(*class_token);
+    add_child(*identifier_token);
+    add_child(*class_argument_list);
+    if (is_identifier) {
+	std::string nsn = identifier_token->get_fully_qualified_name();
+	if (nsn.size() > 0) {
+	    name = nsn + "::" + identifier_token->get_value();
+	}
+	else {
+	    name = identifier_token->get_value();
+	}
     }
     else {
-      name = identifier_token->get_value();
+	name = identifier_token->get_fully_qualified_name();
     }
-  }
-  else {
-    name = identifier_token->get_fully_qualified_name();
-  }
 }
 ClassDeclStart::~ClassDeclStart()
 {}
@@ -1096,17 +1097,17 @@ ClassDeclStart::get_argument_list() const
 { return *class_argument_list; }
 ///////////////////////////////////////////////////
 ClassArgumentList::ClassArgumentList(JLang::owned<Terminal> _argument)
-  : SyntaxNode("class_argument_list", this, _argument->get_source_ref())
-  , paren_l(nullptr)
-  , paren_r(nullptr)
+    : SyntaxNode("class_argument_list", this, _argument->get_source_ref())
+    , paren_l(nullptr)
+    , paren_r(nullptr)
 {
-  add_child(*_argument);
-  argument_list.push_back(std::move(_argument));
+    add_child(*_argument);
+    argument_list.push_back(std::move(_argument));
 }
 ClassArgumentList::ClassArgumentList(const JLang::context::SourceReference & _source_ref)
-  : SyntaxNode("class_argument_list", this, _source_ref)
-  , paren_l(nullptr)
-  , paren_r(nullptr)
+    : SyntaxNode("class_argument_list", this, _source_ref)
+    , paren_l(nullptr)
+    , paren_r(nullptr)
 {
 }
 ClassArgumentList::~ClassArgumentList()
@@ -1114,42 +1115,42 @@ ClassArgumentList::~ClassArgumentList()
 void
 ClassArgumentList::add_parens(JLang::owned<Terminal> _paren_l, JLang::owned<Terminal> _paren_r)
 {
-  paren_l = std::move(_paren_l);
-  prepend_child(*paren_l);
-  
-  paren_r = std::move(_paren_r);
-  add_child(*paren_r);
+    paren_l = std::move(_paren_l);
+    prepend_child(*paren_l);
+    
+    paren_r = std::move(_paren_r);
+    add_child(*paren_r);
 }
 
 void
 ClassArgumentList::add_argument(JLang::owned<Terminal> _comma_token, JLang::owned<Terminal> _argument)
 {
-  comma_list.push_back(std::move(_comma_token));
-  argument_list.push_back(std::move(_argument));
+    comma_list.push_back(std::move(_comma_token));
+    argument_list.push_back(std::move(_argument));
 }
 const std::vector<JLang::owned<Terminal>> &
 ClassArgumentList::get_arguments() const
 { return argument_list; }
 ///////////////////////////////////////////////////
 ClassMemberDeclarationVariable::ClassMemberDeclarationVariable(
-                                     JLang::owned<AccessModifier> _access_modifier,
-                                     JLang::owned<TypeSpecifier> _type_specifier,
-                                     JLang::owned<Terminal> _identifier_token,
-                                     JLang::owned<ArrayLength> _array_length,
-                                     JLang::owned<Terminal> _semicolon_token
-                                     )
-  : SyntaxNode("class_member_declaration_variable", this, _access_modifier->get_source_ref())
-  , access_modifier(std::move(_access_modifier))
-  , type_specifier(std::move(_type_specifier))
-  , identifier_token(std::move(_identifier_token))
-  , array_length(std::move(_array_length))
-  , semicolon_token(std::move(_semicolon_token))
+    JLang::owned<AccessModifier> _access_modifier,
+    JLang::owned<TypeSpecifier> _type_specifier,
+    JLang::owned<Terminal> _identifier_token,
+    JLang::owned<ArrayLength> _array_length,
+    JLang::owned<Terminal> _semicolon_token
+    )
+    : SyntaxNode("class_member_declaration_variable", this, _access_modifier->get_source_ref())
+    , access_modifier(std::move(_access_modifier))
+    , type_specifier(std::move(_type_specifier))
+    , identifier_token(std::move(_identifier_token))
+    , array_length(std::move(_array_length))
+    , semicolon_token(std::move(_semicolon_token))
 {
-  add_child(*access_modifier);
-  add_child(*type_specifier);
-  add_child(*identifier_token);
-  add_child(*array_length);
-  add_child(*semicolon_token);
+    add_child(*access_modifier);
+    add_child(*type_specifier);
+    add_child(*identifier_token);
+    add_child(*array_length);
+    add_child(*semicolon_token);
 }
 ClassMemberDeclarationVariable::~ClassMemberDeclarationVariable()
 {}
@@ -1170,30 +1171,30 @@ ClassMemberDeclarationVariable::get_array_length() const
 { return *array_length; }
 ///////////////////////////////////////////////////
 ClassMemberDeclarationMethod::ClassMemberDeclarationMethod(
-                                                           JLang::owned<AccessModifier> _access_modifier,
-                                                           JLang::owned<TypeSpecifier> _type_specifier,
-                                                           JLang::owned<Terminal> _identifier_token,
-                                                           JLang::owned<Terminal> _paren_l_token,
-                                                           JLang::owned<FunctionDefinitionArgList> _function_definition_arg_list,
-                                                           JLang::owned<Terminal> _paren_r_token,
-                                                           JLang::owned<Terminal> _semicolon_token
-                                                           )
-: SyntaxNode("class_member_declaration_method", this, _access_modifier->get_source_ref())
- , access_modifier(std::move(_access_modifier))
- , type_specifier(std::move(_type_specifier))
- , identifier_token(std::move(_identifier_token))
- , paren_l_token(std::move(_paren_l_token))
- , function_definition_arg_list(std::move(_function_definition_arg_list))
- , paren_r_token(std::move(_paren_r_token))
- , semicolon_token(std::move(_semicolon_token))
+    JLang::owned<AccessModifier> _access_modifier,
+    JLang::owned<TypeSpecifier> _type_specifier,
+    JLang::owned<Terminal> _identifier_token,
+    JLang::owned<Terminal> _paren_l_token,
+    JLang::owned<FunctionDefinitionArgList> _function_definition_arg_list,
+    JLang::owned<Terminal> _paren_r_token,
+    JLang::owned<Terminal> _semicolon_token
+    )
+    : SyntaxNode("class_member_declaration_method", this, _access_modifier->get_source_ref())
+    , access_modifier(std::move(_access_modifier))
+    , type_specifier(std::move(_type_specifier))
+    , identifier_token(std::move(_identifier_token))
+    , paren_l_token(std::move(_paren_l_token))
+    , function_definition_arg_list(std::move(_function_definition_arg_list))
+    , paren_r_token(std::move(_paren_r_token))
+    , semicolon_token(std::move(_semicolon_token))
 {
-  add_child(*access_modifier);
-  add_child(*type_specifier);
-  add_child(*identifier_token);
-  add_child(*paren_l_token);
-  add_child(*function_definition_arg_list);
-  add_child(*paren_r_token);
-  add_child(*semicolon_token);
+    add_child(*access_modifier);
+    add_child(*type_specifier);
+    add_child(*identifier_token);
+    add_child(*paren_l_token);
+    add_child(*function_definition_arg_list);
+    add_child(*paren_r_token);
+    add_child(*semicolon_token);
 }
 ClassMemberDeclarationMethod::~ClassMemberDeclarationMethod()
 {}
@@ -1214,27 +1215,27 @@ ClassMemberDeclarationMethod::get_arguments() const
 { return *function_definition_arg_list; }
 ///////////////////////////////////////////////////
 ClassMemberDeclarationConstructor::ClassMemberDeclarationConstructor(
-                                                           JLang::owned<AccessModifier> _access_modifier,
-                                                           JLang::owned<TypeSpecifier> _type_specifier,
-                                                           JLang::owned<Terminal> _paren_l_token,
-                                                           JLang::owned<FunctionDefinitionArgList> _function_definition_arg_list,
-                                                           JLang::owned<Terminal> _paren_r_token,
-                                                           JLang::owned<Terminal> _semicolon_token
-                                                           )
- : SyntaxNode("class_member_declaration_method", this, _access_modifier->get_source_ref())
- , access_modifier(std::move(_access_modifier))
- , type_specifier(std::move(_type_specifier))
- , paren_l_token(std::move(_paren_l_token))
- , function_definition_arg_list(std::move(_function_definition_arg_list))
- , paren_r_token(std::move(_paren_r_token))
- , semicolon_token(std::move(_semicolon_token))
+    JLang::owned<AccessModifier> _access_modifier,
+    JLang::owned<TypeSpecifier> _type_specifier,
+    JLang::owned<Terminal> _paren_l_token,
+    JLang::owned<FunctionDefinitionArgList> _function_definition_arg_list,
+    JLang::owned<Terminal> _paren_r_token,
+    JLang::owned<Terminal> _semicolon_token
+    )
+    : SyntaxNode("class_member_declaration_method", this, _access_modifier->get_source_ref())
+    , access_modifier(std::move(_access_modifier))
+    , type_specifier(std::move(_type_specifier))
+    , paren_l_token(std::move(_paren_l_token))
+    , function_definition_arg_list(std::move(_function_definition_arg_list))
+    , paren_r_token(std::move(_paren_r_token))
+    , semicolon_token(std::move(_semicolon_token))
 {
-  add_child(*access_modifier);
-  add_child(*type_specifier);
-  add_child(*paren_l_token);
-  add_child(*function_definition_arg_list);
-  add_child(*paren_r_token);
-  add_child(*semicolon_token);
+    add_child(*access_modifier);
+    add_child(*type_specifier);
+    add_child(*paren_l_token);
+    add_child(*function_definition_arg_list);
+    add_child(*paren_r_token);
+    add_child(*semicolon_token);
 }
 ClassMemberDeclarationConstructor::~ClassMemberDeclarationConstructor()
 {}
@@ -1249,30 +1250,30 @@ ClassMemberDeclarationConstructor::get_arguments() const
 { return *function_definition_arg_list; }
 ///////////////////////////////////////////////////
 ClassMemberDeclarationDestructor::ClassMemberDeclarationDestructor(
-                                                                   JLang::owned<AccessModifier> _access_modifier,
-                                                                   JLang::owned<Terminal> _tilde_token,
-                                                                   JLang::owned<TypeSpecifier> _type_specifier,
-                                                                   JLang::owned<Terminal> _paren_l_token,
-                                                                   JLang::owned<FunctionDefinitionArgList> _function_definition_arg_list,
-                                                                   JLang::owned<Terminal> _paren_r_token,
-                                                                   JLang::owned<Terminal> _semicolon_token
-                                                           )
- : SyntaxNode("class_member_declaration_method", this, _access_modifier->get_source_ref())
- , access_modifier(std::move(_access_modifier))
- , tilde_token(std::move(_tilde_token))
- , type_specifier(std::move(_type_specifier))
- , paren_l_token(std::move(_paren_l_token))
- , function_definition_arg_list(std::move(_function_definition_arg_list))
- , paren_r_token(std::move(_paren_r_token))
- , semicolon_token(std::move(_semicolon_token))
+    JLang::owned<AccessModifier> _access_modifier,
+    JLang::owned<Terminal> _tilde_token,
+    JLang::owned<TypeSpecifier> _type_specifier,
+    JLang::owned<Terminal> _paren_l_token,
+    JLang::owned<FunctionDefinitionArgList> _function_definition_arg_list,
+    JLang::owned<Terminal> _paren_r_token,
+    JLang::owned<Terminal> _semicolon_token
+    )
+    : SyntaxNode("class_member_declaration_method", this, _access_modifier->get_source_ref())
+    , access_modifier(std::move(_access_modifier))
+    , tilde_token(std::move(_tilde_token))
+    , type_specifier(std::move(_type_specifier))
+    , paren_l_token(std::move(_paren_l_token))
+    , function_definition_arg_list(std::move(_function_definition_arg_list))
+    , paren_r_token(std::move(_paren_r_token))
+    , semicolon_token(std::move(_semicolon_token))
 {
-  add_child(*access_modifier);
-  add_child(*tilde_token);
-  add_child(*type_specifier);
-  add_child(*paren_l_token);
-  add_child(*function_definition_arg_list);
-  add_child(*paren_r_token);
-  add_child(*semicolon_token);
+    add_child(*access_modifier);
+    add_child(*tilde_token);
+    add_child(*type_specifier);
+    add_child(*paren_l_token);
+    add_child(*function_definition_arg_list);
+    add_child(*paren_r_token);
+    add_child(*semicolon_token);
 }
 ClassMemberDeclarationDestructor::~ClassMemberDeclarationDestructor()
 {}
@@ -1287,13 +1288,13 @@ ClassMemberDeclarationDestructor::get_arguments() const
 { return *function_definition_arg_list; }
 ///////////////////////////////////////////////////
 ClassMemberDeclaration::ClassMemberDeclaration(
-                                               MemberType _member,
-                                               const SyntaxNode & _sn
-                                               )
-  : SyntaxNode("class_member_declaration", this, _sn.get_source_ref())
-  , member(std::move(_member))
+    MemberType _member,
+    const SyntaxNode & _sn
+    )
+    : SyntaxNode("class_member_declaration", this, _sn.get_source_ref())
+    , member(std::move(_member))
 {
-  add_child(_sn);
+    add_child(_sn);
 }
 ClassMemberDeclaration::~ClassMemberDeclaration()
 {}
@@ -1304,44 +1305,44 @@ ClassMemberDeclaration::get_member()
 
 
 ClassMemberDeclarationList::ClassMemberDeclarationList(const JLang::context::SourceReference & _source_ref)
-  : SyntaxNode("class_member_declaration_list", this, _source_ref)
+    : SyntaxNode("class_member_declaration_list", this, _source_ref)
 {}
 ClassMemberDeclarationList::~ClassMemberDeclarationList()
 {}
 const std::vector<JLang::owned<ClassMemberDeclaration>> &
 ClassMemberDeclarationList::get_members() const
 {
-  return members;
+    return members;
 }
 void
 ClassMemberDeclarationList::add_member(JLang::owned<ClassMemberDeclaration> _member)
 {
-  add_child(*_member);
-  members.push_back(std::move(_member));
+    add_child(*_member);
+    members.push_back(std::move(_member));
 }
 ///////////////////////////////////////////////////
 ClassDeclaration::ClassDeclaration(
-                      JLang::owned<ClassDeclStart> _class_decl_start,
-                      JLang::owned<Terminal> _semicolon_token
-                      )
-  : SyntaxNode("class_declaration", this, _class_decl_start->get_source_ref())
-  , class_decl_start(std::move(_class_decl_start))
-  , semicolon_token(std::move(_semicolon_token))
+    JLang::owned<ClassDeclStart> _class_decl_start,
+    JLang::owned<Terminal> _semicolon_token
+    )
+    : SyntaxNode("class_declaration", this, _class_decl_start->get_source_ref())
+    , class_decl_start(std::move(_class_decl_start))
+    , semicolon_token(std::move(_semicolon_token))
 {
-  add_child(*class_decl_start);
-  add_child(*semicolon_token);
+    add_child(*class_decl_start);
+    add_child(*semicolon_token);
 }
 ClassDeclaration::~ClassDeclaration()
 {}
 const AccessModifier &
 ClassDeclaration::get_access_modifier() const
 {
-  return class_decl_start->get_access_modifier();
+    return class_decl_start->get_access_modifier();
 }
 const std::string &
 ClassDeclaration::get_name() const
 {
-  return class_decl_start->get_name();
+    return class_decl_start->get_name();
 }
 const SourceReference &
 ClassDeclaration::get_name_source_ref() const
@@ -1350,41 +1351,41 @@ ClassDeclaration::get_name_source_ref() const
 const ClassArgumentList &
 ClassDeclaration::get_argument_list() const
 {
-  return class_decl_start->get_argument_list();
+    return class_decl_start->get_argument_list();
 }
 
 ///////////////////////////////////////////////////
 ClassDefinition::ClassDefinition(
-                      JLang::owned<ClassDeclStart> _class_decl_start,
-                      JLang::owned<Terminal> _brace_l_token,
-                      JLang::owned<ClassMemberDeclarationList> _class_member_declaration_list,
-                      JLang::owned<Terminal> _brace_r_token,
-                      JLang::owned<Terminal> _semicolon_token
-                      )
-  : SyntaxNode("class_definition", this, _class_decl_start->get_source_ref())
-  , class_decl_start(std::move(_class_decl_start))
-  , brace_l_token(std::move(_brace_l_token))
-  , class_member_declaration_list(std::move(_class_member_declaration_list))
-  , brace_r_token(std::move(_brace_r_token))
-  , semicolon_token(std::move(_semicolon_token))
+    JLang::owned<ClassDeclStart> _class_decl_start,
+    JLang::owned<Terminal> _brace_l_token,
+    JLang::owned<ClassMemberDeclarationList> _class_member_declaration_list,
+    JLang::owned<Terminal> _brace_r_token,
+    JLang::owned<Terminal> _semicolon_token
+    )
+    : SyntaxNode("class_definition", this, _class_decl_start->get_source_ref())
+    , class_decl_start(std::move(_class_decl_start))
+    , brace_l_token(std::move(_brace_l_token))
+    , class_member_declaration_list(std::move(_class_member_declaration_list))
+    , brace_r_token(std::move(_brace_r_token))
+    , semicolon_token(std::move(_semicolon_token))
 {
-  add_child(*class_decl_start);
-  add_child(*brace_l_token);
-  add_child(*class_member_declaration_list);
-  add_child(*brace_r_token);
-  add_child(*semicolon_token);
+    add_child(*class_decl_start);
+    add_child(*brace_l_token);
+    add_child(*class_member_declaration_list);
+    add_child(*brace_r_token);
+    add_child(*semicolon_token);
 }
 ClassDefinition::~ClassDefinition()
 {}
 const AccessModifier &
 ClassDefinition::get_access_modifier() const
 {
-  return class_decl_start->get_access_modifier();
+    return class_decl_start->get_access_modifier();
 }
 const std::string &
 ClassDefinition::get_name() const
 {
-  return class_decl_start->get_name();
+    return class_decl_start->get_name();
 }
 const SourceReference &
 ClassDefinition::get_name_source_ref() const
@@ -1392,7 +1393,7 @@ ClassDefinition::get_name_source_ref() const
 const ClassArgumentList &
 ClassDefinition::get_argument_list() const
 {
-  return class_decl_start->get_argument_list();
+    return class_decl_start->get_argument_list();
 }
 const std::vector<JLang::owned<ClassMemberDeclaration>> &
 ClassDefinition::get_members() const
@@ -1400,24 +1401,24 @@ ClassDefinition::get_members() const
 
 ///////////////////////////////////////////////////
 TypeDefinition::TypeDefinition(
-                     JLang::owned<AccessModifier> _access_modifier,
-                     JLang::owned<Terminal> _typedef_token,
-                     JLang::owned<TypeSpecifier> _type_specifier,
-                     JLang::owned<Terminal> _identifier_token,
-                     JLang::owned<Terminal> _semicolon_token
-                               )
-  : SyntaxNode("type_definition", this, _access_modifier->get_source_ref())
-  , access_modifier(std::move(_access_modifier))
-  , typedef_token(std::move(_typedef_token))
-  , type_specifier(std::move(_type_specifier))
-  , identifier_token(std::move(_identifier_token))
-  , semicolon_token(std::move(_semicolon_token))
+    JLang::owned<AccessModifier> _access_modifier,
+    JLang::owned<Terminal> _typedef_token,
+    JLang::owned<TypeSpecifier> _type_specifier,
+    JLang::owned<Terminal> _identifier_token,
+    JLang::owned<Terminal> _semicolon_token
+    )
+    : SyntaxNode("type_definition", this, _access_modifier->get_source_ref())
+    , access_modifier(std::move(_access_modifier))
+    , typedef_token(std::move(_typedef_token))
+    , type_specifier(std::move(_type_specifier))
+    , identifier_token(std::move(_identifier_token))
+    , semicolon_token(std::move(_semicolon_token))
 {
-  add_child(*access_modifier);
-  add_child(*typedef_token);
-  add_child(*type_specifier);
-  add_child(*identifier_token);
-  add_child(*semicolon_token);
+    add_child(*access_modifier);
+    add_child(*typedef_token);
+    add_child(*type_specifier);
+    add_child(*identifier_token);
+    add_child(*semicolon_token);
 }
 TypeDefinition::~TypeDefinition()
 {}
@@ -1436,21 +1437,21 @@ TypeDefinition::get_type_specifier() const
 
 ///////////////////////////////////////////////////
 EnumDefinitionValue::EnumDefinitionValue(
-                          JLang::owned<Terminal> _identifier_token,
-                          JLang::owned<Terminal> _equals_token,
-                          JLang::owned<ExpressionPrimary> _expression_primary,
-                          JLang::owned<Terminal> _semicolon_token
-                          )
-  : SyntaxNode("enum_definition_value", this, _identifier_token->get_source_ref())
-  , identifier_token(std::move(_identifier_token))
-  , equals_token(std::move(_equals_token))
-  , expression_primary(std::move(_expression_primary))
-  , semicolon_token(std::move(_semicolon_token))
+    JLang::owned<Terminal> _identifier_token,
+    JLang::owned<Terminal> _equals_token,
+    JLang::owned<ExpressionPrimary> _expression_primary,
+    JLang::owned<Terminal> _semicolon_token
+    )
+    : SyntaxNode("enum_definition_value", this, _identifier_token->get_source_ref())
+    , identifier_token(std::move(_identifier_token))
+    , equals_token(std::move(_equals_token))
+    , expression_primary(std::move(_expression_primary))
+    , semicolon_token(std::move(_semicolon_token))
 {
-  add_child(*identifier_token);
-  add_child(*equals_token);
-  add_child(*expression_primary);
-  add_child(*semicolon_token);
+    add_child(*identifier_token);
+    add_child(*equals_token);
+    add_child(*expression_primary);
+    add_child(*semicolon_token);
 }
 EnumDefinitionValue::~EnumDefinitionValue()
 {}
@@ -1467,7 +1468,7 @@ EnumDefinitionValue::get_expression() const
 
 ///////////////////////////////////////////////////
 EnumDefinitionValueList::EnumDefinitionValueList(const JLang::context::SourceReference & _source_ref)
-  : SyntaxNode("enum_definition_value_list", this, _source_ref)
+    : SyntaxNode("enum_definition_value_list", this, _source_ref)
 {}
 
 EnumDefinitionValueList::~EnumDefinitionValueList()
@@ -1475,8 +1476,8 @@ EnumDefinitionValueList::~EnumDefinitionValueList()
 void
 EnumDefinitionValueList::add_value(JLang::owned<EnumDefinitionValue> _value)
 {
-  add_child(*_value);
-  values.push_back(std::move(_value));
+    add_child(*_value);
+    values.push_back(std::move(_value));
 }
 const std::vector<JLang::owned<EnumDefinitionValue>> &
 EnumDefinitionValueList::get_values() const
@@ -1484,33 +1485,33 @@ EnumDefinitionValueList::get_values() const
 
 ///////////////////////////////////////////////////
 EnumDefinition::EnumDefinition(
-                     JLang::owned<AccessModifier> _access_modifier,
-                     JLang::owned<Terminal> _enum_token,
-                     JLang::owned<Terminal> _type_name_token,
-                     JLang::owned<Terminal> _identifier_token,
-                     JLang::owned<Terminal> _brace_l_token,
-                     JLang::owned<EnumDefinitionValueList> _enum_value_list,
-                     JLang::owned<Terminal> _brace_r_token,
-                     JLang::owned<Terminal> _semicolon_token
-                               )
-: SyntaxNode("enum_definition", this, _access_modifier->get_source_ref())
-, access_modifier(std::move(_access_modifier))
-, enum_token(std::move(_enum_token))
-, type_name_token(std::move(_type_name_token))
-, identifier_token(std::move(_identifier_token))
-, brace_l_token(std::move(_brace_l_token))
-, enum_value_list(std::move(_enum_value_list))
-, brace_r_token(std::move(_brace_r_token))
-, semicolon_token(std::move(_semicolon_token))
+    JLang::owned<AccessModifier> _access_modifier,
+    JLang::owned<Terminal> _enum_token,
+    JLang::owned<Terminal> _type_name_token,
+    JLang::owned<Terminal> _identifier_token,
+    JLang::owned<Terminal> _brace_l_token,
+    JLang::owned<EnumDefinitionValueList> _enum_value_list,
+    JLang::owned<Terminal> _brace_r_token,
+    JLang::owned<Terminal> _semicolon_token
+    )
+    : SyntaxNode("enum_definition", this, _access_modifier->get_source_ref())
+    , access_modifier(std::move(_access_modifier))
+    , enum_token(std::move(_enum_token))
+    , type_name_token(std::move(_type_name_token))
+    , identifier_token(std::move(_identifier_token))
+    , brace_l_token(std::move(_brace_l_token))
+    , enum_value_list(std::move(_enum_value_list))
+    , brace_r_token(std::move(_brace_r_token))
+    , semicolon_token(std::move(_semicolon_token))
 {
-  add_child(*access_modifier);
-  add_child(*enum_token);
-  add_child(*type_name_token);
-  add_child(*identifier_token);
-  add_child(*brace_l_token);
-  add_child(*enum_value_list);
-  add_child(*brace_r_token);
-  add_child(*semicolon_token);
+    add_child(*access_modifier);
+    add_child(*enum_token);
+    add_child(*type_name_token);
+    add_child(*identifier_token);
+    add_child(*brace_l_token);
+    add_child(*enum_value_list);
+    add_child(*brace_r_token);
+    add_child(*semicolon_token);
 }
 EnumDefinition::~EnumDefinition()
 {}
@@ -1534,10 +1535,10 @@ EnumDefinition::get_value_list() const
 { return *enum_value_list; }
 ///////////////////////////////////////////////////
 ExpressionPrimaryIdentifier::ExpressionPrimaryIdentifier(JLang::owned<Terminal> _identifier_token)
-  : SyntaxNode("expression_primary_identifier", this, _identifier_token->get_source_ref())
-  , identifier_token(std::move(_identifier_token))
+    : SyntaxNode("expression_primary_identifier", this, _identifier_token->get_source_ref())
+    , identifier_token(std::move(_identifier_token))
 {
-  add_child(*identifier_token);
+    add_child(*identifier_token);
 }
 ExpressionPrimaryIdentifier::~ExpressionPrimaryIdentifier()
 {}
@@ -1546,18 +1547,18 @@ ExpressionPrimaryIdentifier::get_identifier() const
 { return identifier_token->get_value(); }
 ///////////////////////////////////////////////////
 ExpressionPrimaryNested::ExpressionPrimaryNested(
-                                                 JLang::owned<Terminal> _paren_l_token,
-                                                 JLang::owned<Expression> _expression,
-                                                 JLang::owned<Terminal> _paren_r_token
-                                                 )
-  : SyntaxNode("expression_primary_nested", this, _paren_l_token->get_source_ref())
-  , paren_l_token(std::move(_paren_l_token))
-  , expression(std::move(_expression))
-  , paren_r_token(std::move(_paren_r_token))
+    JLang::owned<Terminal> _paren_l_token,
+    JLang::owned<Expression> _expression,
+    JLang::owned<Terminal> _paren_r_token
+    )
+    : SyntaxNode("expression_primary_nested", this, _paren_l_token->get_source_ref())
+    , paren_l_token(std::move(_paren_l_token))
+    , expression(std::move(_expression))
+    , paren_r_token(std::move(_paren_r_token))
 {
-  add_child(*paren_l_token);
-  add_child(*expression);
-  add_child(*paren_r_token);
+    add_child(*paren_l_token);
+    add_child(*expression);
+    add_child(*paren_r_token);
 }
 ExpressionPrimaryNested::~ExpressionPrimaryNested()
 {}
@@ -1567,12 +1568,12 @@ ExpressionPrimaryNested::get_expression() const
 
 ///////////////////////////////////////////////////
 ExpressionPrimaryLiteralInt::ExpressionPrimaryLiteralInt(
-                                                         JLang::owned<Terminal> _literal_token
-                                                         )
-  : SyntaxNode("expression_primary_literal_int", this, _literal_token->get_source_ref())
-  , literal_token(std::move(_literal_token))
+    JLang::owned<Terminal> _literal_token
+    )
+    : SyntaxNode("expression_primary_literal_int", this, _literal_token->get_source_ref())
+    , literal_token(std::move(_literal_token))
 {
-  add_child(*literal_token);
+    add_child(*literal_token);
 }
 ExpressionPrimaryLiteralInt::~ExpressionPrimaryLiteralInt()
 {}
@@ -1584,12 +1585,12 @@ ExpressionPrimaryLiteralInt::get_value_source_ref() const
 { return literal_token->get_source_ref(); }
 ///////////////////////////////////////////////////
 ExpressionPrimaryLiteralChar::ExpressionPrimaryLiteralChar(
-                                                         JLang::owned<Terminal> _literal_token
-                                                         )
-  : SyntaxNode("expression_primary_literal_char", this, _literal_token->get_source_ref())
-  , literal_token(std::move(_literal_token))
+    JLang::owned<Terminal> _literal_token
+    )
+    : SyntaxNode("expression_primary_literal_char", this, _literal_token->get_source_ref())
+    , literal_token(std::move(_literal_token))
 {
-  add_child(*literal_token);
+    add_child(*literal_token);
 }
 ExpressionPrimaryLiteralChar::~ExpressionPrimaryLiteralChar()
 {}
@@ -1601,12 +1602,12 @@ ExpressionPrimaryLiteralChar::get_value_source_ref() const
 { return literal_token->get_source_ref(); }
 ///////////////////////////////////////////////////
 ExpressionPrimaryLiteralString::ExpressionPrimaryLiteralString(
-                                                         JLang::owned<Terminal> _literal_token
-                                                         )
-  : SyntaxNode("expression_primary_literal_string", this, _literal_token->get_source_ref())
-  , literal_token(std::move(_literal_token))
+    JLang::owned<Terminal> _literal_token
+    )
+    : SyntaxNode("expression_primary_literal_string", this, _literal_token->get_source_ref())
+    , literal_token(std::move(_literal_token))
 {
-  add_child(*literal_token);
+    add_child(*literal_token);
 }
 ExpressionPrimaryLiteralString::~ExpressionPrimaryLiteralString()
 {}
@@ -1618,12 +1619,12 @@ ExpressionPrimaryLiteralString::get_value_source_ref() const
 { return literal_token->get_source_ref(); }
 ///////////////////////////////////////////////////
 ExpressionPrimaryLiteralFloat::ExpressionPrimaryLiteralFloat(
-                                                         JLang::owned<Terminal> _literal_token
-                                                         )
-  : SyntaxNode("expression_primary_literal_float", this, _literal_token->get_source_ref())
-  , literal_token(std::move(_literal_token))
+    JLang::owned<Terminal> _literal_token
+    )
+    : SyntaxNode("expression_primary_literal_float", this, _literal_token->get_source_ref())
+    , literal_token(std::move(_literal_token))
 {
-  add_child(*literal_token);
+    add_child(*literal_token);
 }
 ExpressionPrimaryLiteralFloat::~ExpressionPrimaryLiteralFloat()
 {}
@@ -1636,10 +1637,10 @@ ExpressionPrimaryLiteralFloat::get_value_source_ref() const
 
 ///////////////////////////////////////////////////
 ExpressionPrimary::ExpressionPrimary(ExpressionPrimary::ExpressionType _expression_type, const SyntaxNode & _sn)
-  : SyntaxNode("expression_primary", this, _sn.get_source_ref())
-  , expression_type(std::move(_expression_type))
+    : SyntaxNode("expression_primary", this, _sn.get_source_ref())
+    , expression_type(std::move(_expression_type))
 {
-  add_child(_sn);
+    add_child(_sn);
 }
 ExpressionPrimary::~ExpressionPrimary()
 {}
@@ -1649,21 +1650,21 @@ ExpressionPrimary::get_expression() const
 
 ///////////////////////////////////////////////////
 ExpressionPostfixArrayIndex::ExpressionPostfixArrayIndex(
-                                  JLang::owned<Expression> _array_expression,
-                                  JLang::owned<Terminal> _bracket_l_token,
-                                  JLang::owned<Expression> _index_expression,
-                                  JLang::owned<Terminal> _bracket_r_token
-                                  )
-  : SyntaxNode("expression_postfix_array_index", this, _array_expression->get_source_ref())
-  , array_expression(std::move(_array_expression))
-  , bracket_l_token(std::move(_bracket_l_token))
-  , index_expression(std::move(_index_expression))
-  , bracket_r_token(std::move(_bracket_r_token))
+    JLang::owned<Expression> _array_expression,
+    JLang::owned<Terminal> _bracket_l_token,
+    JLang::owned<Expression> _index_expression,
+    JLang::owned<Terminal> _bracket_r_token
+    )
+    : SyntaxNode("expression_postfix_array_index", this, _array_expression->get_source_ref())
+    , array_expression(std::move(_array_expression))
+    , bracket_l_token(std::move(_bracket_l_token))
+    , index_expression(std::move(_index_expression))
+    , bracket_r_token(std::move(_bracket_r_token))
 {
-  add_child(*array_expression);
-  add_child(*bracket_l_token);
-  add_child(*index_expression);
-  add_child(*bracket_r_token);
+    add_child(*array_expression);
+    add_child(*bracket_l_token);
+    add_child(*index_expression);
+    add_child(*bracket_r_token);
 }
 ExpressionPostfixArrayIndex::~ExpressionPostfixArrayIndex()
 {}
@@ -1675,7 +1676,7 @@ ExpressionPostfixArrayIndex::get_index() const
 { return *index_expression; }
 ///////////////////////////////////////////////////
 ArgumentExpressionList::ArgumentExpressionList(const JLang::context::SourceReference & _source_ref)
-  : SyntaxNode("argument_expression_list", this, _source_ref)
+    : SyntaxNode("argument_expression_list", this, _source_ref)
 {}
 ArgumentExpressionList::~ArgumentExpressionList()
 {}
@@ -1685,35 +1686,35 @@ ArgumentExpressionList::get_arguments() const
 void
 ArgumentExpressionList::add_argument(JLang::owned<Expression> _argument)
 {
-  add_child(*_argument);
-  arguments.push_back(std::move(_argument));
+    add_child(*_argument);
+    arguments.push_back(std::move(_argument));
 }
 void
 ArgumentExpressionList::add_argument(JLang::owned<Terminal> _comma_token, JLang::owned<Expression> _argument)
 {
-  add_child(*_comma_token);
-  add_child(*_argument);
-  comma_list.push_back(std::move(_comma_token));
-  arguments.push_back(std::move(_argument));
+    add_child(*_comma_token);
+    add_child(*_argument);
+    comma_list.push_back(std::move(_comma_token));
+    arguments.push_back(std::move(_argument));
 }
 
 ///////////////////////////////////////////////////
 ExpressionPostfixFunctionCall::ExpressionPostfixFunctionCall(
-                                    JLang::owned<Expression> _function_expression,
-                                    JLang::owned<Terminal> _paren_l_token,
-                                    JLang::owned<ArgumentExpressionList> _arguments,
-                                    JLang::owned<Terminal> _paren_r_token
-                                    )
-  : SyntaxNode("expression_postfix_function_call", this, _function_expression->get_source_ref())
-  , function_expression(std::move(_function_expression))
-  , paren_l_token(std::move(_paren_l_token))
-  , arguments(std::move(_arguments))
-  , paren_r_token(std::move(_paren_r_token))
+    JLang::owned<Expression> _function_expression,
+    JLang::owned<Terminal> _paren_l_token,
+    JLang::owned<ArgumentExpressionList> _arguments,
+    JLang::owned<Terminal> _paren_r_token
+    )
+    : SyntaxNode("expression_postfix_function_call", this, _function_expression->get_source_ref())
+    , function_expression(std::move(_function_expression))
+    , paren_l_token(std::move(_paren_l_token))
+    , arguments(std::move(_arguments))
+    , paren_r_token(std::move(_paren_r_token))
 {
-  add_child(*function_expression);
-  add_child(*paren_l_token);
-  add_child(*arguments);
-  add_child(*paren_r_token);
+    add_child(*function_expression);
+    add_child(*paren_l_token);
+    add_child(*arguments);
+    add_child(*paren_r_token);
 }
 ExpressionPostfixFunctionCall::~ExpressionPostfixFunctionCall()
 {}
@@ -1725,18 +1726,18 @@ ExpressionPostfixFunctionCall::get_arguments() const
 { return *arguments; }
 ///////////////////////////////////////////////////
 ExpressionPostfixDot::ExpressionPostfixDot(
-                           JLang::owned<Expression> _expression,
-                           JLang::owned<Terminal> _dot_token,
-                           JLang::owned<Terminal> _identifier_token
-                           )
-  : SyntaxNode("expression_postfix_dot", this, _expression->get_source_ref())
-  , expression(std::move(_expression))
-  , dot_token(std::move(_dot_token))
-  , identifier_token(std::move(_identifier_token))
+    JLang::owned<Expression> _expression,
+    JLang::owned<Terminal> _dot_token,
+    JLang::owned<Terminal> _identifier_token
+    )
+    : SyntaxNode("expression_postfix_dot", this, _expression->get_source_ref())
+    , expression(std::move(_expression))
+    , dot_token(std::move(_dot_token))
+    , identifier_token(std::move(_identifier_token))
 {
-  add_child(*expression);
-  add_child(*dot_token);
-  add_child(*identifier_token);
+    add_child(*expression);
+    add_child(*dot_token);
+    add_child(*identifier_token);
 }
 ExpressionPostfixDot::~ExpressionPostfixDot()
 {}
@@ -1752,18 +1753,18 @@ ExpressionPostfixDot::get_identifier_source_ref() const
 
 ///////////////////////////////////////////////////
 ExpressionPostfixArrow::ExpressionPostfixArrow(
-                           JLang::owned<Expression> _expression,
-                           JLang::owned<Terminal> _arrow_token,
-                           JLang::owned<Terminal> _identifier_token
-                           )
-  : SyntaxNode("expression_postfix_arrow", this, _expression->get_source_ref())
-  , expression(std::move(_expression))
-  , arrow_token(std::move(_arrow_token))
-  , identifier_token(std::move(_identifier_token))
+    JLang::owned<Expression> _expression,
+    JLang::owned<Terminal> _arrow_token,
+    JLang::owned<Terminal> _identifier_token
+    )
+    : SyntaxNode("expression_postfix_arrow", this, _expression->get_source_ref())
+    , expression(std::move(_expression))
+    , arrow_token(std::move(_arrow_token))
+    , identifier_token(std::move(_identifier_token))
 {
-  add_child(*expression);
-  add_child(*arrow_token);
-  add_child(*identifier_token);
+    add_child(*expression);
+    add_child(*arrow_token);
+    add_child(*identifier_token);
 }
 ExpressionPostfixArrow::~ExpressionPostfixArrow()
 {}
@@ -1779,17 +1780,17 @@ ExpressionPostfixArrow::get_identifier_source_ref() const
 
 ///////////////////////////////////////////////////
 ExpressionPostfixIncDec::ExpressionPostfixIncDec(
-                                                 JLang::owned<Expression> _expression,
-                                                 JLang::owned<Terminal> _operator_token,
-                                                 OperationType _type
-                                                 )
-  : SyntaxNode("expression_postfix_incdec", this, _expression->get_source_ref())
-  , expression(std::move(_expression))
-  , operator_token(std::move(_operator_token))
-  , type(_type)
+    JLang::owned<Expression> _expression,
+    JLang::owned<Terminal> _operator_token,
+    OperationType _type
+    )
+    : SyntaxNode("expression_postfix_incdec", this, _expression->get_source_ref())
+    , expression(std::move(_expression))
+    , operator_token(std::move(_operator_token))
+    , type(_type)
 {
-  add_child(*expression);
-  add_child(*operator_token);
+    add_child(*expression);
+    add_child(*operator_token);
 }
 ExpressionPostfixIncDec::~ExpressionPostfixIncDec()
 {}
@@ -1801,17 +1802,17 @@ ExpressionPostfixIncDec::get_expression() const
 { return *expression; }
 ///////////////////////////////////////////////////
 ExpressionUnaryPrefix::ExpressionUnaryPrefix(
-                                             JLang::owned<Terminal> _operator_token,
-                                             JLang::owned<Expression> _expression,
-                                             OperationType _type
-                                             )
-  : SyntaxNode("expression_unary_prefix", this, _operator_token->get_source_ref())
-  , operator_token(std::move(_operator_token))
-  , expression(std::move(_expression))
-  , type(_type)
+    JLang::owned<Terminal> _operator_token,
+    JLang::owned<Expression> _expression,
+    OperationType _type
+    )
+    : SyntaxNode("expression_unary_prefix", this, _operator_token->get_source_ref())
+    , operator_token(std::move(_operator_token))
+    , expression(std::move(_expression))
+    , type(_type)
 {
-  add_child(*operator_token);
-  add_child(*expression);
+    add_child(*operator_token);
+    add_child(*expression);
 }
 ExpressionUnaryPrefix::~ExpressionUnaryPrefix()
 {}
@@ -1826,21 +1827,21 @@ ExpressionUnaryPrefix::get_expression() const
 { return *expression; }
 ///////////////////////////////////////////////////
 ExpressionUnarySizeofType::ExpressionUnarySizeofType(
-                                JLang::owned<Terminal> _sizeof_token,
-                                JLang::owned<Terminal> _paren_l_token,
-                                JLang::owned<TypeSpecifier> _type_specifier,
-                                JLang::owned<Terminal> _paren_r_token
-                                )
-  : SyntaxNode("expression_unary_sizeof_type", this, _sizeof_token->get_source_ref())
-  , sizeof_token(std::move(_sizeof_token))
-  , paren_l_token(std::move(_paren_l_token))
-  , type_specifier(std::move(_type_specifier))
-  , paren_r_token(std::move(_paren_r_token))
+    JLang::owned<Terminal> _sizeof_token,
+    JLang::owned<Terminal> _paren_l_token,
+    JLang::owned<TypeSpecifier> _type_specifier,
+    JLang::owned<Terminal> _paren_r_token
+    )
+    : SyntaxNode("expression_unary_sizeof_type", this, _sizeof_token->get_source_ref())
+    , sizeof_token(std::move(_sizeof_token))
+    , paren_l_token(std::move(_paren_l_token))
+    , type_specifier(std::move(_type_specifier))
+    , paren_r_token(std::move(_paren_r_token))
 {
-  add_child(*sizeof_token);
-  add_child(*paren_l_token);
-  add_child(*type_specifier);
-  add_child(*paren_r_token);
+    add_child(*sizeof_token);
+    add_child(*paren_l_token);
+    add_child(*type_specifier);
+    add_child(*paren_r_token);
 }
 ExpressionUnarySizeofType::~ExpressionUnarySizeofType()
 {}
@@ -1849,27 +1850,27 @@ ExpressionUnarySizeofType::get_type_specifier() const
 { return *type_specifier; }
 ///////////////////////////////////////////////////
 ExpressionCast::ExpressionCast(
-                     JLang::owned<Terminal> _cast_token,
-                     JLang::owned<Terminal> _paren_l_token,
-                     JLang::owned<TypeSpecifier> _type_specifier,
-                     JLang::owned<Terminal> _comma_token,
-                     JLang::owned<Expression> _expression,
-                     JLang::owned<Terminal> _paren_r_token
-                     )
-  : SyntaxNode("expression_cast", this, _cast_token->get_source_ref())
-  , cast_token(std::move(_cast_token))
-  , paren_l_token(std::move(_paren_l_token))
-  , type_specifier(std::move(_type_specifier))
-  , comma_token(std::move(_comma_token))
-  , expression(std::move(_expression))
-  , paren_r_token(std::move(_paren_r_token))
+    JLang::owned<Terminal> _cast_token,
+    JLang::owned<Terminal> _paren_l_token,
+    JLang::owned<TypeSpecifier> _type_specifier,
+    JLang::owned<Terminal> _comma_token,
+    JLang::owned<Expression> _expression,
+    JLang::owned<Terminal> _paren_r_token
+    )
+    : SyntaxNode("expression_cast", this, _cast_token->get_source_ref())
+    , cast_token(std::move(_cast_token))
+    , paren_l_token(std::move(_paren_l_token))
+    , type_specifier(std::move(_type_specifier))
+    , comma_token(std::move(_comma_token))
+    , expression(std::move(_expression))
+    , paren_r_token(std::move(_paren_r_token))
 {
-  add_child(*cast_token);
-  add_child(*paren_l_token);
-  add_child(*type_specifier);
-  add_child(*comma_token);
-  add_child(*expression);
-  add_child(*paren_r_token);
+    add_child(*cast_token);
+    add_child(*paren_l_token);
+    add_child(*type_specifier);
+    add_child(*comma_token);
+    add_child(*expression);
+    add_child(*paren_r_token);
 }
 ExpressionCast::~ExpressionCast()
 {}
@@ -1881,40 +1882,40 @@ ExpressionCast::get_expression() const
 { return *expression; }
 ///////////////////////////////////////////////////
 ExpressionBinary::ExpressionBinary(
-                       JLang::owned<Expression> _expression_a,
-                       JLang::owned<Terminal> _operator_token,
-                       JLang::owned<Expression> _expression_b,
-                       OperationType _type
-                       )
-  : SyntaxNode("expression_binary", this, _expression_a->get_source_ref())
-  , type(_type)
-  , expression_a(std::move(_expression_a))
-  , operator_token(std::move(_operator_token))
-  , operator_token2(nullptr)
-  , expression_b(std::move(_expression_b))
+    JLang::owned<Expression> _expression_a,
+    JLang::owned<Terminal> _operator_token,
+    JLang::owned<Expression> _expression_b,
+    OperationType _type
+    )
+    : SyntaxNode("expression_binary", this, _expression_a->get_source_ref())
+    , type(_type)
+    , expression_a(std::move(_expression_a))
+    , operator_token(std::move(_operator_token))
+    , operator_token2(nullptr)
+    , expression_b(std::move(_expression_b))
 {
-  add_child(*expression_a);
-  add_child(*operator_token);
-  add_child(*expression_b);
+    add_child(*expression_a);
+    add_child(*operator_token);
+    add_child(*expression_b);
 }
 ExpressionBinary::ExpressionBinary(
-                       JLang::owned<Expression> _expression_a,
-                       JLang::owned<Terminal> _operator_token,
-                       JLang::owned<Terminal> _operator_token2,
-                       JLang::owned<Expression> _expression_b,
-                       OperationType _type
-                       )
-  : SyntaxNode("expression_binary", this, _expression_a->get_source_ref())
-  , type(_type)
-  , expression_a(std::move(_expression_a))
-  , operator_token(std::move(_operator_token))
-  , operator_token2(std::move(_operator_token2))
-  , expression_b(std::move(_expression_b))
+    JLang::owned<Expression> _expression_a,
+    JLang::owned<Terminal> _operator_token,
+    JLang::owned<Terminal> _operator_token2,
+    JLang::owned<Expression> _expression_b,
+    OperationType _type
+    )
+    : SyntaxNode("expression_binary", this, _expression_a->get_source_ref())
+    , type(_type)
+    , expression_a(std::move(_expression_a))
+    , operator_token(std::move(_operator_token))
+    , operator_token2(std::move(_operator_token2))
+    , expression_b(std::move(_expression_b))
 {
-  add_child(*expression_a);
-  add_child(*operator_token);
-  add_child(*operator_token2);
-  add_child(*expression_b);
+    add_child(*expression_a);
+    add_child(*operator_token);
+    add_child(*operator_token2);
+    add_child(*expression_b);
 }
 ExpressionBinary::~ExpressionBinary()
 {}
@@ -1932,24 +1933,24 @@ ExpressionBinary::get_b() const
 { return *expression_b; }
 ///////////////////////////////////////////////////
 ExpressionTrinary::ExpressionTrinary(
-                        JLang::owned<Expression> _condition,
-                        JLang::owned<Terminal> _questionmark_token,
-                        JLang::owned<Expression> _if_expression,
-                        JLang::owned<Terminal> _colon_token,
-                        JLang::owned<Expression> _else_expression
-                        )
-  : SyntaxNode("expression_trinary", this, _condition->get_source_ref())
-  , condition(std::move(_condition))
-  , questionmark_token(std::move(_questionmark_token))
-  , if_expression(std::move(_if_expression))
-  , colon_token(std::move(_colon_token))
-  , else_expression(std::move(_else_expression))
+    JLang::owned<Expression> _condition,
+    JLang::owned<Terminal> _questionmark_token,
+    JLang::owned<Expression> _if_expression,
+    JLang::owned<Terminal> _colon_token,
+    JLang::owned<Expression> _else_expression
+    )
+    : SyntaxNode("expression_trinary", this, _condition->get_source_ref())
+    , condition(std::move(_condition))
+    , questionmark_token(std::move(_questionmark_token))
+    , if_expression(std::move(_if_expression))
+    , colon_token(std::move(_colon_token))
+    , else_expression(std::move(_else_expression))
 {
-  add_child(*condition);
-  add_child(*questionmark_token);
-  add_child(*if_expression);
-  add_child(*colon_token);
-  add_child(*else_expression);
+    add_child(*condition);
+    add_child(*questionmark_token);
+    add_child(*if_expression);
+    add_child(*colon_token);
+    add_child(*else_expression);
 }
 ExpressionTrinary::~ExpressionTrinary()
 {}
@@ -1964,10 +1965,10 @@ ExpressionTrinary::get_else() const
 { return *else_expression; }
 ///////////////////////////////////////////////////
 Expression::Expression(Expression::ExpressionType _expression_type, const SyntaxNode & _sn)
-  : SyntaxNode("expression", this, _sn.get_source_ref())
-      , expression_type(std::move(_expression_type))
+    : SyntaxNode("expression", this, _sn.get_source_ref())
+    , expression_type(std::move(_expression_type))
 {
-  add_child(_sn);
+    add_child(_sn);
 }
 Expression::~Expression()
 {}
@@ -1977,15 +1978,15 @@ Expression::get_expression() const
 ///////////////////////////////////////////////////
 
 GlobalInitializerExpressionPrimary::GlobalInitializerExpressionPrimary(
-                                         JLang::owned<Terminal> _equals_token,
-                                         JLang::owned<ExpressionPrimary> _expression
-                                         )
-  : SyntaxNode("global_initializer_expression_primary", this, _equals_token->get_source_ref())
-  , equals_token(std::move(_equals_token))
-  , expression(std::move(_expression))
+    JLang::owned<Terminal> _equals_token,
+    JLang::owned<ExpressionPrimary> _expression
+    )
+    : SyntaxNode("global_initializer_expression_primary", this, _equals_token->get_source_ref())
+    , equals_token(std::move(_equals_token))
+    , expression(std::move(_expression))
 {
-  add_child(*equals_token);
-  add_child(*expression);
+    add_child(*equals_token);
+    add_child(*expression);
 }
 GlobalInitializerExpressionPrimary::~GlobalInitializerExpressionPrimary()
 {}
@@ -1995,21 +1996,21 @@ GlobalInitializerExpressionPrimary::get_expression() const
 
 ///////////////////////////////////////////////////
 StructInitializer::StructInitializer(
-                        JLang::owned<Terminal> _dot_token,
-                        JLang::owned<Terminal> _identifier_token,
-                        JLang::owned<GlobalInitializer> _global_initializer,
-                        JLang::owned<Terminal> _semicolon_token
-                                     )
-  : SyntaxNode("struct_initializer", this, _dot_token->get_source_ref())
-  , dot_token(std::move(_dot_token))
-  , identifier_token(std::move(_identifier_token))
-  , global_initializer(std::move(_global_initializer))
-  , semicolon_token(std::move(_semicolon_token))
+    JLang::owned<Terminal> _dot_token,
+    JLang::owned<Terminal> _identifier_token,
+    JLang::owned<GlobalInitializer> _global_initializer,
+    JLang::owned<Terminal> _semicolon_token
+    )
+    : SyntaxNode("struct_initializer", this, _dot_token->get_source_ref())
+    , dot_token(std::move(_dot_token))
+    , identifier_token(std::move(_identifier_token))
+    , global_initializer(std::move(_global_initializer))
+    , semicolon_token(std::move(_semicolon_token))
 {
-  add_child(*dot_token);
-  add_child(*identifier_token);
-  add_child(*global_initializer);
-  add_child(*semicolon_token);
+    add_child(*dot_token);
+    add_child(*identifier_token);
+    add_child(*global_initializer);
+    add_child(*semicolon_token);
 }
 StructInitializer::~StructInitializer()
 {}
@@ -2019,36 +2020,36 @@ StructInitializer::get_initializer() const
 
 ///////////////////////////////////////////////////
 StructInitializerList::StructInitializerList(const JLang::context::SourceReference & _source_ref)
-  : SyntaxNode("struct_initializer_list", this, _source_ref)
+    : SyntaxNode("struct_initializer_list", this, _source_ref)
 {}
 StructInitializerList::~StructInitializerList()
 {}
 void
 StructInitializerList::add_initializer(JLang::owned<StructInitializer> initializer)
 {
-  add_child(*initializer);
-  initializers.push_back(std::move(initializer));
+    add_child(*initializer);
+    initializers.push_back(std::move(initializer));
 }
 const std::vector<JLang::owned<StructInitializer>> &
 StructInitializerList::get_initializers() const
 {
-  return initializers;
+    return initializers;
 }
 
 ///////////////////////////////////////////////////
 GlobalInitializerAddressofExpressionPrimary::GlobalInitializerAddressofExpressionPrimary(
-                                                                                         JLang::owned<Terminal> _equals_token,
-                                                                                         JLang::owned<Terminal> _addressof_token,
-                                                                                         JLang::owned<ExpressionPrimary> _expression
-                                                                                         )
-  : SyntaxNode("global_initializer_addressof_expression_primary", this, _equals_token->get_source_ref())
-  , equals_token(std::move(_equals_token))
-  , addressof_token(std::move(_addressof_token))
-  , expression(std::move(_expression))
+    JLang::owned<Terminal> _equals_token,
+    JLang::owned<Terminal> _addressof_token,
+    JLang::owned<ExpressionPrimary> _expression
+    )
+    : SyntaxNode("global_initializer_addressof_expression_primary", this, _equals_token->get_source_ref())
+    , equals_token(std::move(_equals_token))
+    , addressof_token(std::move(_addressof_token))
+    , expression(std::move(_expression))
 {
-  add_child(*equals_token);
-  add_child(*addressof_token);
-  add_child(*expression);
+    add_child(*equals_token);
+    add_child(*addressof_token);
+    add_child(*expression);
 }
 GlobalInitializerAddressofExpressionPrimary::~GlobalInitializerAddressofExpressionPrimary()
 {}
@@ -2059,21 +2060,21 @@ GlobalInitializerAddressofExpressionPrimary::get_expression() const
 
 ///////////////////////////////////////////////////
 GlobalInitializerStructInitializerList::GlobalInitializerStructInitializerList(
-                                             JLang::owned<Terminal> _equals_token,
-                                             JLang::owned<Terminal> _brace_l_token,
-                                             JLang::owned<StructInitializerList> _struct_initializer,
-                                             JLang::owned<Terminal> _brace_r_token
-)
-  : SyntaxNode("global_initializer_struct_initializer_list", this, _equals_token->get_source_ref())
-  , equals_token(std::move(_equals_token))
-  , brace_l_token(std::move(_brace_l_token))
-  , struct_initializer(std::move(_struct_initializer))
-  , brace_r_token(std::move(_brace_r_token))
+    JLang::owned<Terminal> _equals_token,
+    JLang::owned<Terminal> _brace_l_token,
+    JLang::owned<StructInitializerList> _struct_initializer,
+    JLang::owned<Terminal> _brace_r_token
+    )
+    : SyntaxNode("global_initializer_struct_initializer_list", this, _equals_token->get_source_ref())
+    , equals_token(std::move(_equals_token))
+    , brace_l_token(std::move(_brace_l_token))
+    , struct_initializer(std::move(_struct_initializer))
+    , brace_r_token(std::move(_brace_r_token))
 {
-  add_child(*equals_token);
-  add_child(*brace_l_token);
-  add_child(*struct_initializer);
-  add_child(*brace_r_token);
+    add_child(*equals_token);
+    add_child(*brace_l_token);
+    add_child(*struct_initializer);
+    add_child(*brace_r_token);
 }
 GlobalInitializerStructInitializerList::~GlobalInitializerStructInitializerList()
 {}
@@ -2083,14 +2084,14 @@ GlobalInitializerStructInitializerList::get_struct_initializer() const
 
 ///////////////////////////////////////////////////
 GlobalInitializer::GlobalInitializer(GlobalInitializer::GlobalInitializerType _initializer, const SyntaxNode & _sn)
-  : SyntaxNode("global_initializer", this, _sn.get_source_ref())
-  , initializer(std::move(_initializer))
+    : SyntaxNode("global_initializer", this, _sn.get_source_ref())
+    , initializer(std::move(_initializer))
 {
-  add_child(_sn);
+    add_child(_sn);
 }
 GlobalInitializer::GlobalInitializer(const JLang::context::SourceReference & _source_ref)
-  : SyntaxNode("global_initializer", this, _source_ref)
-  , initializer(nullptr)
+    : SyntaxNode("global_initializer", this, _source_ref)
+    , initializer(nullptr)
 {}
 GlobalInitializer::~GlobalInitializer()
 {}
@@ -2101,30 +2102,30 @@ GlobalInitializer::get_initializer() const
 
 ///////////////////////////////////////////////////
 FileStatementGlobalDefinition::FileStatementGlobalDefinition(
-                                                             JLang::owned<AccessModifier> _access_modifier,
-                                                             JLang::owned<UnsafeModifier> _unsafe_modifier,
-                                                             JLang::owned<TypeSpecifier> _type_specifier,
-                                                             JLang::owned<Terminal> _name,
-                                                             JLang::owned<ArrayLength> _array_length,
-                                                             JLang::owned<GlobalInitializer> _global_initializer,
-                                                             JLang::owned<Terminal> _semicolon
-                                                             )
-: SyntaxNode("file_statement_global_definition", this, _access_modifier->get_source_ref())
-, access_modifier(std::move(_access_modifier))
-, unsafe_modifier(std::move(_unsafe_modifier))
-, type_specifier(std::move(_type_specifier))
-, name(std::move(_name))
-, array_length(std::move(_array_length))
-, global_initializer(std::move(_global_initializer))
-, semicolon(std::move(_semicolon))
+    JLang::owned<AccessModifier> _access_modifier,
+    JLang::owned<UnsafeModifier> _unsafe_modifier,
+    JLang::owned<TypeSpecifier> _type_specifier,
+    JLang::owned<Terminal> _name,
+    JLang::owned<ArrayLength> _array_length,
+    JLang::owned<GlobalInitializer> _global_initializer,
+    JLang::owned<Terminal> _semicolon
+    )
+    : SyntaxNode("file_statement_global_definition", this, _access_modifier->get_source_ref())
+    , access_modifier(std::move(_access_modifier))
+    , unsafe_modifier(std::move(_unsafe_modifier))
+    , type_specifier(std::move(_type_specifier))
+    , name(std::move(_name))
+    , array_length(std::move(_array_length))
+    , global_initializer(std::move(_global_initializer))
+    , semicolon(std::move(_semicolon))
 {
-  add_child(*access_modifier);
-  add_child(*unsafe_modifier);
-  add_child(*type_specifier);
-  add_child(*name);
-  add_child(*array_length);
-  add_child(*global_initializer);
-  add_child(*semicolon);
+    add_child(*access_modifier);
+    add_child(*unsafe_modifier);
+    add_child(*type_specifier);
+    add_child(*name);
+    add_child(*array_length);
+    add_child(*global_initializer);
+    add_child(*semicolon);
 }
 
 FileStatementGlobalDefinition::~FileStatementGlobalDefinition()
@@ -2154,18 +2155,18 @@ FileStatementGlobalDefinition::get_global_initializer() const
 
 ///////////////////////////////////////////////////
 NamespaceDeclaration::NamespaceDeclaration(
-                           JLang::owned<AccessModifier> _access_modifier,
-                           JLang::owned<Terminal> _namespace_token,
-                           JLang::owned<Terminal> _identifier_token
-                           )
-  : SyntaxNode("namespace_declaration", this, _access_modifier->get_source_ref())
-  , access_modifier(std::move(_access_modifier))
-  , namespace_token(std::move(_namespace_token))
-  , identifier_token(std::move(_identifier_token))
+    JLang::owned<AccessModifier> _access_modifier,
+    JLang::owned<Terminal> _namespace_token,
+    JLang::owned<Terminal> _identifier_token
+    )
+    : SyntaxNode("namespace_declaration", this, _access_modifier->get_source_ref())
+    , access_modifier(std::move(_access_modifier))
+    , namespace_token(std::move(_namespace_token))
+    , identifier_token(std::move(_identifier_token))
 {
-  add_child(*access_modifier);
-  add_child(*namespace_token);
-  add_child(*identifier_token);
+    add_child(*access_modifier);
+    add_child(*namespace_token);
+    add_child(*identifier_token);
 }
 NamespaceDeclaration::~NamespaceDeclaration()
 {}
@@ -2178,24 +2179,24 @@ NamespaceDeclaration::get_name() const
 
 ///////////////////////////////////////////////////
 FileStatementNamespace::FileStatementNamespace(
-                                               JLang::owned<NamespaceDeclaration> _namespace_declaration,
-                                               JLang::owned<Terminal> _brace_l_token,
-                                               JLang::owned<FileStatementList> _file_statement_list,
-                                               JLang::owned<Terminal> _brace_r_token,
-                                               JLang::owned<Terminal> _semicolon_token
-                                               )
-  : SyntaxNode("file_statement_namespace", this, _namespace_declaration->get_source_ref())
-  , namespace_declaration(std::move(_namespace_declaration))
-  , brace_l_token(std::move(_brace_l_token))
-  , file_statement_list(std::move(_file_statement_list))
-  , brace_r_token(std::move(_brace_r_token))
-  , semicolon_token(std::move(_semicolon_token))
+    JLang::owned<NamespaceDeclaration> _namespace_declaration,
+    JLang::owned<Terminal> _brace_l_token,
+    JLang::owned<FileStatementList> _file_statement_list,
+    JLang::owned<Terminal> _brace_r_token,
+    JLang::owned<Terminal> _semicolon_token
+    )
+    : SyntaxNode("file_statement_namespace", this, _namespace_declaration->get_source_ref())
+    , namespace_declaration(std::move(_namespace_declaration))
+    , brace_l_token(std::move(_brace_l_token))
+    , file_statement_list(std::move(_file_statement_list))
+    , brace_r_token(std::move(_brace_r_token))
+    , semicolon_token(std::move(_semicolon_token))
 {
-  add_child(*namespace_declaration);
-  add_child(*brace_l_token);
-  add_child(*file_statement_list);
-  add_child(*brace_r_token);
-  add_child(*semicolon_token);
+    add_child(*namespace_declaration);
+    add_child(*brace_l_token);
+    add_child(*file_statement_list);
+    add_child(*brace_r_token);
+    add_child(*semicolon_token);
 }
 FileStatementNamespace::~FileStatementNamespace()
 {}
@@ -2208,25 +2209,25 @@ const FileStatementList & FileStatementNamespace::get_statement_list() const
 ///////////////////////////////////////////////////
 
 UsingAs::UsingAs(
-        JLang::owned<Terminal> _as_token,
-        JLang::owned<Terminal> _identifier_token
-        )
-  : SyntaxNode("using_as", this, _as_token->get_source_ref())
-  , aas(true)
-  , as_token(std::move(_as_token))
-  , identifier_token(std::move(_identifier_token))
+    JLang::owned<Terminal> _as_token,
+    JLang::owned<Terminal> _identifier_token
+    )
+    : SyntaxNode("using_as", this, _as_token->get_source_ref())
+    , aas(true)
+    , as_token(std::move(_as_token))
+    , identifier_token(std::move(_identifier_token))
 {
-  using_name = identifier_token->get_value();
-  add_child(*as_token);
-  add_child(*identifier_token);
+    using_name = identifier_token->get_value();
+    add_child(*as_token);
+    add_child(*identifier_token);
 }
 UsingAs::UsingAs(const JLang::context::SourceReference & _source_ref)
-  : SyntaxNode("using_as", this, _source_ref)
-  , aas(false)
-  , as_token(nullptr)
-  , identifier_token(nullptr)
+    : SyntaxNode("using_as", this, _source_ref)
+    , aas(false)
+    , as_token(nullptr)
+    , identifier_token(nullptr)
 {
-  using_name = "";
+    using_name = "";
 }
 UsingAs::~UsingAs()
 {}
@@ -2240,24 +2241,25 @@ const SourceReference &
 UsingAs::get_using_name_source_ref() const
 { return identifier_token->get_source_ref(); }
 
-FileStatementUsing::FileStatementUsing(JLang::owned<AccessModifier> _access_modifier,
-                             JLang::owned<Terminal> _using,
-                             JLang::owned<Terminal> _namespace,
-                             JLang::owned<Terminal> _namespace_name,
-                             JLang::owned<UsingAs> _using_as,
-                             JLang::owned<Terminal> _semicolon)
-  : SyntaxNode("file_statement_using", this, _access_modifier->get_source_ref())
-  , using_token(std::move(_using))
-  , namespace_token(std::move(_namespace))
-  , namespace_name_token(std::move(_namespace_name))
-  , using_as(std::move(_using_as))
-  , semicolon_token(std::move(_semicolon))
+FileStatementUsing::FileStatementUsing(
+    JLang::owned<AccessModifier> _access_modifier,
+    JLang::owned<Terminal> _using,
+    JLang::owned<Terminal> _namespace,
+    JLang::owned<Terminal> _namespace_name,
+    JLang::owned<UsingAs> _using_as,
+    JLang::owned<Terminal> _semicolon)
+    : SyntaxNode("file_statement_using", this, _access_modifier->get_source_ref())
+    , using_token(std::move(_using))
+    , namespace_token(std::move(_namespace))
+    , namespace_name_token(std::move(_namespace_name))
+    , using_as(std::move(_using_as))
+    , semicolon_token(std::move(_semicolon))
 {
-  add_child(*using_token);
-  add_child(*namespace_token);
-  add_child(*namespace_name_token);
-  add_child(*using_as);
-  add_child(*semicolon_token);
+    add_child(*using_token);
+    add_child(*namespace_token);
+    add_child(*namespace_name_token);
+    add_child(*using_as);
+    add_child(*semicolon_token);
 }
 FileStatementUsing::~FileStatementUsing()
 {}
@@ -2273,29 +2275,29 @@ FileStatementUsing::get_using_as() const
 
 
 FileStatement::FileStatement(FileStatementType _statement, const SyntaxNode & _sn)
-  : SyntaxNode("file_statement", this, _sn.get_source_ref())
-  , statement(std::move(_statement))
+    : SyntaxNode("file_statement", this, _sn.get_source_ref())
+    , statement(std::move(_statement))
 {
-  add_child(_sn);
+    add_child(_sn);
 }
 FileStatement::~FileStatement()
 {}
 const FileStatement::FileStatementType &
 FileStatement::get_statement() const
 {
-  return statement;
+    return statement;
 }
 
 
 FileStatementList::FileStatementList(const JLang::context::SourceReference & _source_ref)
-  : SyntaxNode("file_statement_list", this, _source_ref)
-  , yyeof(nullptr)
+    : SyntaxNode("file_statement_list", this, _source_ref)
+    , yyeof(nullptr)
 {}
 FileStatementList::FileStatementList(JLang::owned<Terminal> _yyeof)
-  : SyntaxNode("file_statement_list", this, _yyeof->get_source_ref())
-  , yyeof(std::move(_yyeof))
+    : SyntaxNode("file_statement_list", this, _yyeof->get_source_ref())
+    , yyeof(std::move(_yyeof))
 {
-  add_child(*yyeof);
+    add_child(*yyeof);
 }
 FileStatementList::~FileStatementList()
 {}
@@ -2305,19 +2307,19 @@ FileStatementList::get_statements() const
 void
 FileStatementList::add_statement(JLang::owned<FileStatement> statement)
 {
-  add_child(*statement);
-  statements.push_back(std::move(statement));
+    add_child(*statement);
+    statements.push_back(std::move(statement));
 }
 
 TranslationUnit::TranslationUnit(
-                                 JLang::owned<FileStatementList> _file_statement_list,
-                                 JLang::owned<Terminal> _yyeof_token)
-  : SyntaxNode("translation_unit", this, _yyeof_token->get_source_ref())
-  , file_statement_list(std::move(_file_statement_list))
-  , yyeof_token(std::move(_yyeof_token))
+    JLang::owned<FileStatementList> _file_statement_list,
+    JLang::owned<Terminal> _yyeof_token)
+    : SyntaxNode("translation_unit", this, _yyeof_token->get_source_ref())
+    , file_statement_list(std::move(_file_statement_list))
+    , yyeof_token(std::move(_yyeof_token))
 {
-  add_child(*file_statement_list);
-  add_child(*yyeof_token);
+    add_child(*file_statement_list);
+    add_child(*yyeof_token);
 }
 TranslationUnit::~TranslationUnit()
 {}
@@ -2325,5 +2327,5 @@ TranslationUnit::~TranslationUnit()
 const std::vector<JLang::owned<FileStatement>> &
 TranslationUnit::get_statements() const
 {
-  return file_statement_list->get_statements();
+    return file_statement_list->get_statements();
 }

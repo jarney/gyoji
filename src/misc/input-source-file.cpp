@@ -5,20 +5,20 @@
 using namespace JLang::misc;
 
 InputSourceFile::InputSourceFile(int _fd)
-  : fd(_fd)
+    : fd(_fd)
 {}
 InputSourceFile::~InputSourceFile()
 {}
-                                
+
 void InputSourceFile::yy_input(char *buf, int &result, int max_size)
 {
-  errno = 0;
-  result = (int) read(fd, buf, (size_t) max_size);
-  if (result == -1) {
-    if( errno != EINTR) {
-      fprintf(stderr, "Fatal error reading input buffer %d\n", errno);
+    errno = 0;
+    result = (int) read(fd, buf, (size_t) max_size);
+    if (result == -1) {
+	if( errno != EINTR) {
+	    fprintf(stderr, "Fatal error reading input buffer %d\n", errno);
+	}
     }
-  }
-  errno=0;
+    errno = 0;
 }
 

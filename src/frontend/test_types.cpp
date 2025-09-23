@@ -16,41 +16,41 @@ parse_to_mir(std::string & path, CompilerContext & context, std::string base_fil
 
 int main(int argc, char **argv)
 {
-  if (argc != 2) {
-    fprintf(stderr, "First argument must be the path of the source directory\n");
-    return -1;
-  }
-  printf("Testing types\n");
-
-  std::string path(argv[1]);
-
-  CompilerContext context;
-  
-  auto mir = std::move(parse_to_mir(path, context, "tests/type-resolution.j"));
-
-  mir->get_types().dump();
-  
-  printf("    PASSED\n");
+    if (argc != 2) {
+	fprintf(stderr, "First argument must be the path of the source directory\n");
+	return -1;
+    }
+    printf("Testing types\n");
+    
+    std::string path(argv[1]);
+    
+    CompilerContext context;
+    
+    auto mir = std::move(parse_to_mir(path, context, "tests/type-resolution.j"));
+    
+    mir->get_types().dump();
+    
+    printf("    PASSED\n");
 }
 
 static
 JLang::owned<MIR>
 parse_to_mir(std::string & path, CompilerContext & context, std::string base_filename)
 {
-  std::string filename = path + std::string("/") + base_filename;
-  
-  int input = open(filename.c_str(), O_RDONLY);
-  if (input == -1) {
-    fprintf(stderr, "Cannot open file %s\n", base_filename.c_str());
-    return nullptr;
-  }
-
-  JLang::misc::InputSourceFile input_source(input);
-  auto mir =
-      Parser::parse_to_mir(
-                           context,
-                           input_source
-                           );
-  close(input);
-  return std::move(mir);
+    std::string filename = path + std::string("/") + base_filename;
+    
+    int input = open(filename.c_str(), O_RDONLY);
+    if (input == -1) {
+	fprintf(stderr, "Cannot open file %s\n", base_filename.c_str());
+	return nullptr;
+    }
+    
+    JLang::misc::InputSourceFile input_source(input);
+    auto mir =
+	Parser::parse_to_mir(
+	    context,
+	    input_source
+	    );
+    close(input);
+    return std::move(mir);
 }

@@ -8,29 +8,29 @@ using namespace JLang::frontend;
 using namespace JLang::frontend::tree;
 
 TypeResolver::TypeResolver(
-                 JLang::context::CompilerContext & _compiler_context,
-                 const JLang::frontend::tree::TranslationUnit & _translation_unit,
-                 JLang::mir::MIR & _mir)
-  : compiler_context(_compiler_context)
-  , translation_unit(_translation_unit)
-  , types(_mir.get_types())
+    JLang::context::CompilerContext & _compiler_context,
+    const JLang::frontend::tree::TranslationUnit & _translation_unit,
+    JLang::mir::MIR & _mir)
+    : compiler_context(_compiler_context)
+    , translation_unit(_translation_unit)
+    , types(_mir.get_types())
 {}
 TypeResolver::~TypeResolver()
 {}
 
 void TypeResolver::resolve()
 {
-  // To resolve the types, we need only iterate the
-  // input parse tree and pull out any type declarations,
-  // resolving them down to their primitive types.
-  extract_types(translation_unit.get_statements());
+    // To resolve the types, we need only iterate the
+    // input parse tree and pull out any type declarations,
+    // resolving them down to their primitive types.
+    extract_types(translation_unit.get_statements());
 }
 
 void
 TypeResolver::extract_from_class_declaration(const ClassDeclaration & declaration)
 {
-  JLang::owned<Type> type = std::make_unique<Type>(declaration.get_name(), Type::TYPE_COMPOSITE, false, declaration.get_name_source_ref());
-  types.define_type(std::move(type));
+    JLang::owned<Type> type = std::make_unique<Type>(declaration.get_name(), Type::TYPE_COMPOSITE, false, declaration.get_name_source_ref());
+    types.define_type(std::move(type));
 }
 
 Type *
@@ -38,246 +38,246 @@ TypeResolver::get_or_create(std::string pointer_name, Type *pointer_target, Type
 {
     Type *pointer_type = types.get_type(pointer_name);
     if (pointer_type != nullptr) {
-      return pointer_type;
+	return pointer_type;
     }
     else {
-      JLang::owned<Type> pointer_type_created = std::make_unique<Type>(pointer_name, type_type, true, source_ref);
-      pointer_type_created->complete_pointer_definition(pointer_target, source_ref);
-      pointer_type = pointer_type_created.get();
-      types.define_type(std::move(pointer_type_created));
-      return pointer_type;
+	JLang::owned<Type> pointer_type_created = std::make_unique<Type>(pointer_name, type_type, true, source_ref);
+	pointer_type_created->complete_pointer_definition(pointer_target, source_ref);
+	pointer_type = pointer_type_created.get();
+	types.define_type(std::move(pointer_type_created));
+	return pointer_type;
     }
 }
 
 Type *
 TypeResolver::extract_from_type_specifier(const TypeSpecifier & type_specifier) 
 {
-  const auto & type_specifier_type = type_specifier.get_type();
-  if (std::holds_alternative<JLang::owned<TypeSpecifierSimple>>(type_specifier_type)) {
-    const JLang::owned<TypeSpecifierSimple> & simple = std::get<JLang::owned<TypeSpecifierSimple>>(type_specifier_type);
-    const auto & type_name = simple->get_type_name();
-    if (type_name.is_expression()) {
-      auto error = std::make_unique<JLang::context::Error>("Could not resolve type");
-      error->add_message(type_name.get_name_source_ref(), "Specifying types from expressions is not yet supported.");
-      compiler_context.get_errors().add_error(std::move(error));
-      return nullptr;
+    const auto & type_specifier_type = type_specifier.get_type();
+    if (std::holds_alternative<JLang::owned<TypeSpecifierSimple>>(type_specifier_type)) {
+	const JLang::owned<TypeSpecifierSimple> & simple = std::get<JLang::owned<TypeSpecifierSimple>>(type_specifier_type);
+	const auto & type_name = simple->get_type_name();
+	if (type_name.is_expression()) {
+	    auto error = std::make_unique<JLang::context::Error>("Could not resolve type");
+	    error->add_message(type_name.get_name_source_ref(), "Specifying types from expressions is not yet supported.");
+	    compiler_context.get_errors().add_error(std::move(error));
+	    return nullptr;
+	}
+	std::string name = type_name.get_name();
+	Type *type = types.get_type(name);
+	if (type == nullptr) {
+	    compiler_context
+		.get_errors()
+		.add_simple_error(type_name.get_name_source_ref(),
+				  "Could not find type",
+				  std::string("Could not resolve type ") + name
+		    );
+	    return nullptr;
+	}
+	return type;
     }
-    std::string name = type_name.get_name();
-    Type *type = types.get_type(name);
-    if (type == nullptr) {
-      compiler_context
-        .get_errors()
-        .add_simple_error(type_name.get_name_source_ref(),
-                          "Could not find type",
-                          std::string("Could not resolve type ") + name
-                          );
-      return nullptr;
+    else if (std::holds_alternative<JLang::owned<TypeSpecifierTemplate>>(type_specifier_type)) {
+	const auto & template_type = std::get<JLang::owned<TypeSpecifierTemplate>>(type_specifier_type);
+	compiler_context
+	    .get_errors()
+	    .add_simple_error(template_type->get_source_ref(),
+			      "Could not find type",
+			      "Template types are not supported yet."
+		);
+	return nullptr;
     }
-    return type;
-  }
-  else if (std::holds_alternative<JLang::owned<TypeSpecifierTemplate>>(type_specifier_type)) {
-    const auto & template_type = std::get<JLang::owned<TypeSpecifierTemplate>>(type_specifier_type);
+    else if (std::holds_alternative<JLang::owned<TypeSpecifierFunctionPointer>>(type_specifier_type)) {
+	const auto & fptr_type = std::get<JLang::owned<TypeSpecifierFunctionPointer>>(type_specifier_type);
+	compiler_context
+	    .get_errors()
+	    .add_simple_error(fptr_type->get_source_ref(),
+			      "Could not find type",
+			      "Function pointer types are not supported yet."
+		);
+	return nullptr;
+    }
+    else if (std::holds_alternative<JLang::owned<TypeSpecifierPointerTo>>(type_specifier_type)) {
+	const auto & type_specifier_pointer_to = std::get<JLang::owned<TypeSpecifierPointerTo>>(type_specifier_type);
+	Type *pointer_target = extract_from_type_specifier(type_specifier_pointer_to->get_type_specifier());
+	if (pointer_target == nullptr) {
+	    compiler_context
+		.get_errors()
+		.add_simple_error(type_specifier_pointer_to->get_source_ref(),
+				  "Could not find type",
+				  "Could not resolve target of pointer"
+		    );
+	    return nullptr;
+	}
+	std::string pointer_name = pointer_target->get_name() + std::string("*");
+	Type *pointer_type = get_or_create(pointer_name, pointer_target, Type::TYPE_POINTER, type_specifier_pointer_to->get_source_ref());
+	return pointer_type;
+    }
+    else if (std::holds_alternative<JLang::owned<TypeSpecifierReferenceTo>>(type_specifier_type)) {
+	const auto & type_specifier_reference_to = std::get<JLang::owned<TypeSpecifierReferenceTo>>(type_specifier_type);
+	Type *pointer_target = extract_from_type_specifier(type_specifier_reference_to->get_type_specifier());
+	if (pointer_target == nullptr) {
+	    compiler_context
+		.get_errors()
+		.add_simple_error(type_specifier_reference_to->get_source_ref(),
+				  "Could not find type",
+				  "Could not resolve target of reference"
+		    );
+	    return nullptr;
+	}
+	std::string pointer_name = pointer_target->get_name() + std::string("&");
+	Type *pointer_type = get_or_create(pointer_name, pointer_target, Type::TYPE_REFERENCE, type_specifier_reference_to->get_source_ref());
+	return pointer_type;
+    }
+    
     compiler_context
-      .get_errors()
-      .add_simple_error(template_type->get_source_ref(),
-                        "Could not find type",
-                        "Template types are not supported yet."
-                        );
+	.get_errors()
+	.add_simple_error(type_specifier.get_source_ref(),
+			  "Compiler bug!  Please report this message",
+			  "Unknown TypeSpecifier type in variant (compiler bug)"
+	    );
+    
     return nullptr;
-  }
-  else if (std::holds_alternative<JLang::owned<TypeSpecifierFunctionPointer>>(type_specifier_type)) {
-    const auto & fptr_type = std::get<JLang::owned<TypeSpecifierFunctionPointer>>(type_specifier_type);
-    compiler_context
-      .get_errors()
-      .add_simple_error(fptr_type->get_source_ref(),
-                        "Could not find type",
-                        "Function pointer types are not supported yet."
-                        );
-    return nullptr;
-  }
-  else if (std::holds_alternative<JLang::owned<TypeSpecifierPointerTo>>(type_specifier_type)) {
-    const auto & type_specifier_pointer_to = std::get<JLang::owned<TypeSpecifierPointerTo>>(type_specifier_type);
-    Type *pointer_target = extract_from_type_specifier(type_specifier_pointer_to->get_type_specifier());
-    if (pointer_target == nullptr) {
-      compiler_context
-        .get_errors()
-        .add_simple_error(type_specifier_pointer_to->get_source_ref(),
-                          "Could not find type",
-                          "Could not resolve target of pointer"
-                          );
-      return nullptr;
-    }
-    std::string pointer_name = pointer_target->get_name() + std::string("*");
-    Type *pointer_type = get_or_create(pointer_name, pointer_target, Type::TYPE_POINTER, type_specifier_pointer_to->get_source_ref());
-    return pointer_type;
-  }
-  else if (std::holds_alternative<JLang::owned<TypeSpecifierReferenceTo>>(type_specifier_type)) {
-    const auto & type_specifier_reference_to = std::get<JLang::owned<TypeSpecifierReferenceTo>>(type_specifier_type);
-    Type *pointer_target = extract_from_type_specifier(type_specifier_reference_to->get_type_specifier());
-    if (pointer_target == nullptr) {
-      compiler_context
-        .get_errors()
-        .add_simple_error(type_specifier_reference_to->get_source_ref(),
-                          "Could not find type",
-                          "Could not resolve target of reference"
-                          );
-      return nullptr;
-    }
-    std::string pointer_name = pointer_target->get_name() + std::string("&");
-    Type *pointer_type = get_or_create(pointer_name, pointer_target, Type::TYPE_REFERENCE, type_specifier_reference_to->get_source_ref());
-    return pointer_type;
-  }
-  
-  compiler_context
-    .get_errors()
-    .add_simple_error(type_specifier.get_source_ref(),
-                      "Compiler bug!  Please report this message",
-                      "Unknown TypeSpecifier type in variant (compiler bug)"
-                      );
-  
-  return nullptr;
 }
 
 void
 TypeResolver::extract_from_class_members(Type & type, const ClassDefinition & definition)
 {
-  std::vector<TypeMember> members;
-
-  const auto & class_members = definition.get_members();
-  for (const auto & class_member : class_members) {
-    const auto & class_member_type = class_member->get_member();
-    if (std::holds_alternative<JLang::owned<ClassMemberDeclarationVariable>>(class_member_type)) {
-      const auto & member_variable = std::get<JLang::owned<ClassMemberDeclarationVariable>>(class_member_type);
-
-      Type *member_type = extract_from_type_specifier(member_variable->get_type_specifier());
-      if (member_type == nullptr) {
-        compiler_context
-          .get_errors()
-          .add_simple_error(member_variable->get_type_specifier().get_source_ref(),
-                            "Could not find type",
-                            "Could not extract type of member variable " + member_variable->get_name()
-                            );
-      }
-      else {
-        TypeMember add_member(member_variable->get_name(), member_type, class_member->get_source_ref());
-        members.push_back(add_member);
-      }
+    std::vector<TypeMember> members;
+    
+    const auto & class_members = definition.get_members();
+    for (const auto & class_member : class_members) {
+	const auto & class_member_type = class_member->get_member();
+	if (std::holds_alternative<JLang::owned<ClassMemberDeclarationVariable>>(class_member_type)) {
+	    const auto & member_variable = std::get<JLang::owned<ClassMemberDeclarationVariable>>(class_member_type);
+	    
+	    Type *member_type = extract_from_type_specifier(member_variable->get_type_specifier());
+	    if (member_type == nullptr) {
+		compiler_context
+		    .get_errors()
+		    .add_simple_error(member_variable->get_type_specifier().get_source_ref(),
+				      "Could not find type",
+				      "Could not extract type of member variable " + member_variable->get_name()
+			);
+	    }
+	    else {
+		TypeMember add_member(member_variable->get_name(), member_type, class_member->get_source_ref());
+		members.push_back(add_member);
+	    }
+	}
     }
-  }
-  
-  type.complete_composite_definition(members, definition.get_name_source_ref());
+    
+    type.complete_composite_definition(members, definition.get_name_source_ref());
 }
 
 void
 TypeResolver::extract_from_class_definition(const ClassDefinition & definition)
 {
-  const auto it = types.get_types().find(definition.get_name());
-  
-  if (it == types.get_types().end()) {
-    // Case 1: No forward declaration exists, fill in the definition
-    // from the class.
-    JLang::owned<Type> type = std::make_unique<Type>(definition.get_name(), Type::TYPE_COMPOSITE, true, definition.get_name_source_ref());
-    extract_from_class_members(*type, definition);
-    types.define_type(std::move(type));
-  }
-  else {
-    auto & type = *it->second;
-    // Case 2: Class is forward declared, but is incomplete, so fill in the declaration.
-    if (!type.is_complete()) {
-      extract_from_class_members(type, definition);
+    const auto it = types.get_types().find(definition.get_name());
+    
+    if (it == types.get_types().end()) {
+	// Case 1: No forward declaration exists, fill in the definition
+	// from the class.
+	JLang::owned<Type> type = std::make_unique<Type>(definition.get_name(), Type::TYPE_COMPOSITE, true, definition.get_name_source_ref());
+	extract_from_class_members(*type, definition);
+	types.define_type(std::move(type));
     }
     else {
-      // Case 3: Class is declared and complete, but does not match our current definition,
-      // so this is a duplicate.  Raise an error to avoid ambiguity.
-      std::unique_ptr<JLang::context::Error> error = std::make_unique<JLang::context::Error>(std::string("Duplicate class definition: ") + definition.get_name());
-      error->add_message(type.get_defined_source_ref(),
-                         "Originally defined here"
-                         );
-      error->add_message(definition.get_name_source_ref(),
-                         "Re-declared here"
-                         );
-      compiler_context
-        .get_errors()
-        .add_error(std::move(error));
+	auto & type = *it->second;
+	// Case 2: Class is forward declared, but is incomplete, so fill in the declaration.
+	if (!type.is_complete()) {
+	    extract_from_class_members(type, definition);
+	}
+	else {
+	    // Case 3: Class is declared and complete, but does not match our current definition,
+	    // so this is a duplicate.  Raise an error to avoid ambiguity.
+	    std::unique_ptr<JLang::context::Error> error = std::make_unique<JLang::context::Error>(std::string("Duplicate class definition: ") + definition.get_name());
+	    error->add_message(type.get_defined_source_ref(),
+			       "Originally defined here"
+		);
+	    error->add_message(definition.get_name_source_ref(),
+			       "Re-declared here"
+		);
+	    compiler_context
+		.get_errors()
+		.add_error(std::move(error));
+	}
+	
     }
-
-  }
 }
 
 void
 TypeResolver::extract_from_enum(const EnumDefinition & enum_definition)
 {
-  const auto it = types.get_types().find(enum_definition.get_name());
-  if (it == types.get_types().end()) {
-    // No definition exists, create it.
-    JLang::owned<Type> type = std::make_unique<Type>(enum_definition.get_name(), Type::TYPE_ENUM, true, enum_definition.get_name_source_ref());
-    types.define_type(std::move(type));
-  }
-  else {
-    // This is a duplicate, reference the original definition.
-    // Case 3: Class is declared and complete, but does not match our current definition,
-    // so this is a duplicate.  Raise an error to avoid ambiguity.
-    auto & type = *it->second;
-    std::unique_ptr<JLang::context::Error> error = std::make_unique<JLang::context::Error>(std::string("Duplicate enum definition: ") + enum_definition.get_name());
-    error->add_message(type.get_defined_source_ref(),
-                       "Originally defined here"
-                       );
-    error->add_message(enum_definition.get_name_source_ref(),
-                       "Re-declared here"
-                       );
-    compiler_context
-      .get_errors()
-      .add_error(std::move(error));
-  }
+    const auto it = types.get_types().find(enum_definition.get_name());
+    if (it == types.get_types().end()) {
+	// No definition exists, create it.
+	JLang::owned<Type> type = std::make_unique<Type>(enum_definition.get_name(), Type::TYPE_ENUM, true, enum_definition.get_name_source_ref());
+	types.define_type(std::move(type));
+    }
+    else {
+	// This is a duplicate, reference the original definition.
+	// Case 3: Class is declared and complete, but does not match our current definition,
+	// so this is a duplicate.  Raise an error to avoid ambiguity.
+	auto & type = *it->second;
+	std::unique_ptr<JLang::context::Error> error = std::make_unique<JLang::context::Error>(std::string("Duplicate enum definition: ") + enum_definition.get_name());
+	error->add_message(type.get_defined_source_ref(),
+			   "Originally defined here"
+	    );
+	error->add_message(enum_definition.get_name_source_ref(),
+			   "Re-declared here"
+	    );
+	compiler_context
+	    .get_errors()
+	    .add_error(std::move(error));
+    }
 }
 
 void
 TypeResolver::extract_from_namespace(const FileStatementNamespace & namespace_declaration)
 {
-  const auto & statements = namespace_declaration.get_statement_list().get_statements();
-  extract_types(statements);
+    const auto & statements = namespace_declaration.get_statement_list().get_statements();
+    extract_types(statements);
 }
 
 void
 TypeResolver::extract_types(const std::vector<JLang::owned<FileStatement>> & statements)
 {
-  for (const auto & statement : statements) {
-    const auto & file_statement = statement->get_statement();
-    if (std::holds_alternative<JLang::owned<FileStatementFunctionDefinition>>(file_statement)) {
-      // Nothing, no statements can be declared inside here.
+    for (const auto & statement : statements) {
+	const auto & file_statement = statement->get_statement();
+	if (std::holds_alternative<JLang::owned<FileStatementFunctionDefinition>>(file_statement)) {
+	    // Nothing, no statements can be declared inside here.
+	}
+	else if (std::holds_alternative<JLang::owned<FileStatementFunctionDefinition>>(file_statement)) {
+	    // Nothing, no statements can be declared inside here.
+	}
+	else if (std::holds_alternative<JLang::owned<FileStatementGlobalDefinition>>(file_statement)) {
+	    // Nothing, no statements can be declared inside here.
+	}
+	else if (std::holds_alternative<JLang::owned<ClassDeclaration>>(file_statement)) {
+	    extract_from_class_declaration(*std::get<JLang::owned<ClassDeclaration>>(file_statement));
+	}
+	else if (std::holds_alternative<JLang::owned<ClassDefinition>>(file_statement)) {
+	    extract_from_class_definition(*std::get<JLang::owned<ClassDefinition>>(file_statement));
+	}
+	else if (std::holds_alternative<JLang::owned<EnumDefinition>>(file_statement)) {
+	    extract_from_enum(*std::get<JLang::owned<EnumDefinition>>(file_statement));
+	}
+	else if (std::holds_alternative<JLang::owned<TypeDefinition>>(file_statement)) {
+	    // Nothing, no statements can be declared inside here.
+	}
+	else if (std::holds_alternative<JLang::owned<FileStatementNamespace>>(file_statement)) {
+	    extract_from_namespace(*std::get<JLang::owned<FileStatementNamespace>>(file_statement));
+	}
+	else if (std::holds_alternative<JLang::owned<FileStatementUsing>>(file_statement)) {
+	    // Nothing, no statements can be declared inside here.
+	}
+	else {
+	    compiler_context
+		.get_errors()
+		.add_simple_error(statement->get_source_ref(),
+				  "Compiler bug!  Please report this message",
+				  "Unknown statement type in variant, extracting statements from file (compiler bug)"
+		    );
+	}
     }
-    else if (std::holds_alternative<JLang::owned<FileStatementFunctionDefinition>>(file_statement)) {
-      // Nothing, no statements can be declared inside here.
-    }
-    else if (std::holds_alternative<JLang::owned<FileStatementGlobalDefinition>>(file_statement)) {
-      // Nothing, no statements can be declared inside here.
-    }
-    else if (std::holds_alternative<JLang::owned<ClassDeclaration>>(file_statement)) {
-      extract_from_class_declaration(*std::get<JLang::owned<ClassDeclaration>>(file_statement));
-    }
-    else if (std::holds_alternative<JLang::owned<ClassDefinition>>(file_statement)) {
-      extract_from_class_definition(*std::get<JLang::owned<ClassDefinition>>(file_statement));
-    }
-    else if (std::holds_alternative<JLang::owned<EnumDefinition>>(file_statement)) {
-      extract_from_enum(*std::get<JLang::owned<EnumDefinition>>(file_statement));
-    }
-    else if (std::holds_alternative<JLang::owned<TypeDefinition>>(file_statement)) {
-      // Nothing, no statements can be declared inside here.
-    }
-    else if (std::holds_alternative<JLang::owned<FileStatementNamespace>>(file_statement)) {
-      extract_from_namespace(*std::get<JLang::owned<FileStatementNamespace>>(file_statement));
-    }
-    else if (std::holds_alternative<JLang::owned<FileStatementUsing>>(file_statement)) {
-      // Nothing, no statements can be declared inside here.
-    }
-    else {
-      compiler_context
-        .get_errors()
-        .add_simple_error(statement->get_source_ref(),
-                          "Compiler bug!  Please report this message",
-                          "Unknown statement type in variant, extracting statements from file (compiler bug)"
-                          );
-    }
-  }
 }
 

@@ -21,5 +21,6 @@ build/Makefile: CMakeLists.txt
 	mkdir -p install
 	cmake \
 		-DCMAKE_INSTALL_PREFIX=install \
+		-DCMAKE_BUILD_TYPE=Debug \
 		-B build -S .
 

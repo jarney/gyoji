@@ -4,31 +4,35 @@ using namespace JLang::frontend;
 using namespace JLang::frontend::ast;
 
 ///////////////////////////////////////////////////
-SyntaxNode::SyntaxNode(std::string _type, SyntaxNode::specific_type_t _data, const JLang::context::SourceReference & _source_ref)
-  : type(_type)
-  , data(_data)
-  , source_ref(_source_ref)
+SyntaxNode::SyntaxNode(
+    std::string _type,
+    SyntaxNode::specific_type_t _data,
+    const JLang::context::SourceReference & _source_ref
+    )
+    : type(_type)
+    , data(_data)
+    , source_ref(_source_ref)
 {}
 SyntaxNode::~SyntaxNode()
 {}
 void
 SyntaxNode::add_child(const SyntaxNode & node)
 {
-  children.push_back(node);
+    children.push_back(node);
 }
 void
 SyntaxNode::prepend_child(const SyntaxNode & node)
 {
-  children.insert(children.begin(), node);
+    children.insert(children.begin(), node);
 }
 const std::vector<std::reference_wrapper<const SyntaxNode>> &
 SyntaxNode::get_children() const
 {
-  return children;
+    return children;
 }
 const std::string & SyntaxNode::get_type() const
 {
-  return type;
+    return type;
 }
 const SyntaxNode &
 SyntaxNode::get_syntax_node() const

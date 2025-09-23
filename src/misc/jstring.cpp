@@ -5,55 +5,55 @@ using namespace JLang::misc;
 
 std::vector<std::string> JLang::misc::string_split(const std::string &str, const std::string &delimiter)
 {
-  std::vector<std::string> ret;
-  size_t pos = 0;
-  while (true) {
-    size_t newpos = str.find(delimiter, pos);
-    if (newpos == std::string::npos) {
-      break;
+    std::vector<std::string> ret;
+    size_t pos = 0;
+    while (true) {
+	size_t newpos = str.find(delimiter, pos);
+	if (newpos == std::string::npos) {
+	    break;
+	}
+	ret.push_back(str.substr(pos, newpos-pos));
+	pos = newpos + delimiter.size();
     }
-    ret.push_back(str.substr(pos, newpos-pos));
-    pos = newpos + delimiter.size();
-  }
-  if (pos == std::string::npos) {
-  }
-  else {
-    ret.push_back(str.substr(pos));
-  }
-  return ret;
+    if (pos == std::string::npos) {
+    }
+    else {
+	ret.push_back(str.substr(pos));
+    }
+    return ret;
 }
 
 std::string JLang::misc::string_remove_nonidentifier(const std::string & str)
 {
-  std::string newStr;
-  newStr.assign(str);  
-  
-  for(int i = 0; i < str.length(); i++){
-    char c = str.at(i);
-    if (isalnum(c) || c == ':' || c == '_') {
-      continue;
+    std::string newStr;
+    newStr.assign(str);  
+    
+    for(int i = 0; i < str.length(); i++){
+	char c = str.at(i);
+	if (isalnum(c) || c == ':' || c == '_') {
+	    continue;
+	}
+	newStr.erase(std::remove(newStr.begin(), newStr.end(), c), newStr.end());
     }
-    newStr.erase(std::remove(newStr.begin(), newStr.end(), c), newStr.end());
-  }
-  
-  return newStr; 
+    
+    return newStr; 
 }
 
 std::string JLang::misc::string_replace_start(std::string str, const std::string from, const std::string to)
 {
-  std::string ret(str);
-  size_t start_pos = str.find(from);
-
-  // String is not found at all.
-  if (start_pos == std::string::npos) {
+    std::string ret(str);
+    size_t start_pos = str.find(from);
+    
+    // String is not found at all.
+    if (start_pos == std::string::npos) {
+	return ret;
+    }
+    // If the string is not found at the start, so do nothing.
+    if (start_pos != 0) {
+	return ret;
+    }
+    
+    // Replace the string.
+    ret.replace(start_pos, from.length(), to);
     return ret;
-  }
-  // If the string is not found at the start, so do nothing.
-  if (start_pos != 0) {
-    return ret;
-  }
-
-  // Replace the string.
-  ret.replace(start_pos, from.length(), to);
-  return ret;
 }
