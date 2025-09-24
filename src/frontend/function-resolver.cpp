@@ -54,6 +54,24 @@ FunctionResolver::extract_from_expression_primary_identifier(
     const JLang::frontend::tree::ExpressionPrimaryIdentifier & expression
     )
 {
+    // At this point, we should try to identify what this
+    // identifier actually refers to.
+    // * First look inside the function's declared variables in scope.
+    // * Next, look in the global namespace for functions.
+    // * Finally, look in the global namespace for external
+    //   variables like 'global' or 'static' variables.
+    // If the identifier is a function.
+    // There are a few cases:
+    // * The it is a function and is used in an assignment
+    //   to a function pointer.  In this case, we should
+    //   return the type as a function pointer type
+    // * If it is used in a function call directly, we should not
+    //   emit the code, but should just use an 'immediate'
+    //   execution of whatever it is.
+    // * Otherwise, emit it as a 'load' and just follow our nose
+    //   at runtime.
+    // * Maybe we really should 'flatten' our access here.
+    
     function.get_basic_block(current_block).add_statement(
 	std::string("identifier ") +
 	expression.get_identifier().get_fully_qualified_name() + "::" + 
@@ -177,6 +195,16 @@ FunctionResolver::extract_from_expression_primary(
     fprintf(stderr, "Compiler bug, invalid expression type\n");
     exit(1);
   }
+}
+
+static bool is_bool_type(ExpressionValue & expression_value)
+{
+    if (expression_value.type == ExpressionValue::TYPE_TYPE) {
+	if (expression_value.value == "bool") {
+	    return true;
+	}
+    }
+    return false;
 }
 
 static bool is_index_type(ExpressionValue & index_type)
@@ -338,6 +366,14 @@ FunctionResolver::extract_from_expression_unary_prefix(
     ExpressionValue & returned_value,
     const ExpressionUnaryPrefix & expression)
 {
+
+    extract_from_expression(
+	function,
+	current_block,
+	returned_value,
+	expression.get_expression()
+	);
+    
     std::string op = "";
     switch (expression.get_type()) {
     case ExpressionUnaryPrefix::INCREMENT:
@@ -362,6 +398,15 @@ FunctionResolver::extract_from_expression_unary_prefix(
 	op = "~";
 	break;
     case ExpressionUnaryPrefix::LOGICAL_NOT:
+	if (!is_bool_type(returned_value)) {
+	    compiler_context
+		.get_errors()
+		.add_simple_error(
+		    expression.get_expression().get_source_ref(),
+		    "Logical not (!) must operate on 'bool' expressions.",
+		    std::string("Type of condition expression should be 'bool' and was ") + returned_value.value
+		    );
+	}
 	op = "!";
 	break;
     default:
@@ -621,7 +666,6 @@ FunctionResolver::extract_from_statement_ifelse(
 		"Invalid condition in if statement.",
 		std::string("Type of condition expression should be 'bool' and was ") + condition_value.value
 		);
-	
     }
     
     size_t blockid_done = function.add_block();
