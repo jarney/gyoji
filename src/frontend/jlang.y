@@ -662,20 +662,6 @@ class_decl_start
                                                                          );
                 return_data.namespace_context->namespace_new(class_name, Namespace::TYPE_CLASS, visibility_from_modifier(visibility_modifier));
                 return_data.namespace_context->namespace_push(class_name);
-#if 0
-                // XXX TODO: This isn't handled correctly for the strongly-typed AST.
-                if ($4->children.size() > 0) {
-                  for (auto child : $4->children) {
-                    if (child->type == Parser::symbol_kind_type::S_class_argument_list) {
-                      for (auto grandchild : child->children) {
-                        if (grandchild->type == Parser::symbol_kind_type::S_IDENTIFIER) {
-                          return_data.namespace_context->namespace_new(grandchild->get_value(), Namespace::TYPE_CLASS, Namespace::VISIBILITY_PRIVATE);
-                        }
-                      }
-                    }
-                  }
-                }
-#endif
                 PRINT_NONTERMINALS($$);
         }
         | opt_access_modifier CLASS TYPE_NAME opt_class_argument_list {
@@ -2298,13 +2284,28 @@ int visibility_from_modifier(JLang::frontend::tree::AccessModifier::AccessModifi
 void JLang::frontend::yacc::YaccParser::error(const std::string& msg) {
     LexContext *lex_context = (LexContext*)yyget_extra(scanner);
 
+    const SourceReference & src_ref = lex_context->compiler_context.get_token_stream().get_current_source_ref();
+
     // We don't directly print an error here, we report it
     // to the error reporting system so that it can
     // write error information when it needs to, presumably
     // after collecting possibly multiple errors
 
+    // We want to consume more context from the next few
+    // lines so we can produce a good syntax error with
+    // following context.
+    int error_context_lines = 5;
+    while (true) {
+	JLang::frontend::yacc::YaccParser::semantic_type lvalue;
+	int rc = yylex (&lvalue, scanner);
+	if (rc == 0) break;
+	const SourceReference & cur_ref = lex_context->compiler_context.get_token_stream().get_current_source_ref();
+	if (cur_ref.get_line() - src_ref.get_line() >= error_context_lines) {
+	    break;
+	}
+    }
+    
     auto error = std::make_unique<JLang::context::Error>("Syntax Error");
-    SourceReference src_ref("filename", lex_context->line, lex_context->column);
-    error->add_message(src_ref, "syntax error");
+    error->add_message(src_ref, msg);
     return_data.compiler_context.get_errors().add_error(std::move(error));
 }

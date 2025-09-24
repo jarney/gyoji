@@ -1,11 +1,17 @@
 # TODO list
 
 ## Semantic processing
-* Error Handling
-  * Syntax Errors, we should consume more context
-    so we don't cut off the error line as soon as the
-    parse halts.
+* Namespaces
+  * This is a real mess for identifiers.  We need a way to disambiguate
+    local identifiers from global ones that exist in a namespace.
+    We also need a way to fully-qualify them if (and only if) they
+    appear in a namespace so that we can figure out how to look them
+    up in the semantics layer when we actually need to resolve them.
+    If they are fully-qualified identifiers (like global variables)
+    then they should have the same namespace visibility rules, but
+    this seems difficult to keep separate between the syntax and semantic layers.
 
+* Error Handling
   * More MIR for types : Enums and such.
   
   * Basic MIR lowering for functions/expressions.
