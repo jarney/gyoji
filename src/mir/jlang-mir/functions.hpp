@@ -20,7 +20,7 @@ namespace JLang::mir {
 
 	const FunctionPrototype * get_prototype(std::string mangled_name) const;
 	void add_prototype(JLang::owned<FunctionPrototype> prototype);
-	
+
 	/**
 	 * Adds a function to the MIR representation.
 	 */
@@ -106,6 +106,15 @@ namespace JLang::mir {
 	std::vector<FunctionArgument> arguments;
 	
     };
+
+    class LocalVariable {
+    public:
+	LocalVariable(std::string _name, std::string _type);
+	LocalVariable(const LocalVariable & _other);
+	~LocalVariable();
+	std::string name;
+	std::string type;
+    };
     
     class Function {
     public:
@@ -118,6 +127,10 @@ namespace JLang::mir {
 	BasicBlock & get_basic_block(size_t blockid);
 	size_t add_block();
 	void push_block(size_t blockid);
+	
+	const LocalVariable * get_local(std::string local_name);
+	bool add_local(const LocalVariable & local);
+	void remove_local(std::string local_name);
 
 	void dump() const;
     private:
@@ -134,5 +147,7 @@ namespace JLang::mir {
 	// graph.
 	std::map<size_t, std::vector<size_t>> edges;
 	std::vector<size_t> blocks_in_order;
+	
+	std::map<std::string, LocalVariable> in_scope_locals;
     };
 };

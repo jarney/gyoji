@@ -472,6 +472,7 @@ StatementVariableDeclaration::StatementVariableDeclaration(
     , global_initializer(std::move(_global_initializer))
     , semicolon_token(std::move(_semicolon_token))
 {
+    identifier_token->set_fully_qualified_name("");
     add_child(*type_specifier);
     add_child(*identifier_token);
     add_child(*array_length);

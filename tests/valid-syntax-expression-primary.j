@@ -7,6 +7,10 @@ namespace std {
     typedef u8 u8_t;
     typedef u8 * string;
     private const foo_t string2;
+    u32 nested_function() {
+        u32 var;
+	return var;
+    }
 };
 
 namespace MyNamespace {

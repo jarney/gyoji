@@ -43,6 +43,20 @@ Functions::get_functions() const
 { return functions; }
 
 /////////////////////////////////////
+// LocalVariable
+/////////////////////////////////////
+LocalVariable::LocalVariable(std::string _name, std::string _type)
+    : name(_name)
+    , type(_type)
+{}
+LocalVariable::LocalVariable(const LocalVariable & _other)
+    : name(_other.name)
+    , type(_other.type)
+{}
+LocalVariable::~LocalVariable()
+{}
+
+/////////////////////////////////////
 // Function
 /////////////////////////////////////
 Function::Function(
@@ -85,6 +99,32 @@ Function::push_block(size_t blockid)
 {
     fprintf(stderr, "Pushing block %ld\n", blockid);
     blocks_in_order.push_back(blockid);
+}
+
+const LocalVariable *
+Function::get_local(std::string local_name)
+{
+    const auto & it = in_scope_locals.find(local_name);
+    if (it != in_scope_locals.end()) {
+	return &it->second;
+    }
+    return nullptr;
+}
+
+bool
+Function::add_local(const LocalVariable & local)
+{
+    if (get_local(local.name) != nullptr) {
+	return false;
+    }
+    in_scope_locals.insert(std::pair(local.name, local));
+    return true;
+}
+
+void
+Function::remove_local(std::string local_name)
+{
+    in_scope_locals.erase(local_name);
 }
 
 void

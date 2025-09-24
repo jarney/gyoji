@@ -249,39 +249,68 @@ FunctionResolver::extract_from_expression_postfix_function_call(
 	extract_from_expression(function, current_block, arg_type, *arg_expr);
 	arg_types.push_back(arg_type);
     }
+    const Expression & function_expression = expression.get_function();
+    const Expression::ExpressionType & function_expression_type = function_expression.get_expression();
     
-    ExpressionValue function_id_value;
-    extract_from_expression(
-	function,
-	current_block,
-	function_id_value,
-	expression.get_function()
-	);
+    if (std::holds_alternative<JLang::owned<ExpressionPrimaryIdentifier>>(function_expression_type)) {
+	const auto & function_identifier = std::get<JLang::owned<ExpressionPrimaryIdentifier>>(function_expression_type);
+	// If this expression is a primary expression, then this is
+	// an immediate function call and we can directly emit
+	// a call to that function.
 
-    // XXX should be from a mangled name, not just the raw name.
-    fprintf(stderr, "Looking up prototype %s\n", function_id_value.value.c_str());
-    const FunctionPrototype * prototype = mir.get_functions().get_prototype(function_id_value.value);
-    fprintf(stderr, "Found? %p\n", prototype);
-    if (prototype == nullptr) {
+	// XXX This is a hack because
+	// we should really be letting the
+	// namespace do all the heavy lifting here
+	// to format the identifier correctly.
+	std::string function_name =
+	    function_identifier->get_identifier().get_fully_qualified_name()
+	    + std::string("::")
+	    + function_identifier->get_identifier().get_value();
+	fprintf(stderr, "Looking up prototype %s\n", function_name.c_str());
+	const FunctionPrototype * prototype = mir.get_functions().get_prototype(function_name);
+	fprintf(stderr, "Found? %p\n", prototype);
+	if (prototype == nullptr) {
+	    compiler_context
+		.get_errors()
+		.add_simple_error(
+		    expression.get_function().get_source_ref(),
+		    "Unknown function",
+		    std::string("Function call ") + function_name + std::string(" could not be found")
+		    );
+	    return;
+	}
+	function
+	    .get_basic_block(current_block)
+	    .add_statement(std::string("function-call-immediate ") + prototype->get_name());
+	
+	// XXX We should find the return value of the function
+	// and report it here.  For now, we'll hard-code u32
+	// because we don't have that yet.
+	returned_value.type = ExpressionValue::TYPE_TYPE;
+	returned_value.value = prototype->get_return_type();
+	
+    }
+    else {
+	// Otherwise, this expression should be interpreted as an expression
+	// returning a function-pointer value and we should perform an indirect
+	// call to the value that is evaluated in that expression.
+	ExpressionValue function_id_value;
+	extract_from_expression(
+	    function,
+	    current_block,
+	    returned_value,
+	    expression.get_function()
+	    );
 	compiler_context
 	    .get_errors()
 	    .add_simple_error(
 		expression.get_function().get_source_ref(),
-		"Unknown function",
-		std::string("Function call ") + function_id_value.value + std::string(" could not be found")
+		"Compiler todo! Function pointers are not yet supported",
+		"Function is dependent on evaluating an expression which is not yet supported."
 		);
 	return;
     }
-    
-    // XXX We should find the return value of the function
-    // and report it here.  For now, we'll hard-code u32
-    // because we don't have that yet.
-    returned_value.type = ExpressionValue::TYPE_TYPE;
-    returned_value.value = prototype->get_return_type();
-    
-    function
-	.get_basic_block(current_block)
-	.add_statement(std::string("function-call ") + prototype->get_name());
+
 }
 
 void
@@ -321,6 +350,8 @@ FunctionResolver::extract_from_expression_postfix_incdec(
 	.add_statement(std::string("++/-- "));
 }
 
+
+
 void
 FunctionResolver::extract_from_expression_unary_prefix(
     JLang::mir::Function & function,
@@ -329,6 +360,10 @@ FunctionResolver::extract_from_expression_unary_prefix(
     const ExpressionUnaryPrefix & expression)
 {
 
+    // Extract the prior expression
+    // and if not otherwise specified,
+    // the operation will return the
+    // same type as the operand.
     extract_from_expression(
 	function,
 	current_block,
@@ -345,10 +380,31 @@ FunctionResolver::extract_from_expression_unary_prefix(
 	op = "--";
 	break;
     case ExpressionUnaryPrefix::ADDRESSOF:
+	// The addressof changes the type of the
+	// return value to "pointer to" the type returned.
 	op = "&";
+	returned_value.value = returned_value.value + std::string("*");
 	break;
     case ExpressionUnaryPrefix::DEREFERENCE:
+    {
 	op = "*";
+
+	Type *mir_type = mir.get_types().get_type(returned_value.value);
+	if (mir_type == nullptr) {
+	    fprintf(stderr, "Compiler Bug!  Looking for type %s\n", returned_value.value.c_str());
+	    exit(1);
+	}
+	if (mir_type->get_type() != Type::TYPE_POINTER) {
+	    compiler_context
+		.get_errors()
+		.add_simple_error(
+		    expression.get_expression().get_source_ref(),
+		    "Cannot dereference non-pointer",
+		    std::string("Attempting to de-reference non-pointer type ") + returned_value.value
+		    );
+	    return;
+	}
+    }
 	break;
     case ExpressionUnaryPrefix::PLUS:
 	op = "+";
@@ -392,6 +448,7 @@ FunctionResolver::extract_from_expression_unary_sizeof_type(
 	.get_basic_block(current_block)
 	.add_statement("sizeof");
 }
+
 void
 FunctionResolver::extract_from_expression_binary(
     JLang::mir::Function & function,
@@ -706,6 +763,22 @@ FunctionResolver::extract_from_statement_list(
 	if (std::holds_alternative<JLang::owned<StatementVariableDeclaration>>(statement_type)) {
 	    const auto & statement = std::get<JLang::owned<StatementVariableDeclaration>>(statement_type);
 	    function.get_basic_block(current_block).add_statement(std::string("declare ") + statement->get_name());
+	    
+	    fprintf(stderr, "Declaring variable %s\n", statement->get_name().c_str());
+	    JLang::mir::Type * mir_type = type_resolver.extract_from_type_specifier(statement->get_type_specifier());
+
+	    LocalVariable local(statement->get_name(), mir_type->get_name());
+	    
+	    if (!function.add_local(local)) {
+		compiler_context
+		    .get_errors()
+		    .add_simple_error(
+			statement->get_type_specifier().get_source_ref(),
+			"Duplicate Local Variable.",
+			std::string("Variable with name ") + local.name + std::string(" is already in scope and cannot be duplicated in this function.")
+			);
+	    }
+	    
 	    unwind.push_back(statement->get_name());
 	}
 	else if (std::holds_alternative<JLang::owned<StatementBlock>>(statement_type)) {
@@ -755,6 +828,7 @@ FunctionResolver::extract_from_statement_list(
 	}
     }
     for (const auto & undecl : unwind) {
+	function.remove_local(undecl);
 	fprintf(stderr, "Undeclaring %s in block %ld\n", undecl.c_str(), current_block);
 	function.get_basic_block(current_block).add_statement(std::string("undeclare ") + undecl);
     }

@@ -18,7 +18,7 @@ u32 main(u32 argc, u8 **argv)
         if (a == 2) {
 	   u32 scope_var;
            a_a();
-	   if (!a) {
+	   if (*a) {
 	   }
            if (!(a == 19)) {
                nineteen();
