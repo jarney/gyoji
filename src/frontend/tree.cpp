@@ -1437,7 +1437,7 @@ TypeDefinition::get_type_specifier() const
 EnumDefinitionValue::EnumDefinitionValue(
     JLang::owned<Terminal> _identifier_token,
     JLang::owned<Terminal> _equals_token,
-    JLang::owned<ExpressionPrimary> _expression_primary,
+    JLang::owned<Expression> _expression_primary,
     JLang::owned<Terminal> _semicolon_token
     )
     : SyntaxNode("enum_definition_value", this, _identifier_token->get_source_ref())
@@ -1460,7 +1460,7 @@ const SourceReference &
 EnumDefinitionValue::get_name_source_ref() const
 { return identifier_token->get_source_ref(); }
 
-const ExpressionPrimary &
+const Expression &
 EnumDefinitionValue::get_expression() const
 { return *expression_primary; }
 
@@ -1632,19 +1632,6 @@ ExpressionPrimaryLiteralFloat::get_value() const
 const SourceReference &
 ExpressionPrimaryLiteralFloat::get_value_source_ref() const
 { return literal_token->get_source_ref(); }
-
-///////////////////////////////////////////////////
-ExpressionPrimary::ExpressionPrimary(ExpressionPrimary::ExpressionType _expression_type, const SyntaxNode & _sn)
-    : SyntaxNode("expression_primary", this, _sn.get_source_ref())
-    , expression_type(std::move(_expression_type))
-{
-    add_child(_sn);
-}
-ExpressionPrimary::~ExpressionPrimary()
-{}
-const ExpressionPrimary::ExpressionType &
-ExpressionPrimary::get_expression() const
-{ return expression_type; }
 
 ///////////////////////////////////////////////////
 ExpressionPostfixArrayIndex::ExpressionPostfixArrayIndex(
@@ -1977,7 +1964,7 @@ Expression::get_expression() const
 
 GlobalInitializerExpressionPrimary::GlobalInitializerExpressionPrimary(
     JLang::owned<Terminal> _equals_token,
-    JLang::owned<ExpressionPrimary> _expression
+    JLang::owned<Expression> _expression
     )
     : SyntaxNode("global_initializer_expression_primary", this, _equals_token->get_source_ref())
     , equals_token(std::move(_equals_token))
@@ -1986,9 +1973,11 @@ GlobalInitializerExpressionPrimary::GlobalInitializerExpressionPrimary(
     add_child(*equals_token);
     add_child(*expression);
 }
+
 GlobalInitializerExpressionPrimary::~GlobalInitializerExpressionPrimary()
 {}
-const ExpressionPrimary &
+
+const Expression &
 GlobalInitializerExpressionPrimary::get_expression() const
 { return *expression; };
 
@@ -2038,7 +2027,7 @@ StructInitializerList::get_initializers() const
 GlobalInitializerAddressofExpressionPrimary::GlobalInitializerAddressofExpressionPrimary(
     JLang::owned<Terminal> _equals_token,
     JLang::owned<Terminal> _addressof_token,
-    JLang::owned<ExpressionPrimary> _expression
+    JLang::owned<Expression> _expression
     )
     : SyntaxNode("global_initializer_addressof_expression_primary", this, _equals_token->get_source_ref())
     , equals_token(std::move(_equals_token))
@@ -2051,7 +2040,7 @@ GlobalInitializerAddressofExpressionPrimary::GlobalInitializerAddressofExpressio
 }
 GlobalInitializerAddressofExpressionPrimary::~GlobalInitializerAddressofExpressionPrimary()
 {}
-const ExpressionPrimary &
+const Expression &
 GlobalInitializerAddressofExpressionPrimary::get_expression() const
 { return *expression; };
 

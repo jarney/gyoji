@@ -159,44 +159,6 @@ FunctionResolver::extract_from_expression_primary_literal_float(
     returned_value.value = expression.get_value();
 }
 
-void
-FunctionResolver::extract_from_expression_primary(
-    JLang::mir::Function & function,
-    size_t & current_block,
-    ExpressionValue & returned_value,
-    const ExpressionPrimary & expression_container)
-{
-  const auto & expression_type = expression_container.get_expression();
-  if (std::holds_alternative<JLang::owned<ExpressionPrimaryIdentifier>>(expression_type)) {
-    const auto & expression = std::get<JLang::owned<ExpressionPrimaryIdentifier>>(expression_type);
-    extract_from_expression_primary_identifier(function, current_block, returned_value, *expression);
-  }
-  else if (std::holds_alternative<JLang::owned<ExpressionPrimaryNested>>(expression_type)) {
-    const auto & expression = std::get<JLang::owned<ExpressionPrimaryNested>>(expression_type);
-    extract_from_expression_primary_nested(function, current_block, returned_value, *expression);
-  }
-  else if (std::holds_alternative<JLang::owned<ExpressionPrimaryLiteralChar>>(expression_type)) {
-    const auto & expression = std::get<JLang::owned<ExpressionPrimaryLiteralChar>>(expression_type);
-    extract_from_expression_primary_literal_char(function, current_block, returned_value, *expression);
-  }
-  else if (std::holds_alternative<JLang::owned<ExpressionPrimaryLiteralString>>(expression_type)) {
-    const auto & expression = std::get<JLang::owned<ExpressionPrimaryLiteralString>>(expression_type);
-    extract_from_expression_primary_literal_string(function, current_block, returned_value, *expression);
-  }
-  else if (std::holds_alternative<JLang::owned<ExpressionPrimaryLiteralInt>>(expression_type)) {
-    const auto & expression = std::get<JLang::owned<ExpressionPrimaryLiteralInt>>(expression_type);
-    extract_from_expression_primary_literal_int(function, current_block, returned_value, *expression);
-  }
-  else if (std::holds_alternative<JLang::owned<ExpressionPrimaryLiteralFloat>>(expression_type)) {
-    const auto & expression = std::get<JLang::owned<ExpressionPrimaryLiteralFloat>>(expression_type);
-    extract_from_expression_primary_literal_float(function, current_block, returned_value, *expression);
-  }
-  else {
-    fprintf(stderr, "Compiler bug, invalid expression type\n");
-    exit(1);
-  }
-}
-
 static bool is_bool_type(ExpressionValue & expression_value)
 {
     if (expression_value.type == ExpressionValue::TYPE_TYPE) {
@@ -599,9 +561,30 @@ FunctionResolver::extract_from_expression(
     const Expression & expression_container)
 {
   const auto & expression_type = expression_container.get_expression();
-  if (std::holds_alternative<JLang::owned<ExpressionPrimary>>(expression_type)) {
-    const auto & expression = std::get<JLang::owned<ExpressionPrimary>>(expression_type);
-    extract_from_expression_primary(function, current_block, returned_value, *expression);
+
+  if (std::holds_alternative<JLang::owned<ExpressionPrimaryIdentifier>>(expression_type)) {
+    const auto & expression = std::get<JLang::owned<ExpressionPrimaryIdentifier>>(expression_type);
+    extract_from_expression_primary_identifier(function, current_block, returned_value, *expression);
+  }
+  else if (std::holds_alternative<JLang::owned<ExpressionPrimaryNested>>(expression_type)) {
+    const auto & expression = std::get<JLang::owned<ExpressionPrimaryNested>>(expression_type);
+    extract_from_expression_primary_nested(function, current_block, returned_value, *expression);
+  }
+  else if (std::holds_alternative<JLang::owned<ExpressionPrimaryLiteralChar>>(expression_type)) {
+    const auto & expression = std::get<JLang::owned<ExpressionPrimaryLiteralChar>>(expression_type);
+    extract_from_expression_primary_literal_char(function, current_block, returned_value, *expression);
+  }
+  else if (std::holds_alternative<JLang::owned<ExpressionPrimaryLiteralString>>(expression_type)) {
+    const auto & expression = std::get<JLang::owned<ExpressionPrimaryLiteralString>>(expression_type);
+    extract_from_expression_primary_literal_string(function, current_block, returned_value, *expression);
+  }
+  else if (std::holds_alternative<JLang::owned<ExpressionPrimaryLiteralInt>>(expression_type)) {
+    const auto & expression = std::get<JLang::owned<ExpressionPrimaryLiteralInt>>(expression_type);
+    extract_from_expression_primary_literal_int(function, current_block, returned_value, *expression);
+  }
+  else if (std::holds_alternative<JLang::owned<ExpressionPrimaryLiteralFloat>>(expression_type)) {
+    const auto & expression = std::get<JLang::owned<ExpressionPrimaryLiteralFloat>>(expression_type);
+    extract_from_expression_primary_literal_float(function, current_block, returned_value, *expression);
   }
   else if (std::holds_alternative<JLang::owned<ExpressionPostfixArrayIndex>>(expression_type)) {
     const auto & expression = std::get<JLang::owned<ExpressionPostfixArrayIndex>>(expression_type);

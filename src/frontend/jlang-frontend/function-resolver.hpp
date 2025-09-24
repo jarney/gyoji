@@ -82,12 +82,6 @@ namespace JLang::frontend {
 	    ExpressionValue & value,
 	    const JLang::frontend::tree::ExpressionPrimaryLiteralFloat & expression);
 	
-	void extract_from_expression_primary(
-	    JLang::mir::Function & function,
-	    size_t & current_block,
-	    ExpressionValue & value,
-	    const JLang::frontend::tree::ExpressionPrimary & expression);
-	
 	void extract_from_expression_postfix_array_index(
 	    JLang::mir::Function & function,
 	    size_t & current_block,

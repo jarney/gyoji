@@ -211,7 +211,7 @@ int visibility_from_modifier(JLang::frontend::tree::AccessModifier::AccessModifi
 %nterm <JLang::owned<JLang::frontend::tree::FunctionDefinitionArgList>> function_definition_arg_list;
 %nterm <JLang::owned<JLang::frontend::tree::FunctionDefinitionArg>> function_definition_arg
 
-%nterm <JLang::owned<JLang::frontend::tree::ExpressionPrimary>> expression_primary;
+%nterm <JLang::owned<JLang::frontend::tree::Expression>> expression_primary;
 %nterm <JLang::owned<JLang::frontend::tree::ExpressionPrimaryNested>> expression_primary_nested;
 %nterm <JLang::owned<JLang::frontend::tree::ExpressionPrimaryIdentifier>> expression_primary_identifier;
 %nterm <JLang::owned<JLang::frontend::tree::ExpressionPrimaryLiteralInt>> expression_primary_literal_int;
@@ -1208,32 +1208,32 @@ statement_switch_block
 expression_primary
         : expression_primary_identifier {
                 const JLang::frontend::ast::SyntaxNode &sn = *($1);
-                $$ = std::make_unique<JLang::frontend::tree::ExpressionPrimary>(std::move($1), sn);
+                $$ = std::make_unique<JLang::frontend::tree::Expression>(std::move($1), sn);
                 PRINT_NONTERMINALS($$);
         }
         | expression_primary_nested {
                 const JLang::frontend::ast::SyntaxNode &sn = *($1);
-                $$ = std::make_unique<JLang::frontend::tree::ExpressionPrimary>(std::move($1), sn);
+                $$ = std::make_unique<JLang::frontend::tree::Expression>(std::move($1), sn);
                 PRINT_NONTERMINALS($$);
         }
         | expression_primary_literal_int {
                 const JLang::frontend::ast::SyntaxNode &sn = *($1);
-                $$ = std::make_unique<JLang::frontend::tree::ExpressionPrimary>(std::move($1), sn);
+                $$ = std::make_unique<JLang::frontend::tree::Expression>(std::move($1), sn);
                 PRINT_NONTERMINALS($$);
         }
         | expression_primary_literal_char {
                 const JLang::frontend::ast::SyntaxNode &sn = *($1);
-                $$ = std::make_unique<JLang::frontend::tree::ExpressionPrimary>(std::move($1), sn);
+                $$ = std::make_unique<JLang::frontend::tree::Expression>(std::move($1), sn);
                 PRINT_NONTERMINALS($$);
         }
         | expression_primary_literal_string {
                 const JLang::frontend::ast::SyntaxNode &sn = *($1);
-                $$ = std::make_unique<JLang::frontend::tree::ExpressionPrimary>(std::move($1), sn);
+                $$ = std::make_unique<JLang::frontend::tree::Expression>(std::move($1), sn);
                 PRINT_NONTERMINALS($$);
         }
         | expression_primary_literal_float {
                 const JLang::frontend::ast::SyntaxNode &sn = *($1);
-                $$ = std::make_unique<JLang::frontend::tree::ExpressionPrimary>(std::move($1), sn);
+                $$ = std::make_unique<JLang::frontend::tree::Expression>(std::move($1), sn);
                 PRINT_NONTERMINALS($$);
         }
         ;
@@ -1314,8 +1314,7 @@ expression_postfix
 
 expression_postfix_primary
         : expression_primary {
-                const JLang::frontend::ast::SyntaxNode &sn = *($1);
-                $$ = std::make_unique<JLang::frontend::tree::Expression>(std::move($1), sn);
+                $$ = std::move($1);
                 PRINT_NONTERMINALS($$);
         }
         ;

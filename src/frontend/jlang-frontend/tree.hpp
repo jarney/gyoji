@@ -1810,7 +1810,7 @@ namespace JLang::frontend::tree {
 	EnumDefinitionValue(
 	    JLang::owned<Terminal> _identifier_token,
 	    JLang::owned<Terminal> _equals_token,
-	    JLang::owned<ExpressionPrimary> _expression_primary,
+	    JLang::owned<Expression> _expression_primary,
 	    JLang::owned<Terminal> _semicolon_token
 	    );                          
 	/**
@@ -1819,11 +1819,11 @@ namespace JLang::frontend::tree {
 	~EnumDefinitionValue();
 	const std::string & get_name() const;
 	const JLang::context::SourceReference & get_name_source_ref() const;
-	const ExpressionPrimary & get_expression() const;
+	const Expression & get_expression() const;
     private:
 	JLang::owned<Terminal> identifier_token;
 	JLang::owned<Terminal> equals_token;
-	JLang::owned<ExpressionPrimary> expression_primary;
+	JLang::owned<Expression> expression_primary;
 	JLang::owned<Terminal> semicolon_token;      
     };
     
@@ -1962,25 +1962,6 @@ namespace JLang::frontend::tree {
 	const JLang::context::SourceReference & get_value_source_ref() const;
     private:
 	JLang::owned<Terminal> literal_token;
-    };
-    
-    class ExpressionPrimary : public JLang::frontend::ast::SyntaxNode {
-    public:
-	typedef std::variant<JLang::owned<ExpressionPrimaryIdentifier>,
-			     JLang::owned<ExpressionPrimaryNested>,
-			     JLang::owned<ExpressionPrimaryLiteralChar>,
-			     JLang::owned<ExpressionPrimaryLiteralString>,
-			     JLang::owned<ExpressionPrimaryLiteralInt>,
-			     JLang::owned<ExpressionPrimaryLiteralFloat>
-			     > ExpressionType;
-	ExpressionPrimary(ExpressionPrimary::ExpressionType _expression_type, const SyntaxNode & _sn);
-	/**
-	 * Destructor, nothing special.
-	 */
-	~ExpressionPrimary();
-	const ExpressionPrimary::ExpressionType & get_expression() const;
-    private:
-	ExpressionPrimary::ExpressionType expression_type;
     };
     
     class ExpressionPostfixArrayIndex : public JLang::frontend::ast::SyntaxNode {
@@ -2287,7 +2268,13 @@ namespace JLang::frontend::tree {
     
     class Expression : public JLang::frontend::ast::SyntaxNode {
     public:
-	typedef std::variant<JLang::owned<ExpressionPrimary>,
+	typedef std::variant<
+			     JLang::owned<ExpressionPrimaryIdentifier>,
+			     JLang::owned<ExpressionPrimaryNested>,
+			     JLang::owned<ExpressionPrimaryLiteralChar>,
+			     JLang::owned<ExpressionPrimaryLiteralString>,
+			     JLang::owned<ExpressionPrimaryLiteralInt>,
+			     JLang::owned<ExpressionPrimaryLiteralFloat>,
 			     JLang::owned<ExpressionPostfixArrayIndex>,
 			     JLang::owned<ExpressionPostfixFunctionCall>,
 			     JLang::owned<ExpressionPostfixDot>,
@@ -2313,16 +2300,16 @@ namespace JLang::frontend::tree {
     public:
 	GlobalInitializerExpressionPrimary(
 	    JLang::owned<Terminal> _equals_token,
-	    JLang::owned<ExpressionPrimary> _expression
+	    JLang::owned<Expression> _expression
 	    );
 	/**
 	 * Destructor, nothing special.
 	 */
 	~GlobalInitializerExpressionPrimary();
-	const ExpressionPrimary & get_expression() const;
+	const Expression & get_expression() const;
     private:
 	JLang::owned<Terminal> equals_token;
-	JLang::owned<ExpressionPrimary> expression;
+	JLang::owned<Expression> expression;
 	
     };
     class GlobalInitializerAddressofExpressionPrimary : public JLang::frontend::ast::SyntaxNode {
@@ -2330,17 +2317,17 @@ namespace JLang::frontend::tree {
 	GlobalInitializerAddressofExpressionPrimary(
 	    JLang::owned<Terminal> _equals_token,
 	    JLang::owned<Terminal> _addressof_token,
-	    JLang::owned<ExpressionPrimary> _expression
+	    JLang::owned<Expression> _expression
 	    );
 	/**
 	 * Destructor, nothing special.
 	 */
 	~GlobalInitializerAddressofExpressionPrimary();
-	const ExpressionPrimary & get_expression() const;
+	const Expression & get_expression() const;
     private:
 	JLang::owned<Terminal> equals_token;
 	JLang::owned<Terminal> addressof_token;
-	JLang::owned<ExpressionPrimary> expression;
+	JLang::owned<Expression> expression;
     };
     
     class StructInitializer : public JLang::frontend::ast::SyntaxNode {
