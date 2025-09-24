@@ -13,7 +13,7 @@ TypeResolver::TypeResolver(
     JLang::mir::MIR & _mir)
     : compiler_context(_compiler_context)
     , translation_unit(_translation_unit)
-    , types(_mir.get_types())
+    , mir(_mir)
 {}
 TypeResolver::~TypeResolver()
 {}
@@ -30,13 +30,13 @@ void
 TypeResolver::extract_from_class_declaration(const ClassDeclaration & declaration)
 {
     JLang::owned<Type> type = std::make_unique<Type>(declaration.get_name(), Type::TYPE_COMPOSITE, false, declaration.get_name_source_ref());
-    types.define_type(std::move(type));
+    mir.get_types().define_type(std::move(type));
 }
 
 Type *
 TypeResolver::get_or_create(std::string pointer_name, Type *pointer_target, Type::TypeType type_type, const SourceReference & source_ref)
 {
-    Type *pointer_type = types.get_type(pointer_name);
+    Type *pointer_type = mir.get_types().get_type(pointer_name);
     if (pointer_type != nullptr) {
 	return pointer_type;
     }
@@ -44,7 +44,7 @@ TypeResolver::get_or_create(std::string pointer_name, Type *pointer_target, Type
 	JLang::owned<Type> pointer_type_created = std::make_unique<Type>(pointer_name, type_type, true, source_ref);
 	pointer_type_created->complete_pointer_definition(pointer_target, source_ref);
 	pointer_type = pointer_type_created.get();
-	types.define_type(std::move(pointer_type_created));
+	mir.get_types().define_type(std::move(pointer_type_created));
 	return pointer_type;
     }
 }
@@ -63,7 +63,7 @@ TypeResolver::extract_from_type_specifier(const TypeSpecifier & type_specifier)
 	    return nullptr;
 	}
 	std::string name = type_name.get_name();
-	Type *type = types.get_type(name);
+	Type *type = mir.get_types().get_type(name);
 	if (type == nullptr) {
 	    compiler_context
 		.get_errors()
@@ -171,14 +171,14 @@ TypeResolver::extract_from_class_members(Type & type, const ClassDefinition & de
 void
 TypeResolver::extract_from_class_definition(const ClassDefinition & definition)
 {
-    const auto it = types.get_types().find(definition.get_name());
+    const auto it = mir.get_types().get_types().find(definition.get_name());
     
-    if (it == types.get_types().end()) {
+    if (it == mir.get_types().get_types().end()) {
 	// Case 1: No forward declaration exists, fill in the definition
 	// from the class.
 	JLang::owned<Type> type = std::make_unique<Type>(definition.get_name(), Type::TYPE_COMPOSITE, true, definition.get_name_source_ref());
 	extract_from_class_members(*type, definition);
-	types.define_type(std::move(type));
+	mir.get_types().define_type(std::move(type));
     }
     else {
 	auto & type = *it->second;
@@ -207,11 +207,11 @@ TypeResolver::extract_from_class_definition(const ClassDefinition & definition)
 void
 TypeResolver::extract_from_enum(const EnumDefinition & enum_definition)
 {
-    const auto it = types.get_types().find(enum_definition.get_name());
-    if (it == types.get_types().end()) {
+    const auto it = mir.get_types().get_types().find(enum_definition.get_name());
+    if (it == mir.get_types().get_types().end()) {
 	// No definition exists, create it.
 	JLang::owned<Type> type = std::make_unique<Type>(enum_definition.get_name(), Type::TYPE_ENUM, true, enum_definition.get_name_source_ref());
-	types.define_type(std::move(type));
+	mir.get_types().define_type(std::move(type));
     }
     else {
 	// This is a duplicate, reference the original definition.
@@ -231,6 +231,60 @@ TypeResolver::extract_from_enum(const EnumDefinition & enum_definition)
     }
 }
 
+
+void
+TypeResolver::extract_from_function_specifications(
+    const Terminal & name,
+    const TypeSpecifier & type_specifier,
+    const FunctionDefinitionArgList & syntax_arguments
+    )
+{
+    std::string fully_qualified_function_name = 
+	name.get_fully_qualified_name() +
+	std::string("::") + 
+	name.get_value().c_str();
+    
+    Type *type = extract_from_type_specifier(type_specifier);
+    
+    std::vector<FunctionArgument> arguments;
+    const auto & function_argument_list = syntax_arguments;
+    const auto & function_definition_args = function_argument_list.get_arguments();
+    for (const auto & function_definition_arg : function_definition_args) {
+	std::string name = function_definition_arg->get_name();
+	JLang::mir::Type * mir_type = extract_from_type_specifier(function_definition_arg->get_type_specifier());
+	std::string type = mir_type->get_name();
+	
+	FunctionArgument arg(name, type);
+	arguments.push_back(arg);
+    }
+    JLang::owned<FunctionPrototype> prototype = std::make_unique<FunctionPrototype>(
+	fully_qualified_function_name,
+	type->get_name(),
+	arguments
+	);
+    mir.get_functions().add_prototype(std::move(prototype));
+}
+
+void
+TypeResolver::extract_from_function_definition(const FileStatementFunctionDefinition & function_definition)
+{
+    extract_from_function_specifications(
+	function_definition.get_name(),
+	function_definition.get_return_type(),
+	function_definition.get_arguments()
+	);
+}
+
+void
+TypeResolver::extract_from_function_declaration(const FileStatementFunctionDeclaration & function_declaration)
+{
+    extract_from_function_specifications(
+	function_declaration.get_name(),
+	function_declaration.get_return_type(),
+	function_declaration.get_arguments()
+	);
+}
+
 void
 TypeResolver::extract_from_namespace(const FileStatementNamespace & namespace_declaration)
 {
@@ -243,11 +297,11 @@ TypeResolver::extract_types(const std::vector<JLang::owned<FileStatement>> & sta
 {
     for (const auto & statement : statements) {
 	const auto & file_statement = statement->get_statement();
-	if (std::holds_alternative<JLang::owned<FileStatementFunctionDefinition>>(file_statement)) {
-	    // Nothing, no statements can be declared inside here.
+	if (std::holds_alternative<JLang::owned<FileStatementFunctionDeclaration>>(file_statement)) {
+	    extract_from_function_declaration(*std::get<JLang::owned<FileStatementFunctionDeclaration>>(file_statement));
 	}
 	else if (std::holds_alternative<JLang::owned<FileStatementFunctionDefinition>>(file_statement)) {
-	    // Nothing, no statements can be declared inside here.
+	    extract_from_function_definition(*std::get<JLang::owned<FileStatementFunctionDefinition>>(file_statement));
 	}
 	else if (std::holds_alternative<JLang::owned<FileStatementGlobalDefinition>>(file_statement)) {
 	    // Nothing, no statements can be declared inside here.

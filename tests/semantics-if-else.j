@@ -1,4 +1,15 @@
 
+u32 preamble_function_call();
+u32 nineteen();
+u32 nineteen_ish();
+u32 twenty_one_nofun();
+u32 a_a();
+u32 a_b();
+u32 bar();
+u32 printf_first();
+u32 printf_second(u8 *f);
+u32 unconditional_function_call();
+
 
 u32 main(u32 argc, u8 **argv)
 {

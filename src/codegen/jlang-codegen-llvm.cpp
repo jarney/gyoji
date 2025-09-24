@@ -50,20 +50,20 @@ CodeGeneratorLLVMContext::create_function(const Function & function)
 {
     // Make the function type:  double(double,double) etc.
     std::vector<llvm::Type *> llvm_arguments;
-    const std::vector<FunctionArgument> & function_arguments = function.get_arguments();
+    const std::vector<FunctionArgument> & function_arguments = function.get_prototype().get_arguments();
     
     for (const auto & semantic_arg : function_arguments) {
 	llvm::Type *atype = types[semantic_arg.get_type()];
 	llvm_arguments.push_back(atype);
     }
     
-    llvm::Type* return_value_type = types[function.get_return_type()];
+    llvm::Type* return_value_type = types[function.get_prototype().get_return_type()];
     
     llvm::FunctionType *FT =
 	llvm::FunctionType::get(return_value_type, llvm_arguments, false);
     
     llvm::Function *F =
-	llvm::Function::Create(FT, llvm::Function::ExternalLinkage, function.get_name(), TheModule.get());
+	llvm::Function::Create(FT, llvm::Function::ExternalLinkage, function.get_prototype().get_name(), TheModule.get());
     
     // Set names for all arguments.
     unsigned Idx = 0;
@@ -268,138 +268,138 @@ CodeGeneratorLLVMContext::create_types(const MIR & _mir)
 void
 CodeGeneratorLLVMContext::generate()
 {
-  create_types(mir);
-  
-  const Functions & functions = mir.get_functions();
-  for (auto const & function : functions.get_functions()) {
-    fprintf(stderr, "Generating for function %s\n", function->get_name().c_str());
-    generate_function(*function);
-  }
+    create_types(mir);
+    
+    const Functions & functions = mir.get_functions();
+    for (auto const & function : functions.get_functions()) {
+	fprintf(stderr, "Generating for function %s\n", function->get_prototype().get_name().c_str());
+	generate_function(*function);
+    }
 }
 
 void
 CodeGeneratorLLVMContext::generate_function(const JLang::mir::Function & function)
 {
-  // Transfer ownership of the prototype to the FunctionProtos map, but keep a
-  // reference to it for use below.
-  llvm::Function *TheFunction = create_function(function);
-  if (!TheFunction) {
-    fprintf(stderr, "Function declaration not found\n");
-  }
-
-  // Create a new basic block to start insertion into.
-  llvm::BasicBlock *BB = llvm::BasicBlock::Create(*TheContext, "entry", TheFunction);
-  Builder->SetInsertPoint(BB);
-
-  // Record the function arguments in the NamedValues map.
-  //NamedValues.clear();
-  for (auto &Arg : TheFunction->args()) {
-    // Create an alloca for this variable.
-    llvm::AllocaInst *Alloca = CreateEntryBlockAlloca(TheFunction, Arg.getName());
-
-    // Store the initial value into the alloca.
-    Builder->CreateStore(&Arg, Alloca);
-
-    // Add arguments to variable symbol table.
-    //NamedValues[std::string(Arg.getName())] = Alloca;
-  }
-
+    // Transfer ownership of the prototype to the FunctionProtos map, but keep a
+    // reference to it for use below.
+    llvm::Function *TheFunction = create_function(function);
+    if (!TheFunction) {
+	fprintf(stderr, "Function declaration not found\n");
+    }
+    
+    // Create a new basic block to start insertion into.
+    llvm::BasicBlock *BB = llvm::BasicBlock::Create(*TheContext, "entry", TheFunction);
+    Builder->SetInsertPoint(BB);
+    
+    // Record the function arguments in the NamedValues map.
+    //NamedValues.clear();
+    for (auto &Arg : TheFunction->args()) {
+	// Create an alloca for this variable.
+	llvm::AllocaInst *Alloca = CreateEntryBlockAlloca(TheFunction, Arg.getName());
+	
+	// Store the initial value into the alloca.
+	Builder->CreateStore(&Arg, Alloca);
+	
+	// Add arguments to variable symbol table.
+	//NamedValues[std::string(Arg.getName())] = Alloca;
+    }
+    
 #if 0
-  printf("Generating body\n");
-  if (Value *RetVal = Body->codegen()) {
-    printf("Generated body...\n");
-    // Finish off the function.
-    Builder->CreateRet(RetVal);
-
-    // Validate the generated code, checking for consistency.
-    verifyFunction(*TheFunction);
-  }
+    printf("Generating body\n");
+    if (Value *RetVal = Body->codegen()) {
+	printf("Generated body...\n");
+	// Finish off the function.
+	Builder->CreateRet(RetVal);
+	
+	// Validate the generated code, checking for consistency.
+	verifyFunction(*TheFunction);
+    }
 #else
-
-  //Value *block = codegen(*functiondef.scope_body);
-  
+    
+    //Value *block = codegen(*functiondef.scope_body);
+    
 #if 0
-  if (Value *RetVal = llvm::ConstantFP::get(*TheContext, llvm::APFloat(0.0))) {
-    printf("Generated body...\n");
-    // Finish off the function.
-    Builder->CreateRet(RetVal);
-  }
+    if (Value *RetVal = llvm::ConstantFP::get(*TheContext, llvm::APFloat(0.0))) {
+	printf("Generated body...\n");
+	// Finish off the function.
+	Builder->CreateRet(RetVal);
+    }
 #endif
-  //  if (!block) {
+    //  if (!block) {
     llvm::Type *return_value_type = llvm::Type::getDoubleTy(*TheContext);
     Builder->CreateRet(
-                       llvm::ConstantFP::get(*TheContext, llvm::APFloat(0.0))
-                       );
+	llvm::ConstantFP::get(*TheContext, llvm::APFloat(0.0))
+	);
     //  }
     //  else {
     //    Builder->CreateRet(block);
     //  }
-  
-  // Validate the generated code, checking for consistency.
-  verifyFunction(*TheFunction);
-
+    
+    // Validate the generated code, checking for consistency.
+    verifyFunction(*TheFunction);
+    
 #endif
-  
-  //  for (auto &Arg : TheFunction->args()) {
-  //    NamedValues.erase(std::string(Arg.getName()));
-  //  }
+    
+    //  for (auto &Arg : TheFunction->args()) {
+    //    NamedValues.erase(std::string(Arg.getName()));
+    //  }
 }
 
 
 int
 CodeGeneratorLLVMContext::output(const std::string & filename)
 {
-  using namespace llvm;
-  // Initialize the target registry etc.
-  InitializeAllTargetInfos();
-  InitializeAllTargets();
-  InitializeAllTargetMCs();
-  InitializeAllAsmParsers();
-  InitializeAllAsmPrinters();
-
-  auto TargetTriple = sys::getDefaultTargetTriple();
-  TheModule->setTargetTriple(TargetTriple);
-
-  std::string Error;
-  auto Target = TargetRegistry::lookupTarget(TargetTriple, Error);
-
-  // Print an error and exit if we couldn't find the requested target.
-  // This generally occurs if we've forgotten to initialise the
-  // TargetRegistry or we have a bogus target triple.
-  if (!Target) {
-    errs() << Error;
-    return 1;
-  }
-
-  auto CPU = "generic";
-  auto Features = "";
-
-  TargetOptions opt;
-  auto TheTargetMachine = Target->createTargetMachine(
-      TargetTriple, CPU, Features, opt, Reloc::PIC_);
-
-  TheModule->setDataLayout(TheTargetMachine->createDataLayout());
-
-  std::error_code EC;
-  raw_fd_ostream dest(filename, EC, sys::fs::OF_None);
-
-  if (EC) {
-    errs() << "Could not open file: " << EC.message();
-    return 1;
-  }
-
-  legacy::PassManager pass;
-  auto FileType = CodeGenFileType::ObjectFile;
-
-  if (TheTargetMachine->addPassesToEmitFile(pass, dest, nullptr, FileType)) {
-    errs() << "TheTargetMachine can't emit a file of this type";
-    return 1;
-  }
-
-  pass.run(*TheModule);
-  dest.flush();
-
-  outs() << "Wrote " << filename << "\n";
-
-  return 0;
+    using namespace llvm;
+    // Initialize the target registry etc.
+    InitializeAllTargetInfos();
+    InitializeAllTargets();
+    InitializeAllTargetMCs();
+    InitializeAllAsmParsers();
+    InitializeAllAsmPrinters();
+    
+    auto TargetTriple = sys::getDefaultTargetTriple();
+    TheModule->setTargetTriple(TargetTriple);
+    
+    std::string Error;
+    auto Target = TargetRegistry::lookupTarget(TargetTriple, Error);
+    
+    // Print an error and exit if we couldn't find the requested target.
+    // This generally occurs if we've forgotten to initialise the
+    // TargetRegistry or we have a bogus target triple.
+    if (!Target) {
+	errs() << Error;
+	return 1;
+    }
+    
+    auto CPU = "generic";
+    auto Features = "";
+    
+    TargetOptions opt;
+    auto TheTargetMachine = Target->createTargetMachine(
+	TargetTriple, CPU, Features, opt, Reloc::PIC_);
+    
+    TheModule->setDataLayout(TheTargetMachine->createDataLayout());
+    
+    std::error_code EC;
+    raw_fd_ostream dest(filename, EC, sys::fs::OF_None);
+    
+    if (EC) {
+	errs() << "Could not open file: " << EC.message();
+	return 1;
+    }
+    
+    legacy::PassManager pass;
+    auto FileType = CodeGenFileType::ObjectFile;
+    
+    if (TheTargetMachine->addPassesToEmitFile(pass, dest, nullptr, FileType)) {
+	errs() << "TheTargetMachine can't emit a file of this type";
+	return 1;
+    }
+    
+    pass.run(*TheModule);
+    dest.flush();
+    
+    outs() << "Wrote " << filename << "\n";
+    
+    return 0;
 }

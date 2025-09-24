@@ -35,7 +35,7 @@ namespace JLang::frontend {
 	// type, it may be referenced in a function.
 	JLang::mir::Type * extract_from_type_specifier(const JLang::frontend::tree::TypeSpecifier & type_specifier);
     private:
-	JLang::mir::Types & types;
+	JLang::mir::MIR & mir;
 	JLang::context::CompilerContext & compiler_context;
 	const JLang::frontend::tree::TranslationUnit & translation_unit;
 	
@@ -45,6 +45,15 @@ namespace JLang::frontend {
 	void extract_from_enum(const JLang::frontend::tree::EnumDefinition & enum_definition);
 	void extract_from_namespace(const JLang::frontend::tree::FileStatementNamespace & namespace_declaration);
 	void extract_types(const std::vector<JLang::owned<JLang::frontend::tree::FileStatement>> & statements);
+	
+	void extract_from_function_specifications(
+	    const JLang::frontend::tree::Terminal & name,
+	    const JLang::frontend::tree::TypeSpecifier & type_specifier,
+	    const JLang::frontend::tree::FunctionDefinitionArgList & arguments
+	    );
+	
+	void extract_from_function_definition(const JLang::frontend::tree::FileStatementFunctionDefinition & function_definition);
+	void extract_from_function_declaration(const JLang::frontend::tree::FileStatementFunctionDeclaration & function_declaration);
 	
 	JLang::mir::Type *get_or_create(
 	    std::string pointer_name,

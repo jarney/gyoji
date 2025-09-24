@@ -895,8 +895,7 @@ namespace JLang::frontend::tree {
 	/**
 	 * Specifies the name of the function.
 	 */
-	const std::string & get_name() const;
-	const JLang::context::SourceReference & get_name_source_ref() const;
+	const Terminal & get_name() const;
 	/**
 	 * Specifies the list of arguments with names
 	 * and types for the function.
@@ -1504,7 +1503,7 @@ namespace JLang::frontend::tree {
 	~FileStatementFunctionDefinition();
 	const AccessModifier & get_access_modifier() const;
 	const UnsafeModifier & get_unsafe_modifier() const;
-	const TypeSpecifier & get_type_specifier() const;
+	const TypeSpecifier & get_return_type() const;
 	const Terminal & get_name() const;
 	const FunctionDefinitionArgList & get_arguments() const;
 	const ScopeBody & get_scope_body() const;
@@ -1884,8 +1883,9 @@ namespace JLang::frontend::tree {
 	 * Destructor, nothing special.
 	 */
 	~ExpressionPrimaryIdentifier();
-	const std::string & get_identifier() const;
-	const JLang::context::SourceReference & get_identifier_source_ref() const;
+	const Terminal & get_identifier() const;
+	//const std::string & get_identifier() const;
+	//const JLang::context::SourceReference & get_identifier_source_ref() const;
     private:
 	JLang::owned<Terminal> identifier_token;
     };

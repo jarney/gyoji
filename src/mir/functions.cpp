@@ -13,6 +13,25 @@ Functions::Functions()
 Functions::~Functions()
 {}
 
+const FunctionPrototype *
+Functions::get_prototype(std::string mangled_name) const
+{
+    const auto & it = prototypes.find(mangled_name);
+    if (it == prototypes.end()) {
+	fprintf(stderr, "No function prototype found\n");
+	return nullptr;
+    }
+    return it->second.get();
+}
+
+void
+Functions::add_prototype(JLang::owned<FunctionPrototype> prototype)
+{
+    std::string mangled_name = prototype->get_mangled_name();
+    fprintf(stderr, "Adding prototype %s\n", mangled_name.c_str());
+    prototypes.insert(std::pair(mangled_name, std::move(prototype)));
+}
+
 void
 Functions::add_function(JLang::owned<Function> _function)
 {
@@ -27,31 +46,18 @@ Functions::get_functions() const
 // Function
 /////////////////////////////////////
 Function::Function(
-    std::string _name,
-    std::string _return_type,
-    std::vector<FunctionArgument> _arguments
+    const FunctionPrototype & _prototype
     )
-    : name(_name)
-    , return_type(_return_type)
-    , arguments(_arguments)
+    : prototype(_prototype)
     , blockid(0)
 {}
 
 Function::~Function()
 {}
 
-const std::string &
-Function::get_return_type() const
-{ return return_type; }
-
-const std::string &
-Function::get_name() const
-{ return name; }
-
-const std::vector<FunctionArgument> &
-
-Function::get_arguments() const
-{ return arguments; }
+const FunctionPrototype &
+Function::get_prototype() const
+{ return prototype; }
 
 const BasicBlock &
 Function::get_basic_block(size_t blockid) const
@@ -84,8 +90,8 @@ Function::push_block(size_t blockid)
 void
 Function::dump() const
 {
-    fprintf(stderr, "Function %s returns %s\n", name.c_str(), return_type.c_str());
-    for (const auto & arg : arguments) {
+    fprintf(stderr, "Function %s returns %s\n", prototype.get_name().c_str(), prototype.get_return_type().c_str());
+    for (const auto & arg : prototype.get_arguments()) {
 	fprintf(stderr, "    arg %s %s\n", arg.get_type().c_str(), arg.get_name().c_str());
     }
     for (const size_t & i : blocks_in_order) {
@@ -94,6 +100,38 @@ Function::dump() const
 	block.dump();
     }
 }
+/////////////////////////////////////
+// FunctionPrototype
+/////////////////////////////////////
+FunctionPrototype::FunctionPrototype(
+    std::string _name,
+    std::string _return_type,
+    std::vector<FunctionArgument> _arguments
+    )
+    : name(_name)
+    , return_type(_return_type)
+    , arguments(_arguments)
+{}
+
+FunctionPrototype::~FunctionPrototype()
+{}
+
+std::string
+FunctionPrototype::get_mangled_name() const
+{ return name; }
+
+const std::string &
+FunctionPrototype::get_return_type() const
+{ return return_type; }
+
+const std::string &
+FunctionPrototype::get_name() const
+{ return name; }
+
+const std::vector<FunctionArgument> &
+FunctionPrototype::get_arguments() const
+{ return arguments; }
+
 /////////////////////////////////////
 // FunctionArgument
 /////////////////////////////////////

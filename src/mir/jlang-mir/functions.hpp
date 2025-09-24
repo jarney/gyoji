@@ -11,11 +11,15 @@ namespace JLang::mir {
     class Function;
     class SimpleStatement;
     class BasicBlock;
+    class FunctionPrototype;
     
     class Functions {
     public:
 	Functions();
 	~Functions();
+
+	const FunctionPrototype * get_prototype(std::string mangled_name) const;
+	void add_prototype(JLang::owned<FunctionPrototype> prototype);
 	
 	/**
 	 * Adds a function to the MIR representation.
@@ -29,6 +33,8 @@ namespace JLang::mir {
 	
     private:
 	std::vector<JLang::owned<Function>> functions;
+	
+	std::map<std::string, JLang::owned<FunctionPrototype>> prototypes;
     };
     
     // A simple statement is a
@@ -76,26 +82,21 @@ namespace JLang::mir {
 	std::string name;
 	std::string type;
     };
-    
-    class Function {
+
+    class FunctionPrototype {
     public:
-	Function(
+	FunctionPrototype(
 	    std::string _name,
 	    std::string _type,
 	    std::vector<FunctionArgument> _arguments
 	    );
-	~Function();
-	
+	~FunctionPrototype();
+
+	std::string get_mangled_name() const;
 	const std::string & get_return_type() const;
 	const std::string & get_name() const;
 	const std::vector<FunctionArgument> & get_arguments() const;
 	
-	const BasicBlock & get_basic_block(size_t blockid) const;
-	BasicBlock & get_basic_block(size_t blockid);
-	size_t add_block();
-	void push_block(size_t blockid);
-	
-	void dump() const;
     private:
 	std::string name;
 	std::string return_type;
@@ -103,6 +104,24 @@ namespace JLang::mir {
 	// for the entire function and represent values
 	// provided by the caller.
 	std::vector<FunctionArgument> arguments;
+	
+    };
+    
+    class Function {
+    public:
+	Function(const FunctionPrototype & _prototype);
+	~Function();
+
+	const FunctionPrototype &get_prototype() const;
+	
+	const BasicBlock & get_basic_block(size_t blockid) const;
+	BasicBlock & get_basic_block(size_t blockid);
+	size_t add_block();
+	void push_block(size_t blockid);
+
+	void dump() const;
+    private:
+	const FunctionPrototype & prototype;
 	
 	// Holds the max blockid
 	// as we build them.

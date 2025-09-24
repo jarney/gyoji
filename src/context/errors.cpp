@@ -229,7 +229,7 @@ ErrorMessage::print()
 	    }
 	}
 	if (line == linepair.first) {
-	    draw_arrow(column+5);
+	    draw_arrow(column+6);
 	    if (column < 40) {
 		std::string wrapped = wrap_text(80-column, errormsg);
 		std::string indented = indent_text(column+5, wrapped);

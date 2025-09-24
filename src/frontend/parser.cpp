@@ -62,12 +62,14 @@ Parser::parse_to_mir(
 	// to the next stages
 	return mir;
     }
-    
+
+    // First, resolve all of the type definitions.
+    // Also at this stage, we resolve the function declarations
     TypeResolver type_resolver(_compiler_context,
 			       parse_result->get_translation_unit(),
 			       *mir);
     type_resolver.resolve();
-    
+
     FunctionResolver function_resolver(_compiler_context,
 				       parse_result->get_translation_unit(),
 				       *mir,

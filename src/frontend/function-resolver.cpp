@@ -55,10 +55,14 @@ FunctionResolver::extract_from_expression_primary_identifier(
     )
 {
     function.get_basic_block(current_block).add_statement(
-	std::string("identifier ") + expression.get_identifier()
+	std::string("identifier ") +
+	expression.get_identifier().get_fully_qualified_name() + "::" + 
+	expression.get_identifier().get_value()
 	);
     returned_value.type = ExpressionValue::TYPE_IDENTIFIER;
-    returned_value.value = expression.get_identifier();
+    returned_value.value =
+	expression.get_identifier().get_fully_qualified_name() + "::" + 
+	expression.get_identifier().get_value();
 }
 
 void
@@ -239,6 +243,22 @@ FunctionResolver::extract_from_expression_postfix_function_call(
     // and verify that the arguments are equal to
     // the signature we're looking for so we can verify if this
     // is a valid function call and formulate it correctly.
+
+    // Evaluate all of the expressions
+    // for the argument list.
+    // Then, evaluate the expression for the name of the function
+    // and finally gather the name and types for each
+    // of the arguments and build a FunctionPrototype object
+    // from it.  Use that FunctionPrototype to build
+    // the "mangled" name of the actual function to call.
+    //const ArgumentExpressionList & get_arguments() const;
+
+    std::vector<ExpressionValue> arg_types;
+    for (const auto & arg_expr : expression.get_arguments().get_arguments()) {
+	ExpressionValue arg_type;
+	extract_from_expression(function, current_block, arg_type, *arg_expr);
+	arg_types.push_back(arg_type);
+    }
     
     ExpressionValue function_id_value;
     extract_from_expression(
@@ -248,15 +268,30 @@ FunctionResolver::extract_from_expression_postfix_function_call(
 	expression.get_function()
 	);
 
+    // XXX should be from a mangled name, not just the raw name.
+    fprintf(stderr, "Looking up prototype %s\n", function_id_value.value.c_str());
+    const FunctionPrototype * prototype = mir.get_functions().get_prototype(function_id_value.value);
+    fprintf(stderr, "Found? %p\n", prototype);
+    if (prototype == nullptr) {
+	compiler_context
+	    .get_errors()
+	    .add_simple_error(
+		expression.get_function().get_source_ref(),
+		"Unknown function",
+		std::string("Function call ") + function_id_value.value + std::string(" could not be found")
+		);
+	return;
+    }
+    
     // XXX We should find the return value of the function
     // and report it here.  For now, we'll hard-code u32
     // because we don't have that yet.
     returned_value.type = ExpressionValue::TYPE_TYPE;
-    returned_value.value = "u32";
+    returned_value.value = prototype->get_return_type();
     
     function
 	.get_basic_block(current_block)
-	.add_statement(std::string("function-call"));
+	.add_statement(std::string("function-call ") + prototype->get_name());
 }
 
 void
@@ -358,27 +393,43 @@ FunctionResolver::extract_from_expression_binary(
     const ExpressionBinary & expression)
 {
     std::string op = "";
+    extract_from_expression(function, current_block, returned_value, expression.get_a());
+    extract_from_expression(function, current_block, returned_value, expression.get_b());
     switch (expression.get_operator()) {
     case ExpressionBinary::ADD:
 	op = "+";
+	returned_value.type = ExpressionValue::TYPE_TYPE;
+	returned_value.value = "u32";
 	break;
     case ExpressionBinary::SUBTRACT:
 	op = "-";
+	returned_value.type = ExpressionValue::TYPE_TYPE;
+	returned_value.value = "u32";
 	break;
     case ExpressionBinary::MULTIPLY:
 	op = "*";
+	returned_value.type = ExpressionValue::TYPE_TYPE;
+	returned_value.value = "u32";
 	break;
     case ExpressionBinary::DIVIDE:
 	op = "/";
+	returned_value.type = ExpressionValue::TYPE_TYPE;
+	returned_value.value = "u32";
 	break;
     case ExpressionBinary::MODULO:
 	op = "%";
+	returned_value.type = ExpressionValue::TYPE_TYPE;
+	returned_value.value = "u32";
 	break;
     case ExpressionBinary::LOGICAL_AND:
 	op = "&&";
+	returned_value.type = ExpressionValue::TYPE_TYPE;
+	returned_value.value = "bool";
 	break;
     case ExpressionBinary::LOGICAL_OR:
 	op = "||";
+	returned_value.type = ExpressionValue::TYPE_TYPE;
+	returned_value.value = "bool";
 	break;
 	
     case ExpressionBinary::BITWISE_AND:
@@ -399,21 +450,33 @@ FunctionResolver::extract_from_expression_binary(
 	
     case ExpressionBinary::COMPARE_LT:
 	op = "<";
+	returned_value.type = ExpressionValue::TYPE_TYPE;
+	returned_value.value = "bool";
 	break;
     case ExpressionBinary::COMPARE_GT:
 	op = ">";
+	returned_value.type = ExpressionValue::TYPE_TYPE;
+	returned_value.value = "bool";
 	break;
     case ExpressionBinary::COMPARE_LE:
 	op = "<=";
+	returned_value.type = ExpressionValue::TYPE_TYPE;
+	returned_value.value = "bool";
 	break;
     case ExpressionBinary::COMPARE_GE:
 	op = ">=";
+	returned_value.type = ExpressionValue::TYPE_TYPE;
+	returned_value.value = "bool";
 	break;
     case ExpressionBinary::COMPARE_EQ:
 	op = "==";
+	returned_value.type = ExpressionValue::TYPE_TYPE;
+	returned_value.value = "bool";
 	break;
     case ExpressionBinary::COMPARE_NE:
 	op = "!=";
+	returned_value.type = ExpressionValue::TYPE_TYPE;
+	returned_value.value = "bool";
 	break;
 	
     case ExpressionBinary::EQUALS:
@@ -454,8 +517,6 @@ FunctionResolver::extract_from_expression_binary(
 	exit(1);
 	break;
     }
-    extract_from_expression(function, current_block, returned_value, expression.get_a());
-    extract_from_expression(function, current_block, returned_value, expression.get_b());
     
     function
 	.get_basic_block(current_block)
@@ -558,7 +619,7 @@ FunctionResolver::extract_from_statement_ifelse(
 	    .add_simple_error(
 		statement.get_expression().get_source_ref(),
 		"Invalid condition in if statement.",
-		std::string("Type of condition expression should be 'bool'")
+		std::string("Type of condition expression should be 'bool' and was ") + condition_value.value
 		);
 	
     }
@@ -677,108 +738,122 @@ FunctionResolver::extract_from_statement_list(
 void
 FunctionResolver::extract_from_function_definition(const FileStatementFunctionDefinition & function_definition)
 {
-  fprintf(stderr, "Extracting function %s %s\n",
-          function_definition.get_name().get_fully_qualified_name().c_str(),
-          function_definition.get_name().get_value().c_str());
-  
-  std::string fully_qualified_function_name = 
-    function_definition.get_name().get_fully_qualified_name() +
-    std::string("::") + 
-    function_definition.get_name().get_value().c_str();
-  
-  const TypeSpecifier & type_specifier = function_definition.get_type_specifier();
-  Type *type = type_resolver.extract_from_type_specifier(type_specifier);
-
-  if (type == nullptr) {
-    fprintf(stderr, "Could not find return type\n");
-    return;
-
-  }
-
-  std::vector<FunctionArgument> arguments;
-  const auto & function_argument_list = function_definition.get_arguments();
-  const auto & function_definition_args = function_argument_list.get_arguments();
-  for (const auto & function_definition_arg : function_definition_args) {
-    std::string name = function_definition_arg->get_name();
-    JLang::mir::Type * mir_type = type_resolver.extract_from_type_specifier(function_definition_arg->get_type_specifier());
-    std::string type = mir_type->get_name();
-
-    FunctionArgument arg(name, type);
-    arguments.push_back(arg);
-  }
-  
-  JLang::owned<Function> fn = std::make_unique<Function>(
-                                                         fully_qualified_function_name,
-                                                         type->get_name(),
-                                                         arguments);
-
-  // Create a new basic block for the start
-  
-  fprintf(stderr, "START BBlocks\n");
-  fprintf(stderr, "BB0:\n");
-  size_t start_block = fn->add_block();
+    fprintf(stderr, "Extracting function %s %s\n",
+	    function_definition.get_name().get_fully_qualified_name().c_str(),
+	    function_definition.get_name().get_value().c_str());
     
-  extract_from_statement_list(*fn, start_block, function_definition.get_scope_body().get_statements());
-
-  fn->push_block(start_block);
-
-  // Debug dump basic blocks.
-  fn->dump();
-  
-  mir.get_functions().add_function(std::move(fn));
-  
+    std::string fully_qualified_function_name = 
+	function_definition.get_name().get_fully_qualified_name() +
+	std::string("::") + 
+	function_definition.get_name().get_value().c_str();
+    
+    const TypeSpecifier & type_specifier = function_definition.get_return_type();
+    Type *type = type_resolver.extract_from_type_specifier(type_specifier);
+    
+    if (type == nullptr) {
+	fprintf(stderr, "Could not find return type\n");
+	return;
+	
+    }
+    
+    std::vector<FunctionArgument> arguments;
+    const auto & function_argument_list = function_definition.get_arguments();
+    const auto & function_definition_args = function_argument_list.get_arguments();
+    for (const auto & function_definition_arg : function_definition_args) {
+	std::string name = function_definition_arg->get_name();
+	JLang::mir::Type * mir_type = type_resolver.extract_from_type_specifier(function_definition_arg->get_type_specifier());
+	std::string type = mir_type->get_name();
+	
+	FunctionArgument arg(name, type);
+	arguments.push_back(arg);
+    }
+    FunctionPrototype prototype_lookup(
+	fully_qualified_function_name,
+	type->get_name(),
+	arguments
+	);
+    const FunctionPrototype * prototype = mir.get_functions().get_prototype(prototype_lookup.get_mangled_name());
+    fprintf(stderr, "Found? %p\n", prototype);
+    if (prototype == nullptr) {
+	compiler_context
+	    .get_errors()
+	    .add_simple_error(
+		function_definition.get_source_ref(),
+		"Unknown function",
+		std::string("Function call ") + prototype_lookup.get_mangled_name() + std::string(" could not be found")
+		);
+	return;
+    }
+    
+    JLang::owned<Function> fn = std::make_unique<Function>(*prototype);
+    
+    // Create a new basic block for the start
+    
+    fprintf(stderr, "START BBlocks\n");
+    fprintf(stderr, "BB0:\n");
+    size_t start_block = fn->add_block();
+    
+    extract_from_statement_list(*fn, start_block, function_definition.get_scope_body().get_statements());
+    
+    fn->push_block(start_block);
+    
+    // Debug dump basic blocks.
+    fn->dump();
+    
+    mir.get_functions().add_function(std::move(fn));
+    
 }
 void
 FunctionResolver::extract_from_class_definition(const ClassDefinition & definition)
 {
-  //fprintf(stderr, "Extracting from class definition, constructors and destructors which are special-case functions.\n");
-  // These must be linked back to their corresponding type definitions
-  // so that we can generate their code.
+    //fprintf(stderr, "Extracting from class definition, constructors and destructors which are special-case functions.\n");
+    // These must be linked back to their corresponding type definitions
+    // so that we can generate their code.
 }
 
 void
 FunctionResolver::extract_types(const std::vector<JLang::owned<FileStatement>> & statements)
 {
-  for (const auto & statement : statements) {
-    const auto & file_statement = statement->get_statement();
-    if (std::holds_alternative<JLang::owned<FileStatementFunctionDeclaration>>(file_statement)) {
-      // Nothing, no functions can exist here.
+    for (const auto & statement : statements) {
+	const auto & file_statement = statement->get_statement();
+	if (std::holds_alternative<JLang::owned<FileStatementFunctionDeclaration>>(file_statement)) {
+	    // Nothing, no functions can exist here.
+	}
+	else if (std::holds_alternative<JLang::owned<FileStatementFunctionDefinition>>(file_statement)) {
+	    // This is the only place that functions can be extracted from.
+	    extract_from_function_definition(*std::get<JLang::owned<FileStatementFunctionDefinition>>(file_statement));
+	}
+	else if (std::holds_alternative<JLang::owned<FileStatementGlobalDefinition>>(file_statement)) {
+	    // Nothing, no functions can exist here.
+	}
+	else if (std::holds_alternative<JLang::owned<ClassDeclaration>>(file_statement)) {
+	    // Nothing, no functions can exist here.
+	}
+	else if (std::holds_alternative<JLang::owned<ClassDefinition>>(file_statement)) {
+	    // Constructors, Destructors, and methods are special cases.
+	    extract_from_class_definition(*std::get<JLang::owned<ClassDefinition>>(file_statement));
+	}
+	else if (std::holds_alternative<JLang::owned<EnumDefinition>>(file_statement)) {
+	    // Nothing, no functions can exist here.
+	}
+	else if (std::holds_alternative<JLang::owned<TypeDefinition>>(file_statement)) {
+	    // Nothing, no functions can exist here.
+	}
+	else if (std::holds_alternative<JLang::owned<FileStatementNamespace>>(file_statement)) {
+	    extract_from_namespace(*std::get<JLang::owned<FileStatementNamespace>>(file_statement));
+	}
+	else if (std::holds_alternative<JLang::owned<FileStatementUsing>>(file_statement)) {
+	    // Nothing, no functions can exist here.
+	}
+	else {
+	    compiler_context
+		.get_errors()
+		.add_simple_error(statement->get_source_ref(),
+				  "Compiler bug!  Please report this message",
+				  "Unknown statement type in variant, extracting statements from file (compiler bug)"
+		    );
+	}
     }
-    else if (std::holds_alternative<JLang::owned<FileStatementFunctionDefinition>>(file_statement)) {
-      // This is the only place that functions can be extracted from.
-      extract_from_function_definition(*std::get<JLang::owned<FileStatementFunctionDefinition>>(file_statement));
-    }
-    else if (std::holds_alternative<JLang::owned<FileStatementGlobalDefinition>>(file_statement)) {
-      // Nothing, no functions can exist here.
-    }
-    else if (std::holds_alternative<JLang::owned<ClassDeclaration>>(file_statement)) {
-      // Nothing, no functions can exist here.
-    }
-    else if (std::holds_alternative<JLang::owned<ClassDefinition>>(file_statement)) {
-      // Constructors, Destructors, and methods are special cases.
-      extract_from_class_definition(*std::get<JLang::owned<ClassDefinition>>(file_statement));
-    }
-    else if (std::holds_alternative<JLang::owned<EnumDefinition>>(file_statement)) {
-      // Nothing, no functions can exist here.
-    }
-    else if (std::holds_alternative<JLang::owned<TypeDefinition>>(file_statement)) {
-      // Nothing, no functions can exist here.
-    }
-    else if (std::holds_alternative<JLang::owned<FileStatementNamespace>>(file_statement)) {
-      extract_from_namespace(*std::get<JLang::owned<FileStatementNamespace>>(file_statement));
-    }
-    else if (std::holds_alternative<JLang::owned<FileStatementUsing>>(file_statement)) {
-      // Nothing, no functions can exist here.
-    }
-    else {
-      compiler_context
-        .get_errors()
-        .add_simple_error(statement->get_source_ref(),
-                          "Compiler bug!  Please report this message",
-                          "Unknown statement type in variant, extracting statements from file (compiler bug)"
-                          );
-    }
-  }
 }
 
 

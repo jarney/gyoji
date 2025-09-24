@@ -449,13 +449,9 @@ FileStatementFunctionDeclaration::get_unsafe_modifier() const
 const TypeSpecifier &
 FileStatementFunctionDeclaration::get_return_type() const
 { return *type_specifier; }
-const std::string &
+const Terminal &
 FileStatementFunctionDeclaration::get_name() const
-{ return name->get_value(); }
-const SourceReference &
-FileStatementFunctionDeclaration::get_name_source_ref() const
-{ return name->get_source_ref(); }
-
+{ return *name; }
 const FunctionDefinitionArgList &
 FileStatementFunctionDeclaration::get_arguments() const
 { return *arguments; }
@@ -999,7 +995,7 @@ FileStatementFunctionDefinition::get_unsafe_modifier() const
     return *unsafe_modifier;
 }
 const TypeSpecifier &
-FileStatementFunctionDefinition::get_type_specifier() const
+FileStatementFunctionDefinition::get_return_type() const
 {
     return *type_specifier;
 }
@@ -1544,9 +1540,9 @@ ExpressionPrimaryIdentifier::ExpressionPrimaryIdentifier(JLang::owned<Terminal> 
 }
 ExpressionPrimaryIdentifier::~ExpressionPrimaryIdentifier()
 {}
-const std::string &
+const Terminal &
 ExpressionPrimaryIdentifier::get_identifier() const
-{ return identifier_token->get_value(); }
+{ return *identifier_token; }
 ///////////////////////////////////////////////////
 ExpressionPrimaryNested::ExpressionPrimaryNested(
     JLang::owned<Terminal> _paren_l_token,

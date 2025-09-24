@@ -10,6 +10,12 @@
   
   * Basic MIR lowering for functions/expressions.
 
+* Size of "tree.o"
+  Investigate why the libjlang-frontend.a is so damn big.
+  It mostly seems to be "tree.o" which isn't too surprising since
+  it's really the biggest cpp file, but it doesn't seem complicated
+  so it's a bit of a surprise why the code generated is so big.
+
 * Add GCOV support:
   Try to make gcov optional so that we don't have
   to add a required dependency to the README.md
