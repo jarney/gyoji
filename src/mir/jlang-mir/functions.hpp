@@ -93,6 +93,7 @@ namespace JLang::mir {
 	const BasicBlock & get_basic_block(size_t blockid) const;
 	BasicBlock & get_basic_block(size_t blockid);
 	size_t add_block();
+	void push_block(size_t blockid);
 	
 	void dump() const;
     private:
@@ -112,6 +113,7 @@ namespace JLang::mir {
 	// Each basic block (key of map)
 	// has an edge that it connects to, forming a directed
 	// graph.
-	std::map<size_t, std::vector<size_t>> edges;  
+	std::map<size_t, std::vector<size_t>> edges;
+	std::vector<size_t> blocks_in_order;
     };
 };

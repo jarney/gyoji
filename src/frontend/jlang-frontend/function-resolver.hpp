@@ -6,6 +6,21 @@
 namespace JLang::frontend {
     class TypeResolver;
     
+    class ExpressionValue {
+    public:
+	typedef enum {
+	    TYPE_LITERAL,
+	    TYPE_CHAR_LITERAL,
+	    TYPE_STRING_LITERAL,
+	    TYPE_INT_LITERAL,
+	    TYPE_FLOAT_LITERAL,
+	    TYPE_IDENTIFIER,
+	    TYPE_TYPE
+	} ExpressionValueType;
+	ExpressionValueType type;
+	std::string value;
+    };
+
     //! Function Resolver.
     /**
      * This is the 'lowering' process for functions.
@@ -34,92 +49,116 @@ namespace JLang::frontend {
 	void extract_from_expression_primary_identifier(
 	    JLang::mir::Function & function,
 	    size_t & current_block,
+	    ExpressionValue & value,
 	    const JLang::frontend::tree::ExpressionPrimaryIdentifier & expression);
 	
 	void extract_from_expression_primary_nested(
 	    JLang::mir::Function & function,
 	    size_t & current_block,
+	    ExpressionValue & value,
 	    const JLang::frontend::tree::ExpressionPrimaryNested & expression);
 	
 	void extract_from_expression_primary_literal_char(
 	    JLang::mir::Function & function,
 	    size_t & current_block,
+	    ExpressionValue & value,
 	    const JLang::frontend::tree::ExpressionPrimaryLiteralChar & expression);
 	
 	void extract_from_expression_primary_literal_string(
 	    JLang::mir::Function & function,
 	    size_t & current_block,
+	    ExpressionValue & value,
 	    const JLang::frontend::tree::ExpressionPrimaryLiteralString & expression);
 	
 	void extract_from_expression_primary_literal_int(
 	    JLang::mir::Function & function,
 	    size_t & current_block,
+	    ExpressionValue & value,
 	    const JLang::frontend::tree::ExpressionPrimaryLiteralInt & expression);
 	
 	void extract_from_expression_primary_literal_float(
 	    JLang::mir::Function & function,
 	    size_t & current_block,
+	    ExpressionValue & value,
 	    const JLang::frontend::tree::ExpressionPrimaryLiteralFloat & expression);
 	
 	void extract_from_expression_primary(
 	    JLang::mir::Function & function,
 	    size_t & current_block,
+	    ExpressionValue & value,
 	    const JLang::frontend::tree::ExpressionPrimary & expression);
 	
 	void extract_from_expression_postfix_array_index(
 	    JLang::mir::Function & function,
 	    size_t & current_block,
+	    ExpressionValue & value,
 	    const JLang::frontend::tree::ExpressionPostfixArrayIndex & expression);
 	
 	void extract_from_expression_postfix_function_call(
 	    JLang::mir::Function & function,
 	    size_t & current_block,
+	    ExpressionValue & value,
 	    const JLang::frontend::tree::ExpressionPostfixFunctionCall & expression);
 	
 	void extract_from_expression_postfix_dot(
 	    JLang::mir::Function & function,
 	    size_t & current_block,
+	    ExpressionValue & value,
 	    const JLang::frontend::tree::ExpressionPostfixDot & expression);
 	
 	void extract_from_expression_postfix_arrow(
 	    JLang::mir::Function & function,
 	    size_t & current_block,
+	    ExpressionValue & value,
 	    const JLang::frontend::tree::ExpressionPostfixArrow & expression);
 	
 	void extract_from_expression_postfix_incdec(
 	    JLang::mir::Function & function,
 	    size_t & current_block,
+	    ExpressionValue & value,
 	    const JLang::frontend::tree::ExpressionPostfixIncDec & expression);
 	
 	void extract_from_expression_unary_prefix(
 	    JLang::mir::Function & function,
 	    size_t & current_block,
+	    ExpressionValue & value,
 	    const JLang::frontend::tree::ExpressionUnaryPrefix & expression);
 	
 	void extract_from_expression_unary_sizeof_type(
 	    JLang::mir::Function & function,
 	    size_t & current_block,
+	    ExpressionValue & value,
 	    const JLang::frontend::tree::ExpressionUnarySizeofType & expression);
 	
 	void extract_from_expression_binary(
 	    JLang::mir::Function & function,
 	    size_t & current_block,
+	    ExpressionValue & value,
 	    const JLang::frontend::tree::ExpressionBinary & expression);
 	
 	void extract_from_expression_trinary(
 	    JLang::mir::Function & function,
 	    size_t & current_block,
+	    ExpressionValue & value,
 	    const JLang::frontend::tree::ExpressionTrinary & expression);
 	
 	void extract_from_expression_cast(
 	    JLang::mir::Function & function,
 	    size_t & current_block,
+	    ExpressionValue & value,
 	    const JLang::frontend::tree::ExpressionCast & expression);
 	
 	void extract_from_expression(
 	    JLang::mir::Function & function,
 	    size_t & current_block,
+	    ExpressionValue & value,
 	    const JLang::frontend::tree::Expression & expression
+	    );
+	
+	void extract_from_statement_ifelse(
+	    JLang::mir::Function & function,
+	    size_t & current_block,
+	    const JLang::frontend::tree::StatementIfElse & statement
 	    );
 	
 	void extract_from_statement_list(

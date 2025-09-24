@@ -30,6 +30,7 @@ Types::Types()
     define_type(std::make_unique<Type>("f32", Type::TYPE_PRIMITIVE, true, builtin_source_ref));
     define_type(std::make_unique<Type>("f64", Type::TYPE_PRIMITIVE, true, builtin_source_ref));
     
+    define_type(std::make_unique<Type>("bool", Type::TYPE_PRIMITIVE, true, builtin_source_ref));
     define_type(std::make_unique<Type>("void", Type::TYPE_PRIMITIVE, true, builtin_source_ref));
 }
 

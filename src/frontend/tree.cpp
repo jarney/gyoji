@@ -635,7 +635,9 @@ StatementIfElse::get_if_scope_body() const
 const ScopeBody &
 StatementIfElse::get_else_scope_body() const
 { return *else_scope_body; }
-
+const StatementIfElse &
+StatementIfElse::get_else_if() const
+{ return *else_if;}
 ///////////////////////////////////////////////////
 StatementWhile::StatementWhile(
     JLang::owned<Terminal> _while_token,

@@ -108,6 +108,7 @@ NamespaceContext::NamespaceContext()
     namespace_new("f64", Namespace::TYPE_TYPEDEF, Namespace::VISIBILITY_PUBLIC);
     
     namespace_new("void", Namespace::TYPE_TYPEDEF, Namespace::VISIBILITY_PUBLIC);
+    namespace_new("bool", Namespace::TYPE_TYPEDEF, Namespace::VISIBILITY_PUBLIC);
 }
 
 NamespaceContext::~NamespaceContext()

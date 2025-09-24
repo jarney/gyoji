@@ -34,6 +34,7 @@ Function::Function(
     : name(_name)
     , return_type(_return_type)
     , arguments(_arguments)
+    , blockid(0)
 {}
 
 Function::~Function()
@@ -73,6 +74,12 @@ Function::add_block()
     blockid++;
     return blockid_created;
 }
+void
+Function::push_block(size_t blockid)
+{
+    fprintf(stderr, "Pushing block %ld\n", blockid);
+    blocks_in_order.push_back(blockid);
+}
 
 void
 Function::dump() const
@@ -81,7 +88,7 @@ Function::dump() const
     for (const auto & arg : arguments) {
 	fprintf(stderr, "    arg %s %s\n", arg.get_type().c_str(), arg.get_name().c_str());
     }
-    for (size_t i = 0; i < blockid; i++) {
+    for (const size_t & i : blocks_in_order) {
 	fprintf(stderr, "BB%ld:\n", i);
 	const BasicBlock & block = get_basic_block(i);
 	block.dump();

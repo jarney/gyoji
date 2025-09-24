@@ -1162,11 +1162,13 @@ namespace JLang::frontend::tree {
 	 * happens during execution.
 	 */
 	const Expression & get_expression() const;
+
 	/**
 	 * This represents the scope body to execute
 	 * when the expression evaluates to true.
 	 */
 	const ScopeBody & get_if_scope_body() const;
+
 	/**
 	 * If ths statement is an 'else if' block, this
 	 * represents the 'next' if block to execute in

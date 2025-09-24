@@ -193,6 +193,10 @@ CodeGeneratorLLVMContext::create_type_primitive(const Type *primitive)
     else if (primitive->get_name() == "void") {
 	llvm_type = llvm::Type::getVoidTy(*TheContext);
     }
+    else if (primitive->get_name() == "bool") {
+	// Bool is just a u32 under the covers.
+	llvm_type = llvm::Type::getInt32Ty(*TheContext);
+    }
     // Other (unknown, this must be a bug)
     else {
 	fprintf(stderr, "Compiler BUG!  Unknown primitive type passed to code generator\n");
