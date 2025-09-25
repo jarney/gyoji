@@ -22,6 +22,10 @@ add_executable(jformat-tree jformat-tree-main.cpp jformat-tree.cpp)
 target_include_directories(jformat-tree PUBLIC ${CMDLINE_INCLUDE_DIRECTORIES})
 target_link_libraries(jformat-tree PUBLIC ${CMDLINE_LINK_LIBRARIES})
 
+add_executable(jns jnamespaces-main.cpp)
+target_include_directories(jns PUBLIC ${CMDLINE_INCLUDE_DIRECTORIES})
+target_link_libraries(jns PUBLIC ${CMDLINE_LINK_LIBRARIES})
+
 add_executable(jcc jcc.cpp)
 target_include_directories(jcc PUBLIC ${CMDLINE_INCLUDE_DIRECTORIES})
 target_link_libraries(jcc PUBLIC ${CMDLINE_LINK_LIBRARIES})

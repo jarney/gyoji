@@ -141,7 +141,7 @@ void NamespaceContext::namespace_pop()
 void NamespaceContext::namespace_using(std::string name, Namespace* alias)
 {
     Namespace* current = stack.back();
-    current->aliases[name] = alias;
+    current->aliases.push_back(std::pair(name, alias));
 }
 
 Namespace* NamespaceContext::namespace_lookup_qualified(std::vector<std::string> name_qualified, Namespace* root)
@@ -210,6 +210,42 @@ NamespaceContext::namespace_lookup_visibility(std::string search_context, Namesp
     // Not found because visibility type is unknown
     return std::make_shared<NamespaceFoundReason>(NamespaceFoundReason::REASON_NOT_FOUND);
 }
+
+std::vector<std::string>
+NamespaceContext::namespace_search_path(std::string name)
+{
+    std::vector<std::string> path;
+
+    // TODO: If it starts with ::,
+    // Force resolution only from root.
+
+    // Look in our "stack" of namespaces in that order.
+    for (auto it = stack.rbegin(); it != stack.rend(); ++it) {
+	Namespace* current = *it;
+	path.push_back(join_nonempty(current->fully_qualified(), name, "::"));
+    }
+    
+    // Look in any namespaces that we are 'using'
+    for (const auto & alias_ns_it : current()->aliases) {
+	if (alias_ns_it.first.size() == 0) {
+	    path.push_back(join_nonempty(alias_ns_it.second->fully_qualified(), name, "::"));
+	}
+	else {
+	    std::string name_aliased = string_replace_start(
+		name,
+		alias_ns_it.first + std::string("::"),
+		alias_ns_it.second->fully_qualified() + std::string("::")
+		);
+	    path.push_back(name_aliased);
+	}
+    }
+    
+    for (const auto & p : path) {
+	fprintf(stderr, "Search path is %s\n", p.c_str());
+    }
+    return path;
+}
+
 
 NamespaceFoundReason::ptr NamespaceContext::namespace_lookup(std::string name)
 {
@@ -297,18 +333,38 @@ static void print_indent(void)
 void NamespaceContext::namespace_dump_node(Namespace* parent) const
 {
     print_indent();
-    printf("<namespace name='%s' vis='%d'>\n", parent->name.c_str(), parent->visibility);
-    indent++;
-    for (const auto & ns : parent->children) {
-	namespace_dump_node(ns.second.get());
+    std::string type;
+    switch (parent->get_type()) {
+    case Namespace::TYPE_NAMESPACE:
+	type = "namespace";
+	break;
+    case Namespace::TYPE_TYPEDEF:
+	type = "typedef";
+	break;
+    case Namespace::TYPE_CLASS:
+	type = "class";
+	break;
+    default:
+	printf("!Compiler bug.  Unknown namespace type %d\n", parent->get_type());
+	exit(1);
     }
-    for (auto alias : parent->aliases) {
+    if (parent->children.size() == 0 && parent->aliases.size() == 0) {
+	printf("<namespace name='%s' type='%s' vis='%d' />\n", parent->name.c_str(), type.c_str(), parent->visibility);
+    }
+    else {
+	printf("<namespace name='%s' type='%s' vis='%d'>\n", parent->name.c_str(), type.c_str(), parent->visibility);
+	indent++;
+	for (const auto & ns : parent->children) {
+	    namespace_dump_node(ns.second.get());
+	}
+	for (auto alias : parent->aliases) {
+	    print_indent();
+	    printf("<using ns='%s' as='%s'/>\n", alias.second->name.c_str(), alias.first.c_str());
+	}
+	indent--;
 	print_indent();
-	printf("<using ns='%s' as='%s'/>\n", alias.second->name.c_str(), alias.first.c_str());
+	printf("</namespace>\n");
     }
-    indent--;
-    print_indent();
-    printf("</namespace>\n");
 }
 
 void NamespaceContext::namespace_dump() const

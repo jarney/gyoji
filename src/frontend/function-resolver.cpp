@@ -844,9 +844,7 @@ FunctionResolver::extract_from_function_definition(const FileStatementFunctionDe
 	    function_definition.get_name().get_value().c_str());
     
     std::string fully_qualified_function_name = 
-	function_definition.get_name().get_fully_qualified_name() +
-	std::string("::") + 
-	function_definition.get_name().get_value().c_str();
+	function_definition.get_name().get_fully_qualified_name();
     
     const TypeSpecifier & type_specifier = function_definition.get_return_type();
     Type *type = type_resolver.extract_from_type_specifier(type_specifier);

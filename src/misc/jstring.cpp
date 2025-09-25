@@ -23,6 +23,51 @@ std::vector<std::string> JLang::misc::string_split(const std::string &str, const
     return ret;
 }
 
+std::string
+JLang::misc::join_nonempty(const std::string &a, const std::string & b, const std::string delimiter)
+{
+    std::string ret;
+    if (a.size() == 0) {
+	return b;
+    }
+    else {
+	return a + delimiter + b;
+    }
+}
+
+std::string JLang::misc::join_nonempty(const std::vector<std::string> & list, std::string delimiter)
+{
+    std::string ret;
+
+    bool first = true;
+    for (const auto & s : list) {
+	if (s.size() == 0) continue;
+	if (!first) {
+	    ret = ret + delimiter;
+	}
+	first = false;
+	ret = ret + s;
+    }
+    
+    return ret;
+}
+
+std::string JLang::misc::join(const std::vector<std::string> & list, std::string delimiter)
+{
+    std::string ret;
+
+    bool first = true;
+    for (const auto & s : list) {
+	if (!first) {
+	    ret = ret + delimiter;
+	}
+	first = false;
+	ret = ret + s;
+    }
+    
+    return ret;
+}
+
 std::string JLang::misc::string_remove_nonidentifier(const std::string & str)
 {
     std::string newStr;

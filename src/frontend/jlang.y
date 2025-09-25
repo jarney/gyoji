@@ -563,6 +563,18 @@ namespace_declaration
                 return_data.namespace_context->namespace_push(namespace_name);
                 PRINT_NONTERMINALS($$);
         }
+        | opt_access_modifier NAMESPACE NAMESPACE_NAME {
+                JLang::frontend::tree::AccessModifier::AccessModifierType access_modifier = $1->get_type();
+                std::string namespace_name = $3->get_value();
+                $$ = std::make_unique<JLang::frontend::tree::NamespaceDeclaration>(
+                                                                                      std::move($1),
+                                                                                      std::move($2),
+                                                                                      std::move($3)
+                                                                                      );
+                return_data.namespace_context->namespace_new(namespace_name, Namespace::TYPE_NAMESPACE, visibility_from_modifier(access_modifier));
+                return_data.namespace_context->namespace_push(namespace_name);
+                PRINT_NONTERMINALS($$);
+        }
         ;
 
 file_statement_namespace
@@ -818,6 +830,11 @@ opt_unsafe
 
 file_statement_function_declaration
         : opt_access_modifier opt_unsafe type_specifier IDENTIFIER PAREN_L opt_function_definition_arg_list PAREN_R SEMICOLON {
+//		$4->set_fully_qualified_name($4->get_value() + std::string("adding something here(decl)"));
+	        std::string function_name = $4->get_value();
+		const Symbol *sym = return_data.symbol_get_or_create(function_name);
+		$4->set_fully_qualified_name(sym->name);
+		return_data.symbol_table_dump();
                 $$ = std::make_unique<JLang::frontend::tree::FileStatementFunctionDeclaration>(
                                                                                                  std::move($1),
                                                                                                  std::move($2),
@@ -834,6 +851,11 @@ file_statement_function_declaration
 
 file_statement_function_definition
         : opt_access_modifier opt_unsafe type_specifier IDENTIFIER PAREN_L opt_function_definition_arg_list PAREN_R scope_body {
+	        std::string function_name = $4->get_value();
+		const Symbol *sym = return_data.symbol_get_or_create(function_name);
+		return_data.symbol_table_dump();
+		$4->set_fully_qualified_name(sym->name);
+
                 $$ = std::make_unique<JLang::frontend::tree::FileStatementFunctionDefinition>(
                                                                                                 std::move($1),
                                                                                                 std::move($2),

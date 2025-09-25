@@ -14,6 +14,14 @@ namespace JLang::frontend::yacc {
  */
 namespace JLang::frontend {
     class Parser;
+
+    class Symbol {
+    public:
+	Symbol(std::string _name);
+	Symbol(const Symbol & _other);
+	~Symbol();
+	std::string name;
+    };
     
     /**
      * This class represents the result of parsing a source-file.
@@ -120,7 +128,24 @@ namespace JLang::frontend {
 	friend JLang::frontend::yacc::YaccParser;
 	friend JLang::frontend::yacc::LexContext;
 	friend JLang::frontend::Parser;
+
+	void symbol_table_dump();
 	
+	const Symbol *symbol_get_or_create(std::string symbol);
+	
+	void symbol_define(std::string symbol);
+	/**
+	 * Searches for the symbol 'name' in the current namespace context.
+	 * Returns all possible symbol matches for the given name.
+	 *
+	 * The name may be fully-qualified like '::foo::bar' and it may
+	 * be a simple name like 'bar'.  The namespace search path
+	 * and 'using' clauses will be used to find all possible
+	 * namespace prefixes and each namespace prefix will be used
+	 * to search for the existence of the symbol.  If found, it will
+	 * return the symbol.  If not found, it will return nullptr.
+	 */
+	const Symbol *symbol_find(std::string name) const;
     private:
 	/**
 	 * This is used internally by the YACC grammar to return the parse tree.
@@ -132,7 +157,31 @@ namespace JLang::frontend {
 	JLang::context::CompilerContext & compiler_context;
 	
 	JLang::owned<JLang::frontend::tree::TranslationUnit> translation_unit;
+
+	/**
+	 * This is the 'symbol table' which contains all of the globally
+	 * accessible symbols.  This includes global variables and functions
+	 * accessible within various namespaces.  The name of each symbol is
+	 * already mangled so it can be passed down to the code-generation
+	 * stage and used in the MIR so that it does not have to be namespace-aware.
+	 *
+	 * For example, namespace foo { u32 bar(); }
+	 * will have the symbol name foo::bar() already mangled
+	 * and that is the symbol used in the "fully_qualified" name.
+	 */
+	std::map<std::string, Symbol> symbol_table;
 	
+	// We probably need a 'symbol table' which keeps track of global
+	// variables and functions.  The index would be the 'symbol name'
+	// which would consist of the unique name.  For globals, this is just
+	// the symbol name as a fully qualified name.  For functions, this is
+	// the fully namespace qualified name along with mangled argument list
+	// in C++ style.  It should be C++ compatible mangling (maybe?)
+
+	// When we encounter an unqualified name, we try applying the current
+	// search space (usings) and current scopes, try variations on the
+	// name based on the path until we get a match.  If there's no match, we're
+	// clear to create a new one.
     };
     
 };

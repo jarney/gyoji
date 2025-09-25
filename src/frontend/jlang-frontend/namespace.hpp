@@ -146,7 +146,7 @@ namespace JLang::frontend::namespaces {
 	
 	std::map<std::string, JLang::owned<Namespace>> children;  // This is the list of child namespaces.
 	
-	std::map<std::string, Namespace*> aliases;   // This is a list of other namespaces to
+	std::vector<std::pair<std::string, Namespace*>> aliases;   // This is a list of other namespaces to
     };
     
     /**
@@ -286,7 +286,7 @@ namespace JLang::frontend::namespaces {
 	 * under the visibility rules.
 	 */
 	NamespaceFoundReason::ptr namespace_lookup(std::string name);
-	
+
 	/**
 	 * This returns the fully-qualified namespace name of
 	 * the current point in the namespace resolution.
@@ -295,9 +295,16 @@ namespace JLang::frontend::namespaces {
 	 * the current namespace.  New namespaces
 	 * and tokens will be created based on this namespace
 	 * until either a new namespace is pushed or the
-	 * current namespace scope ends with a "}".
+	 * current namespace scope ends with a "}" or namespace_pop().
 	 */
 	std::string namespace_fully_qualified();
+
+	/**
+	 * Returns all of the namespaces that are accessible
+	 * to the current scope after resolving the
+	 * namespace prefix of the given symbol.
+	 */
+	std::vector<std::string> namespace_search_path(std::string symbol);
 	
 	/**
 	 * This is used for debugging namespace
@@ -335,6 +342,96 @@ namespace JLang::frontend::namespaces {
 	
 	
     };
+
+/*
+Cases 1:
+
+// Here, the identifier of the function is "std::foo"
+// and we can create the identifier directly
+// as "std::foo".
+namespace std {
+};
+
+u32 std::foo() {
+}
+
+Case 2:
+// Forward declaration of 'foo' happens
+// inside the std namespace.
+namespace std {
+    u32 foo();
+};
+
+// When defintion occurs, we should look up
+// the identifier and match it with the forward
+// declaration.
+u32 std::foo() {
+};
+
+Case 3:
+// When we forward-declare the function
+// its fully-qualified name is "std::foo"
+// but the definition happens under the name
+// "bar::foo", so we should do a namespace lookup
+// to resolve "bar::" as "std::".
+// But we can't do this in the namespace processing
+// because we don't track function identifiers in
+// namespaces.
+// Instead, we can pass "bar::foo" into a lookup.
+namespace std {
+    u32 foo();
+};
+using namespace std as bar;
+u32 bar::foo() {
+{
+}
+
+Case 4:
+// Even more complicated, we might have a using
+// namespace that doesn't specify an 'as'.
+// In this case, the expectation is that we will
+// be looking for "foo" either in the global/root
+// namespace or inside std.  Both are reachable
+// from this declaration, so it leads to a potentially
+// ambiguous "::foo" or "::std::foo" as the final result
+// unless disambiguated.
+
+// Can we resolve this?  If we handle this at the
+// namespace level, we could start tracking identifiers
+// in the syntax layer inside the namespace object
+// and return them as identifiers like we do with classes
+// and types.
+//
+// But then how do we deal with "local" identifiers like
+// class members and local variables?
+// Shouldn't those be tracked in their own namespaces?
+//
+// Possibly we could track 'new' identifiers (i.e. local ones)
+// and once they have been seen the first time,
+// we can lookup future references to them.
+// class <identifier> would only work for un-seen
+// identifiers.  But really, those lookups would have
+// to guarantee only that they don't exist IN THE CURRENT namespace
+// whereas the lookup of them would follow the USING statement paths.
+u32 foo();
+namespace std {
+    u32 foo();
+};
+using namespace std;
+u32 foo() {
+{
+}
+--------------------------------------------------
+What happens if we track this only at the semantic
+level.  Declaring a local variable would always ignore
+the namespace qualifiers and would always place it in
+the context of a function.
+
+Lookup of identifiers for usage would always do a lookup
+of the 'current' namespace context/path.
+
+
+ */
     
 };
 /*! @} End of Doxygen Groups*/
