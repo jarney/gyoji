@@ -239,11 +239,16 @@ TypeResolver::extract_from_function_specifications(
     const FunctionDefinitionArgList & syntax_arguments
     )
 {
+
     std::string fully_qualified_function_name = 
-	name.get_fully_qualified_name() +
-	std::string("::") + 
-	name.get_value().c_str();
+	name.get_fully_qualified_name();
     
+    const FunctionPrototype *proto = mir.get_functions().get_prototype(fully_qualified_function_name);
+    if (proto != nullptr) {
+	fprintf(stderr, "Prototype %s already exists\n", fully_qualified_function_name.c_str());
+	return;
+    }
+    fprintf(stderr, "Prototype not found, adding it %s\n", fully_qualified_function_name.c_str());
     Type *type = extract_from_type_specifier(type_specifier);
     
     std::vector<FunctionArgument> arguments;
@@ -253,7 +258,6 @@ TypeResolver::extract_from_function_specifications(
 	std::string name = function_definition_arg->get_name();
 	JLang::mir::Type * mir_type = extract_from_type_specifier(function_definition_arg->get_type_specifier());
 	std::string type = mir_type->get_name();
-	
 	FunctionArgument arg(name, type);
 	arguments.push_back(arg);
     }
@@ -263,6 +267,7 @@ TypeResolver::extract_from_function_specifications(
 	arguments
 	);
     mir.get_functions().add_prototype(std::move(prototype));
+
 }
 
 void

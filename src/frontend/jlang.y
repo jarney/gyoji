@@ -832,7 +832,7 @@ file_statement_function_declaration
         : opt_access_modifier opt_unsafe type_specifier IDENTIFIER PAREN_L opt_function_definition_arg_list PAREN_R SEMICOLON {
 //		$4->set_fully_qualified_name($4->get_value() + std::string("adding something here(decl)"));
 	        std::string function_name = $4->get_value();
-		const Symbol *sym = return_data.symbol_get_or_create(function_name);
+		const Symbol *sym = return_data.symbol_get_or_create(function_name, $4->get_source_ref());
 		$4->set_fully_qualified_name(sym->name);
 		return_data.symbol_table_dump();
                 $$ = std::make_unique<JLang::frontend::tree::FileStatementFunctionDeclaration>(
@@ -852,7 +852,7 @@ file_statement_function_declaration
 file_statement_function_definition
         : opt_access_modifier opt_unsafe type_specifier IDENTIFIER PAREN_L opt_function_definition_arg_list PAREN_R scope_body {
 	        std::string function_name = $4->get_value();
-		const Symbol *sym = return_data.symbol_get_or_create(function_name);
+		const Symbol *sym = return_data.symbol_get_or_create(function_name, $4->get_source_ref());
 		return_data.symbol_table_dump();
 		$4->set_fully_qualified_name(sym->name);
 

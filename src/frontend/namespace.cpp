@@ -1,5 +1,6 @@
 #include <jlang-frontend/namespace.hpp>
 #include <jlang-misc/jstring.hpp>
+#include <set>
 
 using namespace JLang::misc;
 using namespace JLang::frontend::namespaces;
@@ -215,6 +216,7 @@ std::vector<std::string>
 NamespaceContext::namespace_search_path(std::string name)
 {
     std::vector<std::string> path;
+    std::set<std::string> uniq;
 
     // TODO: If it starts with ::,
     // Force resolution only from root.
@@ -222,21 +224,35 @@ NamespaceContext::namespace_search_path(std::string name)
     // Look in our "stack" of namespaces in that order.
     for (auto it = stack.rbegin(); it != stack.rend(); ++it) {
 	Namespace* current = *it;
-	path.push_back(join_nonempty(current->fully_qualified(), name, "::"));
+	std::string pathel = join_nonempty(current->fully_qualified(), name, "::");
+	fprintf(stderr, "Adding search path in stack %s\n", pathel.c_str());
+	if (uniq.find(pathel) == uniq.end()) {
+	    path.push_back(pathel);
+	    uniq.insert(pathel);
+	}
     }
     
     // Look in any namespaces that we are 'using'
     for (const auto & alias_ns_it : current()->aliases) {
 	if (alias_ns_it.first.size() == 0) {
-	    path.push_back(join_nonempty(alias_ns_it.second->fully_qualified(), name, "::"));
+	    std::string pathel = join_nonempty(alias_ns_it.second->fully_qualified(), name, "::");
+	    fprintf(stderr, "Adding search path in aliases %s\n", pathel.c_str());
+	    if (uniq.find(pathel) == uniq.end()) {
+		path.push_back(pathel);
+		uniq.insert(pathel);
+	    }
 	}
 	else {
-	    std::string name_aliased = string_replace_start(
+	    std::string pathel = string_replace_start(
 		name,
 		alias_ns_it.first + std::string("::"),
 		alias_ns_it.second->fully_qualified() + std::string("::")
 		);
-	    path.push_back(name_aliased);
+	    fprintf(stderr, "Adding search path in aliases by name %s = %s\n", alias_ns_it.first.c_str(), alias_ns_it.second->fully_qualified().c_str());
+	    if (uniq.find(pathel) == uniq.end()) {
+		path.push_back(pathel);
+		uniq.insert(pathel);
+	    }
 	}
     }
     

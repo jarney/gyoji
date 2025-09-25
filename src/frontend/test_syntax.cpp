@@ -23,9 +23,12 @@ parse(std::string & path, CompilerContext & compiler_context, std::string base_f
 	Parser::parse(compiler_context,
 		      input_source
 	    );
-    
+
     close(input);
     
+    if (compiler_context.has_errors()) {
+	compiler_context.get_errors().print();
+    }
     return std::move(parse_result);
 }
 
@@ -43,7 +46,7 @@ int main(int argc, char **argv)
 	auto parse_result = parse(path, context, "tests/llvm-decl-var.j");
 	ASSERT_NOT_NULL(parse_result, "Parse of known-good thing should not be null");
 	ASSERT_TRUE(parse_result->has_translation_unit(), "We should have a translation unit");
-	ASSERT_INT_EQUAL(6, parse_result->get_translation_unit().get_statements().size(), "Wrong number of statements in file");
+	ASSERT_INT_EQUAL(7, parse_result->get_translation_unit().get_statements().size(), "Wrong number of statements in file");
     }
     
     {

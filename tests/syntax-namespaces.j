@@ -29,6 +29,15 @@ namespace std {
 
 using namespace std as giz::mo;
 
-u32 giz::mo::foo()
+u32 giz::mo::fooart()
 {
 }
+
+namespace fart {
+    u32 baz();
+};
+
+//using namespace fart;
+
+u32 fart::baz()
+{}

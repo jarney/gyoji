@@ -9,12 +9,12 @@ using namespace JLang::frontend::tree;
 
 FunctionResolver::FunctionResolver(
     JLang::context::CompilerContext & _compiler_context,
-    const JLang::frontend::tree::TranslationUnit & _translation_unit,
+    const JLang::frontend::ParseResult & _parse_result,
     JLang::mir::MIR & _mir,
     JLang::frontend::TypeResolver & _type_resolver
     )
     : compiler_context(_compiler_context)
-    , translation_unit(_translation_unit)
+    , parse_result(_parse_result)
     , mir(_mir)
     , type_resolver(_type_resolver)
 {}
@@ -30,7 +30,7 @@ void FunctionResolver::resolve()
 
   // TODO: Split the type extraction
   // out away from the function extraction(?).
-  extract_types(translation_unit.get_statements());
+    extract_types(parse_result.get_translation_unit().get_statements());
 }
 
 void
@@ -839,12 +839,11 @@ FunctionResolver::extract_from_statement_list(
 void
 FunctionResolver::extract_from_function_definition(const FileStatementFunctionDefinition & function_definition)
 {
-    fprintf(stderr, "Extracting function %s %s\n",
-	    function_definition.get_name().get_fully_qualified_name().c_str(),
-	    function_definition.get_name().get_value().c_str());
-    
     std::string fully_qualified_function_name = 
 	function_definition.get_name().get_fully_qualified_name();
+    
+    fprintf(stderr, "Extracting function %s\n",
+	    fully_qualified_function_name.c_str());
     
     const TypeSpecifier & type_specifier = function_definition.get_return_type();
     Type *type = type_resolver.extract_from_type_specifier(type_specifier);
@@ -871,7 +870,7 @@ FunctionResolver::extract_from_function_definition(const FileStatementFunctionDe
 	type->get_name(),
 	arguments
 	);
-    const FunctionPrototype * prototype = mir.get_functions().get_prototype(prototype_lookup.get_mangled_name());
+    const FunctionPrototype * prototype = mir.get_functions().get_prototype(fully_qualified_function_name);
     fprintf(stderr, "Found? %p\n", prototype);
     if (prototype == nullptr) {
 	compiler_context
@@ -879,12 +878,20 @@ FunctionResolver::extract_from_function_definition(const FileStatementFunctionDe
 	    .add_simple_error(
 		function_definition.get_source_ref(),
 		"Unknown function",
-		std::string("Function call ") + prototype_lookup.get_mangled_name() + std::string(" could not be found")
+		std::string("Function call ") + prototype_lookup.get_name() + std::string(" could not be found")
 		);
 	return;
     }
+    const Function * previous_definition = mir.get_functions().function_get(fully_qualified_function_name);
+    if (previous_definition != nullptr) {
+	auto error = std::make_unique<JLang::context::Error>(std::string("Duplicate definition of ") + fully_qualified_function_name);
+	error->add_message(function_definition.get_source_ref(), std::string("Defining here"));
+	error->add_message(previous_definition->get_source_ref(), std::string("Note: previous definition "));
+	compiler_context.get_errors().add_error(std::move(error));
+	return;
+    }
     
-    JLang::owned<Function> fn = std::make_unique<Function>(*prototype);
+    JLang::owned<Function> fn = std::make_unique<Function>(*prototype, function_definition.get_source_ref());
     
     // Create a new basic block for the start
     

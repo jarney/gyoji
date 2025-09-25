@@ -25,6 +25,8 @@ namespace JLang::mir {
 	 * Adds a function to the MIR representation.
 	 */
 	void add_function(JLang::owned<Function> _function);
+
+	const Function * function_get(std::string _name) const;
 	
 	/**
 	 * Read-only representation of functions.
@@ -92,7 +94,6 @@ namespace JLang::mir {
 	    );
 	~FunctionPrototype();
 
-	std::string get_mangled_name() const;
 	const std::string & get_return_type() const;
 	const std::string & get_name() const;
 	const std::vector<FunctionArgument> & get_arguments() const;
@@ -118,7 +119,10 @@ namespace JLang::mir {
     
     class Function {
     public:
-	Function(const FunctionPrototype & _prototype);
+	Function(
+	    const FunctionPrototype & _prototype,
+	    const JLang::context::SourceReference & _source_ref
+	    );
 	~Function();
 
 	const FunctionPrototype &get_prototype() const;
@@ -133,8 +137,11 @@ namespace JLang::mir {
 	void remove_local(std::string local_name);
 
 	void dump() const;
+	
+	const JLang::context::SourceReference & get_source_ref() const;
     private:
 	const FunctionPrototype & prototype;
+	const JLang::context::SourceReference & source_ref;
 	
 	// Holds the max blockid
 	// as we build them.

@@ -17,10 +17,11 @@ namespace JLang::frontend {
 
     class Symbol {
     public:
-	Symbol(std::string _name);
+	Symbol(std::string _name, const JLang::context::SourceReference & _src_ref);
 	Symbol(const Symbol & _other);
 	~Symbol();
 	std::string name;
+	const JLang::context::SourceReference src_ref;
     };
     
     /**
@@ -131,9 +132,9 @@ namespace JLang::frontend {
 
 	void symbol_table_dump();
 	
-	const Symbol *symbol_get_or_create(std::string symbol);
+	const Symbol *symbol_get_or_create(std::string symbol, const JLang::context::SourceReference & _src_ref);
 	
-	void symbol_define(std::string symbol);
+	void symbol_define(std::string symbol, const JLang::context::SourceReference & _src_ref);
 	/**
 	 * Searches for the symbol 'name' in the current namespace context.
 	 * Returns all possible symbol matches for the given name.

@@ -18,7 +18,6 @@ Functions::get_prototype(std::string mangled_name) const
 {
     const auto & it = prototypes.find(mangled_name);
     if (it == prototypes.end()) {
-	fprintf(stderr, "No function prototype found\n");
 	return nullptr;
     }
     return it->second.get();
@@ -27,7 +26,7 @@ Functions::get_prototype(std::string mangled_name) const
 void
 Functions::add_prototype(JLang::owned<FunctionPrototype> prototype)
 {
-    std::string mangled_name = prototype->get_mangled_name();
+    std::string mangled_name = prototype->get_name();
     fprintf(stderr, "Adding prototype %s\n", mangled_name.c_str());
     prototypes.insert(std::pair(mangled_name, std::move(prototype)));
 }
@@ -36,6 +35,17 @@ void
 Functions::add_function(JLang::owned<Function> _function)
 {
     functions.push_back(std::move(_function));
+}
+
+const Function * 
+Functions::function_get(std::string _name) const
+{
+    for (const auto & fn : functions) {
+	if (fn->get_prototype().get_name() == _name) {
+	    return fn.get();
+	}
+    }
+    return nullptr;
 }
 
 const std::vector<JLang::owned<Function>> &
@@ -60,14 +70,20 @@ LocalVariable::~LocalVariable()
 // Function
 /////////////////////////////////////
 Function::Function(
-    const FunctionPrototype & _prototype
+    const FunctionPrototype & _prototype,
+    const JLang::context::SourceReference & _source_ref
     )
     : prototype(_prototype)
+    , source_ref(_source_ref)
     , blockid(0)
 {}
 
 Function::~Function()
 {}
+
+const JLang::context::SourceReference &
+Function::get_source_ref() const
+{ return source_ref; }
 
 const FunctionPrototype &
 Function::get_prototype() const
@@ -155,10 +171,6 @@ FunctionPrototype::FunctionPrototype(
 
 FunctionPrototype::~FunctionPrototype()
 {}
-
-std::string
-FunctionPrototype::get_mangled_name() const
-{ return name; }
 
 const std::string &
 FunctionPrototype::get_return_type() const

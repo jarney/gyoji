@@ -34,7 +34,7 @@ namespace JLang::frontend {
     public:
 	FunctionResolver(
 	    JLang::context::CompilerContext & _compiler_context,
-	    const JLang::frontend::tree::TranslationUnit & _translation_unit,
+	    const JLang::frontend::ParseResult & _parse_result,
 	    JLang::mir::MIR & _mir,
 	    JLang::frontend::TypeResolver & _type_resolver
 	    );
@@ -42,7 +42,7 @@ namespace JLang::frontend {
 	void resolve();
     private:
 	JLang::context::CompilerContext & compiler_context;
-	const JLang::frontend::tree::TranslationUnit & translation_unit;
+	const JLang::frontend::ParseResult & parse_result;
 	JLang::mir::MIR & mir;
 	TypeResolver & type_resolver;
 	

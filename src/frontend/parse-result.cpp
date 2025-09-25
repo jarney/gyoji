@@ -61,9 +61,9 @@ ParseResult::set_translation_unit(JLang::owned<TranslationUnit> _translation_uni
 }
 
 void
-ParseResult::symbol_define(std::string _symbol)
+ParseResult::symbol_define(std::string _symbol, const SourceReference &src_ref)
 {
-    Symbol symbol(_symbol);
+    Symbol symbol(_symbol, src_ref);
     symbol_table.insert(std::pair(_symbol, symbol));
 }
 
@@ -87,19 +87,30 @@ ParseResult::symbol_table_dump()
 }
 
 const Symbol *
-ParseResult::symbol_get_or_create(std::string symbol_name)
+ParseResult::symbol_get_or_create(std::string symbol_name, const SourceReference & src_ref)
 {
     fprintf(stderr, "Encountered symbol %s\n", symbol_name.c_str());
     
     std::vector<std::string> path = namespace_context->namespace_search_path(symbol_name);
+    std::vector<const Symbol *> found_symbols;
     // Search for the symbol using the path.
     for (const auto &sp : path) {
 	fprintf(stderr, "Searching for %s\n", sp.c_str());
 	const Symbol* sym = symbol_find(sp);
 	if (sym) {
-	    fprintf(stderr, "Found symbol %s\n", sym->name.c_str());
-	    return sym;
+	    found_symbols.push_back(sym);
 	}
+    }
+    if (found_symbols.size() == 1) {
+	return found_symbols.at(0);
+    }
+    else if (found_symbols.size() > 1) {
+	auto error = std::make_unique<JLang::context::Error>(std::string("Reference to ") + symbol_name + std::string(" is ambiguous"));
+	error->add_message(src_ref, std::string("Reference to ") + symbol_name + std::string(" is ambiguous"));
+	for (const auto *sym : found_symbols) {
+	    error->add_message(sym->src_ref, std::string("Note: candidates are: ") + sym->name);
+	}
+	compiler_context.get_errors().add_error(std::move(error));
     }
 
     std::string fqs = JLang::misc::join_nonempty(
@@ -109,15 +120,17 @@ ParseResult::symbol_get_or_create(std::string symbol_name)
 	);
     
     fprintf(stderr, "Symbol not found, defining it %s in the current namespace\n", fqs.c_str());
-    symbol_define(fqs);
+    symbol_define(fqs, src_ref);
     return symbol_find(fqs);
 }
 
-Symbol::Symbol(std::string _name)
+Symbol::Symbol(std::string _name, const SourceReference & _src_ref)
     : name(_name)
+    , src_ref(_src_ref)
 {}
 Symbol::~Symbol()
 {}
 Symbol::Symbol(const Symbol & _other)
     : name(_other.name)
+    , src_ref(_other.src_ref)
 {}

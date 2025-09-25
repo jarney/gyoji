@@ -15,7 +15,7 @@ std::float before_ns(f64 x, std::float b, std::float d)
 
 using namespace std;
 
-float doit(f64 a, i32 b, foo x)
+float doit(f64 a, i32 b, foo q)
 {
         q = 10;
         q = q + b;
