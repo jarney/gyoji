@@ -27,7 +27,6 @@ void
 Functions::add_prototype(JLang::owned<FunctionPrototype> prototype)
 {
     std::string mangled_name = prototype->get_name();
-    fprintf(stderr, "Adding prototype %s\n", mangled_name.c_str());
     prototypes.insert(std::pair(mangled_name, std::move(prototype)));
 }
 

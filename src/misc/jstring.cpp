@@ -84,6 +84,16 @@ std::string JLang::misc::string_remove_nonidentifier(const std::string & str)
     return newStr; 
 }
 
+bool JLang::misc::contains(const std::string & s, const std::string &v)
+{
+    size_t found_pos = s.find(v);
+    if (found_pos == std::string::npos) {
+	return false;
+    }
+    return true;
+}
+
+
 std::string JLang::misc::string_replace_start(std::string str, const std::string from, const std::string to)
 {
     std::string ret(str);

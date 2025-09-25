@@ -5,6 +5,7 @@
 #include <memory>
 #include <jlang.l.hpp>
 #include <jlang-frontend.hpp>
+#include <jlang-misc/jstring.hpp>
 #define _JLANG_INTERNAL
 #include <lex-context.hpp>
 #undef _JLANG_INTERNAL
@@ -417,7 +418,16 @@ file_statement
 
 file_statement_global_definition
         : opt_access_modifier opt_unsafe type_specifier IDENTIFIER opt_array_length opt_global_initializer SEMICOLON {
-          $$ = std::make_unique<JLang::frontend::tree::FileStatementGlobalDefinition>(
+	        // This is the point at which we need to fully-qualify our symbol name
+	        // because it may be in a namespace and we need to find it unambiguously
+	        // in a possibly large namespace.  We don't want the MIR or code-gen layers
+	        // to have to care about how we name functions.
+	        // In future, we may support name mangling, but again, that's not the concern of the
+	        // back-end layers.
+	        std::string global_name = $4->get_value();
+	        const Symbol *sym = return_data.symbol_get_or_create(global_name, $4->get_source_ref());
+	    
+	        $$ = std::make_unique<JLang::frontend::tree::FileStatementGlobalDefinition>(
                                                                                       std::move($1),
                                                                                       std::move($2),
                                                                                       std::move($3),
@@ -512,6 +522,19 @@ struct_initializer_list
 
 struct_initializer
         : DOT IDENTIFIER global_initializer SEMICOLON {
+	        // This is the point at which we need to fully-qualify our symbol name
+	        // because it may be in a namespace and we need to find it unambiguously
+	        // in a possibly large namespace.  We don't want the MIR or code-gen layers
+	        // to have to care about how we name functions.
+	        // In future, we may support name mangling, but again, that's not the concern of the
+	        // back-end layers.
+	        std::string initializer_name = $2->get_value();
+                if (JLang::misc::contains(initializer_name, std::string("::"))) {
+		    auto error = std::make_unique<JLang::context::Error>("Syntax Error: Initializer expects name in the namespace of the class.");
+		    error->add_message($2->get_source_ref(), std::string("Initializer ") + initializer_name + " should be a local name, not a fully-qualified name.");
+		    return_data.compiler_context.get_errors().add_error(std::move(error));
+		}
+		$2->set_fully_qualified_name($2->get_value());
                 $$ = std::make_unique<JLang::frontend::tree::StructInitializer>(
                                                                                    std::move($1),
                                                                                    std::move($2),
