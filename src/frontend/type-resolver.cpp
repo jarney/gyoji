@@ -259,6 +259,7 @@ TypeResolver::extract_from_function_specifications(
 	FunctionArgument arg(name, type);
 	arguments.push_back(arg);
     }
+    fprintf(stderr, "Defined prototype %s\n", fully_qualified_function_name.c_str());
     JLang::owned<FunctionPrototype> prototype = std::make_unique<FunctionPrototype>(
 	fully_qualified_function_name,
 	type->get_name(),

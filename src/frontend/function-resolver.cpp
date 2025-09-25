@@ -78,9 +78,10 @@ FunctionResolver::extract_from_expression_primary_identifier(
 	expression.get_identifier().get_value()
 	);
     returned_value.type = ExpressionValue::TYPE_IDENTIFIER;
+    fprintf(stderr, "Returning identifier %s\n", expression.get_identifier().get_fully_qualified_name().c_str());
+    
     returned_value.value =
-	expression.get_identifier().get_fully_qualified_name() + "::" + 
-	expression.get_identifier().get_value();
+	expression.get_identifier().get_fully_qualified_name();
 }
 
 void
@@ -263,9 +264,7 @@ FunctionResolver::extract_from_expression_postfix_function_call(
 	// namespace do all the heavy lifting here
 	// to format the identifier correctly.
 	std::string function_name =
-	    function_identifier->get_identifier().get_fully_qualified_name()
-	    + std::string("::")
-	    + function_identifier->get_identifier().get_value();
+	    function_identifier->get_identifier().get_fully_qualified_name();
 	fprintf(stderr, "Looking up prototype %s\n", function_name.c_str());
 	const FunctionPrototype * prototype = mir.get_functions().get_prototype(function_name);
 	fprintf(stderr, "Found? %p\n", prototype);
