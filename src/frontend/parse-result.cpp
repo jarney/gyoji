@@ -89,13 +89,10 @@ ParseResult::symbol_table_dump()
 const Symbol *
 ParseResult::symbol_get_or_create(std::string symbol_name, const SourceReference & src_ref)
 {
-    fprintf(stderr, "Encountered symbol %s\n", symbol_name.c_str());
-    
     std::vector<std::string> path = namespace_context->namespace_search_path(symbol_name);
     std::vector<const Symbol *> found_symbols;
     // Search for the symbol using the path.
     for (const auto &sp : path) {
-	fprintf(stderr, "Searching for %s\n", sp.c_str());
 	const Symbol* sym = symbol_find(sp);
 	if (sym) {
 	    found_symbols.push_back(sym);
@@ -119,7 +116,6 @@ ParseResult::symbol_get_or_create(std::string symbol_name, const SourceReference
 	std::string("::")
 	);
     
-    fprintf(stderr, "Symbol not found, defining it %s in the current namespace\n", fqs.c_str());
     symbol_define(fqs, src_ref);
     return symbol_find(fqs);
 }

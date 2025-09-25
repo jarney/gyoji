@@ -245,10 +245,8 @@ TypeResolver::extract_from_function_specifications(
     
     const FunctionPrototype *proto = mir.get_functions().get_prototype(fully_qualified_function_name);
     if (proto != nullptr) {
-	fprintf(stderr, "Prototype %s already exists\n", fully_qualified_function_name.c_str());
 	return;
     }
-    fprintf(stderr, "Prototype not found, adding it %s\n", fully_qualified_function_name.c_str());
     Type *type = extract_from_type_specifier(type_specifier);
     
     std::vector<FunctionArgument> arguments;

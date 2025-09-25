@@ -128,7 +128,8 @@ void NamespaceContext::namespace_push(std::string ns)
     Namespace* current = stack.back();
     auto it = current->children.find(ns);
     if (it == current->children.end()) {
-	fprintf(stderr, "Error, trying to push non-existent namespace\n");
+	fprintf(stderr, "Compiler Bug! Error, trying to push non-existent namespace\n");
+	exit(1);
 	return;
     }
     stack.push_back(it->second.get());
@@ -225,7 +226,6 @@ NamespaceContext::namespace_search_path(std::string name)
     for (auto it = stack.rbegin(); it != stack.rend(); ++it) {
 	Namespace* current = *it;
 	std::string pathel = join_nonempty(current->fully_qualified(), name, "::");
-	fprintf(stderr, "Adding search path in stack %s\n", pathel.c_str());
 	if (uniq.find(pathel) == uniq.end()) {
 	    path.push_back(pathel);
 	    uniq.insert(pathel);
@@ -236,7 +236,6 @@ NamespaceContext::namespace_search_path(std::string name)
     for (const auto & alias_ns_it : current()->aliases) {
 	if (alias_ns_it.first.size() == 0) {
 	    std::string pathel = join_nonempty(alias_ns_it.second->fully_qualified(), name, "::");
-	    fprintf(stderr, "Adding search path in aliases %s\n", pathel.c_str());
 	    if (uniq.find(pathel) == uniq.end()) {
 		path.push_back(pathel);
 		uniq.insert(pathel);
@@ -248,7 +247,6 @@ NamespaceContext::namespace_search_path(std::string name)
 		alias_ns_it.first + std::string("::"),
 		alias_ns_it.second->fully_qualified() + std::string("::")
 		);
-	    fprintf(stderr, "Adding search path in aliases by name %s = %s\n", alias_ns_it.first.c_str(), alias_ns_it.second->fully_qualified().c_str());
 	    if (uniq.find(pathel) == uniq.end()) {
 		path.push_back(pathel);
 		uniq.insert(pathel);
@@ -256,9 +254,6 @@ NamespaceContext::namespace_search_path(std::string name)
 	}
     }
     
-    for (const auto & p : path) {
-	fprintf(stderr, "Search path is %s\n", p.c_str());
-    }
     return path;
 }
 

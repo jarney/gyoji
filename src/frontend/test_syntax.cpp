@@ -26,9 +26,6 @@ parse(std::string & path, CompilerContext & compiler_context, std::string base_f
 
     close(input);
     
-    if (compiler_context.has_errors()) {
-	compiler_context.get_errors().print();
-    }
     return std::move(parse_result);
 }
 
@@ -39,24 +36,28 @@ int main(int argc, char **argv)
 	return -1;
     }
     std::string path(argv[1]);
-    CompilerContext context;
     
     // Check that we have the right number of statements in this file.
     {
+	CompilerContext context;
 	auto parse_result = parse(path, context, "tests/llvm-decl-var.j");
+	ASSERT_FALSE(context.has_errors(), "tests/llvm-decl-var.j had an unexpected syntax error");
 	ASSERT_NOT_NULL(parse_result, "Parse of known-good thing should not be null");
 	ASSERT_TRUE(parse_result->has_translation_unit(), "We should have a translation unit");
 	ASSERT_INT_EQUAL(7, parse_result->get_translation_unit().get_statements().size(), "Wrong number of statements in file");
     }
     
     {
+	CompilerContext context;
 	auto parse_result = parse(path, context, "tests/syntax-empty.j");
+	ASSERT_FALSE(context.has_errors(), "tests/syntax-empty.j had an unexpected syntax error");
 	ASSERT_NOT_NULL(parse_result, "Empty file should parse");
 	ASSERT_TRUE(parse_result->has_translation_unit(), "We should have a translation unit");
 	ASSERT_INT_EQUAL(0, parse_result->get_translation_unit().get_statements().size(), "Empty file should have no statements");
     }
     
     {
+	CompilerContext context;
 	auto parse_result = parse(path, context, "tests/syntax-invalid-garbage.j");
 	ASSERT_TRUE(parse_result->has_errors(), "We expect a syntax error in this file");
 	ASSERT_INT_EQUAL(1, parse_result->get_errors().size(), "We should have exactly one error");
@@ -66,7 +67,9 @@ int main(int argc, char **argv)
     
     // Check typedefs and associated modifiers.
     {
+	CompilerContext context;
 	auto parse_result = parse(path, context, "tests/syntax-typedef.j");
+	ASSERT_FALSE(context.has_errors(), "tests/syntax-typedef.j had an unexpected syntax error");
 	ASSERT_NOT_NULL(parse_result, "File should parse correctly.");
 	ASSERT_TRUE(parse_result->has_translation_unit(), "We should have a translation unit");
 	ASSERT_INT_EQUAL(4, parse_result->get_translation_unit().get_statements().size(), "This should have 4 typedefs");
@@ -112,7 +115,9 @@ int main(int argc, char **argv)
 	}
     }
     {
+	CompilerContext context;
 	auto parse_result = parse(path, context, "tests/syntax-access-qualifier.j");
+	ASSERT_FALSE(context.has_errors(), "tests/syntax-access-qualifier.j had an unexpected syntax error");
 	ASSERT_NOT_NULL(parse_result, "File should parse correctly.");
 	ASSERT_TRUE(parse_result->has_translation_unit(), "We should have a translation unit");
 	ASSERT_INT_EQUAL(2, parse_result->get_translation_unit().get_statements().size(), "This should have 2 global initializations.");
@@ -161,7 +166,9 @@ int main(int argc, char **argv)
     }
     
     {
+	CompilerContext context;
 	auto parse_result = parse(path, context, "tests/syntax-pointer.j");
+	ASSERT_FALSE(context.has_errors(), "tests/syntax-pointer.j had an unexpected syntax error");
 	ASSERT_NOT_NULL(parse_result, "File should parse correctly.");
 	ASSERT_TRUE(parse_result->has_translation_unit(), "We should have a translation unit");
 	ASSERT_INT_EQUAL(2, parse_result->get_translation_unit().get_statements().size(), "This should have 2 global initializations.");
@@ -212,7 +219,9 @@ int main(int argc, char **argv)
 	}
     }
     {
+	CompilerContext context;
 	auto parse_result = parse(path, context, "tests/syntax-function-declaration.j");
+	ASSERT_FALSE(context.has_errors(), "tests/syntax-function-declaration.j had an unexpected syntax error");
 	ASSERT_NOT_NULL(parse_result, "File should parse correctly.");
 	ASSERT_TRUE(parse_result->has_translation_unit(), "We should have a translation unit");
 	ASSERT_INT_EQUAL(2, parse_result->get_translation_unit().get_statements().size(), "This should have a function declaration.");
@@ -242,7 +251,9 @@ int main(int argc, char **argv)
 	}
     }
     {
+	CompilerContext context;
 	auto parse_result = parse(path, context, "tests/syntax-function-definition.j");
+	ASSERT_FALSE(context.has_errors(), "tests/syntax-function-definition.j had an unexpected syntax error");
 	ASSERT_NOT_NULL(parse_result, "File should parse correctly.");
 	ASSERT_TRUE(parse_result->has_translation_unit(), "We should have a translation unit");
 	ASSERT_INT_EQUAL(1, parse_result->get_translation_unit().get_statements().size(), "This should have a function definition.");
@@ -256,7 +267,9 @@ int main(int argc, char **argv)
     }
     
     {
+	CompilerContext context;
 	auto parse_result = parse(path, context, "tests/syntax-function-unsafe-block.j");
+	ASSERT_FALSE(context.has_errors(), "tests/syntax-function-unsafe-block.j had an unexpected syntax error");
 	ASSERT_NOT_NULL(parse_result, "File should parse correctly.");
 	ASSERT_TRUE(parse_result->has_translation_unit(), "We should have a translation unit");
 	ASSERT_INT_EQUAL(1, parse_result->get_translation_unit().get_statements().size(), "This should have a function definition.");
