@@ -67,7 +67,7 @@ Parser::parse_to_mir(
     fprintf(stderr, "Symbol table resolution pass\n");
     fprintf(stderr, "============================\n");
     // First, resolve all of the type definitions.
-    // Also at this stage, we resolve the function declarations
+    // Also at this stage, we resolve the function declarations.
     TypeResolver type_resolver(_compiler_context,
 			       parse_result->get_translation_unit(),
 			       *mir);

@@ -112,7 +112,6 @@ Function::add_block()
 void
 Function::push_block(size_t blockid)
 {
-    fprintf(stderr, "Pushing block %ld\n", blockid);
     blocks_in_order.push_back(blockid);
 }
 

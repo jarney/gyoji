@@ -1791,7 +1791,7 @@ ExpressionPostfixIncDec::ExpressionPostfixIncDec(
 ExpressionPostfixIncDec::~ExpressionPostfixIncDec()
 {}
 const ExpressionPostfixIncDec::OperationType &
-ExpressionPostfixIncDec::get_type()
+ExpressionPostfixIncDec::get_type() const
 { return type; }
 const Expression &
 ExpressionPostfixIncDec::get_expression() const

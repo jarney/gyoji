@@ -9,42 +9,42 @@ namespace JLang::frontend {
     class ExpressionValue {
     public:
 	typedef enum {
-	    TYPE_LITERAL,
-	    TYPE_CHAR_LITERAL,
-	    TYPE_STRING_LITERAL,
-	    TYPE_INT_LITERAL,
-	    TYPE_FLOAT_LITERAL,
-	    TYPE_IDENTIFIER,
-	    TYPE_TYPE
+	    /**
+	     * This expression represents a
+	     * variable computed at runtime.
+	     * of a particular type.
+	     */
+	    TYPE_VALUE,
+	    /**
+	     * This expression represents an
+	     * immediate function that can
+	     * be called directly.
+	     */
+	    TYPE_GLOBAL_FUNCTION
 	} ExpressionValueType;
 	ExpressionValueType type;
 	std::string value;
+	size_t variable_id;
     };
 
-    //! Function Resolver.
-    /**
-     * This is the 'lowering' process for functions.
-     * It reads the parse result syntax tree and constructs
-     * functions and the "BasicBlock" control-flow graph
-     * in order to produce the MIR which can later drive
-     * semantic analysis like borrow checking and then
-     * code-generation.
-     */
-    class FunctionResolver {
+    class FunctionDefinitionResolver {
     public:
-	FunctionResolver(
+	FunctionDefinitionResolver(
 	    JLang::context::CompilerContext & _compiler_context,
-	    const JLang::frontend::ParseResult & _parse_result,
+	    const JLang::frontend::tree::FileStatementFunctionDefinition & _function_definition,
 	    JLang::mir::MIR & _mir,
 	    JLang::frontend::TypeResolver & _type_resolver
 	    );
-	~FunctionResolver();
+	~FunctionDefinitionResolver();
 	void resolve();
+	size_t get_new_tmpvar();
+
     private:
 	JLang::context::CompilerContext & compiler_context;
-	const JLang::frontend::ParseResult & parse_result;
+	const JLang::frontend::tree::FileStatementFunctionDefinition & function_definition;
 	JLang::mir::MIR & mir;
 	TypeResolver & type_resolver;
+	size_t new_tmpvar_id;
 	
 	void extract_from_expression_primary_identifier(
 	    JLang::mir::Function & function,
@@ -162,6 +162,34 @@ namespace JLang::frontend {
 	    );
 	
 	void extract_from_function_definition(const JLang::frontend::tree::FileStatementFunctionDefinition & function_definition);
+	
+    };
+    
+    //! Function Resolver.
+    /**
+     * This is the 'lowering' process for functions.
+     * It reads the parse result syntax tree and constructs
+     * functions and the "BasicBlock" control-flow graph
+     * in order to produce the MIR which can later drive
+     * semantic analysis like borrow checking and then
+     * code-generation.
+     */
+    class FunctionResolver {
+    public:
+	FunctionResolver(
+	    JLang::context::CompilerContext & _compiler_context,
+	    const JLang::frontend::ParseResult & _parse_result,
+	    JLang::mir::MIR & _mir,
+	    JLang::frontend::TypeResolver & _type_resolver
+	    );
+	~FunctionResolver();
+	void resolve();
+    private:
+	JLang::context::CompilerContext & compiler_context;
+	const JLang::frontend::ParseResult & parse_result;
+	JLang::mir::MIR & mir;
+	TypeResolver & type_resolver;
+	
 	void extract_from_class_definition(const JLang::frontend::tree::ClassDefinition & definition);
 	void extract_from_namespace(
 	    const JLang::frontend::tree::FileStatementNamespace & namespace_declaration

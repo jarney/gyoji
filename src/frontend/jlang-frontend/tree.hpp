@@ -2117,7 +2117,7 @@ namespace JLang::frontend::tree {
 	 * Destructor, nothing special.
 	 */
 	~ExpressionPostfixIncDec();
-	const ExpressionPostfixIncDec::OperationType & get_type();
+	const ExpressionPostfixIncDec::OperationType & get_type() const;
 	const Expression & get_expression() const;
     private:
 	ExpressionPostfixIncDec::OperationType type;

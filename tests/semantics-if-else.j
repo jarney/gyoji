@@ -13,12 +13,13 @@ u32 unconditional_function_call();
 
 u32 main(u32 argc, u8 **argv)
 {
-        u32 *a = 2;
+        u32 a = 2;
+	a = 19;
         preamble_function_call();
         if (a == 2) {
 	   u32 scope_var;
            a_a();
-	   if (*a == 'x') {
+	   if (a == 4) {
 	   }
            if (!(a == 19)) {
                nineteen();
