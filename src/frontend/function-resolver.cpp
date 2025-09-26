@@ -72,16 +72,33 @@ FunctionResolver::extract_from_expression_primary_identifier(
     //   at runtime.
     // * Maybe we really should 'flatten' our access here.
     
-    function.get_basic_block(current_block).add_statement(
-	std::string("identifier ") +
-	expression.get_identifier().get_fully_qualified_name() + "::" + 
-	expression.get_identifier().get_value()
-	);
     returned_value.type = ExpressionValue::TYPE_IDENTIFIER;
-    fprintf(stderr, "Returning identifier %s\n", expression.get_identifier().get_fully_qualified_name().c_str());
-    
-    returned_value.value =
-	expression.get_identifier().get_fully_qualified_name();
+
+    if (expression.get_identifier().get_identifier_type() == Terminal::IDENTIFIER_LOCAL_SCOPE) {
+	const LocalVariable *localvar = function.get_local(
+	    expression.get_identifier().get_value()
+	    );
+	if (localvar != nullptr) {
+	    fprintf(stderr, "Found local variable %s %s\n", expression.get_identifier().get_value().c_str(),
+		    localvar->type.c_str());
+	    returned_value.value = localvar->type;
+	    function.get_basic_block(current_block).add_statement(
+		std::string("local-identifier ") + expression.get_identifier().get_value()
+		);
+	}
+	// Next, we should check for 'enum' identifiers.
+
+	// If all else fails, we could not resolve it and should
+	// emit an error.
+    }
+    else if (expression.get_identifier().get_identifier_type() == Terminal::IDENTIFIER_GLOBAL_SCOPE) {
+	// Type here should be the type of a function-pointer.
+	
+	// Look in the list of functions,
+	// this might be a function pointer assignment or
+	// a global variable.
+//	const FunctionPrototype *prototype = mir.get_functions().get_prototype(expression.get_identifier().get_fully_qualified_name());
+    }
 }
 
 void
@@ -257,12 +274,8 @@ FunctionResolver::extract_from_expression_postfix_function_call(
 	const auto & function_identifier = std::get<JLang::owned<ExpressionPrimaryIdentifier>>(function_expression_type);
 	// If this expression is a primary expression, then this is
 	// an immediate function call and we can directly emit
-	// a call to that function.
-
-	// XXX This is a hack because
-	// we should really be letting the
-	// namespace do all the heavy lifting here
-	// to format the identifier correctly.
+	// a call to that function instead of emitting the evaluation
+	// of a complicated expression.
 	std::string function_name =
 	    function_identifier->get_identifier().get_fully_qualified_name();
 	fprintf(stderr, "Looking up prototype %s\n", function_name.c_str());
@@ -763,8 +776,8 @@ FunctionResolver::extract_from_statement_list(
 	    const auto & statement = std::get<JLang::owned<StatementVariableDeclaration>>(statement_type);
 	    function.get_basic_block(current_block).add_statement(std::string("declare ") + statement->get_name());
 	    
-	    fprintf(stderr, "Declaring variable %s\n", statement->get_name().c_str());
 	    JLang::mir::Type * mir_type = type_resolver.extract_from_type_specifier(statement->get_type_specifier());
+	    fprintf(stderr, "Declaring variable %s %s\n", statement->get_name().c_str(), mir_type->get_name().c_str());
 
 	    LocalVariable local(statement->get_name(), mir_type->get_name());
 	    

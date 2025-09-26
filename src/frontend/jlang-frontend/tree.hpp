@@ -78,7 +78,7 @@ namespace JLang::frontend::tree {
 	Type type;
 	const JLang::context::Token & token;
     };
-    
+
     //! Represents tokens from the lexer used to represent keywords and identifiers found in the source.
     /**
      * Terminals are the raw tokens received by the lexer.
@@ -87,6 +87,43 @@ namespace JLang::frontend::tree {
      */
     class Terminal : public JLang::frontend::ast::SyntaxNode {
     public:
+	/**
+	 * This is the type for identifiers.  Identifiers
+	 * may be global symbols like functions or global/static
+	 * variables.  In this case, they must be resolved by
+	 * the parser because resolution depends on the namespace
+	 * context which is available only during parsing.  This is a quirk
+	 * of the C/C++ syntax.  Identifiers may also be "local" identifiers
+	 * like member variables or local variables which exist in a scope
+	 * other than that global/namespace scope.  In the 'local' case, resolution
+	 * of these is deferred to the MIR layer, so we may end up passing
+	 * invalid tokens to the MIR where the resolution may fail at that point
+	 * or somewhere in the analysis phase.
+	 */
+	typedef enum {
+	    /**
+	     * Indicates that this identifier is something in a 'global'
+	     * scope, for example, in the root namespace or in a sub-namespace.
+	     * For example, the variable 'g' in 'namespace { u32 g; }' would be
+	     * an identifier in global scope.
+	     */
+	    IDENTIFIER_GLOBAL_SCOPE,
+	    /**
+	     * Indicates that the identifier is something in a 'local' scope
+	     * such as an argument of a function, a local variable in a scope,
+	     * or a class member.
+	     */
+	    IDENTIFIER_LOCAL_SCOPE,
+
+	    /**
+	     * This is an uncategorized identifier.  It is not in local scope
+	     * nor is it in global scope.  For example, this may be the name
+	     * of a namespace or other thing that is consumed only at the
+	     * syntax level and has no semantic meaning.
+	     */
+	    IDENTIFIER_UNCATEGORIZED
+	} IdentifierType;
+    
 	/**
 	 * Construct a terminal from the corresponding
 	 * lexer token.
@@ -136,6 +173,9 @@ namespace JLang::frontend::tree {
 	 * is resolved for identifier, type, and namespace tokens.
 	 */
 	void set_fully_qualified_name(std::string name);
+
+	const IdentifierType & get_identifier_type() const;
+	void set_identifier_type(IdentifierType _identifier_type);
 	
 	// The terminal "owns" uniquely all of the non-syntax data
 	// in this vector.  It may be returned to access it,
@@ -145,6 +185,7 @@ namespace JLang::frontend::tree {
     private:
 	const JLang::context::Token & token;
 	std::string fully_qualified_name;
+	IdentifierType identifier_type;
     };
     
     

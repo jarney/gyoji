@@ -2,6 +2,7 @@
 
 #include <jlang-mir/types.hpp>
 #include <jlang-mir/functions.hpp>
+#include <jlang-mir/globals.hpp>
 
 namespace JLang::mir {
     /**
@@ -35,6 +36,9 @@ namespace JLang::mir {
 	~MIR();
 	const Types & get_types() const;
 	Types & get_types();
+
+	const Globals & get_globals() const;
+	Globals & get_globals();
 	
 	const Functions & get_functions() const;
 	Functions & get_functions();

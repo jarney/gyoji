@@ -528,13 +528,7 @@ struct_initializer
 	        // to have to care about how we name functions.
 	        // In future, we may support name mangling, but again, that's not the concern of the
 	        // back-end layers.
-	        std::string initializer_name = $2->get_value();
-                if (JLang::misc::contains(initializer_name, std::string("::"))) {
-		    auto error = std::make_unique<JLang::context::Error>("Syntax Error: Initializer expects name in the namespace of the class.");
-		    error->add_message($2->get_source_ref(), std::string("Initializer ") + initializer_name + " should be a local name, not a fully-qualified name.");
-		    return_data.compiler_context.get_errors().add_error(std::move(error));
-		}
-		$2->set_fully_qualified_name($2->get_value());
+		$2->set_identifier_type(JLang::frontend::tree::Terminal::IDENTIFIER_LOCAL_SCOPE);
                 $$ = std::make_unique<JLang::frontend::tree::StructInitializer>(
                                                                                    std::move($1),
                                                                                    std::move($2),
@@ -686,6 +680,11 @@ file_statement_using
 // a type instead of an identifier.
 class_decl_start
         : opt_access_modifier CLASS IDENTIFIER opt_class_argument_list {
+	        std::string function_name = $3->get_value();
+		const Symbol *sym = return_data.symbol_get_or_create(function_name, $3->get_source_ref());
+		$3->set_fully_qualified_name(sym->name);
+		$3->set_identifier_type(JLang::frontend::tree::Terminal::IDENTIFIER_GLOBAL_SCOPE);
+		
                 std::string class_name = $3->get_value();
                 JLang::frontend::tree::AccessModifier::AccessModifierType visibility_modifier = $1->get_type();
                 $$ = std::make_unique<JLang::frontend::tree::ClassDeclStart>(
@@ -830,6 +829,7 @@ enum_value_list
 
 enum_value
         : IDENTIFIER EQUALS expression_primary SEMICOLON {
+	        $1->set_identifier_type(JLang::frontend::tree::Terminal::IDENTIFIER_LOCAL_SCOPE);
                 $$ = std::make_unique<JLang::frontend::tree::EnumDefinitionValue>(
                                                                                     std::move($1),
                                                                                     std::move($2),
@@ -862,6 +862,8 @@ file_statement_function_declaration
 	        std::string function_name = $4->get_value();
 		const Symbol *sym = return_data.symbol_get_or_create(function_name, $4->get_source_ref());
 		$4->set_fully_qualified_name(sym->name);
+		$4->set_identifier_type(JLang::frontend::tree::Terminal::IDENTIFIER_GLOBAL_SCOPE);
+		
                 $$ = std::make_unique<JLang::frontend::tree::FileStatementFunctionDeclaration>(
                                                                                                  std::move($1),
                                                                                                  std::move($2),
@@ -928,6 +930,7 @@ function_definition_arg_list
         ;
 function_definition_arg
         : type_specifier IDENTIFIER {
+	        $2->set_identifier_type(JLang::frontend::tree::Terminal::IDENTIFIER_LOCAL_SCOPE);
                 $$ = std::make_unique<JLang::frontend::tree::FunctionDefinitionArg>(
                                                                                        std::move($1),
                                                                                        std::move($2)
@@ -1039,6 +1042,7 @@ opt_array_length
 
 statement_variable_declaration
         : type_specifier IDENTIFIER opt_array_length opt_global_initializer SEMICOLON {
+	        $2->set_identifier_type(JLang::frontend::tree::Terminal::IDENTIFIER_LOCAL_SCOPE);
                 $$ = std::make_unique<JLang::frontend::tree::StatementVariableDeclaration>(
                                                                                               std::move($1),
                                                                                               std::move($2),
@@ -1071,6 +1075,7 @@ statement_expression
         ;
 statement_goto
         : GOTO IDENTIFIER SEMICOLON {
+	        $2->set_identifier_type(JLang::frontend::tree::Terminal::IDENTIFIER_LOCAL_SCOPE);
                 $$ = std::make_unique<JLang::frontend::tree::StatementGoto>(
                                                                                std::move($1),
                                                                                std::move($2),
@@ -1099,6 +1104,7 @@ statement_continue
         ;
 statement_label
         : LABEL IDENTIFIER COLON {
+	        $2->set_identifier_type(JLang::frontend::tree::Terminal::IDENTIFIER_LOCAL_SCOPE);
                 $$ = std::make_unique<JLang::frontend::tree::StatementLabel>(
                                                                                 std::move($1),
                                                                                 std::move($2),
@@ -1280,6 +1286,16 @@ expression_primary
 
 expression_primary_identifier
         : IDENTIFIER {
+	        std::string function_name = $1->get_value();
+		const Symbol *sym = return_data.symbol_get(function_name, $1->get_source_ref());
+		if (sym == nullptr) {
+		    $1->set_identifier_type(JLang::frontend::tree::Terminal::IDENTIFIER_LOCAL_SCOPE);
+		}
+		else {
+		    $1->set_identifier_type(JLang::frontend::tree::Terminal::IDENTIFIER_GLOBAL_SCOPE);
+		    $1->set_fully_qualified_name(sym->name);
+		}
+		
                 $$ = std::make_unique<JLang::frontend::tree::ExpressionPrimaryIdentifier>(std::move($1));
                 PRINT_NONTERMINALS($$);
         }
@@ -1389,6 +1405,7 @@ expression_postfix_function_call
 
 expression_postfix_dot
         : expression_postfix DOT IDENTIFIER {
+	        $3->set_identifier_type(JLang::frontend::tree::Terminal::IDENTIFIER_LOCAL_SCOPE);
                 auto expr = std::make_unique<JLang::frontend::tree::ExpressionPostfixDot>(
                                                                                       std::move($1),
                                                                                       std::move($2),
@@ -1402,6 +1419,7 @@ expression_postfix_dot
 
 expression_postfix_arrow
         : expression_postfix PTR_OP IDENTIFIER {
+	        $3->set_identifier_type(JLang::frontend::tree::Terminal::IDENTIFIER_LOCAL_SCOPE);
                 auto expr = std::make_unique<JLang::frontend::tree::ExpressionPostfixArrow>(
                                                                                         std::move($1),
                                                                                         std::move($2),
@@ -2127,6 +2145,7 @@ class_member_declaration_list
 class_member_declaration
         : opt_access_modifier type_specifier IDENTIFIER opt_array_length SEMICOLON {
                 // Member Variable
+	        $3->set_identifier_type(JLang::frontend::tree::Terminal::IDENTIFIER_LOCAL_SCOPE);
                 auto expr = std::make_unique<JLang::frontend::tree::ClassMemberDeclarationVariable>(
                                                                                                        std::move($1),
                                                                                                        std::move($2),
@@ -2140,6 +2159,7 @@ class_member_declaration
         }
         | opt_access_modifier type_specifier IDENTIFIER PAREN_L opt_function_definition_arg_list PAREN_R SEMICOLON {
                 // Method
+	        $3->set_identifier_type(JLang::frontend::tree::Terminal::IDENTIFIER_LOCAL_SCOPE);
                 auto expr = std::make_unique<JLang::frontend::tree::ClassMemberDeclarationMethod>(
                                                                                                      std::move($1),
                                                                                                      std::move($2),

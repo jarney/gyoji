@@ -11,6 +11,8 @@ using namespace JLang::frontend::tree;
 Terminal::Terminal(const Token & _token)
     : SyntaxNode("terminal", this, _token.get_source_ref())
     , token(_token)
+    , identifier_type(IDENTIFIER_UNCATEGORIZED)
+
 {}
 Terminal::~Terminal()
 {}
@@ -36,6 +38,14 @@ Terminal::get_fully_qualified_name() const
 void
 Terminal::set_fully_qualified_name(std::string _name)
 { fully_qualified_name = _name; }
+
+const Terminal::IdentifierType &
+Terminal::get_identifier_type() const
+{ return identifier_type; }
+
+void
+Terminal::set_identifier_type(IdentifierType _identifier_type)
+{ identifier_type = _identifier_type; }
 
 ///////////////////////////////////////////////////
 // TerminalNonSyntax

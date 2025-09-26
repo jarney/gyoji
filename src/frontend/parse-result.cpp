@@ -89,6 +89,22 @@ ParseResult::symbol_table_dump()
 const Symbol *
 ParseResult::symbol_get_or_create(std::string symbol_name, const SourceReference & src_ref)
 {
+    const Symbol *found = symbol_get(symbol_name, src_ref);
+    if (found) return found;
+    
+    std::string fqs = JLang::misc::join_nonempty(
+	namespace_context->current()->fully_qualified(),
+	symbol_name,
+	std::string("::")
+	);
+    
+    symbol_define(fqs, src_ref);
+    return symbol_find(fqs);
+
+}
+const Symbol *
+ParseResult::symbol_get(std::string symbol_name, const SourceReference & src_ref) const
+{
     std::vector<std::string> path = namespace_context->namespace_search_path(symbol_name);
     std::vector<const Symbol *> found_symbols;
     // Search for the symbol using the path.
@@ -108,16 +124,11 @@ ParseResult::symbol_get_or_create(std::string symbol_name, const SourceReference
 	    error->add_message(sym->src_ref, std::string("Note: candidates are: ") + sym->name);
 	}
 	compiler_context.get_errors().add_error(std::move(error));
+	return nullptr;
     }
-
-    std::string fqs = JLang::misc::join_nonempty(
-	namespace_context->current()->fully_qualified(),
-	symbol_name,
-	std::string("::")
-	);
-    
-    symbol_define(fqs, src_ref);
-    return symbol_find(fqs);
+    else {
+	return nullptr;
+    }
 }
 
 Symbol::Symbol(std::string _name, const SourceReference & _src_ref)

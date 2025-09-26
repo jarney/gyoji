@@ -134,6 +134,8 @@ namespace JLang::frontend {
 	
 	const Symbol *symbol_get_or_create(std::string symbol, const JLang::context::SourceReference & _src_ref);
 	
+	const Symbol *symbol_get(std::string symbol, const JLang::context::SourceReference & _src_ref) const;
+	
 	void symbol_define(std::string symbol, const JLang::context::SourceReference & _src_ref);
 	/**
 	 * Searches for the symbol 'name' in the current namespace context.
