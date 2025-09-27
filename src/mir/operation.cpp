@@ -289,7 +289,7 @@ OperationJump::~OperationJump()
 // OperationReturn
 //////////////////////////////////////////////
 OperationReturn::OperationReturn(size_t _operand)
-    : Operation(OP_JUMP, 0, _operand)
+    : Operation(OP_RETURN, 0, _operand)
 {}
 OperationReturn::~OperationReturn()
 {}

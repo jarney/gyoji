@@ -7,6 +7,6 @@ u32 demo_function_call(u32 a)
 u32 demo_function()
 {
 	u32 a;
-	a = 12;
+	a = 1234567;
  	demo_function_call(a);
 }

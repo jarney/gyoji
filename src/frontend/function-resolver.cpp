@@ -900,6 +900,23 @@ FunctionDefinitionResolver::extract_from_expression(
 }
 
 void
+FunctionDefinitionResolver::extract_from_statement_return(
+    JLang::mir::Function & function,
+    size_t & current_block,
+    const StatementReturn & statement
+    )
+{
+    ExpressionValue retval;
+    extract_from_expression(function, current_block, retval, statement.get_expression());
+
+    auto operation = std::make_unique<OperationReturn>(
+	retval.variable_id
+	);
+    function.get_basic_block(current_block).add_statement(std::move(operation));
+}
+
+
+void
 FunctionDefinitionResolver::extract_from_statement_ifelse(
     JLang::mir::Function & function,
     size_t & current_block,
@@ -1041,7 +1058,7 @@ FunctionDefinitionResolver::extract_from_statement_list(
 	}
 	else if (std::holds_alternative<JLang::owned<StatementReturn>>(statement_type)) {
 	    const auto & statement = std::get<JLang::owned<StatementReturn>>(statement_type);
-	    fprintf(stderr, "return\n");
+	    extract_from_statement_return(function, current_block, *statement);
 	}
 	else {
 	    fprintf(stderr, "Compiler bug, invalid statement type\n");

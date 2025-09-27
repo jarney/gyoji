@@ -149,6 +149,12 @@ namespace JLang::frontend {
 	    const JLang::frontend::tree::Expression & expression
 	    );
 	
+	void extract_from_statement_return(
+	    JLang::mir::Function & function,
+	    size_t & current_block,
+	    const JLang::frontend::tree::StatementReturn & statement
+	    );
+	
 	void extract_from_statement_ifelse(
 	    JLang::mir::Function & function,
 	    size_t & current_block,

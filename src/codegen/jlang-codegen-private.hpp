@@ -38,8 +38,9 @@ namespace JLang::codegen {
 	const JLang::mir::MIR & mir;
 	
 	std::map<std::string, llvm::Type *> types;
-	
-	std::map<std::string, llvm::Value *> NamedValues;
+
+	std::map<std::string, llvm::Value *> local_lvalues;
+	std::map<std::string, llvm::Value *> local_variables;
 	
 	void create_types(const JLang::mir::MIR & mir);
 	llvm::Type *create_type(const JLang::mir::Type * type);
@@ -63,6 +64,7 @@ namespace JLang::codegen {
 	    );
 	void generate_operation_local_variable(
 	    std::map<size_t, llvm::Value *> & tmp_values,
+	    std::map<size_t, llvm::Value *> & tmp_lvalues,
 	    const JLang::mir::Function & mir_function,
 	    const JLang::mir::OperationLocalVariable *operation
 	    );
@@ -139,6 +141,7 @@ namespace JLang::codegen {
 	    );
 	void generate_operation_assign(
 	    std::map<size_t, llvm::Value *> & tmp_values,
+	    std::map<size_t, llvm::Value *> & tmp_lvalues,
 	    const JLang::mir::Function & mir_function,
 	    const JLang::mir::OperationAssign *operation
 	    );
@@ -152,13 +155,13 @@ namespace JLang::codegen {
 	    const JLang::mir::Function & mir_function,
 	    const JLang::mir::OperationJump *operation
 	    );
-	void generate_operation_return(
+	llvm::Value *generate_operation_return(
 	    std::map<size_t, llvm::Value *> & tmp_values,
 	    const JLang::mir::Function & mir_function,
 	    const JLang::mir::OperationReturn *operation
 	    );
 	
-	void generate_basic_block(const JLang::mir::Function & function, size_t blockid);
+	llvm::Value *generate_basic_block(const JLang::mir::Function & function, size_t blockid);
 	void generate_function(const JLang::mir::Function & function);
 	
 	llvm::Function * create_function(const JLang::mir::Function & function);

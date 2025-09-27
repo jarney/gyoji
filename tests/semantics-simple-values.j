@@ -1,8 +1,7 @@
 
-u32 demo_function()
+u32 demo_function(u32 x)
 {
 	u32 a;
-	a = 12;
-	a = a + 19;
+	a = a + x;
 	return a;
 }

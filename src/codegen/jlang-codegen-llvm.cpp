@@ -317,13 +317,19 @@ CodeGeneratorLLVMContext::generate_operation_symbol(
 void
 CodeGeneratorLLVMContext::generate_operation_local_variable(
     std::map<size_t, llvm::Value *> & tmp_values,
+    std::map<size_t, llvm::Value *> & tmp_lvalues,
     const JLang::mir::Function & mir_function,
     const JLang::mir::OperationLocalVariable *operation
     )
 {
     llvm::Type *type = types[operation->get_var_type()];
-    llvm::Value *value = Builder->CreateLoad(type, nullptr, operation->get_symbol_name());
+    llvm::Value *variable_ptr = local_variables[operation->get_symbol_name()];
+    llvm::Value *value = Builder->CreateLoad(type, variable_ptr);
+    tmp_lvalues.insert(std::pair(operation->get_result(), variable_ptr));
     tmp_values.insert(std::pair(operation->get_result(), value));
+    fprintf(stderr, "%ld = local var %s\n",
+	    operation->get_result(),
+	    operation->get_symbol_name().c_str());
 }
 void
 CodeGeneratorLLVMContext::generate_operation_local_declare(
@@ -334,7 +340,7 @@ CodeGeneratorLLVMContext::generate_operation_local_declare(
 {
     llvm::Type *type = types[operation->get_var_type()];
     llvm::Value *value = Builder->CreateAlloca(type, nullptr, operation->get_variable());
-    tmp_values.insert(std::pair(operation->get_result(), value));
+    local_variables[operation->get_variable()] = value;
 }
 void
 CodeGeneratorLLVMContext::generate_operation_local_undeclare(
@@ -350,10 +356,6 @@ CodeGeneratorLLVMContext::generate_operation_literal_char(
     const JLang::mir::OperationLiteralChar *operation
     )
 {
-    llvm::Value *value_a = tmp_values[operation->get_operands().at(0)];
-    llvm::Value *value_b = tmp_values[operation->get_operands().at(1)];
-    llvm::Value *value = Builder->CreateStore(value_a, value_b);
-    tmp_values.insert(std::pair(operation->get_result(), value));
 }
 void
 CodeGeneratorLLVMContext::generate_operation_literal_string(
@@ -370,6 +372,7 @@ CodeGeneratorLLVMContext::generate_operation_literal_int(
     )
 {
     llvm::Value *value = Builder->getInt32(atol(operation->get_literal_int().c_str()));
+    fprintf(stderr, "Literal int goes into %ld\n", operation->get_result());
     tmp_values.insert(std::pair(operation->get_result(), value));
 }
 void
@@ -418,6 +421,12 @@ CodeGeneratorLLVMContext::generate_operation_add(
     llvm::Value *value_b = tmp_values[operation->get_operands().at(1)];
     llvm::Value *sum = Builder->CreateAdd(value_a, value_b);
     tmp_values.insert(std::pair(operation->get_result(), sum));
+    fprintf(stderr, "%ld = %ld + %ld\n",
+	    operation->get_result(),
+	    operation->get_operands().at(0),
+	    operation->get_operands().at(1)
+	);
+	    
     
 }
 void
@@ -444,10 +453,16 @@ CodeGeneratorLLVMContext::generate_operation_divide(
 void
 CodeGeneratorLLVMContext::generate_operation_assign(
     std::map<size_t, llvm::Value *> & tmp_values,
+    std::map<size_t, llvm::Value *> & tmp_lvalues,
     const JLang::mir::Function & mir_function,
     const JLang::mir::OperationAssign *operation
     )
-{}
+{
+    llvm::Value *lvalue = tmp_lvalues[operation->get_operands().at(0)];
+    llvm::Value *value_b = tmp_values[operation->get_operands().at(1)];
+    llvm::Value *value = Builder->CreateStore(value_b, lvalue);
+    tmp_values.insert(std::pair(operation->get_result(), value));
+}
 void
 CodeGeneratorLLVMContext::generate_operation_jump_if_equal(
     std::map<size_t, llvm::Value *> & tmp_values,
@@ -462,15 +477,20 @@ CodeGeneratorLLVMContext::generate_operation_jump(
     const JLang::mir::OperationJump *operation
     )
 {}
-void
+
+llvm::Value *
 CodeGeneratorLLVMContext::generate_operation_return(
     std::map<size_t, llvm::Value *> & tmp_values,
     const JLang::mir::Function & mir_function,
     const JLang::mir::OperationReturn *operation
     )
-{}
+{
+    llvm::Value *value = tmp_values[operation->get_operands().at(0)];
+    Builder->CreateRet(value);
+    return value;
+}
 
-void
+llvm::Value *
 CodeGeneratorLLVMContext::generate_basic_block(
     const JLang::mir::Function & mir_function,
     size_t blockid
@@ -478,8 +498,11 @@ CodeGeneratorLLVMContext::generate_basic_block(
 {
     fprintf(stderr, "Generating code for block BB%ld\n", blockid);
     const JLang::mir::BasicBlock & mir_block = mir_function.get_basic_block(blockid);
-    std::map<size_t, llvm::Value*> tmp_values;
-    
+    std::map<size_t, llvm::Value *> tmp_values;
+    std::map<size_t, llvm::Value *> tmp_lvalues;
+
+    llvm::Value *return_value = nullptr;
+
     for (const auto & operation : mir_block.get_operations()) {
 	switch (operation->get_type()) {
 	case Operation::OP_FUNCTION_CALL:
@@ -489,7 +512,7 @@ CodeGeneratorLLVMContext::generate_basic_block(
 	    generate_operation_symbol(tmp_values, mir_function, (OperationSymbol*)operation.get());
 	    break;
 	case Operation::OP_LOCAL_VARIABLE:
-	    generate_operation_local_variable(tmp_values, mir_function, (OperationLocalVariable*)operation.get());
+	    generate_operation_local_variable(tmp_values, tmp_lvalues, mir_function, (OperationLocalVariable*)operation.get());
 	    break;
 	case Operation::OP_LOCAL_DECLARE:
 	    generate_operation_local_declare(tmp_values, mir_function, (OperationLocalDeclare*)operation.get());
@@ -534,7 +557,7 @@ CodeGeneratorLLVMContext::generate_basic_block(
 	    generate_operation_divide(tmp_values, mir_function, (OperationDivide*)operation.get());
 	    break;
 	case Operation::OP_ASSIGN:
-	    generate_operation_assign(tmp_values, mir_function, (OperationAssign*)operation.get());
+	    generate_operation_assign(tmp_values, tmp_lvalues, mir_function, (OperationAssign*)operation.get());
 	    break;
 	case Operation::OP_JUMP_IF_EQUAL:
 	    generate_operation_jump_if_equal(tmp_values, mir_function, (OperationJumpIfEqual*)operation.get());
@@ -543,12 +566,12 @@ CodeGeneratorLLVMContext::generate_basic_block(
 	    generate_operation_jump(tmp_values, mir_function, (OperationJump*)operation.get());
 	    break;
 	case Operation::OP_RETURN:
-	    generate_operation_return(tmp_values, mir_function, (OperationReturn*)operation.get());
+	    return_value = generate_operation_return(tmp_values, mir_function, (OperationReturn*)operation.get());
 	    break;
 	}
 	operation->dump();
     }
-    
+    return return_value;
 }
 
 
@@ -562,66 +585,47 @@ CodeGeneratorLLVMContext::generate_function(const JLang::mir::Function & functio
 	fprintf(stderr, "Function declaration not found\n");
     }
 
+    llvm::BasicBlock *BB = llvm::BasicBlock::Create(*TheContext, "bbinit", TheFunction);
+    Builder->SetInsertPoint(BB);
+	
+    // Record the function arguments in the NamedValues map.
+    
+    for (const auto & function_argument : function.get_arguments()) {
+	// Create an alloca for this variable.
+	
+	llvm::AllocaInst *argument_alloca = Builder->CreateAlloca(
+	    types[function_argument.get_type()->get_name()],
+	    nullptr,
+	    function_argument.get_name()
+	    );
+	
+	// Add arguments to variable symbol table.
+	local_variables[function_argument.get_name()] = argument_alloca;
+    }
+
+    llvm::Value *return_value = nullptr;
+    
     for (const auto blockid : function.get_blocks_in_order()) {
 	// Create a new basic block to start insertion into.
 	std::string block_name = std::string("BB") + std::to_string(blockid);
-	llvm::BasicBlock *BB = llvm::BasicBlock::Create(*TheContext, block_name, TheFunction);
-	Builder->SetInsertPoint(BB);
-	generate_basic_block(function, blockid);
+	//llvm::BasicBlock *BB = llvm::BasicBlock::Create(*TheContext, block_name, TheFunction);
+	//Builder->SetInsertPoint(BB);
+	return_value = generate_basic_block(function, blockid);
     }
-    
-    // Record the function arguments in the NamedValues map.
-    //NamedValues.clear();
-    for (auto &Arg : TheFunction->args()) {
-	// Create an alloca for this variable.
-	llvm::AllocaInst *Alloca = CreateEntryBlockAlloca(TheFunction, Arg.getName());
-	
-	// Store the initial value into the alloca.
-	Builder->CreateStore(&Arg, Alloca);
-	
-	// Add arguments to variable symbol table.
-	//NamedValues[std::string(Arg.getName())] = Alloca;
+
+    if (return_value == nullptr) {
+	Builder->CreateRet(
+	    Builder->getInt32(0x1000)
+	    );
     }
-    
-#if 0
-    printf("Generating body\n");
-    if (Value *RetVal = Body->codegen()) {
-	printf("Generated body...\n");
-	// Finish off the function.
-	Builder->CreateRet(RetVal);
-	
-	// Validate the generated code, checking for consistency.
-	verifyFunction(*TheFunction);
+    else {
+	fprintf(stderr, "Return already happened\n");
     }
-#else
-    
-    //Value *block = codegen(*functiondef.scope_body);
-    
-#if 0
-    if (Value *RetVal = llvm::ConstantFP::get(*TheContext, llvm::APFloat(0.0))) {
-	printf("Generated body...\n");
-	// Finish off the function.
-	Builder->CreateRet(RetVal);
-    }
-#endif
-    //  if (!block) {
-    llvm::Type *return_value_type = llvm::Type::getInt32Ty(*TheContext);
-    Builder->CreateRet(
-	Builder->getInt32(0)
-	);
-    //  }
-    //  else {
-    //    Builder->CreateRet(block);
-    //  }
     
     // Validate the generated code, checking for consistency.
     verifyFunction(*TheFunction);
     
-#endif
-    
-    //  for (auto &Arg : TheFunction->args()) {
-    //    NamedValues.erase(std::string(Arg.getName()));
-    //  }
+    local_variables.clear();
 }
 
 

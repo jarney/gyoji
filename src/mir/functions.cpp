@@ -81,7 +81,11 @@ Function::Function(
     , arguments(_arguments)
     , source_ref(_source_ref)
     , blockid(0)
-{}
+{
+    for (const auto & arg : arguments) {
+	add_local(LocalVariable(arg.get_name(), arg.get_type()->get_name(), _source_ref));
+    }
+}
 
 Function::~Function()
 {}
