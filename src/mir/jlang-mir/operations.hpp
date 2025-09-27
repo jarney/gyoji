@@ -53,18 +53,167 @@ namespace JLang::mir {
     public:
 	typedef enum {
 	    OP_FUNCTION_CALL,
-	    OP_IMMEDIATE,
 	    OP_SYMBOL,
+	    OP_LOCAL_DECLARE,
+	    OP_LOCAL_UNDECLARE,
+	    OP_LITERAL_CHAR,
+	    OP_LITERAL_STRING,
+	    OP_LITERAL_INT,
+	    OP_LITERAL_FLOAT,
+	    OP_POST_INCREMENT,
+	    OP_POST_DECREMENT,
+	    OP_PRE_INCREMENT,
+	    OP_PRE_DECREMENT,
 	    OP_ADD,
-	    OP_MULTIPLY,
-	    OP_DIVIDIE,
 	    OP_SUBTRACT,
-	    OP_ASSIGN
+	    OP_MULTIPLY,
+	    OP_DIVIDE,
+	    OP_ASSIGN,
+	    OP_JUMP_IF_EQUAL,
+	    OP_JUMP,
+	    OP_RETURN
 	} OperationType;
-	Operation();
+	Operation(OperationType _type, size_t _result);
+	Operation(OperationType _type, size_t _result, size_t _operand);
+	Operation(OperationType _type, size_t _result, size_t _operand_a, size_t _operand_b);
+	Operation(const Operation & _other);
 	~Operation();
+
+	std::string get_name() const;
+	void dump() const;
+	void add_operand(size_t operand);
+	OperationType get_type() const;
+	const std::vector<size_t> & get_operands() const;
+	size_t get_result() const;
+	
+    private:
+	OperationType type;
 	std::vector<size_t> operands;
 	size_t result;
+    };
+
+    class OperationFunctionCall : public Operation {
+    public:
+	OperationFunctionCall(size_t _result);
+	~OperationFunctionCall();
+    };
+    
+    class OperationSymbol : public Operation {
+    public:
+	OperationSymbol(size_t _result, std::string _symbol_name);
+	~OperationSymbol();
+	const std::string & get_symbol_name() const;
+    private:
+	const std::string symbol_name;
+    };
+
+    class OperationLiteralChar : public Operation {
+    public:
+	OperationLiteralChar(size_t _result, std::string _literal_char);
+	~OperationLiteralChar();
+	const std::string & get_literal_char();
+    private:
+	const std::string literal_char;
+    };
+    class OperationLiteralString : public Operation {
+    public:
+	OperationLiteralString(size_t _result, std::string _literal_string);
+	~OperationLiteralString();
+	const std::string & get_literal_string();
+    private:
+	const std::string literal_string;
+    };
+    class OperationLiteralInt : public Operation {
+    public:
+	OperationLiteralInt(size_t _result, std::string _literal_int);
+	~OperationLiteralInt();
+	const std::string & get_literal_int();
+    private:
+	const std::string literal_int;
+    };
+    class OperationLiteralFloat : public Operation {
+    public:
+	OperationLiteralFloat(size_t _result, std::string _literal_float);
+	~OperationLiteralFloat();
+	const std::string & get_literal_float();
+    private:
+	const std::string literal_float;
+    };
+    class OperationPreIncrement : public Operation {
+    public:
+	OperationPreIncrement(size_t _result, size_t _operand);
+	~OperationPreIncrement();
     private:
     };
+    
+    class OperationPostIncrement : public Operation {
+    public:
+	OperationPostIncrement(size_t _result, size_t _operand);
+	~OperationPostIncrement();
+    private:
+    };
+    class OperationPreDecrement : public Operation {
+    public:
+	OperationPreDecrement(size_t _result, size_t _operand);
+	~OperationPreDecrement();
+    private:
+    };
+    
+    class OperationPostDecrement : public Operation {
+    public:
+	OperationPostDecrement(size_t _result, size_t _operand);
+	~OperationPostDecrement();
+    private:
+    };
+    
+    class OperationAdd : public Operation {
+    };
+    class OperationSubtract : public Operation {
+    };
+    class OperationMultiply : public Operation {
+    };
+    class OperationDivide : public Operation {
+    };
+    class OperationAssign : public Operation {
+    };
+
+    class OperationJumpIfEqual : public Operation {
+    public:
+	OperationJumpIfEqual(size_t _operand, std::string _label);
+	~OperationJumpIfEqual();
+    private:
+	std::string label;
+    };
+    
+    class OperationJump : public Operation {
+    public:
+	OperationJump(std::string _label);
+	~OperationJump();
+    private:
+	std::string label;
+    };
+    
+    class OperationReturn : public Operation {
+    public:
+	OperationReturn(size_t _operand);
+	~OperationReturn();
+    };
+
+    class OperationLocalDeclare : public Operation {
+    public:
+	OperationLocalDeclare(std::string _variable);
+	~OperationLocalDeclare();
+    private:
+	std::string variable;
+    };
+    class OperationLocalUndeclare : public Operation {
+    public:
+	OperationLocalUndeclare(std::string _variable);
+	~OperationLocalUndeclare();
+    private:
+	std::string variable;
+    };
+
+    
+    void operation_static_init();
 };

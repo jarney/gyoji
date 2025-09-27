@@ -63,6 +63,8 @@ Parser::parse_to_mir(
 	return mir;
     }
 
+    JLang::mir::operation_static_init();
+
     fprintf(stderr, "============================\n");
     fprintf(stderr, "Symbol table resolution pass\n");
     fprintf(stderr, "============================\n");

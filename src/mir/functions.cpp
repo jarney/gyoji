@@ -8,7 +8,8 @@ using namespace JLang::mir;
 // Functions
 /////////////////////////////////////
 Functions::Functions()
-{}
+{
+}
 
 Functions::~Functions()
 {}
@@ -127,6 +128,9 @@ Function::push_block(size_t blockid)
 {
     blocks_in_order.push_back(blockid);
 }
+const std::vector<size_t> &
+Function::get_blocks_in_order() const
+{ return blocks_in_order; }
 
 const LocalVariable *
 Function::get_local(std::string local_name)
@@ -179,21 +183,6 @@ Function::dump() const
     }
 }
 /////////////////////////////////////
-// SimpleStatement
-/////////////////////////////////////
-
-SimpleStatement::SimpleStatement(std::string _statement_desc)
-    : statement_desc(_statement_desc)
-{}
-
-SimpleStatement::~SimpleStatement()
-{}
-const std::string & 
-SimpleStatement::get_statement() const
-{
-    return statement_desc;
-}
-/////////////////////////////////////
 // BasicBlock
 /////////////////////////////////////
 
@@ -204,19 +193,21 @@ BasicBlock::~BasicBlock()
 {}
 
 void
-BasicBlock::add_statement(std::string statement)
+BasicBlock::add_statement(JLang::owned<Operation> _operation)
 {
-    JLang::owned<SimpleStatement> simple_statement = std::make_unique<SimpleStatement>(statement);
-    statements.push_back(std::move(simple_statement));
+    statements.push_back(std::move(_operation));
 }
 
 void
 BasicBlock::dump() const
 {
     for (const auto & statement : statements) {
-	fprintf(stderr, "    %s\n", statement->get_statement().c_str());
+	statement->dump();
     }
 }
+const std::vector<JLang::owned<Operation>> &
+BasicBlock::get_operations() const
+{ return statements; }
 
 /////////////////////////////////////
 // FunctionArgument

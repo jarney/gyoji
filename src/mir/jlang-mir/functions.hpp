@@ -2,6 +2,7 @@
 
 #include <jlang-misc/pointers.hpp>
 #include <jlang-mir/types.hpp>
+#include <jlang-mir/operations.hpp>
 
 #include <string>
 #include <map>
@@ -46,23 +47,16 @@ namespace JLang::mir {
     // Instead, dependent statements appear first
     // and store their results into temporary
     // variables for the next statements later.
-    class SimpleStatement {
-    public:
-	SimpleStatement(std::string _statement_desc);
-	~SimpleStatement();
-	const std::string & get_statement() const;
-    private:
-	std::string statement_desc;
-    };
     
     class BasicBlock {
     public:
 	BasicBlock();
 	~BasicBlock();
-	void add_statement(std::string statement);
+	void add_statement(JLang::owned<Operation> operation);
+	const std::vector<JLang::owned<Operation>> & get_operations() const;
 	void dump() const;
     private:
-	std::vector<JLang::owned<SimpleStatement>> statements;
+	std::vector<JLang::owned<Operation>> statements;
     };
     
     class FunctionArgument {
@@ -127,7 +121,9 @@ namespace JLang::mir {
 	BasicBlock & get_basic_block(size_t blockid);
 	size_t add_block();
 	void push_block(size_t blockid);
-	
+
+	const std::vector<size_t> & get_blocks_in_order() const;
+
 	const LocalVariable * get_local(std::string local_name);
 	bool add_local(const LocalVariable & local);
 	void remove_local(std::string local_name);

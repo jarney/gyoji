@@ -51,6 +51,7 @@ namespace JLang::codegen {
 	llvm::Type *create_type_function_pointer(const JLang::mir::Type *fptr_type);
 	
 	
+	void generate_basic_block(const JLang::mir::Function & function, size_t blockid);
 	void generate_function(const JLang::mir::Function & function);
 	
 	llvm::Function * create_function(const JLang::mir::Function & function);

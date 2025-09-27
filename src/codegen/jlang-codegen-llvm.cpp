@@ -300,6 +300,24 @@ CodeGeneratorLLVMContext::generate()
 }
 
 void
+CodeGeneratorLLVMContext::generate_basic_block(const JLang::mir::Function & mir_function, size_t blockid)
+{
+    fprintf(stderr, "Generating code for block BB%ld\n", blockid);
+    const JLang::mir::BasicBlock & mir_block = mir_function.get_basic_block(blockid);
+
+    for (const auto & operation : mir_block.get_operations()) {
+	switch (operation->get_type()) {
+	case Operation::OP_FUNCTION_CALL:
+	    fprintf(stderr, "Generating a function call\n");
+	    break;
+	}
+	operation->dump();
+    }
+    
+}
+
+
+void
 CodeGeneratorLLVMContext::generate_function(const JLang::mir::Function & function)
 {
     // Transfer ownership of the prototype to the FunctionProtos map, but keep a
@@ -308,10 +326,14 @@ CodeGeneratorLLVMContext::generate_function(const JLang::mir::Function & functio
     if (!TheFunction) {
 	fprintf(stderr, "Function declaration not found\n");
     }
-    
-    // Create a new basic block to start insertion into.
-    llvm::BasicBlock *BB = llvm::BasicBlock::Create(*TheContext, "entry", TheFunction);
-    Builder->SetInsertPoint(BB);
+
+    for (const auto blockid : function.get_blocks_in_order()) {
+	// Create a new basic block to start insertion into.
+	std::string block_name = std::string("BB") + std::to_string(blockid);
+	llvm::BasicBlock *BB = llvm::BasicBlock::Create(*TheContext, block_name, TheFunction);
+	Builder->SetInsertPoint(BB);
+	generate_basic_block(function, blockid);
+    }
     
     // Record the function arguments in the NamedValues map.
     //NamedValues.clear();

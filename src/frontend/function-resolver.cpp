@@ -163,12 +163,15 @@ FunctionDefinitionResolver::extract_from_expression_primary_identifier(
 	    returned_value.type = ExpressionValue::TYPE_VALUE;
 	    returned_value.value = localvar->type;
 	    returned_value.variable_id = get_new_tmpvar();
+
+
+	    // TODO
+//	    function.get_basic_block(current_block).add_statement(
+//		returned_value.value + std::string(" ") +
+//		std::string("_") + std::to_string(returned_value.variable_id) + std::string(" = ") + 
+//		std::string("local-identifier ") + expression.get_identifier().get_value()
+//		);
 	    
-	    function.get_basic_block(current_block).add_statement(
-		returned_value.value + std::string(" ") +
-		std::string("_") + std::to_string(returned_value.variable_id) + std::string(" = ") + 
-		std::string("local-identifier ") + expression.get_identifier().get_value()
-		);
 	    // XXX We should try to collect all of them and
 	    // emit an error if there is an ambiguity (i.e. shadowing of parameters,
 	    // or class members).
@@ -217,11 +220,11 @@ FunctionDefinitionResolver::extract_from_expression_primary_identifier(
 	returned_value.value = symbol->get_type()->get_name();
 	returned_value.variable_id = get_new_tmpvar();
 
-	function.get_basic_block(current_block).add_statement(
-	    returned_value.value + std::string(" ") +
-	    std::string("_") + std::to_string(returned_value.variable_id) + std::string(" = ") + 
-	    std::string("global-symbol-identifier ") + expression.get_identifier().get_fully_qualified_name()
+	auto operation = std::make_unique<OperationSymbol>(
+	    returned_value.variable_id,
+	    expression.get_identifier().get_fully_qualified_name()
 	    );
+	function.get_basic_block(current_block).add_statement(std::move(operation));
     }
 }
 
@@ -252,13 +255,14 @@ FunctionDefinitionResolver::extract_from_expression_primary_literal_char(
     returned_value.value = std::string("u8");
     returned_value.variable_id = get_new_tmpvar();
     
+    auto operation = std::make_unique<OperationLiteralChar>(
+	returned_value.variable_id,
+	expression.get_value()
+	);
+
     function
 	.get_basic_block(current_block)
-	.add_statement(
-	    returned_value.value + std::string(" ") +
-	    std::string("_") + std::to_string(returned_value.variable_id) + std::string(" = ") +
-	    std::string("char literal ") + expression.get_value()
-	    );
+	.add_statement(std::move(operation));
 }
 
 void
@@ -272,13 +276,13 @@ FunctionDefinitionResolver::extract_from_expression_primary_literal_string(
     returned_value.value = std::string("u8*");
     returned_value.variable_id = get_new_tmpvar();
 
+    auto operation = std::make_unique<OperationLiteralString>(
+	returned_value.variable_id,
+	expression.get_value()
+	);
     function
 	.get_basic_block(current_block)
-	.add_statement(
-	    returned_value.value + std::string(" ") +
-	    std::string("_") + std::to_string(returned_value.variable_id) + std::string(" = ") +
-	    std::string("string literal ") + expression.get_value()
-	    );
+	.add_statement(std::move(operation));
 }
 
 void
@@ -292,13 +296,13 @@ FunctionDefinitionResolver::extract_from_expression_primary_literal_int(
     returned_value.value = std::string("u32"); // Where should we distinguish u8,u16,u32,u64,i8,i16,i32,i64?
     returned_value.variable_id = get_new_tmpvar();
 
+    auto operation = std::make_unique<OperationLiteralInt>(
+	returned_value.variable_id,
+	expression.get_value()
+	);
     function
 	.get_basic_block(current_block)
-	.add_statement(
-	    returned_value.value + std::string(" ") +
-	    std::string("_") + std::to_string(returned_value.variable_id) + std::string(" = ") +
-	    std::string("int literal ") + expression.get_value()
-	    );
+	.add_statement(std::move(operation));
 }
 
 void
@@ -312,13 +316,13 @@ FunctionDefinitionResolver::extract_from_expression_primary_literal_float(
     returned_value.value = std::string("f64"); // Where should we distinguish f32,f64?
     returned_value.variable_id = get_new_tmpvar();
 
+    auto operation = std::make_unique<OperationLiteralFloat>(
+	returned_value.variable_id,
+	expression.get_value()
+	);
     function
 	.get_basic_block(current_block)
-	.add_statement(
-	    returned_value.value + std::string(" ") +
-	    std::string("_") + std::to_string(returned_value.variable_id) + std::string(" = ") +
-	    std::string("float literal ") + expression.get_value()
-	    );
+	.add_statement(std::move(operation));
 }
 
 static bool is_immediate_function_type(const ExpressionValue & value)
@@ -373,9 +377,10 @@ FunctionDefinitionResolver::extract_from_expression_postfix_array_index(
 	return;
     }
     // Look up the type of the array 'pointer to' type
-    function
-	.get_basic_block(current_block)
-	.add_statement("arrayindex[]");
+    // TODO
+//    function
+//	.get_basic_block(current_block)
+//	.add_statement("arrayindex[]");
 }
 void
 FunctionDefinitionResolver::extract_from_expression_postfix_function_call(
@@ -407,19 +412,19 @@ FunctionDefinitionResolver::extract_from_expression_postfix_function_call(
     returned_value.value = function_pointer_type->get_return_type()->get_name();
     returned_value.variable_id = get_new_tmpvar();
     
+    auto operation = std::make_unique<OperationFunctionCall>(
+	returned_value.variable_id
+	);
+    operation->add_operand(function_type.variable_id);  // The function to call.
+    
     std::string call_args = "";
     for (const auto & av : arg_types) {
 	call_args += std::string("_") + std::to_string(av.variable_id) + " ";
+	operation->add_operand(av.variable_id);
     }
     function
 	.get_basic_block(current_block)
-	.add_statement(
-	    returned_value.value + std::string(" ") +
-	    std::string("_") + std::to_string(returned_value.variable_id) + std::string(" = ") + 
-	    std::string("function-call ") + std::string("_") + std::to_string(function_type.variable_id) +
-	    std::string(" ") + 
-	    std::string("(") + call_args + std::string(")")
-	    );
+	.add_statement(std::move(operation));
     
 }
 
@@ -431,9 +436,10 @@ FunctionDefinitionResolver::extract_from_expression_postfix_dot(
     const ExpressionPostfixDot & expression)
 {
     extract_from_expression(function, current_block, returned_value, expression.get_expression());
-    function
-	.get_basic_block(current_block)
-	.add_statement(std::string("dot ") + expression.get_identifier());
+    // TODO
+//    function
+//	.get_basic_block(current_block)
+//	.add_statement(std::string("dot ") + expression.get_identifier());
 }
 void
 FunctionDefinitionResolver::extract_from_expression_postfix_arrow(
@@ -443,9 +449,10 @@ FunctionDefinitionResolver::extract_from_expression_postfix_arrow(
     const ExpressionPostfixArrow & expression)
 {
     extract_from_expression(function, current_block, returned_value, expression.get_expression());
-    function
-	.get_basic_block(current_block)
-	.add_statement(std::string("arrow ") + expression.get_identifier());
+    // TODO
+//    function
+//	.get_basic_block(current_block)
+//	.add_statement(std::string("arrow ") + expression.get_identifier());
 }
 void
 FunctionDefinitionResolver::extract_from_expression_postfix_incdec(
@@ -454,27 +461,42 @@ FunctionDefinitionResolver::extract_from_expression_postfix_incdec(
     ExpressionValue & returned_value,
     const ExpressionPostfixIncDec & expression)
 {
-    extract_from_expression(function, current_block, returned_value, expression.get_expression());
+    ExpressionValue operand_value;
+    extract_from_expression(function, current_block, operand_value, expression.get_expression());
 
+    returned_value.type = ExpressionValue::TYPE_VALUE;
+    returned_value.value = operand_value.value;
+    returned_value.variable_id = get_new_tmpvar();
+    
     std::string op = "unknown";
     switch (expression.get_type()) {
     case ExpressionPostfixIncDec::INCREMENT:
+    {
 	op = "++";
+	OperationPostIncrement operation(
+	    returned_value.variable_id, operand_value.variable_id
+	    );
+    }
 	break;
     case ExpressionPostfixIncDec::DECREMENT:
+    {
 	op = "--";
+	OperationPostDecrement operation(
+	    returned_value.variable_id, operand_value.variable_id
+	    );
+    }
 	break;
     default:
 	break;
     }
     
-    function
-	.get_basic_block(current_block)
-	.add_statement(
-	    returned_value.value + std::string(" ") +
-	    std::string("_") + std::to_string(returned_value.variable_id) + std::string(" = ") + 
-	    std::string("incdec ") + op
-	    );
+//    function
+//	.get_basic_block(current_block)
+//	.add_statement(
+//	    returned_value.value + std::string(" ") +
+//	    std::string("_") + std::to_string(returned_value.variable_id) + std::string(" = ") + 
+//	    std::string("incdec ") + op
+//	    );
     
 }
 
@@ -565,13 +587,14 @@ FunctionDefinitionResolver::extract_from_expression_unary_prefix(
     returned_value.type = operand_value.type;
     returned_value.value = operand_value.value;
     returned_value.variable_id = get_new_tmpvar();
-    function
-	.get_basic_block(current_block)
-	.add_statement(
-	    returned_value.value + std::string(" ") +
-	    std::string("_") + std::to_string(returned_value.variable_id) + std::string(" = ") + 
-	    std::string("unary ") + op + std::string("_") + std::to_string(operand_value.variable_id)
-	    );
+    // TODO
+//    function
+//	.get_basic_block(current_block)
+//	.add_statement(
+//	    returned_value.value + std::string(" ") +
+//	    std::string("_") + std::to_string(returned_value.variable_id) + std::string(" = ") + 
+//	    std::string("unary ") + op + std::string("_") + std::to_string(operand_value.variable_id)
+//	    );
   
 }
 void
@@ -581,9 +604,10 @@ FunctionDefinitionResolver::extract_from_expression_unary_sizeof_type(
     ExpressionValue & returned_value,
     const ExpressionUnarySizeofType & expression)
 {
-    function
-	.get_basic_block(current_block)
-	.add_statement("sizeof");
+    // TODO
+//    function
+//	.get_basic_block(current_block)
+//	.add_statement("sizeof");
 }
 
 void
@@ -734,13 +758,13 @@ FunctionDefinitionResolver::extract_from_expression_binary(
     }
 
     returned_value.variable_id = get_new_tmpvar();
-    function
-	.get_basic_block(current_block)
-	.add_statement(
-	    returned_value.value + std::string(" ") +
-	    std::string("_") + std::to_string(returned_value.variable_id) + std::string(" = ") + 
-	    std::string("binary operator ") + op + std::string(" a=") + std::to_string(aval.variable_id) + std::string(" b=") + std::to_string(bval.variable_id)
-	    );
+//    function
+//	.get_basic_block(current_block)
+//	.add_statement(
+//	    returned_value.value + std::string(" ") +
+//	    std::string("_") + std::to_string(returned_value.variable_id) + std::string(" = ") + 
+//	    std::string("binary operator ") + op + std::string(" a=") + std::to_string(aval.variable_id) + std::string(" b=") + std::to_string(bval.variable_id)
+//	    );
 }
 void
 FunctionDefinitionResolver::extract_from_expression_trinary(
@@ -749,9 +773,9 @@ FunctionDefinitionResolver::extract_from_expression_trinary(
     ExpressionValue & returned_value,
     const ExpressionTrinary & expression)
 {
-    function
-	.get_basic_block(current_block)
-	.add_statement(std::string("trinary operator "));
+//    function
+//	.get_basic_block(current_block)
+//	.add_statement(std::string("trinary operator "));
 }
 void
 FunctionDefinitionResolver::extract_from_expression_cast(
@@ -760,9 +784,9 @@ FunctionDefinitionResolver::extract_from_expression_cast(
     ExpressionValue & returned_value,
     const ExpressionCast & expression)
 {
-    function
-	.get_basic_block(current_block)
-	.add_statement(std::string("cast"));
+//    function
+//	.get_basic_block(current_block)
+//	.add_statement(std::string("cast"));
 }
 
 
@@ -868,10 +892,18 @@ FunctionDefinitionResolver::extract_from_statement_ifelse(
     size_t blockid_else = -1;
     if (statement.has_else() || statement.has_else_if()) {
 	blockid_else = function.add_block();
-	function.get_basic_block(current_block).add_statement(std::string("jne BB") + std::to_string(blockid_else));
+	auto operation = std::make_unique<OperationJumpIfEqual>(
+	    condition_value.variable_id,
+	    std::to_string(blockid_else)
+	    );
+	function.get_basic_block(current_block).add_statement(std::move(operation));
     }
     else {
-	function.get_basic_block(current_block).add_statement(std::string("jne BB") + std::to_string(blockid_done));
+	auto operation = std::make_unique<OperationJumpIfEqual>(
+	    condition_value.variable_id,
+	    std::to_string(blockid_done)
+	    );
+	function.get_basic_block(current_block).add_statement(std::move(operation));
     }
     function.push_block(current_block);
     current_block = function.add_block();
@@ -883,7 +915,10 @@ FunctionDefinitionResolver::extract_from_statement_ifelse(
 	);
     
     if (statement.has_else()) {
-	function.get_basic_block(current_block).add_statement(std::string("jmp BB") + std::to_string(blockid_done));
+	auto operation = std::make_unique<OperationJump>(
+	    std::to_string(blockid_done)
+	    );
+	function.get_basic_block(current_block).add_statement(std::move(operation));
 	function.push_block(current_block);
 	
 	extract_from_statement_list(
@@ -918,7 +953,6 @@ FunctionDefinitionResolver::extract_from_statement_list(
 	const auto & statement_type = statement_el->get_statement();
 	if (std::holds_alternative<JLang::owned<StatementVariableDeclaration>>(statement_type)) {
 	    const auto & statement = std::get<JLang::owned<StatementVariableDeclaration>>(statement_type);
-	    function.get_basic_block(current_block).add_statement(std::string("declare ") + statement->get_name());
 	    
 	    JLang::mir::Type * mir_type = type_resolver.extract_from_type_specifier(statement->get_type_specifier());
 
@@ -933,7 +967,9 @@ FunctionDefinitionResolver::extract_from_statement_list(
 			std::string("Variable with name ") + local.name + std::string(" is already in scope and cannot be duplicated in this function.")
 			);
 	    }
-	    
+
+	    auto operation = std::make_unique<OperationLocalDeclare>(statement->get_name());
+	    function.get_basic_block(current_block).add_statement(std::move(operation));
 	    unwind.push_back(statement->get_name());
 	}
 	else if (std::holds_alternative<JLang::owned<StatementBlock>>(statement_type)) {
@@ -985,7 +1021,9 @@ FunctionDefinitionResolver::extract_from_statement_list(
     for (const auto & undecl : unwind) {
 	function.remove_local(undecl);
 	fprintf(stderr, "Undeclaring %s in block %ld\n", undecl.c_str(), current_block);
-	function.get_basic_block(current_block).add_statement(std::string("undeclare ") + undecl);
+	    
+	auto operation = std::make_unique<OperationLocalUndeclare>(undecl);
+	function.get_basic_block(current_block).add_statement(std::move(operation));
     }
     start_block = current_block;
 }
