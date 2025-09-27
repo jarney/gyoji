@@ -163,7 +163,14 @@ FunctionDefinitionResolver::extract_from_expression_primary_identifier(
 	    returned_value.type = ExpressionValue::TYPE_VALUE;
 	    returned_value.value = localvar->type;
 	    returned_value.variable_id = get_new_tmpvar();
-
+	    fprintf(stderr, "Local variable %ld\n", returned_value.variable_id);
+	    
+	    auto operation = std::make_unique<OperationLocalVariable>(
+		returned_value.variable_id,
+		expression.get_identifier().get_value(),
+		localvar->type
+		);
+	    function.get_basic_block(current_block).add_statement(std::move(operation));
 
 	    // TODO
 //	    function.get_basic_block(current_block).add_statement(
@@ -522,9 +529,14 @@ FunctionDefinitionResolver::extract_from_expression_unary_prefix(
 	expression.get_expression()
 	);
     
+    returned_value.type = operand_value.type;
+    returned_value.value = operand_value.value;
+    returned_value.variable_id = get_new_tmpvar();
+
     std::string op = "";
     switch (expression.get_type()) {
     case ExpressionUnaryPrefix::INCREMENT:
+	
 	op = "++";
 	break;
     case ExpressionUnaryPrefix::DECREMENT:
@@ -584,9 +596,6 @@ FunctionDefinitionResolver::extract_from_expression_unary_prefix(
 	break;
     }
 
-    returned_value.type = operand_value.type;
-    returned_value.value = operand_value.value;
-    returned_value.variable_id = get_new_tmpvar();
     // TODO
 //    function
 //	.get_basic_block(current_block)
@@ -633,12 +642,24 @@ FunctionDefinitionResolver::extract_from_expression_binary(
 		);
 	return;
     }
+    returned_value.variable_id = get_new_tmpvar();
     
     switch (expression.get_operator()) {
     case ExpressionBinary::ADD:
+	{
 	op = "+";
 	returned_value.type = ExpressionValue::TYPE_VALUE;
 	returned_value.value = "u32";
+
+	auto operation = std::make_unique<OperationAdd>(
+	    returned_value.variable_id,
+	    aval.variable_id,
+	    bval.variable_id
+	    );
+	function
+	    .get_basic_block(current_block)
+	    .add_statement(std::move(operation));
+	}	
 	break;
     case ExpressionBinary::SUBTRACT:
 	op = "-";
@@ -719,8 +740,18 @@ FunctionDefinitionResolver::extract_from_expression_binary(
 	break;
 	
     case ExpressionBinary::EQUALS:
+    {
 	op = "=";
-	break;
+	auto operation = std::make_unique<OperationAssign>(
+	    returned_value.variable_id,
+	    aval.variable_id,
+	    bval.variable_id
+	    );
+	function
+	    .get_basic_block(current_block)
+	    .add_statement(std::move(operation));
+    }	
+        break;
     case ExpressionBinary::MUL_ASSIGN:
 	op = "*=";
 	break;
@@ -757,7 +788,6 @@ FunctionDefinitionResolver::extract_from_expression_binary(
 	break;
     }
 
-    returned_value.variable_id = get_new_tmpvar();
 //    function
 //	.get_basic_block(current_block)
 //	.add_statement(
@@ -968,7 +998,7 @@ FunctionDefinitionResolver::extract_from_statement_list(
 			);
 	    }
 
-	    auto operation = std::make_unique<OperationLocalDeclare>(statement->get_name());
+	    auto operation = std::make_unique<OperationLocalDeclare>(statement->get_name(), mir_type->get_name());
 	    function.get_basic_block(current_block).add_statement(std::move(operation));
 	    unwind.push_back(statement->get_name());
 	}

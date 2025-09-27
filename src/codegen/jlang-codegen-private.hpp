@@ -50,6 +50,113 @@ namespace JLang::codegen {
         llvm::Type *create_type_reference(const JLang::mir::Type *referencetype);
 	llvm::Type *create_type_function_pointer(const JLang::mir::Type *fptr_type);
 	
+
+	void generate_operation_function_call(
+	    std::map<size_t, llvm::Value *> & tmp_values,
+	    const JLang::mir::Function & mir_function,
+	    const JLang::mir::OperationFunctionCall *operation
+	    );
+	void generate_operation_symbol(
+	    std::map<size_t, llvm::Value *> & tmp_values,
+	    const JLang::mir::Function & mir_function,
+	    const JLang::mir::OperationSymbol *operation
+	    );
+	void generate_operation_local_variable(
+	    std::map<size_t, llvm::Value *> & tmp_values,
+	    const JLang::mir::Function & mir_function,
+	    const JLang::mir::OperationLocalVariable *operation
+	    );
+	
+	void generate_operation_local_declare(
+	    std::map<size_t, llvm::Value *> & tmp_values,
+	    const JLang::mir::Function & mir_function,
+	    const JLang::mir::OperationLocalDeclare *operation
+	    );
+	void generate_operation_local_undeclare(
+	    std::map<size_t, llvm::Value *> & tmp_values,
+	    const JLang::mir::Function & mir_function,
+	    const JLang::mir::OperationLocalUndeclare *operation
+	    );
+	void generate_operation_literal_char(
+	    std::map<size_t, llvm::Value *> & tmp_values,
+	    const JLang::mir::Function & mir_function,
+	    const JLang::mir::OperationLiteralChar *operation
+	    );
+	void generate_operation_literal_string(
+	    std::map<size_t, llvm::Value *> & tmp_values,
+	    const JLang::mir::Function & mir_function,
+	    const JLang::mir::OperationLiteralString *operation
+	    );
+	void generate_operation_literal_int(
+	    std::map<size_t, llvm::Value *> & tmp_values,
+	    const JLang::mir::Function & mir_function,
+	    const JLang::mir::OperationLiteralInt *operation
+	    );
+	void generate_operation_literal_float(
+	    std::map<size_t, llvm::Value *> & tmp_values,
+	    const JLang::mir::Function & mir_function,
+	    const JLang::mir::OperationLiteralFloat *operation
+	    );
+	void generate_operation_post_increment(
+	    std::map<size_t, llvm::Value *> & tmp_values,
+	    const JLang::mir::Function & mir_function,
+	    const JLang::mir::OperationPostIncrement *operation
+	    );
+	void generate_operation_post_decrement(
+	    std::map<size_t, llvm::Value *> & tmp_values,
+	    const JLang::mir::Function & mir_function,
+	    const JLang::mir::OperationPostDecrement *operation
+	    );
+	void generate_operation_pre_increment(
+	    std::map<size_t, llvm::Value *> & tmp_values,
+	    const JLang::mir::Function & mir_function,
+	    const JLang::mir::OperationPreIncrement *operation
+	    );
+	void generate_operation_pre_decrement(
+	    std::map<size_t, llvm::Value *> & tmp_values,
+	    const JLang::mir::Function & mir_function,
+	    const JLang::mir::OperationPreDecrement *operation
+	    );
+	void generate_operation_add(
+	    std::map<size_t, llvm::Value *> & tmp_values,
+	    const JLang::mir::Function & mir_function,
+	    const JLang::mir::OperationAdd *operation
+	    );
+	void generate_operation_subtract(
+	    std::map<size_t, llvm::Value *> & tmp_values,
+	    const JLang::mir::Function & mir_function,
+	    const JLang::mir::OperationSubtract *operation
+	    );
+	void generate_operation_multiply(
+	    std::map<size_t, llvm::Value *> & tmp_values,
+	    const JLang::mir::Function & mir_function,
+	    const JLang::mir::OperationMultiply *operation
+	    );
+	void generate_operation_divide(
+	    std::map<size_t, llvm::Value *> & tmp_values,
+	    const JLang::mir::Function & mir_function,
+	    const JLang::mir::OperationDivide *operation
+	    );
+	void generate_operation_assign(
+	    std::map<size_t, llvm::Value *> & tmp_values,
+	    const JLang::mir::Function & mir_function,
+	    const JLang::mir::OperationAssign *operation
+	    );
+	void generate_operation_jump_if_equal(
+	    std::map<size_t, llvm::Value *> & tmp_values,
+	    const JLang::mir::Function & mir_function,
+	    const JLang::mir::OperationJumpIfEqual *operation
+	    );
+	void generate_operation_jump(
+	    std::map<size_t, llvm::Value *> & tmp_values,
+	    const JLang::mir::Function & mir_function,
+	    const JLang::mir::OperationJump *operation
+	    );
+	void generate_operation_return(
+	    std::map<size_t, llvm::Value *> & tmp_values,
+	    const JLang::mir::Function & mir_function,
+	    const JLang::mir::OperationReturn *operation
+	    );
 	
 	void generate_basic_block(const JLang::mir::Function & function, size_t blockid);
 	void generate_function(const JLang::mir::Function & function);

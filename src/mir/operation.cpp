@@ -12,6 +12,7 @@ void JLang::mir::operation_static_init()
     // better place to globally initialize static data.
     op_type_names.insert(std::pair(Operation::OP_FUNCTION_CALL, "function-call"));
     op_type_names.insert(std::pair(Operation::OP_SYMBOL, "symbol"));
+    op_type_names.insert(std::pair(Operation::OP_LOCAL_VARIABLE, "load"));
     op_type_names.insert(std::pair(Operation::OP_LOCAL_DECLARE, "declare"));
     op_type_names.insert(std::pair(Operation::OP_LOCAL_UNDECLARE, "undeclare"));
     op_type_names.insert(std::pair(Operation::OP_LITERAL_CHAR, "literal-char"));
@@ -123,6 +124,24 @@ const std::string &
 OperationSymbol::get_symbol_name() const
 { return symbol_name; }
 
+//////////////////////////////////////////////
+// OperationLocalVariable
+//////////////////////////////////////////////
+OperationLocalVariable::OperationLocalVariable(size_t _result, std::string _symbol_name, std::string _var_type)
+    : Operation(OP_LOCAL_VARIABLE, _result)
+    , symbol_name(_symbol_name)
+    , var_type(_var_type)
+{}
+OperationLocalVariable::~OperationLocalVariable()
+{}
+
+const std::string &
+OperationLocalVariable::get_symbol_name() const
+{ return symbol_name; }
+
+const std::string &
+OperationLocalVariable::get_var_type() const
+{ return var_type; }
 
 //////////////////////////////////////////////
 // OperationLiteralChar
@@ -135,7 +154,7 @@ OperationLiteralChar::~OperationLiteralChar()
 {}
 
 const std::string &
-OperationLiteralChar::get_literal_char()
+OperationLiteralChar::get_literal_char() const
 { return literal_char; }
 
 //////////////////////////////////////////////
@@ -149,7 +168,7 @@ OperationLiteralString::~OperationLiteralString()
 {}
 
 const std::string &
-OperationLiteralString::get_literal_string()
+OperationLiteralString::get_literal_string() const
 { return literal_string; }
 
 //////////////////////////////////////////////
@@ -163,7 +182,7 @@ OperationLiteralInt::~OperationLiteralInt()
 {}
 
 const std::string &
-OperationLiteralInt::get_literal_int()
+OperationLiteralInt::get_literal_int() const
 { return literal_int; }
 
 //////////////////////////////////////////////
@@ -177,7 +196,7 @@ OperationLiteralFloat::~OperationLiteralFloat()
 {}
 
 const std::string &
-OperationLiteralFloat::get_literal_float()
+OperationLiteralFloat::get_literal_float() const
 { return literal_float; }
 
 //////////////////////////////////////////////
@@ -218,6 +237,32 @@ OperationPostDecrement::OperationPostDecrement(size_t _result, size_t _operand)
 OperationPostDecrement::~OperationPostDecrement()
 {}
 
+//////////////////////////////////////////////
+// OperationAdd
+//////////////////////////////////////////////
+OperationAdd::OperationAdd(
+	    size_t _result,
+	    size_t _operand_a,
+	    size_t _operand_b
+	    )
+    : Operation(OP_ADD, _result, _operand_a, _operand_b)
+{}
+OperationAdd::~OperationAdd()
+{}
+
+//////////////////////////////////////////////
+// OperationAssign
+//////////////////////////////////////////////
+OperationAssign::OperationAssign(
+	    size_t _result,
+	    size_t _operand_a,
+	    size_t _operand_b
+	    )
+    : Operation(OP_ASSIGN, _result, _operand_a, _operand_b)
+{}
+OperationAssign::~OperationAssign()
+{}
+
 
 //////////////////////////////////////////////
 // OperationJumpIfEqual
@@ -252,12 +297,19 @@ OperationReturn::~OperationReturn()
 //////////////////////////////////////////////
 // OperationLocalDeclare
 //////////////////////////////////////////////
-OperationLocalDeclare::OperationLocalDeclare(std::string _variable)
+OperationLocalDeclare::OperationLocalDeclare(std::string _variable, std::string _var_type)
     : Operation(OP_LOCAL_DECLARE, 0)
     , variable(_variable)
+    , var_type(_var_type)
 {}
 OperationLocalDeclare::~OperationLocalDeclare()
 {}
+const std::string &
+OperationLocalDeclare::get_variable() const
+{ return variable; }
+const std::string &
+OperationLocalDeclare::get_var_type() const
+{ return var_type; }
 
 //////////////////////////////////////////////
 // OperationLocalUndeclare

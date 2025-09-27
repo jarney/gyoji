@@ -300,15 +300,250 @@ CodeGeneratorLLVMContext::generate()
 }
 
 void
-CodeGeneratorLLVMContext::generate_basic_block(const JLang::mir::Function & mir_function, size_t blockid)
+CodeGeneratorLLVMContext::generate_operation_function_call(
+    std::map<size_t, llvm::Value *> & tmp_values,
+    const JLang::mir::Function & mir_function,
+    const JLang::mir::OperationFunctionCall *operation
+    )
+{
+}
+void
+CodeGeneratorLLVMContext::generate_operation_symbol(
+    std::map<size_t, llvm::Value *> & tmp_values,
+    const JLang::mir::Function & mir_function,
+    const JLang::mir::OperationSymbol *operation
+    )
+{}
+void
+CodeGeneratorLLVMContext::generate_operation_local_variable(
+    std::map<size_t, llvm::Value *> & tmp_values,
+    const JLang::mir::Function & mir_function,
+    const JLang::mir::OperationLocalVariable *operation
+    )
+{
+    llvm::Type *type = types[operation->get_var_type()];
+    llvm::Value *value = Builder->CreateLoad(type, nullptr, operation->get_symbol_name());
+    tmp_values.insert(std::pair(operation->get_result(), value));
+}
+void
+CodeGeneratorLLVMContext::generate_operation_local_declare(
+    std::map<size_t, llvm::Value *> & tmp_values,
+    const JLang::mir::Function & mir_function,
+    const JLang::mir::OperationLocalDeclare *operation
+    )
+{
+    llvm::Type *type = types[operation->get_var_type()];
+    llvm::Value *value = Builder->CreateAlloca(type, nullptr, operation->get_variable());
+    tmp_values.insert(std::pair(operation->get_result(), value));
+}
+void
+CodeGeneratorLLVMContext::generate_operation_local_undeclare(
+    std::map<size_t, llvm::Value *> & tmp_values,
+    const JLang::mir::Function & mir_function,
+    const JLang::mir::OperationLocalUndeclare *operation
+    )
+{}
+void
+CodeGeneratorLLVMContext::generate_operation_literal_char(
+    std::map<size_t, llvm::Value *> & tmp_values,
+    const JLang::mir::Function & mir_function,
+    const JLang::mir::OperationLiteralChar *operation
+    )
+{
+    llvm::Value *value_a = tmp_values[operation->get_operands().at(0)];
+    llvm::Value *value_b = tmp_values[operation->get_operands().at(1)];
+    llvm::Value *value = Builder->CreateStore(value_a, value_b);
+    tmp_values.insert(std::pair(operation->get_result(), value));
+}
+void
+CodeGeneratorLLVMContext::generate_operation_literal_string(
+    std::map<size_t, llvm::Value *> & tmp_values,
+    const JLang::mir::Function & mir_function,
+    const JLang::mir::OperationLiteralString *operation
+    )
+{}
+void
+CodeGeneratorLLVMContext::generate_operation_literal_int(
+    std::map<size_t, llvm::Value *> & tmp_values,
+    const JLang::mir::Function & mir_function,
+    const JLang::mir::OperationLiteralInt *operation
+    )
+{
+    llvm::Value *value = Builder->getInt32(atol(operation->get_literal_int().c_str()));
+    tmp_values.insert(std::pair(operation->get_result(), value));
+}
+void
+CodeGeneratorLLVMContext::generate_operation_literal_float(
+    std::map<size_t, llvm::Value *> & tmp_values,
+    const JLang::mir::Function & mir_function,
+    const JLang::mir::OperationLiteralFloat *operation
+    )
+{}
+void
+CodeGeneratorLLVMContext::generate_operation_post_increment(
+    std::map<size_t, llvm::Value *> & tmp_values,
+    const JLang::mir::Function & mir_function,
+    const JLang::mir::OperationPostIncrement *operation
+    )
+{}
+void
+CodeGeneratorLLVMContext::generate_operation_post_decrement(
+    std::map<size_t, llvm::Value *> & tmp_values,
+    const JLang::mir::Function & mir_function,
+    const JLang::mir::OperationPostDecrement *operation
+    )
+{}
+void
+CodeGeneratorLLVMContext::generate_operation_pre_increment(
+    std::map<size_t, llvm::Value *> & tmp_values,
+    const JLang::mir::Function & mir_function,
+    const JLang::mir::OperationPreIncrement *operation
+    )
+{}
+void
+CodeGeneratorLLVMContext::generate_operation_pre_decrement(
+    std::map<size_t, llvm::Value *> & tmp_values,
+    const JLang::mir::Function & mir_function,
+    const JLang::mir::OperationPreDecrement *operation
+    )
+{}
+void
+CodeGeneratorLLVMContext::generate_operation_add(
+    std::map<size_t, llvm::Value *> & tmp_values,
+    const JLang::mir::Function & mir_function,
+    const JLang::mir::OperationAdd *operation
+    )
+{
+    llvm::Value *value_a = tmp_values[operation->get_operands().at(0)];
+    llvm::Value *value_b = tmp_values[operation->get_operands().at(1)];
+    llvm::Value *sum = Builder->CreateAdd(value_a, value_b);
+    tmp_values.insert(std::pair(operation->get_result(), sum));
+    
+}
+void
+CodeGeneratorLLVMContext::generate_operation_subtract(
+    std::map<size_t, llvm::Value *> & tmp_values,
+    const JLang::mir::Function & mir_function,
+    const JLang::mir::OperationSubtract *operation
+    )
+{}
+void
+CodeGeneratorLLVMContext::generate_operation_multiply(
+    std::map<size_t, llvm::Value *> & tmp_values,
+    const JLang::mir::Function & mir_function,
+    const JLang::mir::OperationMultiply *operation
+    )
+{}
+void
+CodeGeneratorLLVMContext::generate_operation_divide(
+    std::map<size_t, llvm::Value *> & tmp_values,
+    const JLang::mir::Function & mir_function,
+    const JLang::mir::OperationDivide *operation
+    )
+{}
+void
+CodeGeneratorLLVMContext::generate_operation_assign(
+    std::map<size_t, llvm::Value *> & tmp_values,
+    const JLang::mir::Function & mir_function,
+    const JLang::mir::OperationAssign *operation
+    )
+{}
+void
+CodeGeneratorLLVMContext::generate_operation_jump_if_equal(
+    std::map<size_t, llvm::Value *> & tmp_values,
+    const JLang::mir::Function & mir_function,
+    const JLang::mir::OperationJumpIfEqual *operation
+    )
+{}
+void
+CodeGeneratorLLVMContext::generate_operation_jump(
+    std::map<size_t, llvm::Value *> & tmp_values,
+    const JLang::mir::Function & mir_function,
+    const JLang::mir::OperationJump *operation
+    )
+{}
+void
+CodeGeneratorLLVMContext::generate_operation_return(
+    std::map<size_t, llvm::Value *> & tmp_values,
+    const JLang::mir::Function & mir_function,
+    const JLang::mir::OperationReturn *operation
+    )
+{}
+
+void
+CodeGeneratorLLVMContext::generate_basic_block(
+    const JLang::mir::Function & mir_function,
+    size_t blockid
+    )
 {
     fprintf(stderr, "Generating code for block BB%ld\n", blockid);
     const JLang::mir::BasicBlock & mir_block = mir_function.get_basic_block(blockid);
-
+    std::map<size_t, llvm::Value*> tmp_values;
+    
     for (const auto & operation : mir_block.get_operations()) {
 	switch (operation->get_type()) {
 	case Operation::OP_FUNCTION_CALL:
-	    fprintf(stderr, "Generating a function call\n");
+	    generate_operation_function_call(tmp_values, mir_function, (JLang::mir::OperationFunctionCall*)operation.get());
+	    break;
+	case Operation::OP_SYMBOL:
+	    generate_operation_symbol(tmp_values, mir_function, (OperationSymbol*)operation.get());
+	    break;
+	case Operation::OP_LOCAL_VARIABLE:
+	    generate_operation_local_variable(tmp_values, mir_function, (OperationLocalVariable*)operation.get());
+	    break;
+	case Operation::OP_LOCAL_DECLARE:
+	    generate_operation_local_declare(tmp_values, mir_function, (OperationLocalDeclare*)operation.get());
+	    break;
+	case Operation::OP_LOCAL_UNDECLARE:
+	    generate_operation_local_undeclare(tmp_values, mir_function, (OperationLocalUndeclare*)operation.get());
+	    break;
+	case Operation::OP_LITERAL_CHAR:
+	    generate_operation_literal_char(tmp_values, mir_function, (OperationLiteralChar*)operation.get());
+	    break;
+	case Operation::OP_LITERAL_STRING:
+	    generate_operation_literal_string(tmp_values, mir_function, (OperationLiteralString*)operation.get());
+	    break;
+	case Operation::OP_LITERAL_INT:
+	    generate_operation_literal_int(tmp_values, mir_function, (OperationLiteralInt*)operation.get());
+	    break;
+	case Operation::OP_LITERAL_FLOAT:
+	    generate_operation_literal_float(tmp_values, mir_function, (OperationLiteralFloat*)operation.get());
+	    break;
+	case Operation::OP_POST_INCREMENT:
+	    generate_operation_post_increment(tmp_values, mir_function, (OperationPostIncrement*)operation.get());
+	    break;
+	case Operation::OP_POST_DECREMENT:
+	    generate_operation_post_decrement(tmp_values, mir_function, (OperationPostDecrement*)operation.get());
+	    break;
+	case Operation::OP_PRE_INCREMENT:
+	    generate_operation_pre_increment(tmp_values, mir_function, (OperationPreIncrement*)operation.get());
+	    break;
+	case Operation::OP_PRE_DECREMENT:
+	    generate_operation_pre_decrement(tmp_values, mir_function, (OperationPreDecrement*)operation.get());
+	    break;
+	case Operation::OP_ADD:
+	    generate_operation_add(tmp_values, mir_function, (OperationAdd*)operation.get());
+	    break;
+	case Operation::OP_SUBTRACT:
+	    generate_operation_subtract(tmp_values, mir_function, (OperationSubtract*)operation.get());
+	    break;
+	case Operation::OP_MULTIPLY:
+	    generate_operation_multiply(tmp_values, mir_function, (OperationMultiply*)operation.get());
+	    break;
+	case Operation::OP_DIVIDE:
+	    generate_operation_divide(tmp_values, mir_function, (OperationDivide*)operation.get());
+	    break;
+	case Operation::OP_ASSIGN:
+	    generate_operation_assign(tmp_values, mir_function, (OperationAssign*)operation.get());
+	    break;
+	case Operation::OP_JUMP_IF_EQUAL:
+	    generate_operation_jump_if_equal(tmp_values, mir_function, (OperationJumpIfEqual*)operation.get());
+	    break;
+	case Operation::OP_JUMP:
+	    generate_operation_jump(tmp_values, mir_function, (OperationJump*)operation.get());
+	    break;
+	case Operation::OP_RETURN:
+	    generate_operation_return(tmp_values, mir_function, (OperationReturn*)operation.get());
 	    break;
 	}
 	operation->dump();
@@ -370,9 +605,9 @@ CodeGeneratorLLVMContext::generate_function(const JLang::mir::Function & functio
     }
 #endif
     //  if (!block) {
-    llvm::Type *return_value_type = llvm::Type::getDoubleTy(*TheContext);
+    llvm::Type *return_value_type = llvm::Type::getInt32Ty(*TheContext);
     Builder->CreateRet(
-	llvm::ConstantFP::get(*TheContext, llvm::APFloat(0.0))
+	Builder->getInt32(0)
 	);
     //  }
     //  else {
@@ -430,7 +665,9 @@ CodeGeneratorLLVMContext::output(const std::string & filename)
     if (EC) {
 	errs() << "Could not open file: " << EC.message();
 	return 1;
-    }
+    } 
+
+    TheModule->print(errs(), nullptr);
     
     legacy::PassManager pass;
     auto FileType = CodeGenFileType::ObjectFile;

@@ -56,6 +56,7 @@ namespace JLang::mir {
 	    OP_SYMBOL,
 	    OP_LOCAL_DECLARE,
 	    OP_LOCAL_UNDECLARE,
+	    OP_LOCAL_VARIABLE,
 	    OP_LITERAL_CHAR,
 	    OP_LITERAL_STRING,
 	    OP_LITERAL_INT,
@@ -107,11 +108,22 @@ namespace JLang::mir {
 	const std::string symbol_name;
     };
 
+    class OperationLocalVariable : public Operation {
+    public:
+	OperationLocalVariable(size_t _result, std::string _symbol_name, std::string _var_type);
+	~OperationLocalVariable();
+	const std::string & get_symbol_name() const;
+	const std::string & get_var_type() const;
+    private:
+	const std::string symbol_name;
+	const std::string var_type;
+    };
+
     class OperationLiteralChar : public Operation {
     public:
 	OperationLiteralChar(size_t _result, std::string _literal_char);
 	~OperationLiteralChar();
-	const std::string & get_literal_char();
+	const std::string & get_literal_char() const;
     private:
 	const std::string literal_char;
     };
@@ -119,7 +131,7 @@ namespace JLang::mir {
     public:
 	OperationLiteralString(size_t _result, std::string _literal_string);
 	~OperationLiteralString();
-	const std::string & get_literal_string();
+	const std::string & get_literal_string() const;
     private:
 	const std::string literal_string;
     };
@@ -127,7 +139,7 @@ namespace JLang::mir {
     public:
 	OperationLiteralInt(size_t _result, std::string _literal_int);
 	~OperationLiteralInt();
-	const std::string & get_literal_int();
+	const std::string & get_literal_int() const;
     private:
 	const std::string literal_int;
     };
@@ -135,7 +147,7 @@ namespace JLang::mir {
     public:
 	OperationLiteralFloat(size_t _result, std::string _literal_float);
 	~OperationLiteralFloat();
-	const std::string & get_literal_float();
+	const std::string & get_literal_float() const;
     private:
 	const std::string literal_float;
     };
@@ -167,6 +179,13 @@ namespace JLang::mir {
     };
     
     class OperationAdd : public Operation {
+    public:
+	OperationAdd(
+	    size_t _result,
+	    size_t _operand_a,
+	    size_t _operand_b
+	    );
+	~OperationAdd();
     };
     class OperationSubtract : public Operation {
     };
@@ -175,6 +194,13 @@ namespace JLang::mir {
     class OperationDivide : public Operation {
     };
     class OperationAssign : public Operation {
+    public:
+	OperationAssign(
+	    size_t _result,
+	    size_t _operand_a,
+	    size_t _operand_b
+	    );
+	~OperationAssign();
     };
 
     class OperationJumpIfEqual : public Operation {
@@ -201,10 +227,13 @@ namespace JLang::mir {
 
     class OperationLocalDeclare : public Operation {
     public:
-	OperationLocalDeclare(std::string _variable);
+	OperationLocalDeclare(std::string _variable, std::string _var_type);
 	~OperationLocalDeclare();
+	const std::string & get_variable() const;
+	const std::string & get_var_type() const;
     private:
 	std::string variable;
+	std::string var_type;
     };
     class OperationLocalUndeclare : public Operation {
     public:
