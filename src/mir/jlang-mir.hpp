@@ -1,6 +1,7 @@
 #pragma once
 
 #include <jlang-mir/types.hpp>
+#include <jlang-mir/operations.hpp>
 #include <jlang-mir/functions.hpp>
 #include <jlang-mir/globals.hpp>
 

@@ -1,6 +1,7 @@
 #include <jlang-frontend/type-resolver.hpp>
 #include <variant>
 #include <stdio.h>
+#include <jlang-misc/jstring.hpp>
 
 using namespace JLang::mir;
 using namespace JLang::context;
@@ -34,15 +35,14 @@ TypeResolver::extract_from_class_declaration(const ClassDeclaration & declaratio
 }
 
 Type *
-TypeResolver::get_or_create(std::string pointer_name, Type *pointer_target, Type::TypeType type_type, const SourceReference & source_ref)
+TypeResolver::get_or_create(std::string pointer_name, Type::TypeType type_type, bool complete, const SourceReference & source_ref)
 {
     Type *pointer_type = mir.get_types().get_type(pointer_name);
     if (pointer_type != nullptr) {
 	return pointer_type;
     }
     else {
-	JLang::owned<Type> pointer_type_created = std::make_unique<Type>(pointer_name, type_type, true, source_ref);
-	pointer_type_created->complete_pointer_definition(pointer_target, source_ref);
+	JLang::owned<Type> pointer_type_created = std::make_unique<Type>(pointer_name, type_type, complete, source_ref);
 	pointer_type = pointer_type_created.get();
 	mir.get_types().define_type(std::move(pointer_type_created));
 	return pointer_type;
@@ -108,7 +108,8 @@ TypeResolver::extract_from_type_specifier(const TypeSpecifier & type_specifier)
 	    return nullptr;
 	}
 	std::string pointer_name = pointer_target->get_name() + std::string("*");
-	Type *pointer_type = get_or_create(pointer_name, pointer_target, Type::TYPE_POINTER, type_specifier_pointer_to->get_source_ref());
+	Type *pointer_type = get_or_create(pointer_name, Type::TYPE_POINTER, false, type_specifier_pointer_to->get_source_ref());
+	pointer_type->complete_pointer_definition(pointer_target, type_specifier_pointer_to->get_source_ref());
 	return pointer_type;
     }
     else if (std::holds_alternative<JLang::owned<TypeSpecifierReferenceTo>>(type_specifier_type)) {
@@ -124,7 +125,8 @@ TypeResolver::extract_from_type_specifier(const TypeSpecifier & type_specifier)
 	    return nullptr;
 	}
 	std::string pointer_name = pointer_target->get_name() + std::string("&");
-	Type *pointer_type = get_or_create(pointer_name, pointer_target, Type::TYPE_REFERENCE, type_specifier_reference_to->get_source_ref());
+	Type *pointer_type = get_or_create(pointer_name, Type::TYPE_REFERENCE, false, type_specifier_reference_to->get_source_ref());
+	pointer_type->complete_pointer_definition(pointer_target, type_specifier_reference_to->get_source_ref());
 	return pointer_type;
     }
     
@@ -266,6 +268,36 @@ TypeResolver::extract_from_function_specifications(
 	arguments
 	);
     mir.get_functions().add_prototype(std::move(prototype));
+
+//////
+// The type-centric way.
+//////
+    std::vector<std::string> arg_list;
+    std::vector<Argument> fptr_arguments;
+    for (const auto & function_definition_arg : function_definition_args) {
+	std::string name = function_definition_arg->get_name();
+	Type * t = extract_from_type_specifier(function_definition_arg->get_type_specifier());
+	arg_list.push_back(t->get_name());
+	fptr_arguments.push_back(
+	    Argument(t, function_definition_arg->get_type_specifier().get_source_ref())
+	    );
+	fprintf(stderr, "Added function argument name %s\n", t->get_name().c_str());
+    }
+    std::string arg_string = JLang::misc::join(arg_list, ",");
+    std::string pointer_name = type->get_name() + std::string("(*)") + std::string("(") + arg_string + std::string(")");
+    Type *pointer_type = get_or_create(pointer_name, Type::TYPE_FUNCTION_POINTER, false, name.get_source_ref());
+    fprintf(stderr, "Creating function pointer type\n");
+    if (type == nullptr) {
+	fprintf(stderr, "This is bad, there is no return type\n");
+    }
+    if (!pointer_type->is_complete()) {
+	fprintf(stderr, "Completing function pointer type\n");
+	pointer_type->complete_function_pointer_definition(
+	    type,
+	    fptr_arguments,
+	    name.get_source_ref()
+	    );
+    }
 
 }
 

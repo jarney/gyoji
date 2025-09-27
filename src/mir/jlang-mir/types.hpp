@@ -93,6 +93,25 @@ namespace JLang::mir {
 	Type *member_type;
 	const JLang::context::SourceReference *source_ref;
     };
+
+    class Argument {
+    public:
+	Argument(
+	    Type *_argument_type,
+	    const JLang::context::SourceReference & _source_ref
+	    );
+	// Copy constructor so we can put it inside
+	// a list.
+	Argument(const Argument & _other);
+	~Argument();
+	const Type* get_type() const;
+	const JLang::context::SourceReference & get_source_ref();
+    private:
+	const Type *argument_type;
+	const JLang::context::SourceReference *source_ref;
+	
+	
+    };
     
     //! This represents a type as declared in a translation unit.
     /**
@@ -135,7 +154,12 @@ namespace JLang::mir {
 	     * containing the address of the data to be accessed.
 	     */
 	    TYPE_POINTER,
-	    
+
+	    /**
+	     * This is a pointer to a function.
+	     */
+	    TYPE_FUNCTION_POINTER,
+
 	    /**
 	     * This is similar to a pointer and is also stored
 	     * internally as an address in a u64, but carries
@@ -188,6 +212,17 @@ namespace JLang::mir {
 	 * Completes the definition of a pointer or reference.
 	 */
 	void complete_pointer_definition(Type *_type, const JLang::context::SourceReference & _source_ref);
+
+	/**
+	 * Completes the definition of a function pointer
+	 * by passing the return-value type and the types
+	 * of each of the arguments.
+	 */
+	void complete_function_pointer_definition(
+	    const Type *_return_type,
+	    const std::vector<Argument> & _argument_types,
+	    const JLang::context::SourceReference & _source_ref
+	    );
 	
 	/**
 	 * Used for debugging purposes to dump the content
@@ -209,12 +244,18 @@ namespace JLang::mir {
 	bool complete;
 	std::string name;
 	TypeType type;
-	Type *pointer_or_ref;
+	
 	const JLang::context::SourceReference *declared_source_ref;
 	const JLang::context::SourceReference *defined_source_ref;
-	
-	// TODO: This should be a vector of members
-	// instead so we can also put the SourceRef into each of them.
+
+	// Used only for pointer and reference types.
+	Type *pointer_or_ref;
+
+	// Used only for function pointer types.
+	const Type *return_type;
+	std::vector<Argument> argument_types;
+
+	// Used only for class/composite types.
 	std::vector<TypeMember> members;
     };
 };

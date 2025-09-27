@@ -57,8 +57,8 @@ namespace JLang::frontend {
 	
 	JLang::mir::Type *get_or_create(
 	    std::string pointer_name,
-	    JLang::mir::Type *pointer_target,
 	    JLang::mir::Type::TypeType type_type,
+	    bool complete,
 	    const JLang::context::SourceReference & source_ref
 	    );
 	

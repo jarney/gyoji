@@ -190,6 +190,13 @@ FunctionDefinitionResolver::extract_from_expression_primary_identifier(
     }
     else if (expression.get_identifier().get_identifier_type() == Terminal::IDENTIFIER_GLOBAL_SCOPE) {
 	// Type here should be the type of a function-pointer.
+
+	// Instead of looking in a list of function prototypes (specifically)
+	// the prior step (type resolution) should also extract a set of global
+	// identifiers like classes, functions, global variables, methods, etc.
+	// along with their associated types.  This will allow us to simply associate
+	// an identifier with a type and move on instead of having to treat each
+	// of these items separately.
 	
 	// Look in the list of functions,
 	// this might be a function pointer assignment or
@@ -939,7 +946,7 @@ FunctionDefinitionResolver::extract_from_statement_list(
 	    
 	    JLang::mir::Type * mir_type = type_resolver.extract_from_type_specifier(statement->get_type_specifier());
 
-	    LocalVariable local(statement->get_name(), mir_type->get_name());
+	    LocalVariable local(statement->get_name(), mir_type->get_name(), statement->get_source_ref());
 	    
 	    if (!function.add_local(local)) {
 		compiler_context

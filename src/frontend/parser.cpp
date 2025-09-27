@@ -73,6 +73,8 @@ Parser::parse_to_mir(
 			       *mir);
     type_resolver.resolve();
 
+    mir->get_types().dump();
+    
     fprintf(stderr, "============================\n");
     fprintf(stderr, "Function resolution pass\n");
     fprintf(stderr, "============================\n");

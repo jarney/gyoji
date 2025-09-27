@@ -54,16 +54,34 @@ Functions::get_functions() const
 /////////////////////////////////////
 // LocalVariable
 /////////////////////////////////////
-LocalVariable::LocalVariable(std::string _name, std::string _type)
+LocalVariable::LocalVariable(std::string _name, std::string _type, const JLang::context::SourceReference & _src_ref)
     : name(_name)
     , type(_type)
+    , src_ref(_src_ref)
+     
 {}
 LocalVariable::LocalVariable(const LocalVariable & _other)
     : name(_other.name)
     , type(_other.type)
+    , src_ref(_other.src_ref)
 {}
 LocalVariable::~LocalVariable()
 {}
+/////////////////////////////////////
+// TmpValue
+/////////////////////////////////////
+TmpValue::TmpValue(const std::string & _type)
+    : type(_type)
+{}
+TmpValue::TmpValue(const TmpValue & _other)
+    : type(_other.type)
+{}
+
+TmpValue::~TmpValue()
+{}
+const std::string &
+TmpValue::get_type() const
+{ return type; }
 
 /////////////////////////////////////
 // Function
@@ -133,6 +151,17 @@ Function::add_local(const LocalVariable & local)
     }
     in_scope_locals.insert(std::pair(local.name, local));
     return true;
+}
+
+const TmpValue *
+Function::tmpvar_get(size_t tmpvar_id)
+{ return &tmpvars.at(tmpvar_id); }
+
+size_t
+Function::tmpvar_define(std::string type_name)
+{
+    tmpvars.push_back(TmpValue(type_name));
+    return tmpvars.size()-1;
 }
 
 void

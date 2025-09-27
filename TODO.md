@@ -1,16 +1,25 @@
 # TODO list
 
 ## Semantic processing
-* Namespaces
-  * This is a real mess for identifiers.  We need a way to disambiguate
-    local identifiers from global ones that exist in a namespace.
-    We also need a way to fully-qualify them if (and only if) they
-    appear in a namespace so that we can figure out how to look them
-    up in the semantics layer when we actually need to resolve them.
-    If they are fully-qualified identifiers (like global variables)
-    then they should have the same namespace visibility rules, but
-    this seems difficult to keep separate between the syntax and semantic layers.
-
+* Basic block operations:
+  * Define the semantic operations of the MIR.
+  * Read/write some Rust examples and look at the rust MIR
+    for inspiration.
+  * Write some of the basics and implement them at the codegen/llvm
+    level to make sure they can actually work.
+  * Include enough semantic information like 'live' and 'dead'
+    storage as well as use and mutation of borrwowed items
+    so that we have enough information to satisfy the borrow checker.
+  * Don't try to support everything yet, just a minimal set
+    of things so we can get a 'working' linked function that
+    we can write some unit-tests around.
+  * End result should be a unit-test that compiles a sample
+    function, links against it, and runs it to verify its
+    behavior for simple if/else and a few basic operations
+    like arithmetic on u32.  We can support other operations
+    later as time allows, but we should have basic calculation
+    and conditional support for this first pass.
+  
 * Error Handling
   * More MIR for types : Enums and such.
   

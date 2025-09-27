@@ -108,12 +108,33 @@ namespace JLang::mir {
 	
     };
 
+    /**
+     * Local variables are named variables defined in the
+     * source-code.  Each of them carries a name and a type
+     * associated with them along with the source reference
+     * where it was defined in the code.
+     */
     class LocalVariable {
     public:
-	LocalVariable(std::string _name, std::string _type);
+	LocalVariable(std::string _name, std::string _type, const JLang::context::SourceReference & _src_ref);
 	LocalVariable(const LocalVariable & _other);
 	~LocalVariable();
 	std::string name;
+	std::string type;
+	const JLang::context::SourceReference & src_ref;
+    };
+
+    /**
+     * These are the operands for three-address-code
+     * operations performed inside basic blocks.
+     */
+    class TmpValue {
+    public:
+	TmpValue(const std::string & _type);
+	TmpValue(const TmpValue & _other);
+	~TmpValue();
+	const std::string & get_type() const;
+    private:
 	std::string type;
     };
     
@@ -139,6 +160,15 @@ namespace JLang::mir {
 	void dump() const;
 	
 	const JLang::context::SourceReference & get_source_ref() const;
+
+	/**
+	 * Operations use these temporary variables
+	 * as their operands and return-values.
+	 * Each temporary value has a type.
+	 */
+	const TmpValue *tmpvar_get(size_t tmpvar_id);
+	size_t tmpvar_define(std::string type_name);
+	
     private:
 	const FunctionPrototype & prototype;
 	const JLang::context::SourceReference & source_ref;
@@ -156,5 +186,7 @@ namespace JLang::mir {
 	std::vector<size_t> blocks_in_order;
 	
 	std::map<std::string, LocalVariable> in_scope_locals;
+
+	std::vector<TmpValue> tmpvars;
     };
 };
