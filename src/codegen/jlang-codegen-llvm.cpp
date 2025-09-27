@@ -50,20 +50,20 @@ CodeGeneratorLLVMContext::create_function(const Function & function)
 {
     // Make the function type:  double(double,double) etc.
     std::vector<llvm::Type *> llvm_arguments;
-    const std::vector<FunctionArgument> & function_arguments = function.get_prototype().get_arguments();
+    const std::vector<FunctionArgument> & function_arguments = function.get_arguments();
     
     for (const auto & semantic_arg : function_arguments) {
-	llvm::Type *atype = types[semantic_arg.get_type()];
+	llvm::Type *atype = types[semantic_arg.get_type()->get_name()];
 	llvm_arguments.push_back(atype);
     }
     
-    llvm::Type* return_value_type = types[function.get_prototype().get_return_type()];
+    llvm::Type* return_value_type = types[function.get_return_type()->get_name()];
     
     llvm::FunctionType *FT =
 	llvm::FunctionType::get(return_value_type, llvm_arguments, false);
     
     llvm::Function *F =
-	llvm::Function::Create(FT, llvm::Function::ExternalLinkage, function.get_prototype().get_name(), TheModule.get());
+	llvm::Function::Create(FT, llvm::Function::ExternalLinkage, function.get_name(), TheModule.get());
     
     // Set names for all arguments.
     unsigned Idx = 0;
@@ -146,6 +146,25 @@ CodeGeneratorLLVMContext::create_type_reference(const JLang::mir::Type *referenc
 		     )
 	);
     return llvm_type;  return llvm_type;
+}
+
+llvm::Type *
+CodeGeneratorLLVMContext::create_type_function_pointer(const JLang::mir::Type *fptr_type)
+{
+    const JLang::mir::Type *mir_return_type = fptr_type->get_return_type();
+    llvm::Type *llvm_return_type = create_type(mir_return_type);
+    
+    const std::vector<JLang::mir::Argument> & mir_args = fptr_type->get_argument_types();
+    
+    std::vector<llvm::Type *> llvm_fptr_args;
+    for (const auto & mir_arg : mir_args) {
+	llvm_fptr_args.push_back(create_type(mir_arg.get_type()));
+    }
+    
+    llvm::ArrayRef<llvm::Type *> llvm_args_ref(llvm_fptr_args);
+    llvm::FunctionType *llvm_fptr_type = llvm::FunctionType::get(llvm_return_type, llvm_args_ref, false);
+    
+    return llvm_fptr_type;
 }
 
 /**
@@ -241,7 +260,10 @@ CodeGeneratorLLVMContext::create_type(const Type * type)
     else if (t == Type::TYPE_REFERENCE) {
 	return create_type_reference(type);
     }
-    fprintf(stderr, "Compiler BUG!  Unknown type type passed to code generator\n");
+    else if (t == Type::TYPE_FUNCTION_POINTER) {
+	return create_type_function_pointer(type);
+    }
+    fprintf(stderr, "Compiler BUG!  Unknown type type passed to code generator %d\n", t);
     exit(1);
     return nullptr;
 }
@@ -272,7 +294,7 @@ CodeGeneratorLLVMContext::generate()
     
     const Functions & functions = mir.get_functions();
     for (auto const & function : functions.get_functions()) {
-	fprintf(stderr, "Generating for function %s\n", function->get_prototype().get_name().c_str());
+	fprintf(stderr, "Generating for function %s\n", function->get_name().c_str());
 	generate_function(*function);
     }
 }

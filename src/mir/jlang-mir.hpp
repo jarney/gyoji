@@ -3,7 +3,7 @@
 #include <jlang-mir/types.hpp>
 #include <jlang-mir/operations.hpp>
 #include <jlang-mir/functions.hpp>
-#include <jlang-mir/globals.hpp>
+#include <jlang-mir/symbols.hpp>
 
 namespace JLang::mir {
     /**
@@ -38,13 +38,14 @@ namespace JLang::mir {
 	const Types & get_types() const;
 	Types & get_types();
 
-	const Globals & get_globals() const;
-	Globals & get_globals();
+	const Symbols & get_symbols() const;
+	Symbols & get_symbols();
 	
 	const Functions & get_functions() const;
 	Functions & get_functions();
     private:
 	Functions functions;
 	Types types;
+	Symbols symbols;
     };
 };

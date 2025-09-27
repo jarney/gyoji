@@ -23,3 +23,11 @@ MIR::get_functions() const
 Functions &
 MIR::get_functions()
 { return functions; }
+
+Symbols &
+MIR::get_symbols()
+{ return symbols; }
+
+const Symbols &
+MIR::get_symbols() const
+{ return symbols; }

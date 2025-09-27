@@ -48,6 +48,7 @@ namespace JLang::codegen {
         llvm::Type *create_type_composite(const JLang::mir::Type *compositetype);
         llvm::Type *create_type_pointer(const JLang::mir::Type *pointertype);
         llvm::Type *create_type_reference(const JLang::mir::Type *referencetype);
+	llvm::Type *create_type_function_pointer(const JLang::mir::Type *fptr_type);
 	
 	
 	void generate_function(const JLang::mir::Function & function);

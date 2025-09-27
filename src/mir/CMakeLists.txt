@@ -3,6 +3,8 @@ set(TYPES_PUBLIC_HEADERS
     jlang-mir.hpp
     jlang-mir/functions.hpp
     jlang-mir/types.hpp
+    jlang-mir/symbols.hpp
+    jlang-mir/operations.hpp
 )
 set(TYPES_SOURCES
     mir.cpp
@@ -10,6 +12,7 @@ set(TYPES_SOURCES
     types.cpp
     type.cpp
     type-member.cpp
+    symbols.cpp
     ${TYPES_PUBLIC_HEADERS}
 )
 

@@ -238,42 +238,21 @@ void
 TypeResolver::extract_from_function_specifications(
     const Terminal & name,
     const TypeSpecifier & type_specifier,
-    const FunctionDefinitionArgList & syntax_arguments
+    const FunctionDefinitionArgList & function_argument_list
     )
 {
 
     std::string fully_qualified_function_name = 
 	name.get_fully_qualified_name();
     
-    const FunctionPrototype *proto = mir.get_functions().get_prototype(fully_qualified_function_name);
-    if (proto != nullptr) {
-	return;
-    }
     Type *type = extract_from_type_specifier(type_specifier);
     
-    std::vector<FunctionArgument> arguments;
-    const auto & function_argument_list = syntax_arguments;
-    const auto & function_definition_args = function_argument_list.get_arguments();
-    for (const auto & function_definition_arg : function_definition_args) {
-	std::string name = function_definition_arg->get_name();
-	JLang::mir::Type * mir_type = extract_from_type_specifier(function_definition_arg->get_type_specifier());
-	std::string type = mir_type->get_name();
-	FunctionArgument arg(name, type);
-	arguments.push_back(arg);
-    }
-    fprintf(stderr, "Defined prototype %s\n", fully_qualified_function_name.c_str());
-    JLang::owned<FunctionPrototype> prototype = std::make_unique<FunctionPrototype>(
-	fully_qualified_function_name,
-	type->get_name(),
-	arguments
-	);
-    mir.get_functions().add_prototype(std::move(prototype));
-
 //////
-// The type-centric way.
+// Define the type of a function pointer.
 //////
     std::vector<std::string> arg_list;
     std::vector<Argument> fptr_arguments;
+    const auto & function_definition_args = function_argument_list.get_arguments();
     for (const auto & function_definition_arg : function_definition_args) {
 	std::string name = function_definition_arg->get_name();
 	Type * t = extract_from_type_specifier(function_definition_arg->get_type_specifier());
@@ -298,7 +277,15 @@ TypeResolver::extract_from_function_specifications(
 	    name.get_source_ref()
 	    );
     }
-
+//////
+// Now that the type has been defined, we can
+// define the symbol for this specific function.
+//////
+    mir.get_symbols().define_symbol(
+	fully_qualified_function_name,
+	pointer_type
+	);
+    
 }
 
 void

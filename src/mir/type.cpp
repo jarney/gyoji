@@ -44,6 +44,16 @@ const Type *
 Type::get_pointer_target() const
 { return pointer_or_ref; }
 
+const Type*
+Type::get_return_type() const
+{ return return_type; }
+
+const std::vector<Argument> &
+Type::get_argument_types() const
+{
+    return argument_types;
+}
+
 
 void
 Type::complete_pointer_definition(Type *_type, const SourceReference & source_ref)

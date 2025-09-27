@@ -53,8 +53,13 @@ namespace JLang::mir {
     public:
 	typedef enum {
 	    OP_FUNCTION_CALL,
+	    OP_IMMEDIATE,
+	    OP_SYMBOL,
 	    OP_ADD,
-	    OP_
+	    OP_MULTIPLY,
+	    OP_DIVIDIE,
+	    OP_SUBTRACT,
+	    OP_ASSIGN
 	} OperationType;
 	Operation();
 	~Operation();

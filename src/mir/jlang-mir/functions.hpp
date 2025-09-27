@@ -11,15 +11,11 @@ namespace JLang::mir {
     class Function;
     class SimpleStatement;
     class BasicBlock;
-    class FunctionPrototype;
     
     class Functions {
     public:
 	Functions();
 	~Functions();
-
-	const FunctionPrototype * get_prototype(std::string mangled_name) const;
-	void add_prototype(JLang::owned<FunctionPrototype> prototype);
 
 	/**
 	 * Adds a function to the MIR representation.
@@ -35,8 +31,6 @@ namespace JLang::mir {
 	
     private:
 	std::vector<JLang::owned<Function>> functions;
-	
-	std::map<std::string, JLang::owned<FunctionPrototype>> prototypes;
     };
     
     // A simple statement is a
@@ -73,41 +67,18 @@ namespace JLang::mir {
     
     class FunctionArgument {
     public:
-	FunctionArgument(
-	    std::string & _name,
-	    std::string & _type
-	    );
+       FunctionArgument(
+           std::string & _name,
+	   const Type *_type
+           );
+	FunctionArgument(const FunctionArgument & _other);
 	~FunctionArgument();
-	const std::string & get_name() const;
-	const std::string & get_type() const;
+       const std::string & get_name() const;
+       const Type* get_type() const;
     private:
 	std::string name;
-	std::string type;
+	const Type *type;
     };
-
-    class FunctionPrototype {
-    public:
-	FunctionPrototype(
-	    std::string _name,
-	    std::string _type,
-	    std::vector<FunctionArgument> _arguments
-	    );
-	~FunctionPrototype();
-
-	const std::string & get_return_type() const;
-	const std::string & get_name() const;
-	const std::vector<FunctionArgument> & get_arguments() const;
-	
-    private:
-	std::string name;
-	std::string return_type;
-	// Arguments are variables that are in scope
-	// for the entire function and represent values
-	// provided by the caller.
-	std::vector<FunctionArgument> arguments;
-	
-    };
-
     /**
      * Local variables are named variables defined in the
      * source-code.  Each of them carries a name and a type
@@ -141,12 +112,16 @@ namespace JLang::mir {
     class Function {
     public:
 	Function(
-	    const FunctionPrototype & _prototype,
+	    std::string _name,
+	    const Type *_return_type,
+	    const std::vector<FunctionArgument> & _arguments,
 	    const JLang::context::SourceReference & _source_ref
 	    );
 	~Function();
 
-	const FunctionPrototype &get_prototype() const;
+	const std::string & get_name() const;
+	const Type *get_return_type() const;
+	const std::vector<FunctionArgument> & get_arguments() const;
 	
 	const BasicBlock & get_basic_block(size_t blockid) const;
 	BasicBlock & get_basic_block(size_t blockid);
@@ -170,7 +145,10 @@ namespace JLang::mir {
 	size_t tmpvar_define(std::string type_name);
 	
     private:
-	const FunctionPrototype & prototype;
+	const std::string name;
+	const Type *return_type;
+	std::vector<FunctionArgument> arguments;
+	
 	const JLang::context::SourceReference & source_ref;
 	
 	// Holds the max blockid

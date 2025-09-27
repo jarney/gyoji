@@ -201,24 +201,27 @@ FunctionDefinitionResolver::extract_from_expression_primary_identifier(
 	// Look in the list of functions,
 	// this might be a function pointer assignment or
 	// a global variable.
-	const FunctionPrototype *prototype = mir.get_functions().get_prototype(expression.get_identifier().get_fully_qualified_name());
-	if (prototype != nullptr) {
-	    returned_value.type = ExpressionValue::TYPE_GLOBAL_FUNCTION;
-	    returned_value.value = expression.get_identifier().get_fully_qualified_name();
-	    returned_value.variable_id = 0;
-	    return;
+	const JLang::mir::Symbol *symbol = mir.get_symbols().get_symbol(
+	    expression.get_identifier().get_fully_qualified_name()
+	    );
+	if (symbol == nullptr) {
+	    compiler_context
+		.get_errors()
+		.add_simple_error(
+		    expression.get_source_ref(),
+		    "Unresolve symbol",
+		    std::string("Local variable ") + expression.get_identifier().get_fully_qualified_name() + std::string(" was not found in this scope.")
+		    );
 	}
-	// If it's not a global function, it might be
-	// a global variable or something that
-	// we should try to resolve as such.
-	
-	compiler_context
-	    .get_errors()
-	    .add_simple_error(
-		expression.get_source_ref(),
-		"Global function could not be resolved",
-		std::string("Global function ") + expression.get_identifier().get_fully_qualified_name() + std::string(" was not found in this scope.")
-		);
+	returned_value.type = ExpressionValue::TYPE_VALUE;
+	returned_value.value = symbol->get_type()->get_name();
+	returned_value.variable_id = get_new_tmpvar();
+
+	function.get_basic_block(current_block).add_statement(
+	    returned_value.value + std::string(" ") +
+	    std::string("_") + std::to_string(returned_value.variable_id) + std::string(" = ") + 
+	    std::string("global-symbol-identifier ") + expression.get_identifier().get_fully_qualified_name()
+	    );
     }
 }
 
@@ -395,56 +398,29 @@ FunctionDefinitionResolver::extract_from_expression_postfix_function_call(
     const Expression & function_expression = expression.get_function();
     const Expression::ExpressionType & function_expression_type = function_expression.get_expression();
 
-    if (is_immediate_function_type(function_type)) {
-	std::string function_name = function_type.value;
-	const FunctionPrototype * prototype = mir.get_functions().get_prototype(function_name);
-	if (prototype == nullptr) {
-	    compiler_context
-		.get_errors()
-		.add_simple_error(
-		    expression.get_function().get_source_ref(),
-		    "Unknown function",
-		    std::string("Function call ") + function_name + std::string(" could not be found")
-		    );
-	    return;
-	}
-
-	// We declare that we return the vale that the function
-	// will return.
-	returned_value.type = ExpressionValue::TYPE_VALUE;
-	returned_value.value = prototype->get_return_type();
-	returned_value.variable_id = get_new_tmpvar();
-
-	std::string call_args = "";
-	for (const auto & av : arg_types) {
-	    call_args += std::string("_") + std::to_string(av.variable_id) + " ";
-	}
-	function
-	    .get_basic_block(current_block)
-	    .add_statement(
-		returned_value.value + std::string(" ") +
-		std::string("_") + std::to_string(returned_value.variable_id) + std::string(" = ") + 
-		std::string("function-call-immediate ") + prototype->get_name() + std::string("(") + call_args + std::string(")")
-		);
+    std::string function_pointer_type_name = function_type.value;
+    const Type *function_pointer_type = mir.get_types().get_type(function_pointer_type_name);
 	
-	
+    // We declare that we return the vale that the function
+    // will return.
+    returned_value.type = ExpressionValue::TYPE_VALUE;
+    returned_value.value = function_pointer_type->get_return_type()->get_name();
+    returned_value.variable_id = get_new_tmpvar();
+    
+    std::string call_args = "";
+    for (const auto & av : arg_types) {
+	call_args += std::string("_") + std::to_string(av.variable_id) + " ";
     }
-    else {
-	// Otherwise, this expression should be interpreted as an expression
-	// returning a function-pointer value and we should perform an indirect
-	// call to the value that is evaluated in that expression.
-
-	// We don't (yet) support indirect function calls/function pointers.
-	compiler_context
-	    .get_errors()
-	    .add_simple_error(
-		expression.get_function().get_source_ref(),
-		"Compiler todo! Function pointers are not yet supported",
-		"Function is dependent on evaluating an expression which is not yet supported."
-		);
-	return;
-    }
-
+    function
+	.get_basic_block(current_block)
+	.add_statement(
+	    returned_value.value + std::string(" ") +
+	    std::string("_") + std::to_string(returned_value.variable_id) + std::string(" = ") + 
+	    std::string("function-call ") + std::string("_") + std::to_string(function_type.variable_id) +
+	    std::string(" ") + 
+	    std::string("(") + call_args + std::string(")")
+	    );
+    
 }
 
 void
@@ -1025,51 +1001,29 @@ FunctionDefinitionResolver::extract_from_function_definition(const FileStatement
 	    fully_qualified_function_name.c_str());
     
     const TypeSpecifier & type_specifier = function_definition.get_return_type();
-    Type *type = type_resolver.extract_from_type_specifier(type_specifier);
+    Type *return_type = type_resolver.extract_from_type_specifier(type_specifier);
     
-    if (type == nullptr) {
+    if (return_type == nullptr) {
 	fprintf(stderr, "Could not find return type\n");
 	return;
 	
     }
-    
     std::vector<FunctionArgument> arguments;
     const auto & function_argument_list = function_definition.get_arguments();
     const auto & function_definition_args = function_argument_list.get_arguments();
     for (const auto & function_definition_arg : function_definition_args) {
-	std::string name = function_definition_arg->get_name();
-	JLang::mir::Type * mir_type = type_resolver.extract_from_type_specifier(function_definition_arg->get_type_specifier());
-	std::string type = mir_type->get_name();
-	
-	FunctionArgument arg(name, type);
-	arguments.push_back(arg);
-    }
-    FunctionPrototype prototype_lookup(
-	fully_qualified_function_name,
-	type->get_name(),
-	arguments
-	);
-    const FunctionPrototype * prototype = mir.get_functions().get_prototype(fully_qualified_function_name);
-    if (prototype == nullptr) {
-	compiler_context
-	    .get_errors()
-	    .add_simple_error(
-		function_definition.get_source_ref(),
-		"Unknown function",
-		std::string("Function definition ") + prototype_lookup.get_name() + std::string(" could not be found")
-		);
-	return;
-    }
-    const Function * previous_definition = mir.get_functions().function_get(fully_qualified_function_name);
-    if (previous_definition != nullptr) {
-	auto error = std::make_unique<JLang::context::Error>(std::string("Duplicate definition of ") + fully_qualified_function_name);
-	error->add_message(function_definition.get_source_ref(), std::string("Defining here"));
-	error->add_message(previous_definition->get_source_ref(), std::string("Note: previous definition "));
-	compiler_context.get_errors().add_error(std::move(error));
-	return;
+       std::string name = function_definition_arg->get_name();
+       JLang::mir::Type * mir_type = type_resolver.extract_from_type_specifier(function_definition_arg->get_type_specifier());
+       
+       FunctionArgument arg(name, mir_type);
+       arguments.push_back(arg);
     }
     
-    JLang::owned<Function> fn = std::make_unique<Function>(*prototype, function_definition.get_source_ref());
+    JLang::owned<Function> fn = std::make_unique<Function>(
+	fully_qualified_function_name,
+	return_type,
+	arguments,
+	function_definition.get_source_ref());
     
     // Create a new basic block for the start
     

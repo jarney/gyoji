@@ -13,23 +13,6 @@ Functions::Functions()
 Functions::~Functions()
 {}
 
-const FunctionPrototype *
-Functions::get_prototype(std::string mangled_name) const
-{
-    const auto & it = prototypes.find(mangled_name);
-    if (it == prototypes.end()) {
-	return nullptr;
-    }
-    return it->second.get();
-}
-
-void
-Functions::add_prototype(JLang::owned<FunctionPrototype> prototype)
-{
-    std::string mangled_name = prototype->get_name();
-    prototypes.insert(std::pair(mangled_name, std::move(prototype)));
-}
-
 void
 Functions::add_function(JLang::owned<Function> _function)
 {
@@ -40,7 +23,7 @@ const Function *
 Functions::function_get(std::string _name) const
 {
     for (const auto & fn : functions) {
-	if (fn->get_prototype().get_name() == _name) {
+	if (fn->get_name() == _name) {
 	    return fn.get();
 	}
     }
@@ -87,10 +70,14 @@ TmpValue::get_type() const
 // Function
 /////////////////////////////////////
 Function::Function(
-    const FunctionPrototype & _prototype,
+    std::string _name,
+    const Type *_return_type,
+    const std::vector<FunctionArgument> & _arguments,
     const JLang::context::SourceReference & _source_ref
     )
-    : prototype(_prototype)
+    : name(_name)
+    , return_type(_return_type)
+    , arguments(_arguments)
     , source_ref(_source_ref)
     , blockid(0)
 {}
@@ -98,13 +85,21 @@ Function::Function(
 Function::~Function()
 {}
 
+const std::string &
+Function::get_name() const
+{ return name; }
+
+const Type *
+Function::get_return_type() const
+{ return return_type; }
+
+const std::vector<FunctionArgument> &
+Function::get_arguments() const
+{ return arguments; }
+
 const JLang::context::SourceReference &
 Function::get_source_ref() const
 { return source_ref; }
-
-const FunctionPrototype &
-Function::get_prototype() const
-{ return prototype; }
 
 const BasicBlock &
 Function::get_basic_block(size_t blockid) const
@@ -173,9 +168,9 @@ Function::remove_local(std::string local_name)
 void
 Function::dump() const
 {
-    fprintf(stderr, "Function %s returns %s\n", prototype.get_name().c_str(), prototype.get_return_type().c_str());
-    for (const auto & arg : prototype.get_arguments()) {
-	fprintf(stderr, "    arg %s %s\n", arg.get_type().c_str(), arg.get_name().c_str());
+    fprintf(stderr, "Function %s %s\n", get_name().c_str(), return_type->get_name().c_str());
+    for (const auto & arg : arguments) {
+	fprintf(stderr, "    arg %s %s\n", arg.get_type()->get_name().c_str(), arg.get_name().c_str());
     }
     for (const size_t & i : blocks_in_order) {
 	fprintf(stderr, "BB%ld:\n", i);
@@ -183,56 +178,6 @@ Function::dump() const
 	block.dump();
     }
 }
-/////////////////////////////////////
-// FunctionPrototype
-/////////////////////////////////////
-FunctionPrototype::FunctionPrototype(
-    std::string _name,
-    std::string _return_type,
-    std::vector<FunctionArgument> _arguments
-    )
-    : name(_name)
-    , return_type(_return_type)
-    , arguments(_arguments)
-{}
-
-FunctionPrototype::~FunctionPrototype()
-{}
-
-const std::string &
-FunctionPrototype::get_return_type() const
-{ return return_type; }
-
-const std::string &
-FunctionPrototype::get_name() const
-{ return name; }
-
-const std::vector<FunctionArgument> &
-FunctionPrototype::get_arguments() const
-{ return arguments; }
-
-/////////////////////////////////////
-// FunctionArgument
-/////////////////////////////////////
-FunctionArgument::FunctionArgument(
-    std::string & _name,
-    std::string & _type
-    )
-    : name(_name)
-    , type(_type)
-{}
-
-FunctionArgument::~FunctionArgument()
-{}
-
-const std::string &
-FunctionArgument::get_name() const
-{ return name; }
-
-const std::string &
-FunctionArgument::get_type() const
-{ return type; }
-
 /////////////////////////////////////
 // SimpleStatement
 /////////////////////////////////////
@@ -272,3 +217,30 @@ BasicBlock::dump() const
 	fprintf(stderr, "    %s\n", statement->get_statement().c_str());
     }
 }
+
+/////////////////////////////////////
+// FunctionArgument
+/////////////////////////////////////
+FunctionArgument::FunctionArgument(
+    std::string & _name,
+    const Type * _type
+    )
+    : name(_name)
+    , type(_type)
+{}
+
+FunctionArgument::FunctionArgument(const FunctionArgument & _other)
+    : name(_other.name)
+    , type(_other.type)
+{}
+
+FunctionArgument::~FunctionArgument()
+{}
+
+const std::string &
+FunctionArgument::get_name() const
+{ return name; }
+
+const Type*
+FunctionArgument::get_type() const
+{ return type; }
