@@ -179,7 +179,7 @@ namespace JLang::frontend {
 	void extract_from_namespace(
 	    const JLang::frontend::tree::FileStatementNamespace & namespace_declaration
 	    );
-	void extract_types(const std::vector<JLang::owned<JLang::frontend::tree::FileStatement>> & statements);
+	void extract_functions(const std::vector<JLang::owned<JLang::frontend::tree::FileStatement>> & statements);
 	
     };
     

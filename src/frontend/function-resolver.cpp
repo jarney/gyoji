@@ -30,26 +30,33 @@ void FunctionResolver::resolve()
 
   // TODO: Split the type extraction
   // out away from the function extraction(?).
-    extract_types(parse_result.get_translation_unit().get_statements());
+    extract_functions(parse_result.get_translation_unit().get_statements());
 }
 void
 FunctionResolver::extract_from_namespace(
     const FileStatementNamespace & namespace_declaration)
 {
     const auto & statements = namespace_declaration.get_statement_list().get_statements();
-    extract_types(statements);
+    extract_functions(statements);
 }
 
 void
 FunctionResolver::extract_from_class_definition(const ClassDefinition & definition)
 {
+    // TODO: We should extract members as
+    // functions from classes so we can set up method calls.
+    // and prepare resolution of class members as variables.
+    // We'll do this last after all the other operations are
+    // supported because we want to first work with 'normal'
+    // C constructs before diving into the OO aspects.
+    //
     //fprintf(stderr, "Extracting from class definition, constructors and destructors which are special-case functions.\n");
     // These must be linked back to their corresponding type definitions
     // so that we can generate their code.
 }
 
 void
-FunctionResolver::extract_types(const std::vector<JLang::owned<FileStatement>> & statements)
+FunctionResolver::extract_functions(const std::vector<JLang::owned<FileStatement>> & statements)
 {
     for (const auto & statement : statements) {
 	const auto & file_statement = statement->get_statement();
@@ -58,6 +65,8 @@ FunctionResolver::extract_types(const std::vector<JLang::owned<FileStatement>> &
 	}
 	else if (std::holds_alternative<JLang::owned<FileStatementFunctionDefinition>>(file_statement)) {
 	    // This is the only place that functions can be extracted from.
+	    // We make this a separate object because we want convenient
+	    // access to certain pieces of context used in resolution.
 	    FunctionDefinitionResolver function_def_resolver(
 		compiler_context,
 		*std::get<JLang::owned<FileStatementFunctionDefinition>>(file_statement),
@@ -67,10 +76,14 @@ FunctionResolver::extract_types(const std::vector<JLang::owned<FileStatement>> &
 	    function_def_resolver.resolve();
 	}
 	else if (std::holds_alternative<JLang::owned<FileStatementGlobalDefinition>>(file_statement)) {
-	    // Nothing, no functions can exist here.
+	    // TODO:
+	    // We want to resolve global variables at this stage, but
+	    // for now, let's handle resolution of local and stack variables
+	    // before we dive into global resolution.
 	}
 	else if (std::holds_alternative<JLang::owned<ClassDeclaration>>(file_statement)) {
 	    // Nothing, no functions can exist here.
+	    // Class declarations should already be resolved by the type_resolver earlier.
 	}
 	else if (std::holds_alternative<JLang::owned<ClassDefinition>>(file_statement)) {
 	    // Constructors, Destructors, and methods are special cases.
@@ -78,15 +91,18 @@ FunctionResolver::extract_types(const std::vector<JLang::owned<FileStatement>> &
 	}
 	else if (std::holds_alternative<JLang::owned<EnumDefinition>>(file_statement)) {
 	    // Nothing, no functions can exist here.
+	    // Enums should already be resolved by the type_resolver earlier.
 	}
 	else if (std::holds_alternative<JLang::owned<TypeDefinition>>(file_statement)) {
 	    // Nothing, no functions can exist here.
+	    // Typedefs should already be resolved by the type_resolver earlier.
 	}
 	else if (std::holds_alternative<JLang::owned<FileStatementNamespace>>(file_statement)) {
 	    extract_from_namespace(*std::get<JLang::owned<FileStatementNamespace>>(file_statement));
 	}
 	else if (std::holds_alternative<JLang::owned<FileStatementUsing>>(file_statement)) {
-	    // Nothing, no functions can exist here.
+	    // Namespace using is largely handled by the parse stage, so we don't
+	    // need to do any function resolution here.
 	}
 	else {
 	    compiler_context
@@ -155,8 +171,6 @@ FunctionDefinitionResolver::extract_from_expression_primary_identifier(
 	    );
 	if (localvar != nullptr) {
 	    returned_tmpvar = function.tmpvar_define(localvar->get_type());
-	    fprintf(stderr, "Local variable %ld\n", returned_tmpvar);
-	    
 	    auto operation = std::make_unique<OperationLocalVariable>(
 		returned_tmpvar,
 		expression.get_identifier().get_value(),
@@ -164,18 +178,11 @@ FunctionDefinitionResolver::extract_from_expression_primary_identifier(
 		);
 	    function.get_basic_block(current_block).add_statement(std::move(operation));
 
-	    // TODO
-//	    function.get_basic_block(current_block).add_statement(
-//		returned_value.value + std::string(" ") +
-//		std::string("_") + std::to_string(returned_value.variable_id) + std::string(" = ") + 
-//		std::string("local-identifier ") + expression.get_identifier().get_value()
-//		);
-	    
-	    // XXX We should try to collect all of them and
-	    // emit an error if there is an ambiguity (i.e. shadowing of parameters,
-	    // or class members).
 	    return;
 	}
+	// TODO: Add enums and class members to the resolution
+	// later when those are handled.
+	
 	// Next, we should check class members (if applicable).
 	
 	// Next, we should check for 'enum' identifiers.
@@ -232,11 +239,11 @@ FunctionDefinitionResolver::extract_from_expression_primary_nested(
     size_t & returned_tmpvar,
     const JLang::frontend::tree::ExpressionPrimaryNested & expression)
 {
-// Nested expressions don't emit blocks on their own, just run whatever is nested.
+    // Nested expressions don't emit blocks on their own, just run whatever is nested.
     extract_from_expression(
 	function,
 	current_block,
-	returned_tmpvar, // Return whatever value the nested expression returns.
+	returned_tmpvar,
 	expression.get_expression()
 	);
 }
@@ -249,7 +256,6 @@ FunctionDefinitionResolver::extract_from_expression_primary_literal_char(
     const JLang::frontend::tree::ExpressionPrimaryLiteralChar & expression)
 {
     returned_tmpvar = function.tmpvar_define(mir.get_types().get_type("u8"));
-    
     auto operation = std::make_unique<OperationLiteralChar>(
 	returned_tmpvar,
 	expression.get_value()
@@ -268,7 +274,6 @@ FunctionDefinitionResolver::extract_from_expression_primary_literal_string(
     const JLang::frontend::tree::ExpressionPrimaryLiteralString & expression)
 {
     returned_tmpvar = function.tmpvar_define(mir.get_types().get_type("u8*"));
-
     auto operation = std::make_unique<OperationLiteralString>(
 	returned_tmpvar,
 	expression.get_value()
@@ -285,8 +290,26 @@ FunctionDefinitionResolver::extract_from_expression_primary_literal_int(
     size_t & returned_tmpvar,
     const JLang::frontend::tree::ExpressionPrimaryLiteralInt & expression)
 {
+    // How do we type literals?  Should we use a suffix like "L" to distinguish
+    // between literal types?
+    // Default is u32, but you can suffix with the type if you need to?
+    // Should we infer the type in the syntax layer based on context
+    // so we can count on a specific type of literal at this stage?
+    //
+    // Should we push off the resolution until the semantic phase?
+    // This path seems bad, I think.
+    //
+    // Like this?
+    // -17UL;
+    //
+    // Or this?
+    // -17i64;
+    // -17i16;
+    // 17u64;
+    // 17u32;
+    // 20u8;
+    //
     returned_tmpvar = function.tmpvar_define(mir.get_types().get_type("u32"));
-
     auto operation = std::make_unique<OperationLiteralInt>(
 	returned_tmpvar,
 	expression.get_value()
@@ -974,7 +997,7 @@ FunctionDefinitionResolver::extract_from_statement_list(
 		compiler_context
 		    .get_errors()
 		    .add_simple_error(
-			statement->get_type_specifier().get_source_ref(),
+			statement->get_name_source_ref(),
 			"Duplicate Local Variable.",
 			std::string("Variable with name ") + local.get_name() + std::string(" is already in scope and cannot be duplicated in this function.")
 			);

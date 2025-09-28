@@ -7,6 +7,7 @@ namespace JLang::misc {
     
     std::vector<std::string> string_split(const std::string &str, const std::string &delimiter);
 
+    bool endswith(const std::string & s, const std::string & suffix);
     bool contains(const std::string & s, const std::string &v);
     std::string join(const std::vector<std::string> & list, std::string delimiter);
     std::string join_nonempty(const std::vector<std::string> & list, std::string delimiter);

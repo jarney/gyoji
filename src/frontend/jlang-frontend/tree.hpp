@@ -1957,10 +1957,29 @@ namespace JLang::frontend::tree {
 	 * Destructor, nothing special.
 	 */
 	~ExpressionPrimaryLiteralInt();
+	/**
+	 * For int literals, this returns only
+	 * the part of the string that includes
+	 * the number, not the part that encodes
+	 * the type.  For example, in 178u32, this
+	 * returns only the '178' part of it.
+	 */
 	const std::string & get_value() const;
+	/**
+	 * For integer literals, this returns
+	 * only the part of the string that
+	 * is the type.  If no type is given,
+	 * the default is 'u32'.  For example,
+	 * in the literal '178u64', this returns
+	 * 'u64' and in '178' this returns
+	 * the default of 'u32'.
+	 */
+	const std::string & get_type() const;
 	const JLang::context::SourceReference & get_value_source_ref() const;
     private:
 	JLang::owned<Terminal> literal_token;
+	std::string integer_part;
+	std::string type_part;
     };
     class ExpressionPrimaryLiteralChar : public JLang::frontend::ast::SyntaxNode {
     public:
@@ -1999,10 +2018,30 @@ namespace JLang::frontend::tree {
 	 * Destructor, nothing special.
 	 */
 	~ExpressionPrimaryLiteralFloat();
+	
+	/**
+	 * For float literals, this returns only
+	 * the part of the string that includes
+	 * the number, not the part that encodes
+	 * the type.  For example, in 178f32, this
+	 * returns only the '178' part of it.
+	 */
 	const std::string & get_value() const;
+	/**
+	 * For float literals, this returns
+	 * only the part of the string that
+	 * is the type.  If no type is given,
+	 * the default is 'f64'.  For example,
+	 * in the literal '178f32', this returns
+	 * 'f64' and in '178.0' this returns
+	 * the default of 'f64'.
+	 */
+	const std::string & get_type() const;
 	const JLang::context::SourceReference & get_value_source_ref() const;
     private:
 	JLang::owned<Terminal> literal_token;
+	std::string float_part;
+	std::string type_part;
     };
     
     class ExpressionPostfixArrayIndex : public JLang::frontend::ast::SyntaxNode {

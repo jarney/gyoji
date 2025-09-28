@@ -22,6 +22,9 @@ int main(int argc, char **argv)
 	strs.push_back("one");
 	ASSERT(std::string("one"), join(strs, "::"), "If there is just one, it should be no delmimiter");
     }
+
+    std::string int_string("178u64");
+    ASSERT_TRUE(endswith(int_string, "u64"), "Expect that we end with the u64 suffix");
     
     printf("    PASSED\n");
 }

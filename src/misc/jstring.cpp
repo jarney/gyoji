@@ -84,6 +84,14 @@ std::string JLang::misc::string_remove_nonidentifier(const std::string & str)
     return newStr; 
 }
 
+bool JLang::misc::endswith(const std::string & s, const std::string & suffix)
+{
+    size_t found_pos = s.find(suffix);
+    if (found_pos == s.size() - suffix.size()) {
+	return true;
+    }
+    return false;
+}
 bool JLang::misc::contains(const std::string & s, const std::string &v)
 {
     size_t found_pos = s.find(v);

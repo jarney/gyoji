@@ -178,7 +178,7 @@ CodeGeneratorLLVMContext::create_type_primitive(const Type *primitive)
 {
     llvm::Type *llvm_type;
     
-    if (primitive->get_name() == "u8") {
+    if (primitive->get_name() == "i8") {
 	llvm_type = llvm::Type::getInt8Ty(*TheContext);
     }
     // Signed integer types
@@ -192,6 +192,9 @@ CodeGeneratorLLVMContext::create_type_primitive(const Type *primitive)
 	llvm_type = llvm::Type::getInt64Ty(*TheContext);
     }
     // Unsigned integer types
+    if (primitive->get_name() == "u8") {
+	llvm_type = llvm::Type::getInt8Ty(*TheContext);
+    }
     else if (primitive->get_name() == "u16") {
 	llvm_type = llvm::Type::getInt16Ty(*TheContext);
     }

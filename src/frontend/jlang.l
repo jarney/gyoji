@@ -96,15 +96,22 @@ void move_array(
 
 %x COMMENT
 
-dseq            ([[:digit:]]+)
-dseq_opt        ({dseq}?)
-frac            (({dseq_opt}"."{dseq})|{dseq}".")
-exp             ([eE][+-]?{dseq})
-exp_opt         ({exp}?)
-integer         ({dseq})
-float           (({frac}{exp_opt})|({dseq}{exp}))
-identifier      ([a-zA-Z_][a-zA-Z_0-9]*)
-whitespace      ([[:space:]])
+dseq                ([[:digit:]]+)
+dseq_opt            ({dseq}?)
+frac                (({dseq_opt}"."{dseq})|{dseq}".")
+exp                 ([eE][+-]?{dseq})
+exp_opt             ({exp}?)
+
+integer             ({dseq})({opt_integer_size})
+integer_size        ("u64"|"u32"|"u16"|"u8"|"i64"|"i32"|"i16"|"i8")
+opt_integer_size    ({integer_size}?)
+
+float               ((({frac}{exp_opt})|({dseq}{exp}))({opt_float_size}))
+float_size          ("f32"|"f64")
+opt_float_size      ({float_size}?)
+
+identifier          ([a-zA-Z_][a-zA-Z_0-9]*)
+whitespace          ([[:space:]])
 %%
 
 namespace {PROCESS_NODE(NAMESPACE);}

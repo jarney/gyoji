@@ -1,4 +1,5 @@
 #include <jlang-frontend.hpp>
+#include <jlang-misc/jstring.hpp>
 
 using namespace JLang::context;
 using namespace JLang::frontend;
@@ -1575,6 +1576,16 @@ const Expression &
 ExpressionPrimaryNested::get_expression() const
 { return *expression; }
 
+static std::string u8_type("u8");
+static std::string u16_type("u16");
+static std::string u32_type("u32");
+static std::string u64_type("u64");
+    
+static std::string i8_type("i8");
+static std::string i16_type("i16");
+static std::string i32_type("i32");
+static std::string i64_type("i64");
+
 ///////////////////////////////////////////////////
 ExpressionPrimaryLiteralInt::ExpressionPrimaryLiteralInt(
     JLang::owned<Terminal> _literal_token
@@ -1583,12 +1594,69 @@ ExpressionPrimaryLiteralInt::ExpressionPrimaryLiteralInt(
     , literal_token(std::move(_literal_token))
 {
     add_child(*literal_token);
+
+    // Extremely ineficcient, but we need to resolve
+    // the specific type of integer here
+    // so that the MIR layer knows what we mean.
+    
+    const std::string & token_value = literal_token->get_value();
+    size_t len = token_value.size();
+    if (JLang::misc::endswith(token_value, u8_type)) {
+	integer_part = token_value.substr(0, len - u8_type.size());
+	type_part = u8_type;
+    }
+    else if (JLang::misc::endswith(token_value, u16_type)) {
+	integer_part = token_value.substr(0, len - u16_type.size());
+	type_part = u16_type;
+    }
+    else if (JLang::misc::endswith(token_value, u32_type)) {
+	integer_part = token_value.substr(0, len - u32_type.size());
+	type_part = u32_type;
+    }
+    else if (JLang::misc::endswith(token_value, u64_type)) {
+	integer_part = token_value.substr(0, len - u64_type.size());
+	type_part = u64_type;
+    }
+    else if (JLang::misc::endswith(token_value, i8_type)) {
+	integer_part = token_value.substr(0, len - i8_type.size());
+	type_part = i8_type;
+    }
+    else if (JLang::misc::endswith(token_value, i16_type)) {
+	integer_part = token_value.substr(0, len - i16_type.size());
+	type_part = i16_type;
+    }
+    else if (JLang::misc::endswith(token_value, i32_type)) {
+	integer_part = token_value.substr(0, len - i32_type.size());
+	type_part = i32_type;
+    }
+    else if (JLang::misc::endswith(token_value, i64_type)) {
+	integer_part = token_value.substr(0, len - i64_type.size());
+	type_part = i64_type;
+    }
+    else {
+	// If not specified, we assume u32 or i32 depending
+	// on whether there's a '-' at the start.
+	integer_part = token_value;
+	if (integer_part[0] == '-') {
+	    type_part = i32_type;
+	}
+	else {
+	    type_part = u32_type;
+	}
+    }
 }
+
 ExpressionPrimaryLiteralInt::~ExpressionPrimaryLiteralInt()
 {}
 const std::string &
 ExpressionPrimaryLiteralInt::get_value() const
-{ return literal_token->get_value(); }
+{ return integer_part; }
+
+const std::string &
+ExpressionPrimaryLiteralInt::get_type() const
+{
+    return type_part;
+}
 const SourceReference &
 ExpressionPrimaryLiteralInt::get_value_source_ref() const
 { return literal_token->get_source_ref(); }
@@ -1627,6 +1695,10 @@ const SourceReference &
 ExpressionPrimaryLiteralString::get_value_source_ref() const
 { return literal_token->get_source_ref(); }
 ///////////////////////////////////////////////////
+
+static std::string f32_type("f32");
+static std::string f64_type("f64");
+
 ExpressionPrimaryLiteralFloat::ExpressionPrimaryLiteralFloat(
     JLang::owned<Terminal> _literal_token
     )
@@ -1634,12 +1706,33 @@ ExpressionPrimaryLiteralFloat::ExpressionPrimaryLiteralFloat(
     , literal_token(std::move(_literal_token))
 {
     add_child(*literal_token);
+
+    const std::string & token_value = literal_token->get_value();
+    size_t len = token_value.size();
+    if (JLang::misc::endswith(token_value, f32_type)) {
+	float_part = token_value.substr(0, len - f32_type.size());
+	type_part = f32_type;
+    }
+    else if (JLang::misc::endswith(token_value, f64_type)) {
+	float_part = token_value.substr(0, len - f64_type.size());
+	type_part = f64_type;
+    }
+    else {
+	// We make the default a 'double'
+	// because in this day and age, there's
+	// no good reason to default to a 'float'.
+	float_part = token_value;
+	type_part = f64_type;
+    }
 }
 ExpressionPrimaryLiteralFloat::~ExpressionPrimaryLiteralFloat()
 {}
 const std::string &
 ExpressionPrimaryLiteralFloat::get_value() const
-{ return literal_token->get_value(); }
+{ return float_part; }
+const std::string &
+ExpressionPrimaryLiteralFloat::get_type() const
+{ return type_part; }
 const SourceReference &
 ExpressionPrimaryLiteralFloat::get_value_source_ref() const
 { return literal_token->get_source_ref(); }
