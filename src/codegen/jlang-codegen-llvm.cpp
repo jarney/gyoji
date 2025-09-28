@@ -192,7 +192,7 @@ CodeGeneratorLLVMContext::create_type_primitive(const Type *primitive)
 	llvm_type = llvm::Type::getInt64Ty(*TheContext);
     }
     // Unsigned integer types
-    if (primitive->get_name() == "u8") {
+    else if (primitive->get_name() == "u8") {
 	llvm_type = llvm::Type::getInt8Ty(*TheContext);
     }
     else if (primitive->get_name() == "u16") {
