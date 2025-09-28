@@ -40,6 +40,17 @@ const std::vector<TypeMember> &
 Type::get_members() const
 { return members; }
 
+const TypeMember *
+Type::member_get(const std::string & member_name) const
+{
+    for (const auto & member : members) {
+	if (member.get_name() == member_name) {
+	    return &member;
+	}
+    }
+    return nullptr;
+}
+
 const Type *
 Type::get_pointer_target() const
 { return pointer_or_ref; }

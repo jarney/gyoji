@@ -54,6 +54,11 @@ namespace JLang::mir {
 	typedef enum {
 	    OP_FUNCTION_CALL,
 	    OP_SYMBOL,
+
+	    OP_ARRAY_INDEX,
+	    OP_DOT,
+	    OP_ARROW,
+	    
 	    OP_LOCAL_DECLARE,
 	    OP_LOCAL_UNDECLARE,
 	    OP_LOCAL_VARIABLE,
@@ -65,6 +70,11 @@ namespace JLang::mir {
 	    OP_POST_DECREMENT,
 	    OP_PRE_INCREMENT,
 	    OP_PRE_DECREMENT,
+
+	    OP_ADDRESSOF,
+	    OP_NEGATE,
+	    OP_DEREFERENCE,
+	    
 	    OP_ADD,
 	    OP_SUBTRACT,
 	    OP_MULTIPLY,
@@ -95,7 +105,7 @@ namespace JLang::mir {
 
     class OperationFunctionCall : public Operation {
     public:
-	OperationFunctionCall(size_t _result);
+	OperationFunctionCall(size_t _result, size_t _callee_tmpvar);
 	~OperationFunctionCall();
     };
     
@@ -106,6 +116,33 @@ namespace JLang::mir {
 	const std::string & get_symbol_name() const;
     private:
 	const std::string symbol_name;
+    };
+
+    class OperationArrayIndex : public Operation {
+    public:
+	OperationArrayIndex(size_t _result, size_t _index_tmpvar, const Type * _array_type);
+	~OperationArrayIndex();
+	const Type *get_array_type() const;
+    private:
+	const Type *array_type;
+    };
+
+    class OperationDot : public Operation {
+    public:
+	OperationDot(size_t _result, std::string _member_name);
+	~OperationDot();
+	const std::string & get_member_name() const;
+    private:
+	const std::string member_name;
+    };
+
+    class OperationArrow : public Operation {
+    public:
+	OperationArrow(size_t _result, std::string _member_name);
+	~OperationArrow();
+	const std::string & get_member_name() const;
+    private:
+	const std::string member_name;
     };
 
     class OperationLocalVariable : public Operation {

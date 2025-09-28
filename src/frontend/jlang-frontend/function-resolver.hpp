@@ -16,14 +16,12 @@ namespace JLang::frontend {
 	    );
 	~FunctionDefinitionResolver();
 	void resolve();
-	size_t get_new_tmpvar();
 
     private:
 	JLang::context::CompilerContext & compiler_context;
 	const JLang::frontend::tree::FileStatementFunctionDefinition & function_definition;
 	JLang::mir::MIR & mir;
 	TypeResolver & type_resolver;
-	size_t new_tmpvar_id;
 	
 	void extract_from_expression_primary_identifier(
 	    JLang::mir::Function & function,

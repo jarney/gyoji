@@ -200,6 +200,7 @@ namespace JLang::mir {
 	TypeType get_type() const;
 	
 	const std::vector<TypeMember> & get_members() const;
+	const TypeMember *member_get(const std::string & member_name) const;
 	
 	const Type * get_pointer_target() const;
 

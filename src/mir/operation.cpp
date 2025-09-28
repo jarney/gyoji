@@ -102,8 +102,8 @@ Operation::dump() const
 //////////////////////////////////////////////
 // OperationFunctionCall
 //////////////////////////////////////////////
-OperationFunctionCall::OperationFunctionCall(size_t _result)
-    : Operation(OP_FUNCTION_CALL, _result)
+OperationFunctionCall::OperationFunctionCall(size_t _result, size_t _callee_tmpvar)
+    : Operation(OP_FUNCTION_CALL, _result, _callee_tmpvar)
 {}
 
 OperationFunctionCall::~OperationFunctionCall()
@@ -123,6 +123,47 @@ OperationSymbol::~OperationSymbol()
 const std::string &
 OperationSymbol::get_symbol_name() const
 { return symbol_name; }
+
+//////////////////////////////////////////////
+// OperationArrayIndex
+//////////////////////////////////////////////
+OperationArrayIndex::OperationArrayIndex(size_t _result, size_t _index_tmpvar, const Type * _array_type)
+    : Operation(OP_ARRAY_INDEX, _result, _index_tmpvar)
+    , array_type(_array_type)
+{}
+OperationArrayIndex::~OperationArrayIndex()
+{}
+const Type *
+OperationArrayIndex::get_array_type() const
+{ return array_type; }
+//////////////////////////////////////////////
+// OperationDot
+//////////////////////////////////////////////
+OperationDot::OperationDot(size_t _result, std::string _member_name)
+    : Operation(OP_DOT, _result)
+    , member_name(_member_name)
+{}
+
+OperationDot::~OperationDot()
+{}
+
+const std::string &
+OperationDot::get_member_name() const
+{ return member_name; }
+//////////////////////////////////////////////
+// OperationArrow
+//////////////////////////////////////////////
+OperationArrow::OperationArrow(size_t _result, std::string _member_name)
+    : Operation(OP_ARROW, _result)
+    , member_name(_member_name)
+{}
+
+OperationArrow::~OperationArrow()
+{}
+
+const std::string &
+OperationArrow::get_member_name() const
+{ return member_name; }
 
 //////////////////////////////////////////////
 // OperationLocalVariable

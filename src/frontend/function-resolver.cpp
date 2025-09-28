@@ -290,26 +290,7 @@ FunctionDefinitionResolver::extract_from_expression_primary_literal_int(
     size_t & returned_tmpvar,
     const JLang::frontend::tree::ExpressionPrimaryLiteralInt & expression)
 {
-    // How do we type literals?  Should we use a suffix like "L" to distinguish
-    // between literal types?
-    // Default is u32, but you can suffix with the type if you need to?
-    // Should we infer the type in the syntax layer based on context
-    // so we can count on a specific type of literal at this stage?
-    //
-    // Should we push off the resolution until the semantic phase?
-    // This path seems bad, I think.
-    //
-    // Like this?
-    // -17UL;
-    //
-    // Or this?
-    // -17i64;
-    // -17i16;
-    // 17u64;
-    // 17u32;
-    // 20u8;
-    //
-    returned_tmpvar = function.tmpvar_define(mir.get_types().get_type("u32"));
+    returned_tmpvar = function.tmpvar_define(mir.get_types().get_type(expression.get_type()));
     auto operation = std::make_unique<OperationLiteralInt>(
 	returned_tmpvar,
 	expression.get_value()
@@ -326,8 +307,7 @@ FunctionDefinitionResolver::extract_from_expression_primary_literal_float(
     size_t & returned_tmpvar,
     const JLang::frontend::tree::ExpressionPrimaryLiteralFloat & expression)
 {
-    returned_tmpvar = function.tmpvar_define(mir.get_types().get_type("f64"));
-
+    returned_tmpvar = function.tmpvar_define(mir.get_types().get_type(expression.get_type()));
     auto operation = std::make_unique<OperationLiteralFloat>(
 	returned_tmpvar,
 	expression.get_value()
@@ -365,6 +345,17 @@ FunctionDefinitionResolver::extract_from_expression_postfix_array_index(
     extract_from_expression(function, current_block, array_tmpvar, expression.get_array());
     extract_from_expression(function, current_block, index_tmpvar, expression.get_index());
 
+    const Type *array_type = function.tmpvar_get(array_tmpvar)->get_type();
+    if (array_type->get_type() != Type::TYPE_POINTER) {
+	compiler_context
+	    .get_errors()
+	    .add_simple_error(
+		expression.get_array().get_source_ref(),
+		"Array type must be a pointer to another type",
+		std::string("Type of array is not a pointer type.")
+		);
+    }
+    
     if (!is_index_type(function.tmpvar_get(index_tmpvar)->get_type())) {
 	compiler_context
 	    .get_errors()
@@ -375,12 +366,18 @@ FunctionDefinitionResolver::extract_from_expression_postfix_array_index(
 		);
 	return;
     }
-    // Look up the type of the array 'pointer to' type
-    // TODO
-//    function
-//	.get_basic_block(current_block)
-//	.add_statement("arrayindex[]");
+    
+    returned_tmpvar = function.tmpvar_define(array_type->get_pointer_target());
+    auto operation = std::make_unique<OperationArrayIndex>(
+	returned_tmpvar,
+	index_tmpvar,
+	array_type
+	);
+    function
+	.get_basic_block(current_block)
+	.add_statement(std::move(operation));
 }
+
 void
 FunctionDefinitionResolver::extract_from_expression_postfix_function_call(
     JLang::mir::Function & function,
@@ -399,19 +396,22 @@ FunctionDefinitionResolver::extract_from_expression_postfix_function_call(
 	arg_types.push_back(arg_returned_value);
     }
 
-    const Expression & function_expression = expression.get_function();
-    const Expression::ExpressionType & function_expression_type = function_expression.get_expression();
-
     const Type *function_pointer_type = function.tmpvar_get(function_type_tmpvar)->get_type();
+    if (function_pointer_type->get_type() != Type::TYPE_FUNCTION_POINTER) {
+	compiler_context
+	    .get_errors()
+	    .add_simple_error(
+		expression.get_function().get_source_ref(),
+		"Called object is not a function.",
+		std::string("Type of object being called is not a function, but is a ") + function_pointer_type->get_name() + std::string(" instead.")
+		);
+    }
 	
     // We declare that we return the vale that the function
     // will return.
     returned_tmpvar = function.tmpvar_define(function_pointer_type->get_return_type());
     
-    auto operation = std::make_unique<OperationFunctionCall>(
-	returned_tmpvar
-	);
-    operation->add_operand(function_type_tmpvar);  // The function to call.
+    auto operation = std::make_unique<OperationFunctionCall>(returned_tmpvar, function_type_tmpvar);
     
     std::string call_args = "";
     for (const auto & av : arg_types) {
@@ -431,12 +431,39 @@ FunctionDefinitionResolver::extract_from_expression_postfix_dot(
     size_t & returned_tmpvar,
     const ExpressionPostfixDot & expression)
 {
-    extract_from_expression(function, current_block, returned_tmpvar, expression.get_expression());
-    // TODO
-//    function
-//	.get_basic_block(current_block)
-//	.add_statement(std::string("dot ") + expression.get_identifier());
+    size_t class_tmpvar;
+    extract_from_expression(function, current_block, class_tmpvar, expression.get_expression());
+
+    const Type *class_type = function.tmpvar_get(class_tmpvar)->get_type();
+    if (class_type->get_type() != Type::TYPE_COMPOSITE) {
+	compiler_context
+	    .get_errors()
+	    .add_simple_error(
+		expression.get_expression().get_source_ref(),
+		"Member access must be applied to a class.",
+		std::string("Type of object being accessed is not a class, but is a ") + class_type->get_name() + std::string(" instead.")
+		);
+    }
+    const std::string & member_name = expression.get_identifier();
+
+    const TypeMember *member = class_type->member_get(member_name);
+    if (member == nullptr) {
+	compiler_context
+	    .get_errors()
+	    .add_simple_error(
+		expression.get_expression().get_source_ref(),
+		"Class does not have this member.",
+		std::string("Class does not have member '") + member_name + std::string("'.")
+		);
+    }
+
+    returned_tmpvar = function.tmpvar_define(member->get_type());
+    auto operation = std::make_unique<OperationDot>(returned_tmpvar, member_name);
+    function
+	.get_basic_block(current_block)
+	.add_statement(std::move(operation));
 }
+
 void
 FunctionDefinitionResolver::extract_from_expression_postfix_arrow(
     JLang::mir::Function & function,
@@ -444,11 +471,49 @@ FunctionDefinitionResolver::extract_from_expression_postfix_arrow(
     size_t & returned_tmpvar,
     const ExpressionPostfixArrow & expression)
 {
-    extract_from_expression(function, current_block, returned_tmpvar, expression.get_expression());
-    // TODO
-//    function
-//	.get_basic_block(current_block)
-//	.add_statement(std::string("arrow ") + expression.get_identifier());
+    size_t classptr_tmpvar;
+    extract_from_expression(function, current_block, classptr_tmpvar, expression.get_expression());
+
+    const Type *classptr_type = function.tmpvar_get(classptr_tmpvar)->get_type();
+    if (classptr_type->get_type() != Type::TYPE_POINTER) {
+	compiler_context
+	    .get_errors()
+	    .add_simple_error(
+		expression.get_expression().get_source_ref(),
+		"Arrow (->) operator must be used on a pointer to a class.",
+		std::string("Type of object being accessed is not a pointer to a class, but is a ") + classptr_type->get_name() + std::string(" instead.")
+		);
+    }
+    const Type *class_type = classptr_type->get_pointer_target();
+    
+    if (class_type->get_type() != Type::TYPE_COMPOSITE) {
+	compiler_context
+	    .get_errors()
+	    .add_simple_error(
+		expression.get_expression().get_source_ref(),
+		"Arrow (->) access must be applied to a pointer to a class.",
+		std::string("Type of object being accessed is not a pointer to a class , but is a pointer to ") + class_type->get_name() + std::string(" instead.")
+		);
+    }
+    const std::string & member_name = expression.get_identifier();
+
+    const TypeMember *member = class_type->member_get(member_name);
+    if (member == nullptr) {
+	compiler_context
+	    .get_errors()
+	    .add_simple_error(
+		expression.get_expression().get_source_ref(),
+		"Class does not have this member.",
+		std::string("Class does not have member '") + member_name + std::string("'.")
+		);
+    }
+
+    returned_tmpvar = function.tmpvar_define(member->get_type());
+    auto operation = std::make_unique<OperationArrow>(returned_tmpvar, member_name);
+    function
+	.get_basic_block(current_block)
+	.add_statement(std::move(operation));
+
 }
 void
 FunctionDefinitionResolver::extract_from_expression_postfix_incdec(
@@ -462,36 +527,26 @@ FunctionDefinitionResolver::extract_from_expression_postfix_incdec(
 
     returned_tmpvar = function.tmpvar_duplicate(operand_tmpvar);
     
-    std::string op = "unknown";
-    switch (expression.get_type()) {
-    case ExpressionPostfixIncDec::INCREMENT:
-    {
-	op = "++";
-	OperationPostIncrement operation(
-	    returned_tmpvar, operand_tmpvar
-	    );
+    if (expression.get_type() == ExpressionPostfixIncDec::INCREMENT) {
+	auto operation = std::make_unique<OperationPostIncrement>(returned_tmpvar, operand_tmpvar);
+	function
+	    .get_basic_block(current_block)
+	    .add_statement(std::move(operation));
     }
-	break;
-    case ExpressionPostfixIncDec::DECREMENT:
-    {
-	op = "--";
-	OperationPostDecrement operation(
-	    returned_tmpvar, operand_tmpvar
-	    );
+    else if (expression.get_type() == ExpressionPostfixIncDec::DECREMENT) {
+	auto operation = std::make_unique<OperationPostDecrement>(returned_tmpvar, operand_tmpvar);
+	function
+	    .get_basic_block(current_block)
+	    .add_statement(std::move(operation));
     }
-	break;
-    default:
-	break;
+    else {
+	compiler_context
+	    .get_errors()
+	    .add_simple_error(expression.get_source_ref(),
+			      "Compiler bug!  Please report this message",
+			      "Unknown postfix operator encountered"
+		);
     }
-    
-//    function
-//	.get_basic_block(current_block)
-//	.add_statement(
-//	    returned_value.value + std::string(" ") +
-//	    std::string("_") + std::to_string(returned_value.variable_id) + std::string(" = ") + 
-//	    std::string("incdec ") + op
-//	    );
-    
 }
 
 
@@ -516,54 +571,58 @@ FunctionDefinitionResolver::extract_from_expression_unary_prefix(
 	expression.get_expression()
 	);
     
-    returned_tmpvar = function.tmpvar_duplicate(operand_tmpvar);
+    const Type *operand_type = function.tmpvar_get(operand_tmpvar)->get_type();
+    if (operand_type == nullptr) {
+	compiler_context
+	    .get_errors()
+	    .add_simple_error(
+		expression.get_source_ref(),
+		"Compiler bug!  Please report this message",
+		"Operand must be a valid type."
+		);
+    }
 
-    std::string op = "";
-    switch (expression.get_type()) {
-    case ExpressionUnaryPrefix::INCREMENT:
-	
-	op = "++";
-	break;
-    case ExpressionUnaryPrefix::DECREMENT:
-	op = "--";
-	break;
-    case ExpressionUnaryPrefix::ADDRESSOF:
-	// The addressof changes the type of the
-	// return value to "pointer to" the type returned.
-	op = "&";
-	//TODO returned_value.value = returned_value.value + std::string("*");
-	break;
-    case ExpressionUnaryPrefix::DEREFERENCE:
-    {
-	op = "*";
-
-	const Type *mir_type = function.tmpvar_get(operand_tmpvar)->get_type();
-	if (mir_type == nullptr) {
-	    fprintf(stderr, "Compiler Bug!  Looking for type %ld\n", operand_tmpvar);
-	    exit(1);
-	}
-	if (mir_type->get_type() != Type::TYPE_POINTER) {
+    if (expression.get_type() == ExpressionUnaryPrefix::INCREMENT) {
+	returned_tmpvar = function.tmpvar_duplicate(operand_tmpvar);
+	auto operation = std::make_unique<OperationPreIncrement>(returned_tmpvar, operand_tmpvar);
+	function
+	    .get_basic_block(current_block)
+	    .add_statement(std::move(operation));
+    }
+    else if (expression.get_type() == ExpressionUnaryPrefix::DECREMENT) {
+	returned_tmpvar = function.tmpvar_duplicate(operand_tmpvar);
+	auto operation = std::make_unique<OperationPreDecrement>(returned_tmpvar, operand_tmpvar);
+	function
+	    .get_basic_block(current_block)
+	    .add_statement(std::move(operation));
+    }
+    else if (expression.get_type() == ExpressionUnaryPrefix::ADDRESSOF) {
+    }
+    else if (expression.get_type() == ExpressionUnaryPrefix::DEREFERENCE) {
+	if (operand_type->get_type() != Type::TYPE_POINTER) {
 	    compiler_context
 		.get_errors()
 		.add_simple_error(
 		    expression.get_expression().get_source_ref(),
 		    "Cannot dereference non-pointer",
-		    std::string("Attempting to de-reference non-pointer type ") + mir_type->get_name()
+		    std::string("Attempting to de-reference non-pointer type ") + operand_type->get_name()
 		    );
 	    return;
 	}
     }
-	break;
-    case ExpressionUnaryPrefix::PLUS:
-	op = "+";
-	break;
-    case ExpressionUnaryPrefix::MINUS:
-	op = "-";
-	break;
-    case ExpressionUnaryPrefix::BITWISE_NOT:
-	op = "~";
-	break;
-    case ExpressionUnaryPrefix::LOGICAL_NOT:
+    else if (expression.get_type() == ExpressionUnaryPrefix::PLUS) {
+	// Unary plus does nothing, really, so why bother?  We just don't
+	// bother to do anything and just wire the return into the operand
+	// directly instead of creating a new tmpvar and assigning it.
+	returned_tmpvar = operand_tmpvar;
+    }
+    else if (expression.get_type() == ExpressionUnaryPrefix::MINUS) {
+	returned_tmpvar = function.tmpvar_duplicate(operand_tmpvar);
+    }
+    else if (expression.get_type() == ExpressionUnaryPrefix::BITWISE_NOT) {
+	returned_tmpvar = function.tmpvar_duplicate(operand_tmpvar);
+    }
+    else if (expression.get_type() == ExpressionUnaryPrefix::LOGICAL_NOT) {
 	if (!is_bool_type(function.tmpvar_get(operand_tmpvar)->get_type())) {
 	    compiler_context
 		.get_errors()
@@ -573,22 +632,16 @@ FunctionDefinitionResolver::extract_from_expression_unary_prefix(
 		    std::string("Type of condition expression should be 'bool' and was ") + function.tmpvar_get(operand_tmpvar)->get_type()->get_name()
 		    );
 	}
-	op = "!";
-	break;
-    default:
-	fprintf(stderr, "Compiler bug! unknown unary operator\n");
-	exit(1);
-	break;
     }
-
-    // TODO
-//    function
-//	.get_basic_block(current_block)
-//	.add_statement(
-//	    returned_value.value + std::string(" ") +
-//	    std::string("_") + std::to_string(returned_value.variable_id) + std::string(" = ") + 
-//	    std::string("unary ") + op + std::string("_") + std::to_string(operand_value.variable_id)
-//	    );
+    else {
+	compiler_context
+	    .get_errors()
+	    .add_simple_error(
+		expression.get_expression().get_source_ref(),
+		"Compiler Bug!",
+		"Encountered unknown unary prefix expression"
+		);
+    }
   
 }
 void
