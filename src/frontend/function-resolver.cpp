@@ -649,7 +649,7 @@ FunctionDefinitionResolver::extract_from_expression_binary(
 	{
 	op = "+";
 	returned_value.type = ExpressionValue::TYPE_VALUE;
-	returned_value.value = "u32";
+	returned_value.value = aval.value;
 
 	auto operation = std::make_unique<OperationAdd>(
 	    returned_value.variable_id,
