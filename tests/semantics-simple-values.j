@@ -1,7 +1,7 @@
 
-u32 demo_function(u32 x)
+u32 demo_function(u32 a, u32 b)
 {
-	u32 a;
-	a = a + x;
-	return a;
+	u32 c;
+	c = a + b;
+	return c;
 }

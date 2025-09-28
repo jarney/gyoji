@@ -585,22 +585,28 @@ CodeGeneratorLLVMContext::generate_function(const JLang::mir::Function & functio
 	fprintf(stderr, "Function declaration not found\n");
     }
 
-    llvm::BasicBlock *BB = llvm::BasicBlock::Create(*TheContext, "bbinit", TheFunction);
-    Builder->SetInsertPoint(BB);
-	
     // Record the function arguments in the NamedValues map.
+    llvm::BasicBlock *BB = llvm::BasicBlock::Create(*TheContext, "entry", TheFunction);
+    Builder->SetInsertPoint(BB);
+
     
+    size_t i = 0;
     for (const auto & function_argument : function.get_arguments()) {
 	// Create an alloca for this variable.
-	
-	llvm::AllocaInst *argument_alloca = Builder->CreateAlloca(
+	llvm::IRBuilder<> TmpB(&TheFunction->getEntryBlock(),
+			       TheFunction->getEntryBlock().begin());
+	llvm::AllocaInst *argument_alloca = TmpB.CreateAlloca(
 	    types[function_argument.get_type()->get_name()],
 	    nullptr,
 	    function_argument.get_name()
 	    );
+
+	llvm::Argument *arg = TheFunction->getArg(i);
+	Builder->CreateStore(arg, argument_alloca);
 	
 	// Add arguments to variable symbol table.
 	local_variables[function_argument.get_name()] = argument_alloca;
+	i++;
     }
 
     llvm::Value *return_value = nullptr;
@@ -608,8 +614,9 @@ CodeGeneratorLLVMContext::generate_function(const JLang::mir::Function & functio
     for (const auto blockid : function.get_blocks_in_order()) {
 	// Create a new basic block to start insertion into.
 	std::string block_name = std::string("BB") + std::to_string(blockid);
-	//llvm::BasicBlock *BB = llvm::BasicBlock::Create(*TheContext, block_name, TheFunction);
-	//Builder->SetInsertPoint(BB);
+	llvm::BasicBlock *BB = llvm::BasicBlock::Create(*TheContext, block_name, TheFunction);
+	Builder->CreateBr(BB);
+	Builder->SetInsertPoint(BB);
 	return_value = generate_basic_block(function, blockid);
     }
 
