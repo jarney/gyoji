@@ -127,7 +127,7 @@ OperationSymbol::get_symbol_name() const
 //////////////////////////////////////////////
 // OperationLocalVariable
 //////////////////////////////////////////////
-OperationLocalVariable::OperationLocalVariable(size_t _result, std::string _symbol_name, std::string _var_type)
+OperationLocalVariable::OperationLocalVariable(size_t _result, std::string _symbol_name, const Type * _var_type)
     : Operation(OP_LOCAL_VARIABLE, _result)
     , symbol_name(_symbol_name)
     , var_type(_var_type)
@@ -139,7 +139,7 @@ const std::string &
 OperationLocalVariable::get_symbol_name() const
 { return symbol_name; }
 
-const std::string &
+const Type *
 OperationLocalVariable::get_var_type() const
 { return var_type; }
 

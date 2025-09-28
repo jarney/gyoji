@@ -322,7 +322,7 @@ CodeGeneratorLLVMContext::generate_operation_local_variable(
     const JLang::mir::OperationLocalVariable *operation
     )
 {
-    llvm::Type *type = types[operation->get_var_type()];
+    llvm::Type *type = types[operation->get_var_type()->get_name()];
     llvm::Value *variable_ptr = local_variables[operation->get_symbol_name()];
     llvm::Value *value = Builder->CreateLoad(type, variable_ptr);
     tmp_lvalues.insert(std::pair(operation->get_result(), variable_ptr));

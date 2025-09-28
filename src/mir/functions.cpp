@@ -38,7 +38,7 @@ Functions::get_functions() const
 /////////////////////////////////////
 // LocalVariable
 /////////////////////////////////////
-LocalVariable::LocalVariable(std::string _name, std::string _type, const JLang::context::SourceReference & _src_ref)
+LocalVariable::LocalVariable(std::string _name, const Type *_type, const JLang::context::SourceReference & _src_ref)
     : name(_name)
     , type(_type)
     , src_ref(_src_ref)
@@ -51,6 +51,18 @@ LocalVariable::LocalVariable(const LocalVariable & _other)
 {}
 LocalVariable::~LocalVariable()
 {}
+
+std::string
+LocalVariable::get_name() const
+{ return name; }
+
+const Type*
+LocalVariable::get_type() const
+{ return type; }
+
+const JLang::context::SourceReference &
+LocalVariable::get_source_ref() const
+{ return src_ref; }
 /////////////////////////////////////
 // TmpValue
 /////////////////////////////////////
@@ -83,7 +95,7 @@ Function::Function(
     , blockid(0)
 {
     for (const auto & arg : arguments) {
-	add_local(LocalVariable(arg.get_name(), arg.get_type()->get_name(), _source_ref));
+	add_local(LocalVariable(arg.get_name(), arg.get_type(), _source_ref));
     }
 }
 
@@ -149,10 +161,10 @@ Function::get_local(std::string local_name)
 bool
 Function::add_local(const LocalVariable & local)
 {
-    if (get_local(local.name) != nullptr) {
+    if (get_local(local.get_name()) != nullptr) {
 	return false;
     }
-    in_scope_locals.insert(std::pair(local.name, local));
+    in_scope_locals.insert(std::pair(local.get_name(), local));
     return true;
 }
 

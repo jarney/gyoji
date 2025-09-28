@@ -81,11 +81,15 @@ namespace JLang::mir {
      */
     class LocalVariable {
     public:
-	LocalVariable(std::string _name, std::string _type, const JLang::context::SourceReference & _src_ref);
+	LocalVariable(std::string _name, const Type* _type, const JLang::context::SourceReference & _src_ref);
 	LocalVariable(const LocalVariable & _other);
 	~LocalVariable();
+	std::string get_name() const;
+	const Type* get_type() const;
+	const JLang::context::SourceReference & get_source_ref() const;
+    private:
 	std::string name;
-	std::string type;
+	const Type* type;
 	const JLang::context::SourceReference & src_ref;
     };
 

@@ -110,13 +110,13 @@ namespace JLang::mir {
 
     class OperationLocalVariable : public Operation {
     public:
-	OperationLocalVariable(size_t _result, std::string _symbol_name, std::string _var_type);
+	OperationLocalVariable(size_t _result, std::string _symbol_name, const Type * _var_type);
 	~OperationLocalVariable();
 	const std::string & get_symbol_name() const;
-	const std::string & get_var_type() const;
+	const Type * get_var_type() const;
     private:
 	const std::string symbol_name;
-	const std::string var_type;
+	const Type * var_type;
     };
 
     class OperationLiteralChar : public Operation {

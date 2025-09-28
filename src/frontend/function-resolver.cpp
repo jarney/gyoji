@@ -154,13 +154,13 @@ FunctionDefinitionResolver::extract_from_expression_primary_identifier(
 	    expression.get_identifier().get_value()
 	    );
 	if (localvar != nullptr) {
-	    returned_tmpvar = function.tmpvar_define(mir.get_types().get_type(localvar->type));
+	    returned_tmpvar = function.tmpvar_define(localvar->get_type());
 	    fprintf(stderr, "Local variable %ld\n", returned_tmpvar);
 	    
 	    auto operation = std::make_unique<OperationLocalVariable>(
 		returned_tmpvar,
 		expression.get_identifier().get_value(),
-		localvar->type
+		localvar->get_type()
 		);
 	    function.get_basic_block(current_block).add_statement(std::move(operation));
 
@@ -968,7 +968,7 @@ FunctionDefinitionResolver::extract_from_statement_list(
 	    
 	    JLang::mir::Type * mir_type = type_resolver.extract_from_type_specifier(statement->get_type_specifier());
 
-	    LocalVariable local(statement->get_name(), mir_type->get_name(), statement->get_source_ref());
+	    LocalVariable local(statement->get_name(), mir_type, statement->get_type_specifier().get_source_ref());
 	    
 	    if (!function.add_local(local)) {
 		compiler_context
@@ -976,7 +976,7 @@ FunctionDefinitionResolver::extract_from_statement_list(
 		    .add_simple_error(
 			statement->get_type_specifier().get_source_ref(),
 			"Duplicate Local Variable.",
-			std::string("Variable with name ") + local.name + std::string(" is already in scope and cannot be duplicated in this function.")
+			std::string("Variable with name ") + local.get_name() + std::string(" is already in scope and cannot be duplicated in this function.")
 			);
 	    }
 
