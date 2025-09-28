@@ -113,7 +113,6 @@ FunctionDefinitionResolver::FunctionDefinitionResolver(
     , function_definition(_function_definition)
     , mir(_mir)
     , type_resolver(_type_resolver)
-    , new_tmpvar_id(0)
 {}
 FunctionDefinitionResolver::~FunctionDefinitionResolver()
 {}
@@ -124,16 +123,11 @@ FunctionDefinitionResolver::resolve()
     extract_from_function_definition(function_definition);
 }
 
-size_t
-FunctionDefinitionResolver::get_new_tmpvar()
-{ return new_tmpvar_id++; }
-
-
 void
 FunctionDefinitionResolver::extract_from_expression_primary_identifier(
     JLang::mir::Function & function,
     size_t & current_block,
-    ExpressionValue & returned_value,
+    size_t & returned_tmpvar,
     const JLang::frontend::tree::ExpressionPrimaryIdentifier & expression
     )
 {
@@ -160,13 +154,11 @@ FunctionDefinitionResolver::extract_from_expression_primary_identifier(
 	    expression.get_identifier().get_value()
 	    );
 	if (localvar != nullptr) {
-	    returned_value.type = ExpressionValue::TYPE_VALUE;
-	    returned_value.value = localvar->type;
-	    returned_value.variable_id = get_new_tmpvar();
-	    fprintf(stderr, "Local variable %ld\n", returned_value.variable_id);
+	    returned_tmpvar = function.tmpvar_define(mir.get_types().get_type(localvar->type));
+	    fprintf(stderr, "Local variable %ld\n", returned_tmpvar);
 	    
 	    auto operation = std::make_unique<OperationLocalVariable>(
-		returned_value.variable_id,
+		returned_tmpvar,
 		expression.get_identifier().get_value(),
 		localvar->type
 		);
@@ -223,12 +215,10 @@ FunctionDefinitionResolver::extract_from_expression_primary_identifier(
 		    std::string("Local variable ") + expression.get_identifier().get_fully_qualified_name() + std::string(" was not found in this scope.")
 		    );
 	}
-	returned_value.type = ExpressionValue::TYPE_VALUE;
-	returned_value.value = symbol->get_type()->get_name();
-	returned_value.variable_id = get_new_tmpvar();
+	returned_tmpvar = function.tmpvar_define(symbol->get_type());
 
 	auto operation = std::make_unique<OperationSymbol>(
-	    returned_value.variable_id,
+	    returned_tmpvar,
 	    expression.get_identifier().get_fully_qualified_name()
 	    );
 	function.get_basic_block(current_block).add_statement(std::move(operation));
@@ -239,14 +229,14 @@ void
 FunctionDefinitionResolver::extract_from_expression_primary_nested(
     JLang::mir::Function & function,
     size_t & current_block,
-    ExpressionValue & returned_value,
+    size_t & returned_tmpvar,
     const JLang::frontend::tree::ExpressionPrimaryNested & expression)
 {
 // Nested expressions don't emit blocks on their own, just run whatever is nested.
     extract_from_expression(
 	function,
 	current_block,
-	returned_value, // Return whatever value the nested expression returns.
+	returned_tmpvar, // Return whatever value the nested expression returns.
 	expression.get_expression()
 	);
 }
@@ -255,15 +245,13 @@ void
 FunctionDefinitionResolver::extract_from_expression_primary_literal_char(
     JLang::mir::Function & function,
     size_t & current_block,
-    ExpressionValue & returned_value,
+    size_t & returned_tmpvar,
     const JLang::frontend::tree::ExpressionPrimaryLiteralChar & expression)
 {
-    returned_value.type = ExpressionValue::TYPE_VALUE;
-    returned_value.value = std::string("u8");
-    returned_value.variable_id = get_new_tmpvar();
+    returned_tmpvar = function.tmpvar_define(mir.get_types().get_type("u8"));
     
     auto operation = std::make_unique<OperationLiteralChar>(
-	returned_value.variable_id,
+	returned_tmpvar,
 	expression.get_value()
 	);
 
@@ -276,15 +264,13 @@ void
 FunctionDefinitionResolver::extract_from_expression_primary_literal_string(
     JLang::mir::Function & function,
     size_t & current_block,
-    ExpressionValue & returned_value,
+    size_t & returned_tmpvar,
     const JLang::frontend::tree::ExpressionPrimaryLiteralString & expression)
 {
-    returned_value.type = ExpressionValue::TYPE_VALUE;
-    returned_value.value = std::string("u8*");
-    returned_value.variable_id = get_new_tmpvar();
+    returned_tmpvar = function.tmpvar_define(mir.get_types().get_type("u8*"));
 
     auto operation = std::make_unique<OperationLiteralString>(
-	returned_value.variable_id,
+	returned_tmpvar,
 	expression.get_value()
 	);
     function
@@ -296,15 +282,13 @@ void
 FunctionDefinitionResolver::extract_from_expression_primary_literal_int(
     JLang::mir::Function & function,
     size_t & current_block,
-    ExpressionValue & returned_value,
+    size_t & returned_tmpvar,
     const JLang::frontend::tree::ExpressionPrimaryLiteralInt & expression)
 {
-    returned_value.type = ExpressionValue::TYPE_VALUE;
-    returned_value.value = std::string("u32"); // Where should we distinguish u8,u16,u32,u64,i8,i16,i32,i64?
-    returned_value.variable_id = get_new_tmpvar();
+    returned_tmpvar = function.tmpvar_define(mir.get_types().get_type("u32"));
 
     auto operation = std::make_unique<OperationLiteralInt>(
-	returned_value.variable_id,
+	returned_tmpvar,
 	expression.get_value()
 	);
     function
@@ -316,15 +300,13 @@ void
 FunctionDefinitionResolver::extract_from_expression_primary_literal_float(
     JLang::mir::Function & function,
     size_t & current_block,
-    ExpressionValue & returned_value,
+    size_t & returned_tmpvar,
     const JLang::frontend::tree::ExpressionPrimaryLiteralFloat & expression)
 {
-    returned_value.type = ExpressionValue::TYPE_VALUE;
-    returned_value.value = std::string("f64"); // Where should we distinguish f32,f64?
-    returned_value.variable_id = get_new_tmpvar();
+    returned_tmpvar = function.tmpvar_define(mir.get_types().get_type("f64"));
 
     auto operation = std::make_unique<OperationLiteralFloat>(
-	returned_value.variable_id,
+	returned_tmpvar,
 	expression.get_value()
 	);
     function
@@ -332,31 +314,18 @@ FunctionDefinitionResolver::extract_from_expression_primary_literal_float(
 	.add_statement(std::move(operation));
 }
 
-static bool is_immediate_function_type(const ExpressionValue & value)
+static bool is_bool_type(const Type* value)
 {
-    if (value.type == ExpressionValue::TYPE_GLOBAL_FUNCTION) {
+    if (value->get_name() == "bool") {
 	return true;
     }
     return false;
 }
 
-static bool is_bool_type(const ExpressionValue & value)
+static bool is_index_type(const Type* value)
 {
-    if (value.type == ExpressionValue::TYPE_VALUE) {
-	if (value.value == "bool") {
-	    return true;
-	}
-    }
-    return false;
-}
-
-static bool is_index_type(const ExpressionValue & value)
-{
-    if (value.type == ExpressionValue::TYPE_VALUE) {
-	if (value.value == "u32") {
-	    return true;
-	}
-	return false;
+    if (value->get_name() == "u32") {
+	return true;
     }
     return false;
 }
@@ -365,15 +334,15 @@ void
 FunctionDefinitionResolver::extract_from_expression_postfix_array_index(
     JLang::mir::Function & function,
     size_t & current_block,
-    ExpressionValue & returned_value,
+    size_t & returned_tmpvar,
     const ExpressionPostfixArrayIndex & expression)
 {
-    ExpressionValue array_type;
-    ExpressionValue index_type;
-    extract_from_expression(function, current_block, array_type, expression.get_array());
-    extract_from_expression(function, current_block, index_type, expression.get_index());
+    size_t array_tmpvar;
+    size_t index_tmpvar;
+    extract_from_expression(function, current_block, array_tmpvar, expression.get_array());
+    extract_from_expression(function, current_block, index_tmpvar, expression.get_index());
 
-    if (!is_index_type(index_type)) {
+    if (!is_index_type(function.tmpvar_get(index_tmpvar)->get_type())) {
 	compiler_context
 	    .get_errors()
 	    .add_simple_error(
@@ -393,41 +362,38 @@ void
 FunctionDefinitionResolver::extract_from_expression_postfix_function_call(
     JLang::mir::Function & function,
     size_t & current_block,
-    ExpressionValue & returned_value,
+    size_t & returned_tmpvar,
     const ExpressionPostfixFunctionCall & expression)
 {
     // Extract the expression itself from the arguments.
-    ExpressionValue function_type;
-    extract_from_expression(function, current_block, function_type, expression.get_function());
+    size_t function_type_tmpvar;
+    extract_from_expression(function, current_block, function_type_tmpvar, expression.get_function());
     
-    std::vector<ExpressionValue> arg_types;
+    std::vector<size_t> arg_types;
     for (const auto & arg_expr : expression.get_arguments().get_arguments()) {
-	ExpressionValue arg_type;
-	extract_from_expression(function, current_block, arg_type, *arg_expr);
-	arg_types.push_back(arg_type);
+	size_t arg_returned_value;
+	extract_from_expression(function, current_block, arg_returned_value, *arg_expr);
+	arg_types.push_back(arg_returned_value);
     }
 
     const Expression & function_expression = expression.get_function();
     const Expression::ExpressionType & function_expression_type = function_expression.get_expression();
 
-    std::string function_pointer_type_name = function_type.value;
-    const Type *function_pointer_type = mir.get_types().get_type(function_pointer_type_name);
+    const Type *function_pointer_type = function.tmpvar_get(function_type_tmpvar)->get_type();
 	
     // We declare that we return the vale that the function
     // will return.
-    returned_value.type = ExpressionValue::TYPE_VALUE;
-    returned_value.value = function_pointer_type->get_return_type()->get_name();
-    returned_value.variable_id = get_new_tmpvar();
+    returned_tmpvar = function.tmpvar_define(function_pointer_type->get_return_type());
     
     auto operation = std::make_unique<OperationFunctionCall>(
-	returned_value.variable_id
+	returned_tmpvar
 	);
-    operation->add_operand(function_type.variable_id);  // The function to call.
+    operation->add_operand(function_type_tmpvar);  // The function to call.
     
     std::string call_args = "";
     for (const auto & av : arg_types) {
-	call_args += std::string("_") + std::to_string(av.variable_id) + " ";
-	operation->add_operand(av.variable_id);
+	call_args += std::string("_") + std::to_string(av) + " ";
+	operation->add_operand(av);
     }
     function
 	.get_basic_block(current_block)
@@ -439,10 +405,10 @@ void
 FunctionDefinitionResolver::extract_from_expression_postfix_dot(
     JLang::mir::Function & function,
     size_t & current_block,
-    ExpressionValue & returned_value,
+    size_t & returned_tmpvar,
     const ExpressionPostfixDot & expression)
 {
-    extract_from_expression(function, current_block, returned_value, expression.get_expression());
+    extract_from_expression(function, current_block, returned_tmpvar, expression.get_expression());
     // TODO
 //    function
 //	.get_basic_block(current_block)
@@ -452,10 +418,10 @@ void
 FunctionDefinitionResolver::extract_from_expression_postfix_arrow(
     JLang::mir::Function & function,
     size_t & current_block,
-    ExpressionValue & returned_value,
+    size_t & returned_tmpvar,
     const ExpressionPostfixArrow & expression)
 {
-    extract_from_expression(function, current_block, returned_value, expression.get_expression());
+    extract_from_expression(function, current_block, returned_tmpvar, expression.get_expression());
     // TODO
 //    function
 //	.get_basic_block(current_block)
@@ -465,15 +431,13 @@ void
 FunctionDefinitionResolver::extract_from_expression_postfix_incdec(
     JLang::mir::Function & function,
     size_t & current_block,
-    ExpressionValue & returned_value,
+    size_t & returned_tmpvar,
     const ExpressionPostfixIncDec & expression)
 {
-    ExpressionValue operand_value;
-    extract_from_expression(function, current_block, operand_value, expression.get_expression());
+    size_t operand_tmpvar;
+    extract_from_expression(function, current_block, operand_tmpvar, expression.get_expression());
 
-    returned_value.type = ExpressionValue::TYPE_VALUE;
-    returned_value.value = operand_value.value;
-    returned_value.variable_id = get_new_tmpvar();
+    returned_tmpvar = function.tmpvar_duplicate(operand_tmpvar);
     
     std::string op = "unknown";
     switch (expression.get_type()) {
@@ -481,7 +445,7 @@ FunctionDefinitionResolver::extract_from_expression_postfix_incdec(
     {
 	op = "++";
 	OperationPostIncrement operation(
-	    returned_value.variable_id, operand_value.variable_id
+	    returned_tmpvar, operand_tmpvar
 	    );
     }
 	break;
@@ -489,7 +453,7 @@ FunctionDefinitionResolver::extract_from_expression_postfix_incdec(
     {
 	op = "--";
 	OperationPostDecrement operation(
-	    returned_value.variable_id, operand_value.variable_id
+	    returned_tmpvar, operand_tmpvar
 	    );
     }
 	break;
@@ -513,7 +477,7 @@ void
 FunctionDefinitionResolver::extract_from_expression_unary_prefix(
     JLang::mir::Function & function,
     size_t & current_block,
-    ExpressionValue & returned_value,
+    size_t & returned_tmpvar,
     const ExpressionUnaryPrefix & expression)
 {
 
@@ -521,17 +485,15 @@ FunctionDefinitionResolver::extract_from_expression_unary_prefix(
     // and if not otherwise specified,
     // the operation will return the
     // same type as the operand.
-    ExpressionValue operand_value;
+    size_t operand_tmpvar;
     extract_from_expression(
 	function,
 	current_block,
-	operand_value,
+	operand_tmpvar,
 	expression.get_expression()
 	);
     
-    returned_value.type = operand_value.type;
-    returned_value.value = operand_value.value;
-    returned_value.variable_id = get_new_tmpvar();
+    returned_tmpvar = function.tmpvar_duplicate(operand_tmpvar);
 
     std::string op = "";
     switch (expression.get_type()) {
@@ -546,15 +508,15 @@ FunctionDefinitionResolver::extract_from_expression_unary_prefix(
 	// The addressof changes the type of the
 	// return value to "pointer to" the type returned.
 	op = "&";
-	returned_value.value = returned_value.value + std::string("*");
+	//TODO returned_value.value = returned_value.value + std::string("*");
 	break;
     case ExpressionUnaryPrefix::DEREFERENCE:
     {
 	op = "*";
 
-	Type *mir_type = mir.get_types().get_type(returned_value.value);
+	const Type *mir_type = function.tmpvar_get(operand_tmpvar)->get_type();
 	if (mir_type == nullptr) {
-	    fprintf(stderr, "Compiler Bug!  Looking for type %s\n", returned_value.value.c_str());
+	    fprintf(stderr, "Compiler Bug!  Looking for type %ld\n", operand_tmpvar);
 	    exit(1);
 	}
 	if (mir_type->get_type() != Type::TYPE_POINTER) {
@@ -563,7 +525,7 @@ FunctionDefinitionResolver::extract_from_expression_unary_prefix(
 		.add_simple_error(
 		    expression.get_expression().get_source_ref(),
 		    "Cannot dereference non-pointer",
-		    std::string("Attempting to de-reference non-pointer type ") + returned_value.value
+		    std::string("Attempting to de-reference non-pointer type ") + mir_type->get_name()
 		    );
 	    return;
 	}
@@ -579,13 +541,13 @@ FunctionDefinitionResolver::extract_from_expression_unary_prefix(
 	op = "~";
 	break;
     case ExpressionUnaryPrefix::LOGICAL_NOT:
-	if (!is_bool_type(operand_value)) {
+	if (!is_bool_type(function.tmpvar_get(operand_tmpvar)->get_type())) {
 	    compiler_context
 		.get_errors()
 		.add_simple_error(
 		    expression.get_expression().get_source_ref(),
 		    "Logical not (!) must operate on 'bool' expressions.",
-		    std::string("Type of condition expression should be 'bool' and was ") + returned_value.value
+		    std::string("Type of condition expression should be 'bool' and was ") + function.tmpvar_get(operand_tmpvar)->get_type()->get_name()
 		    );
 	}
 	op = "!";
@@ -610,7 +572,7 @@ void
 FunctionDefinitionResolver::extract_from_expression_unary_sizeof_type(
     JLang::mir::Function & function,
     size_t & current_block,
-    ExpressionValue & returned_value,
+    size_t & returned_tmpvar,
     const ExpressionUnarySizeofType & expression)
 {
     // TODO
@@ -623,38 +585,38 @@ void
 FunctionDefinitionResolver::extract_from_expression_binary(
     JLang::mir::Function & function,
     size_t & current_block,
-    ExpressionValue & returned_value,
+    size_t & returned_tmpvar,
     const ExpressionBinary & expression)
 {
     std::string op = "";
 
-    ExpressionValue aval;
-    ExpressionValue bval;
-    extract_from_expression(function, current_block, aval, expression.get_a());
-    extract_from_expression(function, current_block, bval, expression.get_b());
-    if (aval.type != bval.type || aval.value != bval.value) {
+    size_t a_tmpvar;
+    size_t b_tmpvar;
+    extract_from_expression(function, current_block, a_tmpvar, expression.get_a());
+    extract_from_expression(function, current_block, b_tmpvar, expression.get_b());
+    std::string atypename = function.tmpvar_get(a_tmpvar)->get_type()->get_name();
+    std::string btypename = function.tmpvar_get(b_tmpvar)->get_type()->get_name();
+    if (atypename != btypename) {
 	compiler_context
 	    .get_errors()
 	    .add_simple_error(
 		expression.get_source_ref(),
 		"Type mismatch in binary operation",
-		std::string("The type of operands should match: a= ") + aval.value + std::string(" b=") + bval.value
+		std::string("The type of operands should match: a= ") + atypename + std::string(" b=") + btypename
 		);
 	return;
     }
-    returned_value.variable_id = get_new_tmpvar();
-    
     switch (expression.get_operator()) {
     case ExpressionBinary::ADD:
 	{
 	op = "+";
-	returned_value.type = ExpressionValue::TYPE_VALUE;
-	returned_value.value = aval.value;
+	returned_tmpvar = function.tmpvar_duplicate(a_tmpvar);
+    
 
 	auto operation = std::make_unique<OperationAdd>(
-	    returned_value.variable_id,
-	    aval.variable_id,
-	    bval.variable_id
+	    returned_tmpvar,
+	    a_tmpvar,
+	    b_tmpvar
 	    );
 	function
 	    .get_basic_block(current_block)
@@ -663,89 +625,82 @@ FunctionDefinitionResolver::extract_from_expression_binary(
 	break;
     case ExpressionBinary::SUBTRACT:
 	op = "-";
-	returned_value.type = ExpressionValue::TYPE_VALUE;
-	returned_value.value = "u32";
+	returned_tmpvar = function.tmpvar_define(mir.get_types().get_type("u32"));
 	break;
     case ExpressionBinary::MULTIPLY:
 	op = "*";
-	returned_value.type = ExpressionValue::TYPE_VALUE;
-	returned_value.value = "u32";
+	returned_tmpvar = function.tmpvar_define(mir.get_types().get_type("u32"));
 	break;
     case ExpressionBinary::DIVIDE:
 	op = "/";
-	returned_value.type = ExpressionValue::TYPE_VALUE;
-	returned_value.value = "u32";
+	returned_tmpvar = function.tmpvar_define(mir.get_types().get_type("u32"));
 	break;
     case ExpressionBinary::MODULO:
 	op = "%";
-	returned_value.type = ExpressionValue::TYPE_VALUE;
-	returned_value.value = "u32";
+	returned_tmpvar = function.tmpvar_define(mir.get_types().get_type("u32"));
 	break;
     case ExpressionBinary::LOGICAL_AND:
 	op = "&&";
-	returned_value.type = ExpressionValue::TYPE_VALUE;
-	returned_value.value = "bool";
+	returned_tmpvar = function.tmpvar_define(mir.get_types().get_type("bool"));
 	break;
     case ExpressionBinary::LOGICAL_OR:
 	op = "||";
-	returned_value.type = ExpressionValue::TYPE_VALUE;
-	returned_value.value = "bool";
+	returned_tmpvar = function.tmpvar_define(mir.get_types().get_type("bool"));
 	break;
-	
     case ExpressionBinary::BITWISE_AND:
 	op = "&";
+	returned_tmpvar = function.tmpvar_define(mir.get_types().get_type("u32"));
 	break;
     case ExpressionBinary::BITWISE_OR:
 	op = "|";
+	returned_tmpvar = function.tmpvar_define(mir.get_types().get_type("u32"));
 	break;
     case ExpressionBinary::BITWISE_XOR:
 	op = "^";
+	returned_tmpvar = function.tmpvar_define(mir.get_types().get_type("u32"));
 	break;
     case ExpressionBinary::SHIFT_LEFT:
 	op = "<<";
+	returned_tmpvar = function.tmpvar_define(mir.get_types().get_type("u32"));
 	break;
     case ExpressionBinary::SHIFT_RIGHT:
 	op = ">>";
+	returned_tmpvar = function.tmpvar_define(mir.get_types().get_type("u32"));
 	break;
 	
     case ExpressionBinary::COMPARE_LT:
 	op = "<";
-	returned_value.type = ExpressionValue::TYPE_VALUE;
-	returned_value.value = "bool";
+	returned_tmpvar = function.tmpvar_define(mir.get_types().get_type("bool"));
 	break;
     case ExpressionBinary::COMPARE_GT:
 	op = ">";
-	returned_value.type = ExpressionValue::TYPE_VALUE;
-	returned_value.value = "bool";
+	returned_tmpvar = function.tmpvar_define(mir.get_types().get_type("bool"));
 	break;
     case ExpressionBinary::COMPARE_LE:
 	op = "<=";
-	returned_value.type = ExpressionValue::TYPE_VALUE;
-	returned_value.value = "bool";
+	returned_tmpvar = function.tmpvar_define(mir.get_types().get_type("bool"));
 	break;
     case ExpressionBinary::COMPARE_GE:
 	op = ">=";
-	returned_value.type = ExpressionValue::TYPE_VALUE;
-	returned_value.value = "bool";
+	returned_tmpvar = function.tmpvar_define(mir.get_types().get_type("bool"));
 	break;
     case ExpressionBinary::COMPARE_EQ:
 	op = "==";
-	returned_value.type = ExpressionValue::TYPE_VALUE;
-	returned_value.value = "bool";
+	returned_tmpvar = function.tmpvar_define(mir.get_types().get_type("bool"));
 	break;
     case ExpressionBinary::COMPARE_NE:
 	op = "!=";
-	returned_value.type = ExpressionValue::TYPE_VALUE;
-	returned_value.value = "bool";
+	returned_tmpvar = function.tmpvar_define(mir.get_types().get_type("bool"));
 	break;
 	
     case ExpressionBinary::EQUALS:
     {
 	op = "=";
+	returned_tmpvar = function.tmpvar_duplicate(a_tmpvar);
 	auto operation = std::make_unique<OperationAssign>(
-	    returned_value.variable_id,
-	    aval.variable_id,
-	    bval.variable_id
+	    returned_tmpvar,
+	    a_tmpvar,
+	    b_tmpvar
 	    );
 	function
 	    .get_basic_block(current_block)
@@ -754,33 +709,43 @@ FunctionDefinitionResolver::extract_from_expression_binary(
         break;
     case ExpressionBinary::MUL_ASSIGN:
 	op = "*=";
+	returned_tmpvar = function.tmpvar_duplicate(a_tmpvar);
 	break;
     case ExpressionBinary::DIV_ASSIGN:
 	op = "/=";
+	returned_tmpvar = function.tmpvar_duplicate(a_tmpvar);
 	break;
     case ExpressionBinary::MOD_ASSIGN:
 	op = "%=";
+	returned_tmpvar = function.tmpvar_duplicate(a_tmpvar);
 	break;
     case ExpressionBinary::ADD_ASSIGN:
 	op = "+=";
+	returned_tmpvar = function.tmpvar_duplicate(a_tmpvar);
 	break;
     case ExpressionBinary::SUB_ASSIGN:
 	op = "-=";
+	returned_tmpvar = function.tmpvar_duplicate(a_tmpvar);
 	break;
     case ExpressionBinary::LEFT_ASSIGN:
 	op = "<<=";
+	returned_tmpvar = function.tmpvar_duplicate(a_tmpvar);
 	break;
     case ExpressionBinary::RIGHT_ASSIGN:
 	op = ">>=";
+	returned_tmpvar = function.tmpvar_duplicate(a_tmpvar);
 	break;
     case ExpressionBinary::AND_ASSIGN:
 	op = "&=";
+	returned_tmpvar = function.tmpvar_duplicate(a_tmpvar);
 	break;
     case ExpressionBinary::OR_ASSIGN:
 	op = "|=";
+	returned_tmpvar = function.tmpvar_duplicate(a_tmpvar);
 	break;
     case ExpressionBinary::XOR_ASSIGN:
 	op = "^=";
+	returned_tmpvar = function.tmpvar_duplicate(a_tmpvar);
 	break;
     default:
 	fprintf(stderr, "Compiler bug! unknown binary operator\n");
@@ -800,7 +765,7 @@ void
 FunctionDefinitionResolver::extract_from_expression_trinary(
     JLang::mir::Function & function,
     size_t & current_block,
-    ExpressionValue & returned_value,
+    size_t & returned_tmpvar,
     const ExpressionTrinary & expression)
 {
 //    function
@@ -811,7 +776,7 @@ void
 FunctionDefinitionResolver::extract_from_expression_cast(
     JLang::mir::Function & function,
     size_t & current_block,
-    ExpressionValue & returned_value,
+    size_t & returned_tmpvar,
     const ExpressionCast & expression)
 {
 //    function
@@ -824,74 +789,74 @@ void
 FunctionDefinitionResolver::extract_from_expression(
     JLang::mir::Function & function,
     size_t & current_block,
-    ExpressionValue & returned_value,
+    size_t & returned_tmpvar,
     const Expression & expression_container)
 {
   const auto & expression_type = expression_container.get_expression();
 
   if (std::holds_alternative<JLang::owned<ExpressionPrimaryIdentifier>>(expression_type)) {
     const auto & expression = std::get<JLang::owned<ExpressionPrimaryIdentifier>>(expression_type);
-    extract_from_expression_primary_identifier(function, current_block, returned_value, *expression);
+    extract_from_expression_primary_identifier(function, current_block, returned_tmpvar, *expression);
   }
   else if (std::holds_alternative<JLang::owned<ExpressionPrimaryNested>>(expression_type)) {
     const auto & expression = std::get<JLang::owned<ExpressionPrimaryNested>>(expression_type);
-    extract_from_expression_primary_nested(function, current_block, returned_value, *expression);
+    extract_from_expression_primary_nested(function, current_block, returned_tmpvar, *expression);
   }
   else if (std::holds_alternative<JLang::owned<ExpressionPrimaryLiteralChar>>(expression_type)) {
     const auto & expression = std::get<JLang::owned<ExpressionPrimaryLiteralChar>>(expression_type);
-    extract_from_expression_primary_literal_char(function, current_block, returned_value, *expression);
+    extract_from_expression_primary_literal_char(function, current_block, returned_tmpvar, *expression);
   }
   else if (std::holds_alternative<JLang::owned<ExpressionPrimaryLiteralString>>(expression_type)) {
     const auto & expression = std::get<JLang::owned<ExpressionPrimaryLiteralString>>(expression_type);
-    extract_from_expression_primary_literal_string(function, current_block, returned_value, *expression);
+    extract_from_expression_primary_literal_string(function, current_block, returned_tmpvar, *expression);
   }
   else if (std::holds_alternative<JLang::owned<ExpressionPrimaryLiteralInt>>(expression_type)) {
     const auto & expression = std::get<JLang::owned<ExpressionPrimaryLiteralInt>>(expression_type);
-    extract_from_expression_primary_literal_int(function, current_block, returned_value, *expression);
+    extract_from_expression_primary_literal_int(function, current_block, returned_tmpvar, *expression);
   }
   else if (std::holds_alternative<JLang::owned<ExpressionPrimaryLiteralFloat>>(expression_type)) {
     const auto & expression = std::get<JLang::owned<ExpressionPrimaryLiteralFloat>>(expression_type);
-    extract_from_expression_primary_literal_float(function, current_block, returned_value, *expression);
+    extract_from_expression_primary_literal_float(function, current_block, returned_tmpvar, *expression);
   }
   else if (std::holds_alternative<JLang::owned<ExpressionPostfixArrayIndex>>(expression_type)) {
     const auto & expression = std::get<JLang::owned<ExpressionPostfixArrayIndex>>(expression_type);
-    extract_from_expression_postfix_array_index(function, current_block, returned_value, *expression);
+    extract_from_expression_postfix_array_index(function, current_block, returned_tmpvar, *expression);
   }
   else if (std::holds_alternative<JLang::owned<ExpressionPostfixFunctionCall>>(expression_type)) {
     const auto & expression = std::get<JLang::owned<ExpressionPostfixFunctionCall>>(expression_type);
-    extract_from_expression_postfix_function_call(function, current_block, returned_value, *expression);
+    extract_from_expression_postfix_function_call(function, current_block, returned_tmpvar, *expression);
   }
   else if (std::holds_alternative<JLang::owned<ExpressionPostfixDot>>(expression_type)) {
     const auto & expression = std::get<JLang::owned<ExpressionPostfixDot>>(expression_type);
-    extract_from_expression_postfix_dot(function, current_block, returned_value, *expression);
+    extract_from_expression_postfix_dot(function, current_block, returned_tmpvar, *expression);
   }
   else if (std::holds_alternative<JLang::owned<ExpressionPostfixArrow>>(expression_type)) {
     const auto & expression = std::get<JLang::owned<ExpressionPostfixArrow>>(expression_type);
-    extract_from_expression_postfix_arrow(function, current_block, returned_value, *expression);
+    extract_from_expression_postfix_arrow(function, current_block, returned_tmpvar, *expression);
   }
   else if (std::holds_alternative<JLang::owned<ExpressionPostfixIncDec>>(expression_type)) {
     const auto & expression = std::get<JLang::owned<ExpressionPostfixIncDec>>(expression_type);
-    extract_from_expression_postfix_incdec(function, current_block, returned_value, *expression);
+    extract_from_expression_postfix_incdec(function, current_block, returned_tmpvar, *expression);
   }
   else if (std::holds_alternative<JLang::owned<ExpressionUnaryPrefix>>(expression_type)) {
     const auto & expression = std::get<JLang::owned<ExpressionUnaryPrefix>>(expression_type);
-    extract_from_expression_unary_prefix(function, current_block, returned_value, *expression);
+    extract_from_expression_unary_prefix(function, current_block, returned_tmpvar, *expression);
   }
   else if (std::holds_alternative<JLang::owned<ExpressionUnarySizeofType>>(expression_type)) {
     const auto & expression = std::get<JLang::owned<ExpressionUnarySizeofType>>(expression_type);
-    extract_from_expression_unary_sizeof_type(function, current_block, returned_value, *expression);
+    extract_from_expression_unary_sizeof_type(function, current_block, returned_tmpvar, *expression);
   }
   else if (std::holds_alternative<JLang::owned<ExpressionBinary>>(expression_type)) {
     const auto & expression = std::get<JLang::owned<ExpressionBinary>>(expression_type);
-    extract_from_expression_binary(function, current_block, returned_value, *expression);
+    extract_from_expression_binary(function, current_block, returned_tmpvar, *expression);
   }
   else if (std::holds_alternative<JLang::owned<ExpressionTrinary>>(expression_type)) {
     const auto & expression = std::get<JLang::owned<ExpressionTrinary>>(expression_type);
-    extract_from_expression_trinary(function, current_block, returned_value, *expression);
+    extract_from_expression_trinary(function, current_block, returned_tmpvar, *expression);
   }
   else if (std::holds_alternative<JLang::owned<ExpressionCast>>(expression_type)) {
     const auto & expression = std::get<JLang::owned<ExpressionCast>>(expression_type);
-    extract_from_expression_cast(function, current_block, returned_value, *expression);
+    extract_from_expression_cast(function, current_block, returned_tmpvar, *expression);
   }
   else {
     fprintf(stderr, "Compiler bug, invalid expression type\n");
@@ -906,11 +871,11 @@ FunctionDefinitionResolver::extract_from_statement_return(
     const StatementReturn & statement
     )
 {
-    ExpressionValue retval;
-    extract_from_expression(function, current_block, retval, statement.get_expression());
+    size_t expression_tmpvar;
+    extract_from_expression(function, current_block, expression_tmpvar, statement.get_expression());
 
     auto operation = std::make_unique<OperationReturn>(
-	retval.variable_id
+	expression_tmpvar
 	);
     function.get_basic_block(current_block).add_statement(std::move(operation));
 }
@@ -923,15 +888,15 @@ FunctionDefinitionResolver::extract_from_statement_ifelse(
     const StatementIfElse & statement
     )
 {
-    ExpressionValue condition_value;
-    extract_from_expression(function, current_block, condition_value, statement.get_expression());
-    if (!is_bool_type(condition_value)) {
+    size_t condition_tmpvar;
+    extract_from_expression(function, current_block, condition_tmpvar, statement.get_expression());
+    if (!is_bool_type(function.tmpvar_get(condition_tmpvar)->get_type())) {
 	compiler_context
 	    .get_errors()
 	    .add_simple_error(
 		statement.get_expression().get_source_ref(),
 		"Invalid condition in if statement.",
-		std::string("Type of condition expression should be 'bool' and was ") + condition_value.value
+		std::string("Type of condition expression should be 'bool' and was ") + function.tmpvar_get(condition_tmpvar)->get_type()->get_name()
 		);
     }
     
@@ -940,14 +905,14 @@ FunctionDefinitionResolver::extract_from_statement_ifelse(
     if (statement.has_else() || statement.has_else_if()) {
 	blockid_else = function.add_block();
 	auto operation = std::make_unique<OperationJumpIfEqual>(
-	    condition_value.variable_id,
+	    condition_tmpvar,
 	    std::to_string(blockid_else)
 	    );
 	function.get_basic_block(current_block).add_statement(std::move(operation));
     }
     else {
 	auto operation = std::make_unique<OperationJumpIfEqual>(
-	    condition_value.variable_id,
+	    condition_tmpvar,
 	    std::to_string(blockid_done)
 	    );
 	function.get_basic_block(current_block).add_statement(std::move(operation));
@@ -1025,8 +990,8 @@ FunctionDefinitionResolver::extract_from_statement_list(
 	}
 	else if (std::holds_alternative<JLang::owned<StatementExpression>>(statement_type)) {
 	    const auto & statement = std::get<JLang::owned<StatementExpression>>(statement_type);
-	    ExpressionValue returned_value;
-	    extract_from_expression(function, current_block, returned_value, statement->get_expression());
+	    size_t returned_tmpvar;
+	    extract_from_expression(function, current_block, returned_tmpvar, statement->get_expression());
 	}
 	else if (std::holds_alternative<JLang::owned<StatementIfElse>>(statement_type)) {
 	    const auto & statement = std::get<JLang::owned<StatementIfElse>>(statement_type);

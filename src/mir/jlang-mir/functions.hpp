@@ -95,12 +95,12 @@ namespace JLang::mir {
      */
     class TmpValue {
     public:
-	TmpValue(const std::string & _type);
+	TmpValue(const Type *_type);
 	TmpValue(const TmpValue & _other);
 	~TmpValue();
-	const std::string & get_type() const;
+	const Type* get_type() const;
     private:
-	std::string type;
+	const Type *type;
     };
     
     class Function {
@@ -137,8 +137,9 @@ namespace JLang::mir {
 	 * as their operands and return-values.
 	 * Each temporary value has a type.
 	 */
-	const TmpValue *tmpvar_get(size_t tmpvar_id);
-	size_t tmpvar_define(std::string type_name);
+	const TmpValue *tmpvar_get(size_t tmpvar_id) const;
+	size_t tmpvar_define(const Type *tmpvar_type);
+	size_t tmpvar_duplicate(size_t tmpvar_id);
 	
     private:
 	const std::string name;

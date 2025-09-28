@@ -54,7 +54,7 @@ LocalVariable::~LocalVariable()
 /////////////////////////////////////
 // TmpValue
 /////////////////////////////////////
-TmpValue::TmpValue(const std::string & _type)
+TmpValue::TmpValue(const Type* _type)
     : type(_type)
 {}
 TmpValue::TmpValue(const TmpValue & _other)
@@ -63,7 +63,7 @@ TmpValue::TmpValue(const TmpValue & _other)
 
 TmpValue::~TmpValue()
 {}
-const std::string &
+const Type*
 TmpValue::get_type() const
 { return type; }
 
@@ -157,16 +157,20 @@ Function::add_local(const LocalVariable & local)
 }
 
 const TmpValue *
-Function::tmpvar_get(size_t tmpvar_id)
+Function::tmpvar_get(size_t tmpvar_id) const
 { return &tmpvars.at(tmpvar_id); }
 
 size_t
-Function::tmpvar_define(std::string type_name)
+Function::tmpvar_define(const Type* type)
 {
-    tmpvars.push_back(TmpValue(type_name));
+    tmpvars.push_back(TmpValue(type));
     return tmpvars.size()-1;
 }
-
+size_t
+Function::tmpvar_duplicate(size_t tempvar_id)
+{
+    return tmpvar_define(tmpvar_get(tempvar_id)->get_type());
+}
 void
 Function::remove_local(std::string local_name)
 {
