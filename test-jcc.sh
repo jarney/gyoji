@@ -13,9 +13,13 @@ TEST_FILES="semantics-simple-values"
 
 for TEST_FILE in ${TEST_FILES} ; do
     echo -n "Testing ${TEST_FILE} "
+
+    # Preprocess the test file into J code.
+    clang -E ${CMAKE_SOURCE_DIR}/tests/semantics-simple-values.c > ${TEST_JCC_DIR}/${TEST_FILE}.j
+    
     # Build the code using jcc
     ${CMAKE_BINARY_DIR}/src/cmdline/jcc \
-		       ${CMAKE_SOURCE_DIR}/tests/${TEST_FILE}.j \
+		       ${TEST_JCC_DIR}/${TEST_FILE}.j \
 		       ${TEST_JCC_DIR}/${TEST_FILE}.j.o
     if [ $? -ne 0 ] ; then
 	echo "${TEST_FILE} failed to compile with jcc"
@@ -25,6 +29,7 @@ for TEST_FILE in ${TEST_FILES} ; do
     
     # Build the equivalent construct using C.
     clang -c \
+	  -DC_LANG \
 	  ${CMAKE_SOURCE_DIR}/tests/${TEST_FILE}.c \
 	  -o ${TEST_JCC_DIR}/${TEST_FILE}.c.o
     if [ $? -ne 0 ] ; then

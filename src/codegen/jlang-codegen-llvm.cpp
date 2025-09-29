@@ -502,21 +502,173 @@ CodeGeneratorLLVMContext::generate_operation_subtract(
     const JLang::mir::Function & mir_function,
     const JLang::mir::OperationBinary *operation
     )
-{}
+{
+    size_t a = operation->get_a();
+    size_t b = operation->get_b();
+    const JLang::mir::Type *atype = mir_function.tmpvar_get(a)->get_type();
+    const JLang::mir::Type *btype = mir_function.tmpvar_get(b)->get_type();
+    if (!atype->is_numeric()) {
+	compiler_context
+	    .get_errors()
+	    .add_simple_error(
+		operation->get_source_ref(),
+		"Compiler bug! Invalid operand for add operator.",
+		std::string("Invalid operands for add operation.  Operand must be a numeric type, but was ") + atype->get_name() + std::string(" and ") + btype->get_name()
+		);
+	return;
+    }
+    llvm::Value *value_a = tmp_values[a];
+    llvm::Value *value_b = tmp_values[b];
+
+    std::string primitive_name = atype->get_name();
+    if (atype->is_integer()) {
+	llvm::Value *sum = Builder->CreateSub(value_a, value_b);
+	tmp_values.insert(std::pair(operation->get_result(), sum));
+    }
+    else if (atype->is_float()) {
+	llvm::Value *sum = Builder->CreateFSub(value_a, value_b);
+	tmp_values.insert(std::pair(operation->get_result(), sum));
+    }
+    else {
+	compiler_context
+	    .get_errors()
+	    .add_simple_error(
+		operation->get_source_ref(),
+		"Compiler bug! Invalid operand for add operator.",
+		std::string("Operands must be integer or floating-point primitive types but were ") + atype->get_name() + std::string(" and ") + btype->get_name()
+		);
+	return;
+    }
+}
+
 void
 CodeGeneratorLLVMContext::generate_operation_multiply(
     std::map<size_t, llvm::Value *> & tmp_values,
     const JLang::mir::Function & mir_function,
     const JLang::mir::OperationBinary *operation
     )
-{}
+{
+    size_t a = operation->get_a();
+    size_t b = operation->get_b();
+    const JLang::mir::Type *atype = mir_function.tmpvar_get(a)->get_type();
+    const JLang::mir::Type *btype = mir_function.tmpvar_get(b)->get_type();
+    if (!atype->is_numeric()) {
+	compiler_context
+	    .get_errors()
+	    .add_simple_error(
+		operation->get_source_ref(),
+		"Compiler bug! Invalid operand for add operator.",
+		std::string("Invalid operands for add operation.  Operand must be a numeric type, but was ") + atype->get_name() + std::string(" and ") + btype->get_name()
+		);
+	return;
+    }
+    llvm::Value *value_a = tmp_values[a];
+    llvm::Value *value_b = tmp_values[b];
+
+    std::string primitive_name = atype->get_name();
+    if (atype->is_integer()) {
+	llvm::Value *sum = Builder->CreateMul(value_a, value_b);
+	tmp_values.insert(std::pair(operation->get_result(), sum));
+    }
+    else if (atype->is_float()) {
+	llvm::Value *sum = Builder->CreateFMul(value_a, value_b);
+	tmp_values.insert(std::pair(operation->get_result(), sum));
+    }
+    else {
+	compiler_context
+	    .get_errors()
+	    .add_simple_error(
+		operation->get_source_ref(),
+		"Compiler bug! Invalid operand for add operator.",
+		std::string("Operands must be integer or floating-point primitive types but were ") + atype->get_name() + std::string(" and ") + btype->get_name()
+		);
+	return;
+    }
+}
 void
 CodeGeneratorLLVMContext::generate_operation_divide(
     std::map<size_t, llvm::Value *> & tmp_values,
     const JLang::mir::Function & mir_function,
     const JLang::mir::OperationBinary *operation
     )
-{}
+{
+    size_t a = operation->get_a();
+    size_t b = operation->get_b();
+    const JLang::mir::Type *atype = mir_function.tmpvar_get(a)->get_type();
+    const JLang::mir::Type *btype = mir_function.tmpvar_get(b)->get_type();
+    if (!atype->is_numeric()) {
+	compiler_context
+	    .get_errors()
+	    .add_simple_error(
+		operation->get_source_ref(),
+		"Compiler bug! Invalid operand for divide operator.",
+		std::string("Invalid operands for divide operation.  Operand must be a numeric type, but was ") + atype->get_name() + std::string(" and ") + btype->get_name()
+		);
+	return;
+    }
+    llvm::Value *value_a = tmp_values[a];
+    llvm::Value *value_b = tmp_values[b];
+
+    std::string primitive_name = atype->get_name();
+    if (atype->is_integer()) {
+	if (atype->is_signed()) {
+	    llvm::Value *sum = Builder->CreateSDiv(value_a, value_b);
+	    tmp_values.insert(std::pair(operation->get_result(), sum));
+	}
+	else {
+	    llvm::Value *sum = Builder->CreateUDiv(value_a, value_b);
+	    tmp_values.insert(std::pair(operation->get_result(), sum));
+	}
+    }
+    else if (atype->is_float()) {
+	llvm::Value *sum = Builder->CreateFDiv(value_a, value_b);
+	tmp_values.insert(std::pair(operation->get_result(), sum));
+    }
+    else {
+	compiler_context
+	    .get_errors()
+	    .add_simple_error(
+		operation->get_source_ref(),
+		"Compiler bug! Invalid operand for add operator.",
+		std::string("Operands must be integer or floating-point primitive types but were ") + atype->get_name() + std::string(" and ") + btype->get_name()
+		);
+	return;
+    }
+}
+void
+CodeGeneratorLLVMContext::generate_operation_modulo(
+    std::map<size_t, llvm::Value *> & tmp_values,
+    const JLang::mir::Function & mir_function,
+    const JLang::mir::OperationBinary *operation
+    )
+{
+    size_t a = operation->get_a();
+    size_t b = operation->get_b();
+    const JLang::mir::Type *atype = mir_function.tmpvar_get(a)->get_type();
+    const JLang::mir::Type *btype = mir_function.tmpvar_get(b)->get_type();
+    if (!atype->is_integer()) {
+	compiler_context
+	    .get_errors()
+	    .add_simple_error(
+		operation->get_source_ref(),
+		"Compiler bug! Invalid operand for modulo operator.",
+		std::string("Invalid operands for modulo operation.  Operand must be a integer type, but was ") + atype->get_name() + std::string(" and ") + btype->get_name()
+		);
+	return;
+    }
+    llvm::Value *value_a = tmp_values[a];
+    llvm::Value *value_b = tmp_values[b];
+
+    std::string primitive_name = atype->get_name();
+    if (atype->is_signed()) {
+	llvm::Value *sum = Builder->CreateSRem(value_a, value_b);
+	tmp_values.insert(std::pair(operation->get_result(), sum));
+    }
+    else {
+	llvm::Value *sum = Builder->CreateURem(value_a, value_b);
+	tmp_values.insert(std::pair(operation->get_result(), sum));
+    }
+}
 void
 CodeGeneratorLLVMContext::generate_operation_assign(
     std::map<size_t, llvm::Value *> & tmp_values,
@@ -631,6 +783,9 @@ CodeGeneratorLLVMContext::generate_basic_block(
 	    break;
 	case Operation::OP_DIVIDE:
 	    generate_operation_divide(tmp_values, mir_function, (OperationBinary*)operation.get());
+	    break;
+	case Operation::OP_MODULO:
+	    generate_operation_modulo(tmp_values, mir_function, (OperationBinary*)operation.get());
 	    break;
 	case Operation::OP_ASSIGN:
 	    generate_operation_assign(tmp_values, tmp_lvalues, mir_function, (OperationBinary*)operation.get());

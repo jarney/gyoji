@@ -2372,7 +2372,9 @@ void JLang::frontend::yacc::YaccParser::error(const std::string& msg) {
     while (true) {
 	JLang::frontend::yacc::YaccParser::semantic_type lvalue;
 	int rc = yylex (&lvalue, scanner);
-	if (rc == 0) break;
+	if (rc == 0) {
+	    break;
+	}
 	const SourceReference & cur_ref = lex_context->compiler_context.get_token_stream().get_current_source_ref();
 	if (cur_ref.get_line() - src_ref.get_line() >= error_context_lines) {
 	    break;

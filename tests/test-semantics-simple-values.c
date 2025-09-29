@@ -1,41 +1,26 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define DECLARE_BINARY_OPERATIONS(jtype, ctype, fname)		\
-    ctype c_##jtype##fname(ctype a, ctype b); \
-ctype j_##jtype##fname(ctype a, ctype b);
+#define u8 unsigned char
+#define u16 unsigned short
+#define u32 unsigned int
+#define u64 unsigned long
 
-#define DECLARE_BINARY_OPERATIONS_FULL(retjtype, retctype, actype, bctype, fname) \
-    retctype c_##retjtype##fname(actype a, bctype b); \
-    retctype j_##retjtype##fname(actype a, bctype b);
+#define i8 char
+#define i16 short
+#define i32 int
+#define i64 long
+
+#define DECLARE_BINARY_OPERATIONS_FULL(retjtype, ajtype, bjtype, fname) \
+    retjtype c_##retjtype##fname(ajtype a, bjtype b); \
+    retjtype j_##retjtype##fname(ajtype a, bjtype b);
     
-
-DECLARE_BINARY_OPERATIONS(u16, unsigned short, _add);
-DECLARE_BINARY_OPERATIONS(i16, short, _add);
-DECLARE_BINARY_OPERATIONS(u32, unsigned int, _add);
-DECLARE_BINARY_OPERATIONS_FULL(u32, unsigned int, unsigned short, unsigned int, _add_widen_a);
-
-
-#define TEST_BINARY_OPERATION(jtype, ctype, fmt, fname)			\
+#define TEST_BINARY_OPERATION_FULL(retjtype, ajtype, bjtype, retfmt, afmt, bfmt, fname) \
     {									\
-	ctype a##jtype = (ctype)a;					\
-	ctype b##jtype = (ctype)b;					\
-	ctype jret##jtype = j_##jtype##fname(a##jtype, b##jtype);	\
-	ctype cret##jtype = c_##jtype##fname(a##jtype, b##jtype);	\
-	if (jret##jtype != cret##jtype) {				\
-	    fprintf(stderr,						\
-		    #jtype " " fmt " " fmt " : " fmt " " fmt "\n",	\
-		    a##jtype, b##jtype, jret##jtype, cret##jtype);	\
-	    return 1;							\
-	}								\
-    }									\
-
-#define TEST_BINARY_OPERATION_FULL(retjtype, ajtype, bjtype, retctype, actype, bctype, retfmt, afmt, bfmt, fname) \
-    {									\
-	actype a##ajtype = (actype)a;					\
-	bctype b##bjtype = (bctype)b;					\
-	retctype jret##retjtype = j_##retjtype##fname(a##ajtype, b##bjtype);	\
-	retctype cret##retjtype = c_##retjtype##fname(a##ajtype, b##bjtype);	\
+	ajtype a##ajtype = (ajtype)a;					\
+	bjtype b##bjtype = (bjtype)b;					\
+	retjtype jret##retjtype = j_##retjtype##fname(a##ajtype, b##bjtype);	\
+	retjtype cret##retjtype = c_##retjtype##fname(a##ajtype, b##bjtype);	\
 	if (jret##retjtype != cret##retjtype) {				\
 	    fprintf(stderr,						\
 		    #retjtype " " afmt " " bfmt " : " retfmt " " retfmt "\n",	\
@@ -44,7 +29,128 @@ DECLARE_BINARY_OPERATIONS_FULL(u32, unsigned int, unsigned short, unsigned int, 
 	}								\
     }									\
 
+//////////////////////////
+// Addition
+//////////////////////////
+DECLARE_BINARY_OPERATIONS_FULL(u8, u8, u8, _add);
 
+DECLARE_BINARY_OPERATIONS_FULL(u16, u16, u16, _add);
+DECLARE_BINARY_OPERATIONS_FULL(u16, u8, u16, _add_widen_a);
+DECLARE_BINARY_OPERATIONS_FULL(u16, u16, u8, _add_widen_b);
+
+DECLARE_BINARY_OPERATIONS_FULL(u32, u32, u32, _add);
+DECLARE_BINARY_OPERATIONS_FULL(u32, u16, u32, _add_widen_a);
+DECLARE_BINARY_OPERATIONS_FULL(u32, u32, u16, _add_widen_b);
+
+DECLARE_BINARY_OPERATIONS_FULL(u64, u64, u64, _add);
+DECLARE_BINARY_OPERATIONS_FULL(u64, u32, u64, _add_widen_a);
+DECLARE_BINARY_OPERATIONS_FULL(u64, u64, u32, _add_widen_b);
+
+DECLARE_BINARY_OPERATIONS_FULL(i8, i8, i8, _add);
+
+DECLARE_BINARY_OPERATIONS_FULL(i16, i16, i16, _add);
+DECLARE_BINARY_OPERATIONS_FULL(i16, i8, i16, _add_widen_a);
+DECLARE_BINARY_OPERATIONS_FULL(i16, i16, i8, _add_widen_b);
+
+DECLARE_BINARY_OPERATIONS_FULL(i32, i32, i32, _add);
+DECLARE_BINARY_OPERATIONS_FULL(i32, i16, i32, _add_widen_a);
+DECLARE_BINARY_OPERATIONS_FULL(i32, i32, i16, _add_widen_b);
+
+DECLARE_BINARY_OPERATIONS_FULL(i64, i64, i64, _add);
+DECLARE_BINARY_OPERATIONS_FULL(i64, i32, i64, _add_widen_a);
+DECLARE_BINARY_OPERATIONS_FULL(i64, i64, i32, _add_widen_b);
+//////////////////////////
+// Subtraction
+//////////////////////////
+DECLARE_BINARY_OPERATIONS_FULL(u8, u8, u8, _subtract);
+
+DECLARE_BINARY_OPERATIONS_FULL(u16, u16, u16, _subtract);
+DECLARE_BINARY_OPERATIONS_FULL(u16, u8, u16, _subtract_widen_a);
+DECLARE_BINARY_OPERATIONS_FULL(u16, u16, u8, _subtract_widen_b);
+
+DECLARE_BINARY_OPERATIONS_FULL(u32, u32, u32, _subtract);
+DECLARE_BINARY_OPERATIONS_FULL(u32, u16, u32, _subtract_widen_a);
+DECLARE_BINARY_OPERATIONS_FULL(u32, u32, u16, _subtract_widen_b);
+
+DECLARE_BINARY_OPERATIONS_FULL(u64, u64, u64, _subtract);
+DECLARE_BINARY_OPERATIONS_FULL(u64, u32, u64, _subtract_widen_a);
+DECLARE_BINARY_OPERATIONS_FULL(u64, u64, u32, _subtract_widen_b);
+
+DECLARE_BINARY_OPERATIONS_FULL(i8, i8, i8, _subtract);
+
+DECLARE_BINARY_OPERATIONS_FULL(i16, i16, i16, _subtract);
+DECLARE_BINARY_OPERATIONS_FULL(i16, i8, i16, _subtract_widen_a);
+DECLARE_BINARY_OPERATIONS_FULL(i16, i16, i8, _subtract_widen_b);
+
+DECLARE_BINARY_OPERATIONS_FULL(i32, i32, i32, _subtract);
+DECLARE_BINARY_OPERATIONS_FULL(i32, i16, i32, _subtract_widen_a);
+DECLARE_BINARY_OPERATIONS_FULL(i32, i32, i16, _subtract_widen_b);
+
+DECLARE_BINARY_OPERATIONS_FULL(i64, i64, i64, _subtract);
+DECLARE_BINARY_OPERATIONS_FULL(i64, i32, i64, _subtract_widen_a);
+DECLARE_BINARY_OPERATIONS_FULL(i64, i64, i32, _subtract_widen_b);
+
+//////////////////////////
+// Multiplication
+//////////////////////////
+DECLARE_BINARY_OPERATIONS_FULL(u8, u8, u8, _multiply);
+
+DECLARE_BINARY_OPERATIONS_FULL(u16, u16, u16, _multiply);
+DECLARE_BINARY_OPERATIONS_FULL(u16, u8, u16, _multiply_widen_a);
+DECLARE_BINARY_OPERATIONS_FULL(u16, u16, u8, _multiply_widen_b);
+
+DECLARE_BINARY_OPERATIONS_FULL(u32, u32, u32, _multiply);
+DECLARE_BINARY_OPERATIONS_FULL(u32, u16, u32, _multiply_widen_a);
+DECLARE_BINARY_OPERATIONS_FULL(u32, u32, u16, _multiply_widen_b);
+
+DECLARE_BINARY_OPERATIONS_FULL(u64, u64, u64, _multiply);
+DECLARE_BINARY_OPERATIONS_FULL(u64, u32, u64, _multiply_widen_a);
+DECLARE_BINARY_OPERATIONS_FULL(u64, u64, u32, _multiply_widen_b);
+
+DECLARE_BINARY_OPERATIONS_FULL(i8, i8, i8, _multiply);
+
+DECLARE_BINARY_OPERATIONS_FULL(i16, i16, i16, _multiply);
+DECLARE_BINARY_OPERATIONS_FULL(i16, i8, i16, _multiply_widen_a);
+DECLARE_BINARY_OPERATIONS_FULL(i16, i16, i8, _multiply_widen_b);
+
+DECLARE_BINARY_OPERATIONS_FULL(i32, i32, i32, _multiply);
+DECLARE_BINARY_OPERATIONS_FULL(i32, i16, i32, _multiply_widen_a);
+DECLARE_BINARY_OPERATIONS_FULL(i32, i32, i16, _multiply_widen_b);
+
+DECLARE_BINARY_OPERATIONS_FULL(i64, i64, i64, _multiply);
+DECLARE_BINARY_OPERATIONS_FULL(i64, i32, i64, _multiply_widen_a);
+DECLARE_BINARY_OPERATIONS_FULL(i64, i64, i32, _multiply_widen_b);
+
+//////////////////////////
+// Division
+//////////////////////////
+DECLARE_BINARY_OPERATIONS_FULL(u8, u8, u8, _divide);
+
+DECLARE_BINARY_OPERATIONS_FULL(u16, u16, u16, _divide);
+DECLARE_BINARY_OPERATIONS_FULL(u16, u8, u16, _divide_widen_a);
+DECLARE_BINARY_OPERATIONS_FULL(u16, u16, u8, _divide_widen_b);
+
+DECLARE_BINARY_OPERATIONS_FULL(u32, u32, u32, _divide);
+DECLARE_BINARY_OPERATIONS_FULL(u32, u16, u32, _divide_widen_a);
+DECLARE_BINARY_OPERATIONS_FULL(u32, u32, u16, _divide_widen_b);
+
+DECLARE_BINARY_OPERATIONS_FULL(u64, u64, u64, _divide);
+DECLARE_BINARY_OPERATIONS_FULL(u64, u32, u64, _divide_widen_a);
+DECLARE_BINARY_OPERATIONS_FULL(u64, u64, u32, _divide_widen_b);
+
+DECLARE_BINARY_OPERATIONS_FULL(i8, i8, i8, _divide);
+
+DECLARE_BINARY_OPERATIONS_FULL(i16, i16, i16, _divide);
+DECLARE_BINARY_OPERATIONS_FULL(i16, i8, i16, _divide_widen_a);
+DECLARE_BINARY_OPERATIONS_FULL(i16, i16, i8, _divide_widen_b);
+
+DECLARE_BINARY_OPERATIONS_FULL(i32, i32, i32, _divide);
+DECLARE_BINARY_OPERATIONS_FULL(i32, i16, i32, _divide_widen_a);
+DECLARE_BINARY_OPERATIONS_FULL(i32, i32, i16, _divide_widen_b);
+
+DECLARE_BINARY_OPERATIONS_FULL(i64, i64, i64, _divide);
+DECLARE_BINARY_OPERATIONS_FULL(i64, i32, i64, _divide_widen_a);
+DECLARE_BINARY_OPERATIONS_FULL(i64, i64, i32, _divide_widen_b);
 
 
 int main(int argc, char **argv)
@@ -53,13 +159,117 @@ int main(int argc, char **argv)
 	unsigned int a = rand();
 	unsigned int b = rand();
 
-	TEST_BINARY_OPERATION(i16, short, "%d", _add);
+//////////////////////////
+// Addition
+//////////////////////////
+	TEST_BINARY_OPERATION_FULL(u8, u8, u8, "%d", "%d", "%d", _add);
 	
-	TEST_BINARY_OPERATION(u16, unsigned short, "%d", _add);
+	TEST_BINARY_OPERATION_FULL(u16, u16, u16, "%d", "%d", "%d", _add);
 	
-	TEST_BINARY_OPERATION(u32, unsigned int, "%d", _add);
+	TEST_BINARY_OPERATION_FULL(u32, u32, u32, "%d", "%d", "%d", _add);
+	TEST_BINARY_OPERATION_FULL(u32, u16, u32, "%d", "%d", "%d", _add_widen_a);
+	TEST_BINARY_OPERATION_FULL(u32, u32, u16, "%d", "%d", "%d", _add_widen_b);
 
-	TEST_BINARY_OPERATION_FULL(u32, u16, u32, unsigned long, unsigned short, unsigned long, "%ld", "%d", "%ld", _add_widen_a);
+    	TEST_BINARY_OPERATION_FULL(u64, u64, u64, "%ld", "%ld", "%ld", _add);
+	TEST_BINARY_OPERATION_FULL(u64, u32, u64, "%ld", "%d", "%ld", _add_widen_a);
+	TEST_BINARY_OPERATION_FULL(u64, u64, u32, "%ld", "%ld", "%d", _add_widen_b);
+
+	TEST_BINARY_OPERATION_FULL(i8, i8, i8, "%d", "%d", "%d", _add);
+	
+	TEST_BINARY_OPERATION_FULL(i16, i16, i16, "%d", "%d", "%d", _add);
+	
+	TEST_BINARY_OPERATION_FULL(i32, i32, i32, "%d", "%d", "%d", _add);
+	TEST_BINARY_OPERATION_FULL(i32, i16, i32, "%d", "%d", "%d", _add_widen_a);
+	TEST_BINARY_OPERATION_FULL(i32, i32, i16, "%d", "%d", "%d", _add_widen_b);
+
+    	TEST_BINARY_OPERATION_FULL(i64, i64, i64, "%ld", "%ld", "%ld", _add);
+	TEST_BINARY_OPERATION_FULL(i64, i32, i64, "%ld", "%d", "%ld", _add_widen_a);
+	TEST_BINARY_OPERATION_FULL(i64, i64, i32, "%ld", "%ld", "%d", _add_widen_b);
+
+//////////////////////////
+// Subtraction
+//////////////////////////
+	TEST_BINARY_OPERATION_FULL(u8, u8, u8, "%d", "%d", "%d", _subtract);
+	
+	TEST_BINARY_OPERATION_FULL(u16, u16, u16, "%d", "%d", "%d", _subtract);
+	
+	TEST_BINARY_OPERATION_FULL(u32, u32, u32, "%d", "%d", "%d", _subtract);
+	TEST_BINARY_OPERATION_FULL(u32, u16, u32, "%d", "%d", "%d", _subtract_widen_a);
+	TEST_BINARY_OPERATION_FULL(u32, u32, u16, "%d", "%d", "%d", _subtract_widen_b);
+
+    	TEST_BINARY_OPERATION_FULL(u64, u64, u64, "%ld", "%ld", "%ld", _subtract);
+	TEST_BINARY_OPERATION_FULL(u64, u32, u64, "%ld", "%d", "%ld", _subtract_widen_a);
+	TEST_BINARY_OPERATION_FULL(u64, u64, u32, "%ld", "%ld", "%d", _subtract_widen_b);
+
+	TEST_BINARY_OPERATION_FULL(i8, i8, i8, "%d", "%d", "%d", _subtract);
+	
+	TEST_BINARY_OPERATION_FULL(i16, i16, i16, "%d", "%d", "%d", _subtract);
+	
+	TEST_BINARY_OPERATION_FULL(i32, i32, i32, "%d", "%d", "%d", _subtract);
+	TEST_BINARY_OPERATION_FULL(i32, i16, i32, "%d", "%d", "%d", _subtract_widen_a);
+	TEST_BINARY_OPERATION_FULL(i32, i32, i16, "%d", "%d", "%d", _subtract_widen_b);
+
+    	TEST_BINARY_OPERATION_FULL(i64, i64, i64, "%ld", "%ld", "%ld", _subtract);
+	TEST_BINARY_OPERATION_FULL(i64, i32, i64, "%ld", "%d", "%ld", _subtract_widen_a);
+	TEST_BINARY_OPERATION_FULL(i64, i64, i32, "%ld", "%ld", "%d", _subtract_widen_b);
+
+//////////////////////////
+// Multiply
+//////////////////////////
+	TEST_BINARY_OPERATION_FULL(u8, u8, u8, "%d", "%d", "%d", _multiply);
+	
+	TEST_BINARY_OPERATION_FULL(u16, u16, u16, "%d", "%d", "%d", _multiply);
+	
+	TEST_BINARY_OPERATION_FULL(u32, u32, u32, "%d", "%d", "%d", _multiply);
+	TEST_BINARY_OPERATION_FULL(u32, u16, u32, "%d", "%d", "%d", _multiply_widen_a);
+	TEST_BINARY_OPERATION_FULL(u32, u32, u16, "%d", "%d", "%d", _multiply_widen_b);
+
+    	TEST_BINARY_OPERATION_FULL(u64, u64, u64, "%ld", "%ld", "%ld", _multiply);
+	TEST_BINARY_OPERATION_FULL(u64, u32, u64, "%ld", "%d", "%ld", _multiply_widen_a);
+	TEST_BINARY_OPERATION_FULL(u64, u64, u32, "%ld", "%ld", "%d", _multiply_widen_b);
+
+	TEST_BINARY_OPERATION_FULL(i8, i8, i8, "%d", "%d", "%d", _multiply);
+	
+	TEST_BINARY_OPERATION_FULL(i16, i16, i16, "%d", "%d", "%d", _multiply);
+	
+	TEST_BINARY_OPERATION_FULL(i32, i32, i32, "%d", "%d", "%d", _multiply);
+	TEST_BINARY_OPERATION_FULL(i32, i16, i32, "%d", "%d", "%d", _multiply_widen_a);
+	TEST_BINARY_OPERATION_FULL(i32, i32, i16, "%d", "%d", "%d", _multiply_widen_b);
+
+    	TEST_BINARY_OPERATION_FULL(i64, i64, i64, "%ld", "%ld", "%ld", _multiply);
+	TEST_BINARY_OPERATION_FULL(i64, i32, i64, "%ld", "%d", "%ld", _multiply_widen_a);
+	TEST_BINARY_OPERATION_FULL(i64, i64, i32, "%ld", "%ld", "%d", _multiply_widen_b);
+//////////////////////////
+// Divide
+//////////////////////////
+
+	// Protect divide by zero.
+	if ((u8)a == 0) continue;
+	if ((u8)b == 0) continue;
+	TEST_BINARY_OPERATION_FULL(u8, u8, u8, "%d", "%d", "%d", _divide);
+
+	TEST_BINARY_OPERATION_FULL(u16, u16, u16, "%d", "%d", "%d", _divide);
+	
+	TEST_BINARY_OPERATION_FULL(u32, u32, u32, "%d", "%d", "%d", _divide);
+	TEST_BINARY_OPERATION_FULL(u32, u16, u32, "%d", "%d", "%d", _divide_widen_a);
+	TEST_BINARY_OPERATION_FULL(u32, u32, u16, "%d", "%d", "%d", _divide_widen_b);
+
+    	TEST_BINARY_OPERATION_FULL(u64, u64, u64, "%ld", "%ld", "%ld", _divide);
+	TEST_BINARY_OPERATION_FULL(u64, u32, u64, "%ld", "%d", "%ld", _divide_widen_a);
+	TEST_BINARY_OPERATION_FULL(u64, u64, u32, "%ld", "%ld", "%d", _divide_widen_b);
+
+	TEST_BINARY_OPERATION_FULL(i8, i8, i8, "%d", "%d", "%d", _divide);
+	
+	TEST_BINARY_OPERATION_FULL(i16, i16, i16, "%d", "%d", "%d", _divide);
+	
+	TEST_BINARY_OPERATION_FULL(i32, i32, i32, "%d", "%d", "%d", _divide);
+	TEST_BINARY_OPERATION_FULL(i32, i16, i32, "%d", "%d", "%d", _divide_widen_a);
+	TEST_BINARY_OPERATION_FULL(i32, i32, i16, "%d", "%d", "%d", _divide_widen_b);
+
+    	TEST_BINARY_OPERATION_FULL(i64, i64, i64, "%ld", "%ld", "%ld", _divide);
+	TEST_BINARY_OPERATION_FULL(i64, i32, i64, "%ld", "%d", "%ld", _divide_widen_a);
+	TEST_BINARY_OPERATION_FULL(i64, i64, i32, "%ld", "%ld", "%d", _divide_widen_b);
+
     }
     return 0;
 }

@@ -50,7 +50,7 @@ std::vector<std::pair<size_t, std::string>>
 TokenStream::context(size_t line_start, size_t line_end) const
 {
     std::vector<std::pair<size_t, std::string>> ret;
-    line_start = std::max(line_start, (size_t)0);
+    line_start = (unsigned long)std::max((long)line_start, (long)0);
     if (line_end < line_start) {
 	return ret;
     }
