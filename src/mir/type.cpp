@@ -67,7 +67,7 @@ Type::get_argument_types() const
 
 
 void
-Type::complete_pointer_definition(Type *_type, const SourceReference & source_ref)
+Type::complete_pointer_definition(const Type *_type, const SourceReference & source_ref)
 {
     complete = true;
     pointer_or_ref = _type;
@@ -170,7 +170,7 @@ Type::dump() const
 // Argument
 /////////////////////////
 Argument::Argument(
-    Type *_argument_type,
+    const Type *_argument_type,
     const JLang::context::SourceReference & _source_ref
     )
     : argument_type(_argument_type)

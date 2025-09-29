@@ -279,6 +279,61 @@ OperationPostDecrement::~OperationPostDecrement()
 {}
 
 //////////////////////////////////////////////
+// OperationAddressOf
+//////////////////////////////////////////////
+OperationAddressOf::OperationAddressOf(size_t _result, size_t _operand)
+    : Operation(OP_ADDRESSOF, _result, _operand)
+{}
+OperationAddressOf::~OperationAddressOf()
+{}
+
+//////////////////////////////////////////////
+// OperationDereference
+//////////////////////////////////////////////
+OperationDereference::OperationDereference(size_t _result, size_t _operand)
+    : Operation(OP_DEREFERENCE, _result, _operand)
+{}
+OperationDereference::~OperationDereference()
+{}
+
+//////////////////////////////////////////////
+// OperationNegate
+//////////////////////////////////////////////
+OperationNegate::OperationNegate(size_t _result, size_t _operand)
+    : Operation(OP_NEGATE, _result, _operand)
+{}
+OperationNegate::~OperationNegate()
+{}
+
+//////////////////////////////////////////////
+// OperationBitwiseNot
+//////////////////////////////////////////////
+OperationBitwiseNot::OperationBitwiseNot(size_t _result, size_t _operand)
+    : Operation(OP_BITWISE_NOT, _result, _operand)
+{}
+OperationBitwiseNot::~OperationBitwiseNot()
+{}
+
+//////////////////////////////////////////////
+// OperationLogicalNot
+//////////////////////////////////////////////
+OperationLogicalNot::OperationLogicalNot(size_t _result, size_t _operand)
+    : Operation(OP_LOGICAL_NOT, _result, _operand)
+{}
+OperationLogicalNot::~OperationLogicalNot()
+{}
+
+//////////////////////////////////////////////
+// OperationSizeofType
+//////////////////////////////////////////////
+OperationSizeofType::OperationSizeofType(size_t _result, size_t _operand)
+    : Operation(OP_SIZEOF_TYPE, _result, _operand)
+{}
+OperationSizeofType::~OperationSizeofType()
+{}
+
+
+//////////////////////////////////////////////
 // OperationAdd
 //////////////////////////////////////////////
 OperationAdd::OperationAdd(

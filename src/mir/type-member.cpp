@@ -7,7 +7,7 @@ using namespace JLang::mir;
 
 TypeMember::TypeMember(
     std::string _member_name,
-    Type *_member_type,
+    const Type *_member_type,
     const SourceReference & _source_ref
     )
     : member_name(_member_name)

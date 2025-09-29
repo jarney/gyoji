@@ -597,6 +597,12 @@ FunctionDefinitionResolver::extract_from_expression_unary_prefix(
 	    .add_statement(std::move(operation));
     }
     else if (expression.get_type() == ExpressionUnaryPrefix::ADDRESSOF) {
+	const Type * pointer_to_operand_type = mir.get_types().get_pointer_to(operand_type, expression.get_source_ref());
+	returned_tmpvar = function.tmpvar_define(pointer_to_operand_type);
+	auto operation = std::make_unique<OperationAddressOf>(returned_tmpvar, operand_tmpvar);
+	function
+	    .get_basic_block(current_block)
+	    .add_statement(std::move(operation));
     }
     else if (expression.get_type() == ExpressionUnaryPrefix::DEREFERENCE) {
 	if (operand_type->get_type() != Type::TYPE_POINTER) {
@@ -609,6 +615,11 @@ FunctionDefinitionResolver::extract_from_expression_unary_prefix(
 		    );
 	    return;
 	}
+	returned_tmpvar = function.tmpvar_define(operand_type);
+	auto operation = std::make_unique<OperationDereference>(returned_tmpvar, operand_tmpvar);
+	function
+	    .get_basic_block(current_block)
+	    .add_statement(std::move(operation));
     }
     else if (expression.get_type() == ExpressionUnaryPrefix::PLUS) {
 	// Unary plus does nothing, really, so why bother?  We just don't
@@ -618,9 +629,17 @@ FunctionDefinitionResolver::extract_from_expression_unary_prefix(
     }
     else if (expression.get_type() == ExpressionUnaryPrefix::MINUS) {
 	returned_tmpvar = function.tmpvar_duplicate(operand_tmpvar);
+	auto operation = std::make_unique<OperationNegate>(returned_tmpvar, operand_tmpvar);
+	function
+	    .get_basic_block(current_block)
+	    .add_statement(std::move(operation));
     }
     else if (expression.get_type() == ExpressionUnaryPrefix::BITWISE_NOT) {
 	returned_tmpvar = function.tmpvar_duplicate(operand_tmpvar);
+	auto operation = std::make_unique<OperationBitwiseNot>(returned_tmpvar, operand_tmpvar);
+	function
+	    .get_basic_block(current_block)
+	    .add_statement(std::move(operation));
     }
     else if (expression.get_type() == ExpressionUnaryPrefix::LOGICAL_NOT) {
 	if (!is_bool_type(function.tmpvar_get(operand_tmpvar)->get_type())) {
@@ -632,6 +651,11 @@ FunctionDefinitionResolver::extract_from_expression_unary_prefix(
 		    std::string("Type of condition expression should be 'bool' and was ") + function.tmpvar_get(operand_tmpvar)->get_type()->get_name()
 		    );
 	}
+	returned_tmpvar = function.tmpvar_duplicate(operand_tmpvar);
+	auto operation = std::make_unique<OperationLogicalNot>(returned_tmpvar, operand_tmpvar);
+	function
+	    .get_basic_block(current_block)
+	    .add_statement(std::move(operation));
     }
     else {
 	compiler_context
@@ -651,10 +675,14 @@ FunctionDefinitionResolver::extract_from_expression_unary_sizeof_type(
     size_t & returned_tmpvar,
     const ExpressionUnarySizeofType & expression)
 {
-    // TODO
-//    function
-//	.get_basic_block(current_block)
-//	.add_statement("sizeof");
+    const Type * operand_type = type_resolver.extract_from_type_specifier(expression.get_type_specifier());
+    const Type * u64_type = mir.get_types().get_type("u64");
+    size_t operand_tmpvar = function.tmpvar_define(operand_type);
+    returned_tmpvar = function.tmpvar_define(u64_type);
+    auto operation = std::make_unique<OperationSizeofType>(returned_tmpvar, operand_tmpvar);
+    function
+	.get_basic_block(current_block)
+	.add_statement(std::move(operation));
 }
 
 void
@@ -828,14 +856,6 @@ FunctionDefinitionResolver::extract_from_expression_binary(
 	exit(1);
 	break;
     }
-
-//    function
-//	.get_basic_block(current_block)
-//	.add_statement(
-//	    returned_value.value + std::string(" ") +
-//	    std::string("_") + std::to_string(returned_value.variable_id) + std::string(" = ") + 
-//	    std::string("binary operator ") + op + std::string(" a=") + std::to_string(aval.variable_id) + std::string(" b=") + std::to_string(bval.variable_id)
-//	    );
 }
 void
 FunctionDefinitionResolver::extract_from_expression_trinary(
@@ -1042,7 +1062,7 @@ FunctionDefinitionResolver::extract_from_statement_list(
 	if (std::holds_alternative<JLang::owned<StatementVariableDeclaration>>(statement_type)) {
 	    const auto & statement = std::get<JLang::owned<StatementVariableDeclaration>>(statement_type);
 	    
-	    JLang::mir::Type * mir_type = type_resolver.extract_from_type_specifier(statement->get_type_specifier());
+	    const JLang::mir::Type * mir_type = type_resolver.extract_from_type_specifier(statement->get_type_specifier());
 
 	    LocalVariable local(statement->get_name(), mir_type, statement->get_type_specifier().get_source_ref());
 	    
@@ -1127,7 +1147,7 @@ FunctionDefinitionResolver::extract_from_function_definition(const FileStatement
 	    fully_qualified_function_name.c_str());
     
     const TypeSpecifier & type_specifier = function_definition.get_return_type();
-    Type *return_type = type_resolver.extract_from_type_specifier(type_specifier);
+    const Type *return_type = type_resolver.extract_from_type_specifier(type_specifier);
     
     if (return_type == nullptr) {
 	fprintf(stderr, "Could not find return type\n");
@@ -1139,7 +1159,7 @@ FunctionDefinitionResolver::extract_from_function_definition(const FileStatement
     const auto & function_definition_args = function_argument_list.get_arguments();
     for (const auto & function_definition_arg : function_definition_args) {
        std::string name = function_definition_arg->get_name();
-       JLang::mir::Type * mir_type = type_resolver.extract_from_type_specifier(function_definition_arg->get_type_specifier());
+       const JLang::mir::Type * mir_type = type_resolver.extract_from_type_specifier(function_definition_arg->get_type_specifier());
        
        FunctionArgument arg(name, mir_type);
        arguments.push_back(arg);

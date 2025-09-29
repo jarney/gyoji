@@ -46,6 +46,36 @@ Types::get_type(std::string type) const
     }
     return it->second.get();
 }
+const Type *
+Types::get_pointer_to(const Type *_type, const SourceReference & src_ref)
+{
+    std::string pointer_type_name = _type->get_name() + std::string("*");
+    Type* pointer_type = get_type(pointer_type_name);
+    if (pointer_type != nullptr) {
+	return pointer_type;
+    }
+    JLang::owned<Type> pointer_owned = std::make_unique<Type>(pointer_type_name, Type::TYPE_POINTER, false, src_ref);
+    pointer_type = pointer_owned.get();
+    pointer_owned->complete_pointer_definition(_type, src_ref);
+    define_type(std::move(pointer_owned));
+    return pointer_type;
+}
+
+const Type *
+Types::get_reference_to(const Type *_type, const SourceReference & src_ref)
+{
+    std::string pointer_type_name = _type->get_name() + std::string("&");
+
+    Type* pointer_type = get_type(pointer_type_name);
+    if (pointer_type != nullptr) {
+	return pointer_type;
+    }
+    JLang::owned<Type> pointer_owned = std::make_unique<Type>(pointer_type_name, Type::TYPE_REFERENCE, false, src_ref);
+    pointer_type = pointer_owned.get();
+    pointer_owned->complete_pointer_definition(_type, src_ref);
+    define_type(std::move(pointer_owned));
+    return pointer_type;
+}
 
 void
 Types::define_type(JLang::owned<Type> type)

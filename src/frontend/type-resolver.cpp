@@ -49,7 +49,7 @@ TypeResolver::get_or_create(std::string pointer_name, Type::TypeType type_type, 
     }
 }
 
-Type *
+const Type *
 TypeResolver::extract_from_type_specifier(const TypeSpecifier & type_specifier) 
 {
     const auto & type_specifier_type = type_specifier.get_type();
@@ -97,7 +97,7 @@ TypeResolver::extract_from_type_specifier(const TypeSpecifier & type_specifier)
     }
     else if (std::holds_alternative<JLang::owned<TypeSpecifierPointerTo>>(type_specifier_type)) {
 	const auto & type_specifier_pointer_to = std::get<JLang::owned<TypeSpecifierPointerTo>>(type_specifier_type);
-	Type *pointer_target = extract_from_type_specifier(type_specifier_pointer_to->get_type_specifier());
+	const Type *pointer_target = extract_from_type_specifier(type_specifier_pointer_to->get_type_specifier());
 	if (pointer_target == nullptr) {
 	    compiler_context
 		.get_errors()
@@ -107,14 +107,12 @@ TypeResolver::extract_from_type_specifier(const TypeSpecifier & type_specifier)
 		    );
 	    return nullptr;
 	}
-	std::string pointer_name = pointer_target->get_name() + std::string("*");
-	Type *pointer_type = get_or_create(pointer_name, Type::TYPE_POINTER, false, type_specifier_pointer_to->get_source_ref());
-	pointer_type->complete_pointer_definition(pointer_target, type_specifier_pointer_to->get_source_ref());
+	const Type *pointer_type = mir.get_types().get_pointer_to(pointer_target, type_specifier_pointer_to->get_source_ref());
 	return pointer_type;
     }
     else if (std::holds_alternative<JLang::owned<TypeSpecifierReferenceTo>>(type_specifier_type)) {
 	const auto & type_specifier_reference_to = std::get<JLang::owned<TypeSpecifierReferenceTo>>(type_specifier_type);
-	Type *pointer_target = extract_from_type_specifier(type_specifier_reference_to->get_type_specifier());
+	const Type *pointer_target = extract_from_type_specifier(type_specifier_reference_to->get_type_specifier());
 	if (pointer_target == nullptr) {
 	    compiler_context
 		.get_errors()
@@ -124,9 +122,7 @@ TypeResolver::extract_from_type_specifier(const TypeSpecifier & type_specifier)
 		    );
 	    return nullptr;
 	}
-	std::string pointer_name = pointer_target->get_name() + std::string("&");
-	Type *pointer_type = get_or_create(pointer_name, Type::TYPE_REFERENCE, false, type_specifier_reference_to->get_source_ref());
-	pointer_type->complete_pointer_definition(pointer_target, type_specifier_reference_to->get_source_ref());
+	const Type *pointer_type = mir.get_types().get_reference_to(pointer_target, type_specifier_reference_to->get_source_ref());
 	return pointer_type;
     }
     
@@ -151,7 +147,7 @@ TypeResolver::extract_from_class_members(Type & type, const ClassDefinition & de
 	if (std::holds_alternative<JLang::owned<ClassMemberDeclarationVariable>>(class_member_type)) {
 	    const auto & member_variable = std::get<JLang::owned<ClassMemberDeclarationVariable>>(class_member_type);
 	    
-	    Type *member_type = extract_from_type_specifier(member_variable->get_type_specifier());
+	    const Type *member_type = extract_from_type_specifier(member_variable->get_type_specifier());
 	    if (member_type == nullptr) {
 		compiler_context
 		    .get_errors()
@@ -245,7 +241,7 @@ TypeResolver::extract_from_function_specifications(
     std::string fully_qualified_function_name = 
 	name.get_fully_qualified_name();
     
-    Type *type = extract_from_type_specifier(type_specifier);
+    const Type *type = extract_from_type_specifier(type_specifier);
     
 //////
 // Define the type of a function pointer.
@@ -255,7 +251,7 @@ TypeResolver::extract_from_function_specifications(
     const auto & function_definition_args = function_argument_list.get_arguments();
     for (const auto & function_definition_arg : function_definition_args) {
 	std::string name = function_definition_arg->get_name();
-	Type * t = extract_from_type_specifier(function_definition_arg->get_type_specifier());
+	const Type * t = extract_from_type_specifier(function_definition_arg->get_type_specifier());
 	arg_list.push_back(t->get_name());
 	fptr_arguments.push_back(
 	    Argument(t, function_definition_arg->get_type_specifier().get_source_ref())

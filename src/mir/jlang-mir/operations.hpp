@@ -72,8 +72,12 @@ namespace JLang::mir {
 	    OP_PRE_DECREMENT,
 
 	    OP_ADDRESSOF,
-	    OP_NEGATE,
 	    OP_DEREFERENCE,
+	    OP_NEGATE,
+	    OP_BITWISE_NOT,
+	    OP_LOGICAL_NOT,
+
+	    OP_SIZEOF_TYPE,
 	    
 	    OP_ADD,
 	    OP_SUBTRACT,
@@ -214,7 +218,48 @@ namespace JLang::mir {
 	~OperationPostDecrement();
     private:
     };
+
+    class OperationAddressOf : public Operation {
+    public:
+	OperationAddressOf(size_t _result, size_t _operand);
+	~OperationAddressOf();
+    private:
+    };
+    class OperationDereference : public Operation {
+    public:
+	OperationDereference(size_t _result, size_t _operand);
+	~OperationDereference();
+    private:
+    };
     
+    class OperationNegate : public Operation {
+    public:
+	OperationNegate(size_t _result, size_t _operand);
+	~OperationNegate();
+    private:
+    };
+
+    class OperationBitwiseNot : public Operation {
+    public:
+	OperationBitwiseNot(size_t _result, size_t _operand);
+	~OperationBitwiseNot();
+    private:
+    };
+
+    class OperationLogicalNot : public Operation {
+    public:
+	OperationLogicalNot(size_t _result, size_t _operand);
+	~OperationLogicalNot();
+    private:
+    };
+    
+    class OperationSizeofType : public Operation {
+    public:
+	OperationSizeofType(size_t _result, size_t _operand);
+	~OperationSizeofType();
+    private:
+    };
+
     class OperationAdd : public Operation {
     public:
 	OperationAdd(

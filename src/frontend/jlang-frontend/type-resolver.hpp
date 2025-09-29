@@ -33,7 +33,7 @@ namespace JLang::frontend {
 	// a usage of an already existing 'Type'
 	// even if it was never referenced in another
 	// type, it may be referenced in a function.
-	JLang::mir::Type * extract_from_type_specifier(const JLang::frontend::tree::TypeSpecifier & type_specifier);
+	const JLang::mir::Type * extract_from_type_specifier(const JLang::frontend::tree::TypeSpecifier & type_specifier);
     private:
 	JLang::mir::MIR & mir;
 	JLang::context::CompilerContext & compiler_context;

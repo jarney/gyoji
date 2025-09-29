@@ -45,6 +45,10 @@ namespace JLang::mir {
 	 */
 	Type * get_type(std::string type) const;
 	
+	const Type * get_pointer_to(const Type *_type, const JLang::context::SourceReference & src_ref);
+	
+	const Type * get_reference_to(const Type *_type, const JLang::context::SourceReference & src_ref);
+	
 	/**
 	 * This is used to define a fully-qualified type
 	 * from the definition.  Note that some types
@@ -79,7 +83,7 @@ namespace JLang::mir {
     public:
 	TypeMember(
 	    std::string _member_name,
-	    Type *_member_type,
+	    const Type *_member_type,
 	    const JLang::context::SourceReference & _source_ref
 	    );
 	TypeMember(const TypeMember & other);
@@ -90,14 +94,14 @@ namespace JLang::mir {
 	const JLang::context::SourceReference & get_source_ref() const;
     private:
 	std::string member_name;
-	Type *member_type;
+	const Type *member_type;
 	const JLang::context::SourceReference *source_ref;
     };
 
     class Argument {
     public:
 	Argument(
-	    Type *_argument_type,
+	    const Type *_argument_type,
 	    const JLang::context::SourceReference & _source_ref
 	    );
 	// Copy constructor so we can put it inside
@@ -215,7 +219,7 @@ namespace JLang::mir {
 	/**
 	 * Completes the definition of a pointer or reference.
 	 */
-	void complete_pointer_definition(Type *_type, const JLang::context::SourceReference & _source_ref);
+	void complete_pointer_definition(const Type *_type, const JLang::context::SourceReference & _source_ref);
 
 	/**
 	 * Completes the definition of a function pointer
@@ -253,7 +257,7 @@ namespace JLang::mir {
 	const JLang::context::SourceReference *defined_source_ref;
 
 	// Used only for pointer and reference types.
-	Type *pointer_or_ref;
+	const Type *pointer_or_ref;
 
 	// Used only for function pointer types.
 	const Type *return_type;
