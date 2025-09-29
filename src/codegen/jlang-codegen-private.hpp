@@ -123,6 +123,11 @@ namespace JLang::codegen {
 	    const JLang::mir::Function & mir_function,
 	    const JLang::mir::OperationUnary *operation
 	    );
+	void generate_operation_widen_numeric(
+	    std::map<size_t, llvm::Value *> & tmp_values,
+	    const JLang::mir::Function & mir_function,
+	    const JLang::mir::OperationCast *operation
+	    );
 	void generate_operation_add(
 	    std::map<size_t, llvm::Value *> & tmp_values,
 	    const JLang::mir::Function & mir_function,

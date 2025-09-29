@@ -419,6 +419,38 @@ CodeGeneratorLLVMContext::generate_operation_pre_decrement(
     const JLang::mir::OperationUnary *operation
     )
 {}
+
+void
+CodeGeneratorLLVMContext::generate_operation_widen_numeric(
+    std::map<size_t, llvm::Value *> & tmp_values,
+    const JLang::mir::Function & mir_function,
+    const JLang::mir::OperationCast *operation
+    )
+{
+    size_t a = operation->get_a();
+    const JLang::mir::Type *atype = mir_function.tmpvar_get(a)->get_type();
+    if (!atype->is_numeric()) {
+	compiler_context
+	    .get_errors()
+	    .add_simple_error(
+		operation->get_source_ref(),
+		"Compiler bug! Invalid operand for add operator.",
+		std::string("Invalid operands for add operation.  Operand must be a numeric type, but was ") + atype->get_name()
+		);
+	return;
+    }
+    llvm::Value *value_a = tmp_values[a];
+    llvm::Type *llvm_cast_type = types[operation->get_cast_type()->get_name()];
+    if (atype->is_integer()) {
+	llvm::Value *sum = Builder->CreateIntCast(value_a, llvm_cast_type, atype->is_signed());
+	tmp_values.insert(std::pair(operation->get_result(), sum));
+    }
+    else {
+	llvm::Value *sum = Builder->CreateFPCast(value_a, llvm_cast_type);
+	tmp_values.insert(std::pair(operation->get_result(), sum));
+    }
+}
+
 void
 CodeGeneratorLLVMContext::generate_operation_add(
     std::map<size_t, llvm::Value *> & tmp_values,
@@ -430,8 +462,7 @@ CodeGeneratorLLVMContext::generate_operation_add(
     size_t b = operation->get_b();
     const JLang::mir::Type *atype = mir_function.tmpvar_get(a)->get_type();
     const JLang::mir::Type *btype = mir_function.tmpvar_get(b)->get_type();
-    if ((!atype->is_numeric()) ||
-	(!btype->is_numeric())) {
+    if (!atype->is_numeric()) {
 	compiler_context
 	    .get_errors()
 	    .add_simple_error(
@@ -441,34 +472,15 @@ CodeGeneratorLLVMContext::generate_operation_add(
 		);
 	return;
     }
-    if (atype->get_name() != btype->get_name()) {
-	compiler_context
-	    .get_errors()
-	    .add_simple_error(
-		operation->get_source_ref(),
-		"Compiler bug! Invalid operand for add operator.",
-		std::string("Operands must match ") + atype->get_name() + std::string(" and ") + btype->get_name()
-		);
-	return;
-    }
-    
-    llvm::Value *value_a = tmp_values[operation->get_a()];
-    llvm::Value *value_b = tmp_values[operation->get_b()];
+    llvm::Value *value_a = tmp_values[a];
+    llvm::Value *value_b = tmp_values[b];
 
     std::string primitive_name = atype->get_name();
-    if (primitive_name == std::string("u8") ||
-	primitive_name == std::string("u16") ||
-	primitive_name == std::string("u32") ||
-	primitive_name == std::string("u64") ||
-	primitive_name == std::string("i8") ||
-	primitive_name == std::string("i16") ||
-	primitive_name == std::string("i32") ||
-	primitive_name == std::string("i64")) {
+    if (atype->is_integer()) {
 	llvm::Value *sum = Builder->CreateAdd(value_a, value_b);
 	tmp_values.insert(std::pair(operation->get_result(), sum));
     }
-    else if (primitive_name == std::string("f32") ||
-	     primitive_name == std::string("f64")) {
+    else if (atype->is_float()) {
 	llvm::Value *sum = Builder->CreateFAdd(value_a, value_b);
 	tmp_values.insert(std::pair(operation->get_result(), sum));
     }
@@ -598,6 +610,15 @@ CodeGeneratorLLVMContext::generate_basic_block(
 	    break;
 	case Operation::OP_PRE_DECREMENT:
 	    generate_operation_pre_decrement(tmp_values, mir_function, (OperationUnary*)operation.get());
+	    break;
+	case Operation::OP_WIDEN_SIGNED:
+	    generate_operation_widen_numeric(tmp_values, mir_function, (OperationCast*)operation.get());
+	    break;
+	case Operation::OP_WIDEN_UNSIGNED:
+	    generate_operation_widen_numeric(tmp_values, mir_function, (OperationCast*)operation.get());
+	    break;
+	case Operation::OP_WIDEN_FLOAT:
+	    generate_operation_widen_numeric(tmp_values, mir_function, (OperationCast*)operation.get());
 	    break;
 	case Operation::OP_ADD:
 	    generate_operation_add(tmp_values, mir_function, (OperationBinary*)operation.get());
