@@ -881,7 +881,7 @@ FunctionDefinitionResolver::numeric_widen(
 	return false;
     }
     
-    size_t widened_var;
+    size_t widened_var = function.tmpvar_define(widen_to);
     auto operation = std::make_unique<OperationCast>(
 	widen_type,
 	_src_ref,
@@ -948,12 +948,14 @@ FunctionDefinitionResolver::handle_binary_arithmetic(
 		if (!numeric_widen(function, current_block, _src_ref, b_tmpvar, atype)) {
 		    return false;
 		}
+		fprintf(stderr, "Widened B %ld %ld\n", a_tmpvar, b_tmpvar);
 		widened = atype;
 	    }
 	    else if (atype->get_primitive_size() < btype->get_primitive_size()) {
 		if (!numeric_widen(function, current_block, _src_ref, a_tmpvar, btype)) {
 		    return false;
 		}
+		fprintf(stderr, "Widened A %ld %ld\n", a_tmpvar, b_tmpvar);
 		widened = btype;
 	    }
 	    else {
@@ -967,12 +969,14 @@ FunctionDefinitionResolver::handle_binary_arithmetic(
 		if (!numeric_widen(function, current_block, _src_ref, b_tmpvar, atype)) {
 		    return false;
 		}
+		fprintf(stderr, "Widened UB %ld %ld\n", a_tmpvar, b_tmpvar);
 		widened = atype;
 	    }
 	    else if (atype->get_primitive_size() < btype->get_primitive_size()) {
 		if (!numeric_widen(function, current_block, _src_ref, a_tmpvar, btype)) {
 		    return false;
 		}
+		fprintf(stderr, "Widened UA %ld %ld\n", a_tmpvar, b_tmpvar);
 		widened = btype;
 	    }
 	    else {
@@ -1052,6 +1056,7 @@ FunctionDefinitionResolver::extract_from_expression_binary(
     if (!extract_from_expression(function, current_block, b_tmpvar, expression.get_b())) {
 	return false;
     }
+    fprintf(stderr, "Handling binary operator %ld %ld\n", a_tmpvar, b_tmpvar);
 
     ExpressionBinary::OperationType op_type;
     op_type = expression.get_operator();

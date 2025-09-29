@@ -27,6 +27,10 @@ for TEST_FILE in ${TEST_FILES} ; do
     clang -c \
 	  ${CMAKE_SOURCE_DIR}/tests/${TEST_FILE}.c \
 	  -o ${TEST_JCC_DIR}/${TEST_FILE}.c.o
+    if [ $? -ne 0 ] ; then
+	echo "${TEST_FILE} failed to compile comparison with clang"
+	exit 1
+    fi
 
     # Link them into the 'main' for the test.
     clang -o \
@@ -34,6 +38,10 @@ for TEST_FILE in ${TEST_FILES} ; do
 	  ${CMAKE_SOURCE_DIR}/tests/test-semantics-simple-values.c \
 	  ${TEST_JCC_DIR}/semantics-simple-values.j.o \
 	  ${TEST_JCC_DIR}/semantics-simple-values.c.o
+    if [ $? -ne 0 ] ; then
+	echo "${TEST_FILE} failed to compile test with clang"
+	exit 1
+    fi
 
     # Now run the test.  If it returns 0,
     # everything was fine.  If it returns != 0
