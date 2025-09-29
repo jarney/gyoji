@@ -145,6 +145,30 @@ bool
 Type::is_function_pointer() const
 { return (type == TYPE_FUNCTION_POINTER); }
 
+size_t
+Type::get_primitive_size() const
+{
+    switch (type) {
+    case TYPE_PRIMITIVE_u8:
+    case TYPE_PRIMITIVE_i8:
+	return 1;
+    case TYPE_PRIMITIVE_u16:
+    case TYPE_PRIMITIVE_i16:
+	return 2;
+    case TYPE_PRIMITIVE_u32:
+    case TYPE_PRIMITIVE_i32:
+    case TYPE_PRIMITIVE_f32:
+	return 4;
+    case TYPE_PRIMITIVE_u64:
+    case TYPE_PRIMITIVE_i64:
+    case TYPE_PRIMITIVE_f64:
+	return 8;
+    }
+    return 0;
+    
+}
+
+
 Type::TypeType
 Type::get_type() const
 { return type; }

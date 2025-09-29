@@ -135,6 +135,25 @@ OperationUnary::~OperationUnary()
 size_t
 OperationUnary::get_a() const
 { return operands.at(0); }
+//////////////////////////////////////////////
+// OperationCast
+//////////////////////////////////////////////
+OperationCast::OperationCast(
+    OperationType _type,
+    const JLang::context::SourceReference & _src_ref,
+    size_t _result,
+    size_t _operand,
+    const Type *_cast_type
+    )
+    : OperationUnary(_type, _src_ref, _result, _operand)
+    , cast_type(_cast_type)
+{}
+OperationCast::~OperationCast()
+{}
+
+const Type*
+OperationCast::get_cast_type() const
+{ return cast_type; }
 
 //////////////////////////////////////////////
 // OperationBinary

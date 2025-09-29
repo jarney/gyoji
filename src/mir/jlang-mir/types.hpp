@@ -228,6 +228,7 @@ namespace JLang::mir {
 	bool is_enum() const;
 	bool is_composite() const;
 	bool is_function_pointer() const;
+	size_t get_primitive_size() const;
 	
 	TypeType get_type() const;
 	

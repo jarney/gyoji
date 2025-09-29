@@ -57,6 +57,11 @@ namespace JLang::mir {
 	    OP_FUNCTION_CALL,   // Any, but need to match function signatures -> Function return-value type
 	    OP_SYMBOL,          // N/A
 
+	    // Cast operations
+	    OP_WIDEN_SIGNED,    // Widen a signed integer to a larger type.
+	    OP_WIDEN_UNSIGNED,  // Widen an unsigned integer to a larger type.
+	    OP_WIDEN_FLOAT,     // Widen a floating-point to a larger type.
+	    
 	    OP_ARRAY_INDEX,     // Pointer types -> Pointer Target type
 	    OP_DOT,             // class types -> Found member type
 	    OP_ARROW,           // Pointer to class types -> Found member type
@@ -160,6 +165,21 @@ namespace JLang::mir {
 	size_t get_a() const;
     };
     
+    class OperationCast : public OperationUnary {
+    public:
+	OperationCast(
+	    OperationType _type,
+	    const JLang::context::SourceReference & _src_ref,
+	    size_t _result,
+	    size_t _operand,
+	    const Type *_cast_type
+	    );
+	~OperationCast();
+	const Type* get_cast_type() const;
+    private:
+	const Type *cast_type;
+    };
+
     class OperationBinary : public Operation {
     public:
 	OperationBinary(
