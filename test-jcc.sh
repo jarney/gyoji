@@ -17,6 +17,11 @@ for TEST_FILE in ${TEST_FILES} ; do
     ${CMAKE_BINARY_DIR}/src/cmdline/jcc \
 		       ${CMAKE_SOURCE_DIR}/tests/${TEST_FILE}.j \
 		       ${TEST_JCC_DIR}/${TEST_FILE}.j.o
+    if [ $? -ne 0 ] ; then
+	echo "${TEST_FILE} failed to compile with jcc"
+	echo "FAILED"
+	exit 1
+    fi
     
     # Build the equivalent construct using C.
     clang -c \

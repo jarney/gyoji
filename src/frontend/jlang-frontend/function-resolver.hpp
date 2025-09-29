@@ -15,7 +15,7 @@ namespace JLang::frontend {
 	    JLang::frontend::TypeResolver & _type_resolver
 	    );
 	~FunctionDefinitionResolver();
-	void resolve();
+	bool resolve();
 
     private:
 	JLang::context::CompilerContext & compiler_context;
@@ -23,7 +23,7 @@ namespace JLang::frontend {
 	JLang::mir::MIR & mir;
 	TypeResolver & type_resolver;
 	
-	void numeric_widen(
+	bool numeric_widen(
 	    JLang::mir::Function & function,
 	    size_t & current_block,
 	    const JLang::context::SourceReference & _src_ref,
@@ -41,128 +41,128 @@ namespace JLang::frontend {
 	    size_t b_tmpvar
 	    );
 	
-	void extract_from_expression_primary_identifier(
+	bool extract_from_expression_primary_identifier(
 	    JLang::mir::Function & function,
 	    size_t & current_block,
 	    size_t & returned_tmpvar,
 	    const JLang::frontend::tree::ExpressionPrimaryIdentifier & expression);
 	
-	void extract_from_expression_primary_nested(
+	bool extract_from_expression_primary_nested(
 	    JLang::mir::Function & function,
 	    size_t & current_block,
 	    size_t & returned_tmpvar,
 	    const JLang::frontend::tree::ExpressionPrimaryNested & expression);
 	
-	void extract_from_expression_primary_literal_char(
+	bool extract_from_expression_primary_literal_char(
 	    JLang::mir::Function & function,
 	    size_t & current_block,
 	    size_t & returned_tmpvar,
 	    const JLang::frontend::tree::ExpressionPrimaryLiteralChar & expression);
 	
-	void extract_from_expression_primary_literal_string(
+	bool extract_from_expression_primary_literal_string(
 	    JLang::mir::Function & function,
 	    size_t & current_block,
 	    size_t & returned_tmpvar,
 	    const JLang::frontend::tree::ExpressionPrimaryLiteralString & expression);
 	
-	void extract_from_expression_primary_literal_int(
+	bool extract_from_expression_primary_literal_int(
 	    JLang::mir::Function & function,
 	    size_t & current_block,
 	    size_t & returned_tmpvar,
 	    const JLang::frontend::tree::ExpressionPrimaryLiteralInt & expression);
 	
-	void extract_from_expression_primary_literal_float(
+	bool extract_from_expression_primary_literal_float(
 	    JLang::mir::Function & function,
 	    size_t & current_block,
 	    size_t & returned_tmpvar,
 	    const JLang::frontend::tree::ExpressionPrimaryLiteralFloat & expression);
 	
-	void extract_from_expression_postfix_array_index(
+	bool extract_from_expression_postfix_array_index(
 	    JLang::mir::Function & function,
 	    size_t & current_block,
 	    size_t & returned_tmpvar,
 	    const JLang::frontend::tree::ExpressionPostfixArrayIndex & expression);
 	
-	void extract_from_expression_postfix_function_call(
+	bool extract_from_expression_postfix_function_call(
 	    JLang::mir::Function & function,
 	    size_t & current_block,
 	    size_t & returned_tmpvar,
 	    const JLang::frontend::tree::ExpressionPostfixFunctionCall & expression);
 	
-	void extract_from_expression_postfix_dot(
+	bool extract_from_expression_postfix_dot(
 	    JLang::mir::Function & function,
 	    size_t & current_block,
 	    size_t & returned_tmpvar,
 	    const JLang::frontend::tree::ExpressionPostfixDot & expression);
 	
-	void extract_from_expression_postfix_arrow(
+	bool extract_from_expression_postfix_arrow(
 	    JLang::mir::Function & function,
 	    size_t & current_block,
 	    size_t & returned_tmpvar,
 	    const JLang::frontend::tree::ExpressionPostfixArrow & expression);
 	
-	void extract_from_expression_postfix_incdec(
+	bool extract_from_expression_postfix_incdec(
 	    JLang::mir::Function & function,
 	    size_t & current_block,
 	    size_t & returned_tmpvar,
 	    const JLang::frontend::tree::ExpressionPostfixIncDec & expression);
 	
-	void extract_from_expression_unary_prefix(
+	bool extract_from_expression_unary_prefix(
 	    JLang::mir::Function & function,
 	    size_t & current_block,
 	    size_t & returned_tmpvar,
 	    const JLang::frontend::tree::ExpressionUnaryPrefix & expression);
 	
-	void extract_from_expression_unary_sizeof_type(
+	bool extract_from_expression_unary_sizeof_type(
 	    JLang::mir::Function & function,
 	    size_t & current_block,
 	    size_t & returned_tmpvar,
 	    const JLang::frontend::tree::ExpressionUnarySizeofType & expression);
 	
-	void extract_from_expression_binary(
+	bool extract_from_expression_binary(
 	    JLang::mir::Function & function,
 	    size_t & current_block,
 	    size_t & returned_tmpvar,
 	    const JLang::frontend::tree::ExpressionBinary & expression);
 	
-	void extract_from_expression_trinary(
+	bool extract_from_expression_trinary(
 	    JLang::mir::Function & function,
 	    size_t & current_block,
 	    size_t & returned_tmpvar,
 	    const JLang::frontend::tree::ExpressionTrinary & expression);
 	
-	void extract_from_expression_cast(
+	bool extract_from_expression_cast(
 	    JLang::mir::Function & function,
 	    size_t & current_block,
 	    size_t & returned_tmpvar,
 	    const JLang::frontend::tree::ExpressionCast & expression);
 	
-	void extract_from_expression(
+	bool extract_from_expression(
 	    JLang::mir::Function & function,
 	    size_t & current_block,
 	    size_t & returned_tmpvar,
 	    const JLang::frontend::tree::Expression & expression
 	    );
 	
-	void extract_from_statement_return(
+	bool extract_from_statement_return(
 	    JLang::mir::Function & function,
 	    size_t & current_block,
 	    const JLang::frontend::tree::StatementReturn & statement
 	    );
 	
-	void extract_from_statement_ifelse(
+	bool extract_from_statement_ifelse(
 	    JLang::mir::Function & function,
 	    size_t & current_block,
 	    const JLang::frontend::tree::StatementIfElse & statement
 	    );
 	
-	void extract_from_statement_list(
+	bool extract_from_statement_list(
 	    JLang::mir::Function & function,
 	    size_t & current_block,
 	    const JLang::frontend::tree::StatementList & statement_list
 	    );
 	
-	void extract_from_function_definition(const JLang::frontend::tree::FileStatementFunctionDefinition & function_definition);
+	bool extract_from_function_definition(const JLang::frontend::tree::FileStatementFunctionDefinition & function_definition);
 	
     };
     
@@ -184,18 +184,18 @@ namespace JLang::frontend {
 	    JLang::frontend::TypeResolver & _type_resolver
 	    );
 	~FunctionResolver();
-	void resolve();
+	bool resolve();
     private:
 	JLang::context::CompilerContext & compiler_context;
 	const JLang::frontend::ParseResult & parse_result;
 	JLang::mir::MIR & mir;
 	TypeResolver & type_resolver;
 	
-	void extract_from_class_definition(const JLang::frontend::tree::ClassDefinition & definition);
-	void extract_from_namespace(
+	bool extract_from_class_definition(const JLang::frontend::tree::ClassDefinition & definition);
+	bool extract_from_namespace(
 	    const JLang::frontend::tree::FileStatementNamespace & namespace_declaration
 	    );
-	void extract_functions(const std::vector<JLang::owned<JLang::frontend::tree::FileStatement>> & statements);
+	bool extract_functions(const std::vector<JLang::owned<JLang::frontend::tree::FileStatement>> & statements);
 	
     };
     

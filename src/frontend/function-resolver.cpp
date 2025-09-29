@@ -22,7 +22,7 @@ FunctionResolver::FunctionResolver(
 FunctionResolver::~FunctionResolver()
 {}
 
-void FunctionResolver::resolve()
+bool FunctionResolver::resolve()
 {
   // To resolve the functions, we need only iterate the
   // input parse tree and pull out any type declarations,
@@ -30,17 +30,17 @@ void FunctionResolver::resolve()
 
   // TODO: Split the type extraction
   // out away from the function extraction(?).
-    extract_functions(parse_result.get_translation_unit().get_statements());
+    return extract_functions(parse_result.get_translation_unit().get_statements());
 }
-void
+bool
 FunctionResolver::extract_from_namespace(
     const FileStatementNamespace & namespace_declaration)
 {
     const auto & statements = namespace_declaration.get_statement_list().get_statements();
-    extract_functions(statements);
+    return extract_functions(statements);
 }
 
-void
+bool
 FunctionResolver::extract_from_class_definition(const ClassDefinition & definition)
 {
     // TODO: We should extract members as
@@ -53,9 +53,10 @@ FunctionResolver::extract_from_class_definition(const ClassDefinition & definiti
     //fprintf(stderr, "Extracting from class definition, constructors and destructors which are special-case functions.\n");
     // These must be linked back to their corresponding type definitions
     // so that we can generate their code.
+    return true;
 }
 
-void
+bool
 FunctionResolver::extract_functions(const std::vector<JLang::owned<FileStatement>> & statements)
 {
     for (const auto & statement : statements) {
@@ -73,7 +74,9 @@ FunctionResolver::extract_functions(const std::vector<JLang::owned<FileStatement
 		mir,
 		type_resolver
 		);
-	    function_def_resolver.resolve();
+	    if (!function_def_resolver.resolve()) {
+		return false;
+	    }
 	}
 	else if (std::holds_alternative<JLang::owned<FileStatementGlobalDefinition>>(file_statement)) {
 	    // TODO:
@@ -87,7 +90,9 @@ FunctionResolver::extract_functions(const std::vector<JLang::owned<FileStatement
 	}
 	else if (std::holds_alternative<JLang::owned<ClassDefinition>>(file_statement)) {
 	    // Constructors, Destructors, and methods are special cases.
-	    extract_from_class_definition(*std::get<JLang::owned<ClassDefinition>>(file_statement));
+	    if (!extract_from_class_definition(*std::get<JLang::owned<ClassDefinition>>(file_statement))) {
+		return false;
+	    }
 	}
 	else if (std::holds_alternative<JLang::owned<EnumDefinition>>(file_statement)) {
 	    // Nothing, no functions can exist here.
@@ -98,7 +103,9 @@ FunctionResolver::extract_functions(const std::vector<JLang::owned<FileStatement
 	    // Typedefs should already be resolved by the type_resolver earlier.
 	}
 	else if (std::holds_alternative<JLang::owned<FileStatementNamespace>>(file_statement)) {
-	    extract_from_namespace(*std::get<JLang::owned<FileStatementNamespace>>(file_statement));
+	    if (!extract_from_namespace(*std::get<JLang::owned<FileStatementNamespace>>(file_statement))) {
+		return false;
+	    }
 	}
 	else if (std::holds_alternative<JLang::owned<FileStatementUsing>>(file_statement)) {
 	    // Namespace using is largely handled by the parse stage, so we don't
@@ -111,8 +118,10 @@ FunctionResolver::extract_functions(const std::vector<JLang::owned<FileStatement
 				  "Compiler bug!  Please report this message",
 				  "Unknown statement type in variant, extracting statements from file (compiler bug)"
 		    );
+	    return false;
 	}
     }
+    return true;
 }
 
 ////////////////////////////////////////////////
@@ -133,13 +142,13 @@ FunctionDefinitionResolver::FunctionDefinitionResolver(
 FunctionDefinitionResolver::~FunctionDefinitionResolver()
 {}
 
-void
+bool
 FunctionDefinitionResolver::resolve()
 {
-    extract_from_function_definition(function_definition);
+    return extract_from_function_definition(function_definition);
 }
 
-void
+bool
 FunctionDefinitionResolver::extract_from_expression_primary_identifier(
     JLang::mir::Function & function,
     size_t & current_block,
@@ -179,7 +188,7 @@ FunctionDefinitionResolver::extract_from_expression_primary_identifier(
 		);
 	    function.get_basic_block(current_block).add_statement(std::move(operation));
 
-	    return;
+	    return true;
 	}
 	// TODO: Add enums and class members to the resolution
 	// later when those are handled.
@@ -197,6 +206,7 @@ FunctionDefinitionResolver::extract_from_expression_primary_identifier(
 		"Local variable could not be resolved",
 		std::string("Local variable ") + expression.get_identifier().get_value() + std::string(" was not found in this scope.")
 		);
+	return false;
     }
     else if (expression.get_identifier().get_identifier_type() == Terminal::IDENTIFIER_GLOBAL_SCOPE) {
 	// Type here should be the type of a function-pointer.
@@ -222,6 +232,7 @@ FunctionDefinitionResolver::extract_from_expression_primary_identifier(
 		    "Unresolve symbol",
 		    std::string("Local variable ") + expression.get_identifier().get_fully_qualified_name() + std::string(" was not found in this scope.")
 		    );
+	    return false;
 	}
 	returned_tmpvar = function.tmpvar_define(symbol->get_type());
 
@@ -231,10 +242,12 @@ FunctionDefinitionResolver::extract_from_expression_primary_identifier(
 	    expression.get_identifier().get_fully_qualified_name()
 	    );
 	function.get_basic_block(current_block).add_statement(std::move(operation));
+	return true;
     }
+    return false;
 }
 
-void
+bool
 FunctionDefinitionResolver::extract_from_expression_primary_nested(
     JLang::mir::Function & function,
     size_t & current_block,
@@ -242,7 +255,7 @@ FunctionDefinitionResolver::extract_from_expression_primary_nested(
     const JLang::frontend::tree::ExpressionPrimaryNested & expression)
 {
     // Nested expressions don't emit blocks on their own, just run whatever is nested.
-    extract_from_expression(
+    return extract_from_expression(
 	function,
 	current_block,
 	returned_tmpvar,
@@ -250,7 +263,7 @@ FunctionDefinitionResolver::extract_from_expression_primary_nested(
 	);
 }
 
-void
+bool
 FunctionDefinitionResolver::extract_from_expression_primary_literal_char(
     JLang::mir::Function & function,
     size_t & current_block,
@@ -267,9 +280,10 @@ FunctionDefinitionResolver::extract_from_expression_primary_literal_char(
     function
 	.get_basic_block(current_block)
 	.add_statement(std::move(operation));
+    return true;
 }
 
-void
+bool
 FunctionDefinitionResolver::extract_from_expression_primary_literal_string(
     JLang::mir::Function & function,
     size_t & current_block,
@@ -285,9 +299,10 @@ FunctionDefinitionResolver::extract_from_expression_primary_literal_string(
     function
 	.get_basic_block(current_block)
 	.add_statement(std::move(operation));
+    return true;
 }
 
-void
+bool
 FunctionDefinitionResolver::extract_from_expression_primary_literal_int(
     JLang::mir::Function & function,
     size_t & current_block,
@@ -303,9 +318,10 @@ FunctionDefinitionResolver::extract_from_expression_primary_literal_int(
     function
 	.get_basic_block(current_block)
 	.add_statement(std::move(operation));
+    return true;
 }
 
-void
+bool
 FunctionDefinitionResolver::extract_from_expression_primary_literal_float(
     JLang::mir::Function & function,
     size_t & current_block,
@@ -321,6 +337,7 @@ FunctionDefinitionResolver::extract_from_expression_primary_literal_float(
     function
 	.get_basic_block(current_block)
 	.add_statement(std::move(operation));
+    return true;
 }
 
 static bool is_bool_type(const Type* value)
@@ -339,7 +356,7 @@ static bool is_index_type(const Type* value)
     return false;
 }
 
-void
+bool
 FunctionDefinitionResolver::extract_from_expression_postfix_array_index(
     JLang::mir::Function & function,
     size_t & current_block,
@@ -348,8 +365,12 @@ FunctionDefinitionResolver::extract_from_expression_postfix_array_index(
 {
     size_t array_tmpvar;
     size_t index_tmpvar;
-    extract_from_expression(function, current_block, array_tmpvar, expression.get_array());
-    extract_from_expression(function, current_block, index_tmpvar, expression.get_index());
+    if (!extract_from_expression(function, current_block, array_tmpvar, expression.get_array())) {
+	return false;
+    }
+    if (!extract_from_expression(function, current_block, index_tmpvar, expression.get_index())) {
+	return false;
+    }
 
     const Type *array_type = function.tmpvar_get(array_tmpvar)->get_type();
     if (array_type->get_type() != Type::TYPE_POINTER) {
@@ -360,6 +381,7 @@ FunctionDefinitionResolver::extract_from_expression_postfix_array_index(
 		"Array type must be a pointer to another type",
 		std::string("Type of array is not a pointer type.")
 		);
+	return false;
     }
     
     if (!is_index_type(function.tmpvar_get(index_tmpvar)->get_type())) {
@@ -370,7 +392,7 @@ FunctionDefinitionResolver::extract_from_expression_postfix_array_index(
 		"Array index must be an integer type",
 		std::string("Type of index is not an index")
 		);
-	return;
+	return false;
     }
     
     returned_tmpvar = function.tmpvar_define(array_type->get_pointer_target());
@@ -383,9 +405,11 @@ FunctionDefinitionResolver::extract_from_expression_postfix_array_index(
     function
 	.get_basic_block(current_block)
 	.add_statement(std::move(operation));
+
+    return true;
 }
 
-void
+bool
 FunctionDefinitionResolver::extract_from_expression_postfix_function_call(
     JLang::mir::Function & function,
     size_t & current_block,
@@ -394,12 +418,16 @@ FunctionDefinitionResolver::extract_from_expression_postfix_function_call(
 {
     // Extract the expression itself from the arguments.
     size_t function_type_tmpvar;
-    extract_from_expression(function, current_block, function_type_tmpvar, expression.get_function());
+    if (!extract_from_expression(function, current_block, function_type_tmpvar, expression.get_function())) {
+	return false;
+    }
     
     std::vector<size_t> arg_types;
     for (const auto & arg_expr : expression.get_arguments().get_arguments()) {
 	size_t arg_returned_value;
-	extract_from_expression(function, current_block, arg_returned_value, *arg_expr);
+	if (!extract_from_expression(function, current_block, arg_returned_value, *arg_expr)) {
+	    return false;
+	}
 	arg_types.push_back(arg_returned_value);
     }
 
@@ -432,10 +460,11 @@ FunctionDefinitionResolver::extract_from_expression_postfix_function_call(
     function
 	.get_basic_block(current_block)
 	.add_statement(std::move(operation));
-    
+
+    return true;
 }
 
-void
+bool
 FunctionDefinitionResolver::extract_from_expression_postfix_dot(
     JLang::mir::Function & function,
     size_t & current_block,
@@ -443,7 +472,9 @@ FunctionDefinitionResolver::extract_from_expression_postfix_dot(
     const ExpressionPostfixDot & expression)
 {
     size_t class_tmpvar;
-    extract_from_expression(function, current_block, class_tmpvar, expression.get_expression());
+    if (!extract_from_expression(function, current_block, class_tmpvar, expression.get_expression())) {
+	return false;
+    }
 
     const Type *class_type = function.tmpvar_get(class_tmpvar)->get_type();
     if (class_type->get_type() != Type::TYPE_COMPOSITE) {
@@ -454,6 +485,7 @@ FunctionDefinitionResolver::extract_from_expression_postfix_dot(
 		"Member access must be applied to a class.",
 		std::string("Type of object being accessed is not a class, but is a ") + class_type->get_name() + std::string(" instead.")
 		);
+	return false;
     }
     const std::string & member_name = expression.get_identifier();
 
@@ -477,9 +509,10 @@ FunctionDefinitionResolver::extract_from_expression_postfix_dot(
     function
 	.get_basic_block(current_block)
 	.add_statement(std::move(operation));
+    return true;
 }
 
-void
+bool
 FunctionDefinitionResolver::extract_from_expression_postfix_arrow(
     JLang::mir::Function & function,
     size_t & current_block,
@@ -487,7 +520,9 @@ FunctionDefinitionResolver::extract_from_expression_postfix_arrow(
     const ExpressionPostfixArrow & expression)
 {
     size_t classptr_tmpvar;
-    extract_from_expression(function, current_block, classptr_tmpvar, expression.get_expression());
+    if (!extract_from_expression(function, current_block, classptr_tmpvar, expression.get_expression())) {
+	return false;
+    }
 
     const Type *classptr_type = function.tmpvar_get(classptr_tmpvar)->get_type();
     if (classptr_type->get_type() != Type::TYPE_POINTER) {
@@ -498,6 +533,7 @@ FunctionDefinitionResolver::extract_from_expression_postfix_arrow(
 		"Arrow (->) operator must be used on a pointer to a class.",
 		std::string("Type of object being accessed is not a pointer to a class, but is a ") + classptr_type->get_name() + std::string(" instead.")
 		);
+	return false;
     }
     const Type *class_type = classptr_type->get_pointer_target();
     
@@ -509,6 +545,7 @@ FunctionDefinitionResolver::extract_from_expression_postfix_arrow(
 		"Arrow (->) access must be applied to a pointer to a class.",
 		std::string("Type of object being accessed is not a pointer to a class , but is a pointer to ") + class_type->get_name() + std::string(" instead.")
 		);
+	return false;
     }
     const std::string & member_name = expression.get_identifier();
 
@@ -521,6 +558,7 @@ FunctionDefinitionResolver::extract_from_expression_postfix_arrow(
 		"Class does not have this member.",
 		std::string("Class does not have member '") + member_name + std::string("'.")
 		);
+	return false;
     }
 
     returned_tmpvar = function.tmpvar_define(member->get_type());
@@ -532,9 +570,11 @@ FunctionDefinitionResolver::extract_from_expression_postfix_arrow(
     function
 	.get_basic_block(current_block)
 	.add_statement(std::move(operation));
+    return true;
 
 }
-void
+
+bool
 FunctionDefinitionResolver::extract_from_expression_postfix_incdec(
     JLang::mir::Function & function,
     size_t & current_block,
@@ -542,7 +582,9 @@ FunctionDefinitionResolver::extract_from_expression_postfix_incdec(
     const ExpressionPostfixIncDec & expression)
 {
     size_t operand_tmpvar;
-    extract_from_expression(function, current_block, operand_tmpvar, expression.get_expression());
+    if (!extract_from_expression(function, current_block, operand_tmpvar, expression.get_expression())) {
+	return false;
+    }
 
     returned_tmpvar = function.tmpvar_duplicate(operand_tmpvar);
     
@@ -575,12 +617,14 @@ FunctionDefinitionResolver::extract_from_expression_postfix_incdec(
 			      "Compiler bug!  Please report this message",
 			      "Unknown postfix operator encountered"
 		);
+	return false;
     }
+    return true;
 }
 
 
 
-void
+bool
 FunctionDefinitionResolver::extract_from_expression_unary_prefix(
     JLang::mir::Function & function,
     size_t & current_block,
@@ -593,12 +637,14 @@ FunctionDefinitionResolver::extract_from_expression_unary_prefix(
     // the operation will return the
     // same type as the operand.
     size_t operand_tmpvar;
-    extract_from_expression(
-	function,
-	current_block,
-	operand_tmpvar,
-	expression.get_expression()
-	);
+    if (!extract_from_expression(
+	    function,
+	    current_block,
+	    operand_tmpvar,
+	    expression.get_expression()
+	    )) {
+	return false;
+    }
     
     const Type *operand_type = function.tmpvar_get(operand_tmpvar)->get_type();
     if (operand_type == nullptr) {
@@ -710,7 +756,7 @@ FunctionDefinitionResolver::extract_from_expression_unary_prefix(
 		    "Cannot dereference non-pointer",
 		    std::string("Attempting to de-reference non-pointer type ") + operand_type->get_name()
 		    );
-	    return;
+	    return false;
 	}
 	returned_tmpvar = function.tmpvar_define(operand_type);
 	auto operation = std::make_unique<OperationUnary>(
@@ -782,10 +828,11 @@ FunctionDefinitionResolver::extract_from_expression_unary_prefix(
 		"Compiler Bug!",
 		"Encountered unknown unary prefix expression"
 		);
+	return false;
     }
-  
+    return true;
 }
-void
+bool
 FunctionDefinitionResolver::extract_from_expression_unary_sizeof_type(
     JLang::mir::Function & function,
     size_t & current_block,
@@ -805,9 +852,10 @@ FunctionDefinitionResolver::extract_from_expression_unary_sizeof_type(
     function
 	.get_basic_block(current_block)
 	.add_statement(std::move(operation));
+    return true;
 }
 
-void
+bool
 FunctionDefinitionResolver::numeric_widen(
     JLang::mir::Function & function,
     size_t & current_block,
@@ -830,7 +878,7 @@ FunctionDefinitionResolver::numeric_widen(
     }
     else {
 	fprintf(stderr, "Compiler Bug! Widening number of unknown type\n");
-	exit(1);
+	return false;
     }
     
     size_t widened_var;
@@ -845,6 +893,7 @@ FunctionDefinitionResolver::numeric_widen(
 	.get_basic_block(current_block)
 	.add_statement(std::move(operation));
     _widen_var = widened_var;
+    return true;
 }
 
 bool
@@ -894,11 +943,15 @@ FunctionDefinitionResolver::handle_binary_arithmetic(
 	// Deal with signed-ness.  We can't mix signed and unsigned.
 	if (atype->is_signed() && btype->is_signed()) {
 	    if (atype->get_primitive_size() > btype->get_primitive_size()) {
-		numeric_widen(function, current_block, _src_ref, b_tmpvar, atype);
+		if (!numeric_widen(function, current_block, _src_ref, b_tmpvar, atype)) {
+		    return false;
+		}
 		widened = atype;
 	    }
 	    else if (atype->get_primitive_size() < btype->get_primitive_size()) {
-		numeric_widen(function, current_block, _src_ref, a_tmpvar, btype);
+		if (!numeric_widen(function, current_block, _src_ref, a_tmpvar, btype)) {
+		    return false;
+		}
 		widened = btype;
 	    }
 	    else {
@@ -909,11 +962,15 @@ FunctionDefinitionResolver::handle_binary_arithmetic(
 	}
 	else if (atype->is_unsigned() && btype->is_unsigned()) {
 	    if (atype->get_primitive_size() > btype->get_primitive_size()) {
-		numeric_widen(function, current_block, _src_ref, b_tmpvar, atype);
+		if (!numeric_widen(function, current_block, _src_ref, b_tmpvar, atype)) {
+		    return false;
+		}
 		widened = atype;
 	    }
 	    else if (atype->get_primitive_size() < btype->get_primitive_size()) {
-		numeric_widen(function, current_block, _src_ref, a_tmpvar, btype);
+		if (!numeric_widen(function, current_block, _src_ref, a_tmpvar, btype)) {
+		    return false;
+		}
 		widened = btype;
 	    }
 	    else {
@@ -938,22 +995,26 @@ FunctionDefinitionResolver::handle_binary_arithmetic(
     // know that we have a float in the else.
     else {
 	if (atype->get_primitive_size() > btype->get_primitive_size()) {
-		numeric_widen(function, current_block, _src_ref, b_tmpvar, atype);
-		widened = atype;
+	    if (!numeric_widen(function, current_block, _src_ref, b_tmpvar, atype)) {
+		return false;
+	    }
+	    widened = atype;
 	}
 	else if (atype->get_primitive_size() < btype->get_primitive_size()) {
-		numeric_widen(function, current_block, _src_ref, a_tmpvar, btype);
-		widened = btype;
+	    if (!numeric_widen(function, current_block, _src_ref, a_tmpvar, btype)) {
+		return false;
+	    }
+	    widened = btype;
 	}
 	else {
-		widened = atype;
+	    widened = atype;
 	}
     }
-
+    
     // The return type is whatever
     // we widened the add to be.
     returned_tmpvar = function.tmpvar_define(widened);
-
+    
     // We emit the appropriate operation as either an integer or
     // floating-point add depending on which one it was.
     // The back-end may assume that the operand types are both
@@ -973,7 +1034,7 @@ FunctionDefinitionResolver::handle_binary_arithmetic(
     return true;
 }
 
-void
+bool
 FunctionDefinitionResolver::extract_from_expression_binary(
     JLang::mir::Function & function,
     size_t & current_block,
@@ -983,8 +1044,12 @@ FunctionDefinitionResolver::extract_from_expression_binary(
     size_t a_tmpvar;
     size_t b_tmpvar;
     
-    extract_from_expression(function, current_block, a_tmpvar, expression.get_a());
-    extract_from_expression(function, current_block, b_tmpvar, expression.get_b());
+    if (!extract_from_expression(function, current_block, a_tmpvar, expression.get_a())) {
+	return false;
+    }
+    if (!extract_from_expression(function, current_block, b_tmpvar, expression.get_b())) {
+	return false;
+    }
 
     std::string atypename = function.tmpvar_get(a_tmpvar)->get_type()->get_name();
     std::string btypename = function.tmpvar_get(b_tmpvar)->get_type()->get_name();
@@ -996,60 +1061,70 @@ FunctionDefinitionResolver::extract_from_expression_binary(
 		"Type mismatch in binary operation",
 		std::string("The type of operands should match: a= ") + atypename + std::string(" b=") + btypename
 		);
-	return;
+	return false;
     }
     ExpressionBinary::OperationType op_type;
     op_type = expression.get_operator();
 
     if (op_type == ExpressionBinary::ADD) {
-	handle_binary_arithmetic(
+	if (!handle_binary_arithmetic(
 	    function,
 	    expression.get_source_ref(),
 	    Operation::OP_ADD,
 	    current_block,
 	    returned_tmpvar,
 	    a_tmpvar,
-	    b_tmpvar);
+	    b_tmpvar)) {
+	    return false;
+	}
     }	
     else if (op_type == ExpressionBinary::SUBTRACT) {
-	handle_binary_arithmetic(
+	if (!handle_binary_arithmetic(
 	    function,
 	    expression.get_source_ref(),
 	    Operation::OP_SUBTRACT,
 	    current_block,
 	    returned_tmpvar,
 	    a_tmpvar,
-	    b_tmpvar);
+	    b_tmpvar)) {
+	    return false;
+	}
     }
     else if (op_type == ExpressionBinary::MULTIPLY) {
-	handle_binary_arithmetic(
+	if (!handle_binary_arithmetic(
 	    function,
 	    expression.get_source_ref(),
 	    Operation::OP_MULTIPLY,
 	    current_block,
 	    returned_tmpvar,
 	    a_tmpvar,
-	    b_tmpvar);
+	    b_tmpvar)) {
+	    return false;
+	}
     }
     else if (op_type == ExpressionBinary::DIVIDE) {
-	handle_binary_arithmetic(
+	if (!handle_binary_arithmetic(
 	    function,
 	    expression.get_source_ref(),
 	    Operation::OP_DIVIDE,
 	    current_block,
 	    returned_tmpvar,
 	    a_tmpvar,
-	    b_tmpvar);
+	    b_tmpvar)) {
+	    return false;
+	}
     }
     else if (op_type == ExpressionBinary::MODULO) {
-	handle_binary_arithmetic(
+	if (!handle_binary_arithmetic(
 	    function,
 	    expression.get_source_ref(),
 	    Operation::OP_MODULO,
 	    current_block,
 	    returned_tmpvar,
 	    a_tmpvar,
-	    b_tmpvar);
+	    b_tmpvar)) {
+	    return false;
+	}
     }
     else if (op_type == ExpressionBinary::LOGICAL_AND) {
 	returned_tmpvar = function.tmpvar_define(mir.get_types().get_type("bool"));
@@ -1271,9 +1346,11 @@ FunctionDefinitionResolver::extract_from_expression_binary(
 		"Compiler bug! unknown binary operator",
 		std::string("Invalid binary operator type ") + std::to_string(op_type)
 		);
+	return false;
     }
+    return true;
 }
-void
+bool
 FunctionDefinitionResolver::extract_from_expression_trinary(
     JLang::mir::Function & function,
     size_t & current_block,
@@ -1283,8 +1360,9 @@ FunctionDefinitionResolver::extract_from_expression_trinary(
 //    function
 //	.get_basic_block(current_block)
 //	.add_statement(std::string("trinary operator "));
+    return false;
 }
-void
+bool
 FunctionDefinitionResolver::extract_from_expression_cast(
     JLang::mir::Function & function,
     size_t & current_block,
@@ -1294,10 +1372,11 @@ FunctionDefinitionResolver::extract_from_expression_cast(
 //    function
 //	.get_basic_block(current_block)
 //	.add_statement(std::string("cast"));
+    return false;
 }
 
 
-void
+bool
 FunctionDefinitionResolver::extract_from_expression(
     JLang::mir::Function & function,
     size_t & current_block,
@@ -1308,75 +1387,75 @@ FunctionDefinitionResolver::extract_from_expression(
 
   if (std::holds_alternative<JLang::owned<ExpressionPrimaryIdentifier>>(expression_type)) {
     const auto & expression = std::get<JLang::owned<ExpressionPrimaryIdentifier>>(expression_type);
-    extract_from_expression_primary_identifier(function, current_block, returned_tmpvar, *expression);
+    return extract_from_expression_primary_identifier(function, current_block, returned_tmpvar, *expression);
   }
   else if (std::holds_alternative<JLang::owned<ExpressionPrimaryNested>>(expression_type)) {
     const auto & expression = std::get<JLang::owned<ExpressionPrimaryNested>>(expression_type);
-    extract_from_expression_primary_nested(function, current_block, returned_tmpvar, *expression);
+    return extract_from_expression_primary_nested(function, current_block, returned_tmpvar, *expression);
   }
   else if (std::holds_alternative<JLang::owned<ExpressionPrimaryLiteralChar>>(expression_type)) {
     const auto & expression = std::get<JLang::owned<ExpressionPrimaryLiteralChar>>(expression_type);
-    extract_from_expression_primary_literal_char(function, current_block, returned_tmpvar, *expression);
+    return extract_from_expression_primary_literal_char(function, current_block, returned_tmpvar, *expression);
   }
   else if (std::holds_alternative<JLang::owned<ExpressionPrimaryLiteralString>>(expression_type)) {
     const auto & expression = std::get<JLang::owned<ExpressionPrimaryLiteralString>>(expression_type);
-    extract_from_expression_primary_literal_string(function, current_block, returned_tmpvar, *expression);
+    return extract_from_expression_primary_literal_string(function, current_block, returned_tmpvar, *expression);
   }
   else if (std::holds_alternative<JLang::owned<ExpressionPrimaryLiteralInt>>(expression_type)) {
     const auto & expression = std::get<JLang::owned<ExpressionPrimaryLiteralInt>>(expression_type);
-    extract_from_expression_primary_literal_int(function, current_block, returned_tmpvar, *expression);
+    return extract_from_expression_primary_literal_int(function, current_block, returned_tmpvar, *expression);
   }
   else if (std::holds_alternative<JLang::owned<ExpressionPrimaryLiteralFloat>>(expression_type)) {
     const auto & expression = std::get<JLang::owned<ExpressionPrimaryLiteralFloat>>(expression_type);
-    extract_from_expression_primary_literal_float(function, current_block, returned_tmpvar, *expression);
+    return extract_from_expression_primary_literal_float(function, current_block, returned_tmpvar, *expression);
   }
   else if (std::holds_alternative<JLang::owned<ExpressionPostfixArrayIndex>>(expression_type)) {
     const auto & expression = std::get<JLang::owned<ExpressionPostfixArrayIndex>>(expression_type);
-    extract_from_expression_postfix_array_index(function, current_block, returned_tmpvar, *expression);
+    return extract_from_expression_postfix_array_index(function, current_block, returned_tmpvar, *expression);
   }
   else if (std::holds_alternative<JLang::owned<ExpressionPostfixFunctionCall>>(expression_type)) {
     const auto & expression = std::get<JLang::owned<ExpressionPostfixFunctionCall>>(expression_type);
-    extract_from_expression_postfix_function_call(function, current_block, returned_tmpvar, *expression);
+    return extract_from_expression_postfix_function_call(function, current_block, returned_tmpvar, *expression);
   }
   else if (std::holds_alternative<JLang::owned<ExpressionPostfixDot>>(expression_type)) {
     const auto & expression = std::get<JLang::owned<ExpressionPostfixDot>>(expression_type);
-    extract_from_expression_postfix_dot(function, current_block, returned_tmpvar, *expression);
+    return extract_from_expression_postfix_dot(function, current_block, returned_tmpvar, *expression);
   }
   else if (std::holds_alternative<JLang::owned<ExpressionPostfixArrow>>(expression_type)) {
     const auto & expression = std::get<JLang::owned<ExpressionPostfixArrow>>(expression_type);
-    extract_from_expression_postfix_arrow(function, current_block, returned_tmpvar, *expression);
+    return extract_from_expression_postfix_arrow(function, current_block, returned_tmpvar, *expression);
   }
   else if (std::holds_alternative<JLang::owned<ExpressionPostfixIncDec>>(expression_type)) {
     const auto & expression = std::get<JLang::owned<ExpressionPostfixIncDec>>(expression_type);
-    extract_from_expression_postfix_incdec(function, current_block, returned_tmpvar, *expression);
+    return extract_from_expression_postfix_incdec(function, current_block, returned_tmpvar, *expression);
   }
   else if (std::holds_alternative<JLang::owned<ExpressionUnaryPrefix>>(expression_type)) {
     const auto & expression = std::get<JLang::owned<ExpressionUnaryPrefix>>(expression_type);
-    extract_from_expression_unary_prefix(function, current_block, returned_tmpvar, *expression);
+    return extract_from_expression_unary_prefix(function, current_block, returned_tmpvar, *expression);
   }
   else if (std::holds_alternative<JLang::owned<ExpressionUnarySizeofType>>(expression_type)) {
     const auto & expression = std::get<JLang::owned<ExpressionUnarySizeofType>>(expression_type);
-    extract_from_expression_unary_sizeof_type(function, current_block, returned_tmpvar, *expression);
+    return extract_from_expression_unary_sizeof_type(function, current_block, returned_tmpvar, *expression);
   }
   else if (std::holds_alternative<JLang::owned<ExpressionBinary>>(expression_type)) {
     const auto & expression = std::get<JLang::owned<ExpressionBinary>>(expression_type);
-    extract_from_expression_binary(function, current_block, returned_tmpvar, *expression);
+    return extract_from_expression_binary(function, current_block, returned_tmpvar, *expression);
   }
   else if (std::holds_alternative<JLang::owned<ExpressionTrinary>>(expression_type)) {
     const auto & expression = std::get<JLang::owned<ExpressionTrinary>>(expression_type);
-    extract_from_expression_trinary(function, current_block, returned_tmpvar, *expression);
+    return extract_from_expression_trinary(function, current_block, returned_tmpvar, *expression);
   }
   else if (std::holds_alternative<JLang::owned<ExpressionCast>>(expression_type)) {
     const auto & expression = std::get<JLang::owned<ExpressionCast>>(expression_type);
-    extract_from_expression_cast(function, current_block, returned_tmpvar, *expression);
+    return extract_from_expression_cast(function, current_block, returned_tmpvar, *expression);
   }
   else {
     fprintf(stderr, "Compiler bug, invalid expression type\n");
-    exit(1);
+    return false;
   }
 }
 
-void
+bool
 FunctionDefinitionResolver::extract_from_statement_return(
     JLang::mir::Function & function,
     size_t & current_block,
@@ -1384,17 +1463,20 @@ FunctionDefinitionResolver::extract_from_statement_return(
     )
 {
     size_t expression_tmpvar;
-    extract_from_expression(function, current_block, expression_tmpvar, statement.get_expression());
+    if (!extract_from_expression(function, current_block, expression_tmpvar, statement.get_expression())) {
+	return false;
+    }
 
     auto operation = std::make_unique<OperationReturn>(
 	statement.get_source_ref(),
 	expression_tmpvar
 	);
     function.get_basic_block(current_block).add_statement(std::move(operation));
+    return true;
 }
 
 
-void
+bool
 FunctionDefinitionResolver::extract_from_statement_ifelse(
     JLang::mir::Function & function,
     size_t & current_block,
@@ -1402,7 +1484,9 @@ FunctionDefinitionResolver::extract_from_statement_ifelse(
     )
 {
     size_t condition_tmpvar;
-    extract_from_expression(function, current_block, condition_tmpvar, statement.get_expression());
+    if (!extract_from_expression(function, current_block, condition_tmpvar, statement.get_expression())) {
+	return false;
+    }
     if (!is_bool_type(function.tmpvar_get(condition_tmpvar)->get_type())) {
 	compiler_context
 	    .get_errors()
@@ -1411,6 +1495,7 @@ FunctionDefinitionResolver::extract_from_statement_ifelse(
 		"Invalid condition in if statement.",
 		std::string("Type of condition expression should be 'bool' and was ") + function.tmpvar_get(condition_tmpvar)->get_type()->get_name()
 		);
+	return false;
     }
     
     size_t blockid_done = function.add_block();
@@ -1435,11 +1520,13 @@ FunctionDefinitionResolver::extract_from_statement_ifelse(
     function.push_block(current_block);
     current_block = function.add_block();
     
-    extract_from_statement_list(
+    if (!extract_from_statement_list(
 	function,
 	current_block,
 	statement.get_if_scope_body().get_statements()
-	);
+	    )) {
+	return false;
+    }
     
     if (statement.has_else()) {
 	auto operation = std::make_unique<OperationJump>(
@@ -1449,25 +1536,30 @@ FunctionDefinitionResolver::extract_from_statement_ifelse(
 	function.get_basic_block(current_block).add_statement(std::move(operation));
 	function.push_block(current_block);
 	
-	extract_from_statement_list(
+	if (extract_from_statement_list(
 	    function,
 	    blockid_else,
 	    statement.get_else_scope_body().get_statements()
-	    );
+		)) {
+	    return false;
+	}
 	function.push_block(blockid_else);
     }
     else if (statement.has_else_if()) {
-	extract_from_statement_ifelse(
+	if (!extract_from_statement_ifelse(
 	    function,
 	    current_block,
 	    statement.get_else_if()
-	    );
+		)) {
+	    return false;
+	}
     }
     current_block = blockid_done;
+    return true;
 }
 
 
-void
+bool
 FunctionDefinitionResolver::extract_from_statement_list(
                                               JLang::mir::Function & function,
                                               size_t & start_block,
@@ -1494,6 +1586,7 @@ FunctionDefinitionResolver::extract_from_statement_list(
 			"Duplicate Local Variable.",
 			std::string("Variable with name ") + local.get_name() + std::string(" is already in scope and cannot be duplicated in this function.")
 			);
+		return false;
 	    }
 
 	    auto operation = std::make_unique<OperationLocalDeclare>(
@@ -1506,16 +1599,22 @@ FunctionDefinitionResolver::extract_from_statement_list(
 	}
 	else if (std::holds_alternative<JLang::owned<StatementBlock>>(statement_type)) {
 	    const auto & statement = std::get<JLang::owned<StatementBlock>>(statement_type);
-	    extract_from_statement_list(function, current_block, statement->get_scope_body().get_statements());
+	    if (!extract_from_statement_list(function, current_block, statement->get_scope_body().get_statements())) {
+		return false;
+	    }
 	}
 	else if (std::holds_alternative<JLang::owned<StatementExpression>>(statement_type)) {
 	    const auto & statement = std::get<JLang::owned<StatementExpression>>(statement_type);
 	    size_t returned_tmpvar;
-	    extract_from_expression(function, current_block, returned_tmpvar, statement->get_expression());
+	    if (!extract_from_expression(function, current_block, returned_tmpvar, statement->get_expression())) {
+		return false;
+	    }
 	}
 	else if (std::holds_alternative<JLang::owned<StatementIfElse>>(statement_type)) {
 	    const auto & statement = std::get<JLang::owned<StatementIfElse>>(statement_type);
-	    extract_from_statement_ifelse(function, current_block, *statement);
+	    if (!extract_from_statement_ifelse(function, current_block, *statement)) {
+		return false;
+	    }
 	}
 	else if (std::holds_alternative<JLang::owned<StatementWhile>>(statement_type)) {
 	    const auto & statement = std::get<JLang::owned<StatementWhile>>(statement_type);
@@ -1543,11 +1642,13 @@ FunctionDefinitionResolver::extract_from_statement_list(
 	}
 	else if (std::holds_alternative<JLang::owned<StatementReturn>>(statement_type)) {
 	    const auto & statement = std::get<JLang::owned<StatementReturn>>(statement_type);
-	    extract_from_statement_return(function, current_block, *statement);
+	    if (!extract_from_statement_return(function, current_block, *statement)) {
+		return false;
+	    }
 	}
 	else {
 	    fprintf(stderr, "Compiler bug, invalid statement type\n");
-	    exit(1);
+	    return false;
 	}
     }
     for (const auto & undecl : unwind) {
@@ -1560,10 +1661,11 @@ FunctionDefinitionResolver::extract_from_statement_list(
 	function.get_basic_block(current_block).add_statement(std::move(operation));
     }
     start_block = current_block;
+    return true;
 }
 
 
-void
+bool
 FunctionDefinitionResolver::extract_from_function_definition(const FileStatementFunctionDefinition & function_definition)
 {
     std::string fully_qualified_function_name = 
@@ -1577,7 +1679,7 @@ FunctionDefinitionResolver::extract_from_function_definition(const FileStatement
     
     if (return_type == nullptr) {
 	fprintf(stderr, "Could not find return type\n");
-	return;
+	return false;
 	
     }
     std::vector<FunctionArgument> arguments;
@@ -1603,7 +1705,9 @@ FunctionDefinitionResolver::extract_from_function_definition(const FileStatement
     fprintf(stderr, "BB0:\n");
     size_t start_block = fn->add_block();
     
-    extract_from_statement_list(*fn, start_block, function_definition.get_scope_body().get_statements());
+    if (!extract_from_statement_list(*fn, start_block, function_definition.get_scope_body().get_statements())) {
+	return false;
+    }
     
     fn->push_block(start_block);
     
@@ -1611,5 +1715,6 @@ FunctionDefinitionResolver::extract_from_function_definition(const FileStatement
     fn->dump();
     
     mir.get_functions().add_function(std::move(fn));
-    
+
+    return true;
 }
