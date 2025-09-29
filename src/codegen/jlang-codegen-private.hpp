@@ -24,7 +24,10 @@
 namespace JLang::codegen {
     class CodeGeneratorLLVMContext {
     public:
-	CodeGeneratorLLVMContext(const JLang::mir::MIR & _mir);
+	CodeGeneratorLLVMContext(
+	    const JLang::context::CompilerContext & _context,
+	    const JLang::mir::MIR & _mir
+	    );
 	~CodeGeneratorLLVMContext();
 	void initialize();
 	void generate();
@@ -35,6 +38,7 @@ namespace JLang::codegen {
 	JLang::owned<llvm::IRBuilder<>> Builder;
 	JLang::owned<llvm::Module> TheModule;
 	
+	const JLang::context::CompilerContext & compiler_context;
 	const JLang::mir::MIR & mir;
 	
 	std::map<std::string, llvm::Type *> types;
@@ -122,28 +126,28 @@ namespace JLang::codegen {
 	void generate_operation_add(
 	    std::map<size_t, llvm::Value *> & tmp_values,
 	    const JLang::mir::Function & mir_function,
-	    const JLang::mir::OperationAdd *operation
+	    const JLang::mir::OperationBinary *operation
 	    );
 	void generate_operation_subtract(
 	    std::map<size_t, llvm::Value *> & tmp_values,
 	    const JLang::mir::Function & mir_function,
-	    const JLang::mir::OperationSubtract *operation
+	    const JLang::mir::OperationBinary *operation
 	    );
 	void generate_operation_multiply(
 	    std::map<size_t, llvm::Value *> & tmp_values,
 	    const JLang::mir::Function & mir_function,
-	    const JLang::mir::OperationMultiply *operation
+	    const JLang::mir::OperationBinary *operation
 	    );
 	void generate_operation_divide(
 	    std::map<size_t, llvm::Value *> & tmp_values,
 	    const JLang::mir::Function & mir_function,
-	    const JLang::mir::OperationDivide *operation
+	    const JLang::mir::OperationBinary *operation
 	    );
 	void generate_operation_assign(
 	    std::map<size_t, llvm::Value *> & tmp_values,
 	    std::map<size_t, llvm::Value *> & tmp_lvalues,
 	    const JLang::mir::Function & mir_function,
-	    const JLang::mir::OperationAssign *operation
+	    const JLang::mir::OperationBinary *operation
 	    );
 	void generate_operation_jump_if_equal(
 	    std::map<size_t, llvm::Value *> & tmp_values,

@@ -36,18 +36,36 @@ void JLang::mir::operation_static_init()
 
 
 
-Operation::Operation(OperationType _type, size_t _result)
+Operation::Operation(
+    OperationType _type,
+    const JLang::context::SourceReference & _src_ref,
+    size_t _result
+    )
     : type(_type)
+    , src_ref(_src_ref)
     , result(_result)
 {}
-Operation::Operation(OperationType _type, size_t _result, size_t _operand)
+Operation::Operation(
+    OperationType _type,
+    const JLang::context::SourceReference & _src_ref,
+    size_t _result,
+    size_t _operand
+    )
     : type(_type)
+    , src_ref(_src_ref)
     , result(_result)
 {
     add_operand(_operand);
 }
-Operation::Operation(OperationType _type, size_t _result, size_t _operand_a, size_t _operand_b)
+Operation::Operation(
+    OperationType _type,
+    const JLang::context::SourceReference & _src_ref,
+    size_t _result,
+    size_t _operand_a,
+    size_t _operand_b
+    )
     : type(_type)
+    , src_ref(_src_ref)
     , result(_result)
 {
     add_operand(_operand_a);
@@ -58,6 +76,7 @@ Operation::~Operation()
 
 Operation::Operation(const Operation & _other)
     : type(_other.type)
+    , src_ref(_other.src_ref)
     , operands(_other.operands)
     , result(_other.result)
 {}
@@ -87,6 +106,10 @@ size_t
 Operation::get_result() const
 { return result; }
 
+const JLang::context::SourceReference &
+Operation::get_source_ref() const
+{ return src_ref; }
+
 void
 Operation::dump() const
 {
@@ -102,8 +125,12 @@ Operation::dump() const
 //////////////////////////////////////////////
 // OperationFunctionCall
 //////////////////////////////////////////////
-OperationFunctionCall::OperationFunctionCall(size_t _result, size_t _callee_tmpvar)
-    : Operation(OP_FUNCTION_CALL, _result, _callee_tmpvar)
+OperationFunctionCall::OperationFunctionCall(
+    const JLang::context::SourceReference & _src_ref,
+    size_t _result,
+    size_t _callee_tmpvar
+    )
+    : Operation(OP_FUNCTION_CALL, _src_ref, _result, _callee_tmpvar)
 {}
 
 OperationFunctionCall::~OperationFunctionCall()
@@ -112,8 +139,12 @@ OperationFunctionCall::~OperationFunctionCall()
 //////////////////////////////////////////////
 // OperationSymbol
 //////////////////////////////////////////////
-OperationSymbol::OperationSymbol(size_t _result, std::string _symbol_name)
-    : Operation(OP_SYMBOL, _result)
+OperationSymbol::OperationSymbol(
+    const JLang::context::SourceReference & _src_ref,
+    size_t _result,
+    std::string _symbol_name
+    )
+    : Operation(OP_SYMBOL, _src_ref, _result)
     , symbol_name(_symbol_name)
 {}
 
@@ -127,8 +158,13 @@ OperationSymbol::get_symbol_name() const
 //////////////////////////////////////////////
 // OperationArrayIndex
 //////////////////////////////////////////////
-OperationArrayIndex::OperationArrayIndex(size_t _result, size_t _index_tmpvar, const Type * _array_type)
-    : Operation(OP_ARRAY_INDEX, _result, _index_tmpvar)
+OperationArrayIndex::OperationArrayIndex(
+    const JLang::context::SourceReference & _src_ref,
+    size_t _result,
+    size_t _index_tmpvar,
+    const Type * _array_type
+    )
+    : Operation(OP_ARRAY_INDEX, _src_ref, _result, _index_tmpvar)
     , array_type(_array_type)
 {}
 OperationArrayIndex::~OperationArrayIndex()
@@ -139,8 +175,12 @@ OperationArrayIndex::get_array_type() const
 //////////////////////////////////////////////
 // OperationDot
 //////////////////////////////////////////////
-OperationDot::OperationDot(size_t _result, std::string _member_name)
-    : Operation(OP_DOT, _result)
+OperationDot::OperationDot(
+    const JLang::context::SourceReference & _src_ref,
+    size_t _result,
+    std::string _member_name
+    )
+    : Operation(OP_DOT, _src_ref, _result)
     , member_name(_member_name)
 {}
 
@@ -153,8 +193,12 @@ OperationDot::get_member_name() const
 //////////////////////////////////////////////
 // OperationArrow
 //////////////////////////////////////////////
-OperationArrow::OperationArrow(size_t _result, std::string _member_name)
-    : Operation(OP_ARROW, _result)
+OperationArrow::OperationArrow(
+    const JLang::context::SourceReference & _src_ref,
+    size_t _result,
+    std::string _member_name
+    )
+    : Operation(OP_ARROW, _src_ref, _result)
     , member_name(_member_name)
 {}
 
@@ -168,8 +212,13 @@ OperationArrow::get_member_name() const
 //////////////////////////////////////////////
 // OperationLocalVariable
 //////////////////////////////////////////////
-OperationLocalVariable::OperationLocalVariable(size_t _result, std::string _symbol_name, const Type * _var_type)
-    : Operation(OP_LOCAL_VARIABLE, _result)
+OperationLocalVariable::OperationLocalVariable(
+    const JLang::context::SourceReference & _src_ref,
+    size_t _result,
+    std::string _symbol_name,
+    const Type * _var_type
+    )
+    : Operation(OP_LOCAL_VARIABLE, _src_ref, _result)
     , symbol_name(_symbol_name)
     , var_type(_var_type)
 {}
@@ -187,8 +236,12 @@ OperationLocalVariable::get_var_type() const
 //////////////////////////////////////////////
 // OperationLiteralChar
 //////////////////////////////////////////////
-OperationLiteralChar::OperationLiteralChar(size_t _result, std::string _literal_char)
-    : Operation(OP_LITERAL_CHAR, _result)
+OperationLiteralChar::OperationLiteralChar(
+    const JLang::context::SourceReference & _src_ref,
+    size_t _result,
+    std::string _literal_char
+    )
+    : Operation(OP_LITERAL_CHAR, _src_ref, _result)
     , literal_char(_literal_char)
 {}
 OperationLiteralChar::~OperationLiteralChar()
@@ -201,8 +254,12 @@ OperationLiteralChar::get_literal_char() const
 //////////////////////////////////////////////
 // OperationLiteralString
 //////////////////////////////////////////////
-OperationLiteralString::OperationLiteralString(size_t _result, std::string _literal_string)
-    : Operation(OP_LITERAL_STRING, _result)
+OperationLiteralString::OperationLiteralString(
+    const JLang::context::SourceReference & _src_ref,
+    size_t _result,
+    std::string _literal_string
+    )
+    : Operation(OP_LITERAL_STRING, _src_ref, _result)
     , literal_string(_literal_string)
 {}
 OperationLiteralString::~OperationLiteralString()
@@ -215,8 +272,12 @@ OperationLiteralString::get_literal_string() const
 //////////////////////////////////////////////
 // OperationLiteralInt
 //////////////////////////////////////////////
-OperationLiteralInt::OperationLiteralInt(size_t _result, std::string _literal_int)
-    : Operation(OP_LITERAL_INT, _result)
+OperationLiteralInt::OperationLiteralInt(
+    const JLang::context::SourceReference & _src_ref,
+    size_t _result,
+    std::string _literal_int
+    )
+    : Operation(OP_LITERAL_INT, _src_ref, _result)
     , literal_int(_literal_int)
 {}
 OperationLiteralInt::~OperationLiteralInt()
@@ -229,8 +290,12 @@ OperationLiteralInt::get_literal_int() const
 //////////////////////////////////////////////
 // OperationLiteralFloat
 //////////////////////////////////////////////
-OperationLiteralFloat::OperationLiteralFloat(size_t _result, std::string _literal_float)
-    : Operation(OP_LITERAL_FLOAT, _result)
+OperationLiteralFloat::OperationLiteralFloat(
+    const JLang::context::SourceReference & _src_ref,
+    size_t _result,
+    std::string _literal_float
+    )
+    : Operation(OP_LITERAL_FLOAT, _src_ref, _result)
     , literal_float(_literal_float)
 {}
 OperationLiteralFloat::~OperationLiteralFloat()
@@ -243,8 +308,12 @@ OperationLiteralFloat::get_literal_float() const
 //////////////////////////////////////////////
 // OperationPreIncrement
 //////////////////////////////////////////////
-OperationPreIncrement::OperationPreIncrement(size_t _result, size_t _operand)
-    : Operation(OP_PRE_INCREMENT, _result, _operand)
+OperationPreIncrement::OperationPreIncrement(
+    const JLang::context::SourceReference & _src_ref,
+    size_t _result,
+    size_t _operand
+    )
+    : Operation(OP_PRE_INCREMENT, _src_ref, _result, _operand)
 {}
 OperationPreIncrement::~OperationPreIncrement()
 {}
@@ -252,8 +321,12 @@ OperationPreIncrement::~OperationPreIncrement()
 //////////////////////////////////////////////
 // OperationPostIncrement
 //////////////////////////////////////////////
-OperationPostIncrement::OperationPostIncrement(size_t _result, size_t _operand)
-    : Operation(OP_PRE_INCREMENT, _result, _operand)
+OperationPostIncrement::OperationPostIncrement(
+    const JLang::context::SourceReference & _src_ref,
+    size_t _result,
+    size_t _operand
+    )
+    : Operation(OP_PRE_INCREMENT, _src_ref, _result, _operand)
 {}
 
 OperationPostIncrement::~OperationPostIncrement()
@@ -262,8 +335,12 @@ OperationPostIncrement::~OperationPostIncrement()
 //////////////////////////////////////////////
 // OperationPreDecrement
 //////////////////////////////////////////////
-OperationPreDecrement::OperationPreDecrement(size_t _result, size_t _operand)
-    : Operation(OP_PRE_INCREMENT, _result, _operand)
+OperationPreDecrement::OperationPreDecrement(
+    const JLang::context::SourceReference & _src_ref,
+    size_t _result,
+    size_t _operand
+    )
+    : Operation(OP_PRE_INCREMENT, _src_ref, _result, _operand)
 {}
 OperationPreDecrement::~OperationPreDecrement()
 {}
@@ -271,8 +348,12 @@ OperationPreDecrement::~OperationPreDecrement()
 //////////////////////////////////////////////
 // OperationPostDecrement
 //////////////////////////////////////////////
-OperationPostDecrement::OperationPostDecrement(size_t _result, size_t _operand)
-    : Operation(OP_PRE_INCREMENT, _result, _operand)
+OperationPostDecrement::OperationPostDecrement(
+    const JLang::context::SourceReference & _src_ref,
+    size_t _result,
+    size_t _operand
+    )
+    : Operation(OP_PRE_INCREMENT, _src_ref, _result, _operand)
 {}
 
 OperationPostDecrement::~OperationPostDecrement()
@@ -281,8 +362,12 @@ OperationPostDecrement::~OperationPostDecrement()
 //////////////////////////////////////////////
 // OperationAddressOf
 //////////////////////////////////////////////
-OperationAddressOf::OperationAddressOf(size_t _result, size_t _operand)
-    : Operation(OP_ADDRESSOF, _result, _operand)
+OperationAddressOf::OperationAddressOf(
+    const JLang::context::SourceReference & _src_ref,
+    size_t _result,
+    size_t _operand
+    )
+    : Operation(OP_ADDRESSOF, _src_ref, _result, _operand)
 {}
 OperationAddressOf::~OperationAddressOf()
 {}
@@ -290,8 +375,12 @@ OperationAddressOf::~OperationAddressOf()
 //////////////////////////////////////////////
 // OperationDereference
 //////////////////////////////////////////////
-OperationDereference::OperationDereference(size_t _result, size_t _operand)
-    : Operation(OP_DEREFERENCE, _result, _operand)
+OperationDereference::OperationDereference(
+    const JLang::context::SourceReference & _src_ref,
+    size_t _result,
+    size_t _operand
+    )
+    : Operation(OP_DEREFERENCE, _src_ref, _result, _operand)
 {}
 OperationDereference::~OperationDereference()
 {}
@@ -299,8 +388,12 @@ OperationDereference::~OperationDereference()
 //////////////////////////////////////////////
 // OperationNegate
 //////////////////////////////////////////////
-OperationNegate::OperationNegate(size_t _result, size_t _operand)
-    : Operation(OP_NEGATE, _result, _operand)
+OperationNegate::OperationNegate(
+    const JLang::context::SourceReference & _src_ref,
+    size_t _result,
+    size_t _operand
+    )
+    : Operation(OP_NEGATE, _src_ref, _result, _operand)
 {}
 OperationNegate::~OperationNegate()
 {}
@@ -308,8 +401,12 @@ OperationNegate::~OperationNegate()
 //////////////////////////////////////////////
 // OperationBitwiseNot
 //////////////////////////////////////////////
-OperationBitwiseNot::OperationBitwiseNot(size_t _result, size_t _operand)
-    : Operation(OP_BITWISE_NOT, _result, _operand)
+OperationBitwiseNot::OperationBitwiseNot(
+    const JLang::context::SourceReference & _src_ref,
+    size_t _result,
+    size_t _operand
+    )
+    : Operation(OP_BITWISE_NOT, _src_ref, _result, _operand)
 {}
 OperationBitwiseNot::~OperationBitwiseNot()
 {}
@@ -317,8 +414,12 @@ OperationBitwiseNot::~OperationBitwiseNot()
 //////////////////////////////////////////////
 // OperationLogicalNot
 //////////////////////////////////////////////
-OperationLogicalNot::OperationLogicalNot(size_t _result, size_t _operand)
-    : Operation(OP_LOGICAL_NOT, _result, _operand)
+OperationLogicalNot::OperationLogicalNot(
+    const JLang::context::SourceReference & _src_ref,
+    size_t _result,
+    size_t _operand
+    )
+    : Operation(OP_LOGICAL_NOT, _src_ref, _result, _operand)
 {}
 OperationLogicalNot::~OperationLogicalNot()
 {}
@@ -326,8 +427,12 @@ OperationLogicalNot::~OperationLogicalNot()
 //////////////////////////////////////////////
 // OperationSizeofType
 //////////////////////////////////////////////
-OperationSizeofType::OperationSizeofType(size_t _result, size_t _operand)
-    : Operation(OP_SIZEOF_TYPE, _result, _operand)
+OperationSizeofType::OperationSizeofType(
+    const JLang::context::SourceReference & _src_ref,
+    size_t _result,
+    size_t _operand
+    )
+    : Operation(OP_SIZEOF_TYPE, _src_ref, _result, _operand)
 {}
 OperationSizeofType::~OperationSizeofType()
 {}
@@ -336,35 +441,36 @@ OperationSizeofType::~OperationSizeofType()
 //////////////////////////////////////////////
 // OperationAdd
 //////////////////////////////////////////////
-OperationAdd::OperationAdd(
-	    size_t _result,
-	    size_t _operand_a,
-	    size_t _operand_b
-	    )
-    : Operation(OP_ADD, _result, _operand_a, _operand_b)
-{}
-OperationAdd::~OperationAdd()
-{}
 
-//////////////////////////////////////////////
-// OperationAssign
-//////////////////////////////////////////////
-OperationAssign::OperationAssign(
-	    size_t _result,
-	    size_t _operand_a,
-	    size_t _operand_b
+OperationBinary::OperationBinary(
+    OperationType _type,
+    const JLang::context::SourceReference & _src_ref,
+    size_t _result,
+    size_t _operand_a,
+    size_t _operand_b
 	    )
-    : Operation(OP_ASSIGN, _result, _operand_a, _operand_b)
+    : Operation(_type, _src_ref, _result, _operand_a, _operand_b)
 {}
-OperationAssign::~OperationAssign()
+OperationBinary::~OperationBinary()
 {}
+size_t
+OperationBinary::get_a() const
+{ return operands.at(0); }
+
+size_t
+OperationBinary::get_b() const
+{ return operands.at(1); }
 
 
 //////////////////////////////////////////////
 // OperationJumpIfEqual
 //////////////////////////////////////////////
-OperationJumpIfEqual::OperationJumpIfEqual(size_t _operand, std::string _label)
-    : Operation(OP_JUMP_IF_EQUAL, 0, _operand)
+OperationJumpIfEqual::OperationJumpIfEqual(
+    const JLang::context::SourceReference & _src_ref,
+    size_t _operand,
+    std::string _label
+    )
+    : Operation(OP_JUMP_IF_EQUAL, _src_ref, 0, _operand)
     , label(_label)
 {}
 
@@ -374,8 +480,11 @@ OperationJumpIfEqual::~OperationJumpIfEqual()
 //////////////////////////////////////////////
 // OperationJump
 //////////////////////////////////////////////
-OperationJump::OperationJump(std::string _label)
-    : Operation(OP_JUMP, 0)
+OperationJump::OperationJump(
+    const JLang::context::SourceReference & _src_ref,
+    std::string _label
+    )
+    : Operation(OP_JUMP, _src_ref, 0)
     , label(_label)
 {}
 OperationJump::~OperationJump()
@@ -384,8 +493,11 @@ OperationJump::~OperationJump()
 //////////////////////////////////////////////
 // OperationReturn
 //////////////////////////////////////////////
-OperationReturn::OperationReturn(size_t _operand)
-    : Operation(OP_RETURN, 0, _operand)
+OperationReturn::OperationReturn(
+    const JLang::context::SourceReference & _src_ref,
+    size_t _operand
+    )
+    : Operation(OP_RETURN, _src_ref, 0, _operand)
 {}
 OperationReturn::~OperationReturn()
 {}
@@ -393,8 +505,12 @@ OperationReturn::~OperationReturn()
 //////////////////////////////////////////////
 // OperationLocalDeclare
 //////////////////////////////////////////////
-OperationLocalDeclare::OperationLocalDeclare(std::string _variable, std::string _var_type)
-    : Operation(OP_LOCAL_DECLARE, 0)
+OperationLocalDeclare::OperationLocalDeclare(
+    const JLang::context::SourceReference & _src_ref,
+    std::string _variable,
+    std::string _var_type
+    )
+    : Operation(OP_LOCAL_DECLARE, _src_ref, 0)
     , variable(_variable)
     , var_type(_var_type)
 {}
@@ -410,8 +526,11 @@ OperationLocalDeclare::get_var_type() const
 //////////////////////////////////////////////
 // OperationLocalUndeclare
 //////////////////////////////////////////////
-OperationLocalUndeclare::OperationLocalUndeclare(std::string _variable)
-    : Operation(OP_LOCAL_UNDECLARE, 0)
+OperationLocalUndeclare::OperationLocalUndeclare(
+    const JLang::context::SourceReference & _src_ref,
+    std::string _variable
+    )
+    : Operation(OP_LOCAL_UNDECLARE, _src_ref, 0)
     , variable(_variable)
 {}
 

@@ -5,8 +5,11 @@ using namespace llvm::sys;
 using namespace JLang::codegen;
 using namespace JLang::mir;
 
-CodeGeneratorLLVM::CodeGeneratorLLVM(const JLang::mir::MIR & _mir)
-    : context(std::make_unique<CodeGeneratorLLVMContext>(_mir))
+CodeGeneratorLLVM::CodeGeneratorLLVM(
+    const JLang::context::CompilerContext & _compiler_context,
+    const JLang::mir::MIR & _mir
+    )
+    : context(std::make_unique<CodeGeneratorLLVMContext>(_compiler_context, _mir))
 {}
 
 CodeGeneratorLLVM::~CodeGeneratorLLVM()
@@ -26,8 +29,12 @@ CodeGeneratorLLVM::output(const std::string & filename)
 /////////////////////////////////////
 // CodeGeneratorLLVMContext
 /////////////////////////////////////
-CodeGeneratorLLVMContext::CodeGeneratorLLVMContext(const JLang::mir::MIR & _mir)
-    : mir(_mir)
+CodeGeneratorLLVMContext::CodeGeneratorLLVMContext(
+    const JLang::context::CompilerContext & _compiler_context,
+    const JLang::mir::MIR & _mir
+    )
+    : compiler_context(_compiler_context)
+    , mir(_mir)
 {}
 CodeGeneratorLLVMContext::~CodeGeneratorLLVMContext()
 {}
@@ -417,40 +424,86 @@ void
 CodeGeneratorLLVMContext::generate_operation_add(
     std::map<size_t, llvm::Value *> & tmp_values,
     const JLang::mir::Function & mir_function,
-    const JLang::mir::OperationAdd *operation
+    const JLang::mir::OperationBinary *operation
     )
 {
-    llvm::Value *value_a = tmp_values[operation->get_operands().at(0)];
-    llvm::Value *value_b = tmp_values[operation->get_operands().at(1)];
-    llvm::Value *sum = Builder->CreateAdd(value_a, value_b);
-    tmp_values.insert(std::pair(operation->get_result(), sum));
-    fprintf(stderr, "%ld = %ld + %ld\n",
-	    operation->get_result(),
-	    operation->get_operands().at(0),
-	    operation->get_operands().at(1)
-	);
-	    
+    size_t a = operation->get_a();
+    size_t b = operation->get_b();
+    const JLang::mir::Type *atype = mir_function.tmpvar_get(a)->get_type();
+    const JLang::mir::Type *btype = mir_function.tmpvar_get(b)->get_type();
+    if ((atype->get_type() != JLang::mir::Type::TYPE_PRIMITIVE) ||
+	(btype->get_type() != JLang::mir::Type::TYPE_PRIMITIVE)) {
+	compiler_context
+	    .get_errors()
+	    .add_simple_error(
+		operation->get_source_ref(),
+		"Compiler bug! Invalid operand for add operator.",
+		std::string("Invalid operands for add operation.  Operand must be a numeric type, but was ") + atype->get_name() + std::string(" and ") + btype->get_name()
+		);
+	return;
+    }
+    if (atype->get_name() != btype->get_name()) {
+	compiler_context
+	    .get_errors()
+	    .add_simple_error(
+		operation->get_source_ref(),
+		"Compiler bug! Invalid operand for add operator.",
+		std::string("Operands must match ") + atype->get_name() + std::string(" and ") + btype->get_name()
+		);
+	return;
+    }
     
+    llvm::Value *value_a = tmp_values[operation->get_a()];
+    llvm::Value *value_b = tmp_values[operation->get_b()];
+
+    std::string primitive_name = atype->get_name();
+    if (primitive_name == std::string("u8") ||
+	primitive_name == std::string("u16") ||
+	primitive_name == std::string("u32") ||
+	primitive_name == std::string("u64") ||
+	primitive_name == std::string("i8") ||
+	primitive_name == std::string("i16") ||
+	primitive_name == std::string("i32") ||
+	primitive_name == std::string("i64")) {
+	llvm::Value *sum = Builder->CreateAdd(value_a, value_b);
+	tmp_values.insert(std::pair(operation->get_result(), sum));
+    }
+    else if (primitive_name == std::string("f32") ||
+	     primitive_name == std::string("f64")) {
+	llvm::Value *sum = Builder->CreateFAdd(value_a, value_b);
+	tmp_values.insert(std::pair(operation->get_result(), sum));
+    }
+    else {
+	compiler_context
+	    .get_errors()
+	    .add_simple_error(
+		operation->get_source_ref(),
+		"Compiler bug! Invalid operand for add operator.",
+		std::string("Operands must be integer or floating-point primitive types but were ") + atype->get_name() + std::string(" and ") + btype->get_name()
+		);
+	return;
+    }
 }
+
 void
 CodeGeneratorLLVMContext::generate_operation_subtract(
     std::map<size_t, llvm::Value *> & tmp_values,
     const JLang::mir::Function & mir_function,
-    const JLang::mir::OperationSubtract *operation
+    const JLang::mir::OperationBinary *operation
     )
 {}
 void
 CodeGeneratorLLVMContext::generate_operation_multiply(
     std::map<size_t, llvm::Value *> & tmp_values,
     const JLang::mir::Function & mir_function,
-    const JLang::mir::OperationMultiply *operation
+    const JLang::mir::OperationBinary *operation
     )
 {}
 void
 CodeGeneratorLLVMContext::generate_operation_divide(
     std::map<size_t, llvm::Value *> & tmp_values,
     const JLang::mir::Function & mir_function,
-    const JLang::mir::OperationDivide *operation
+    const JLang::mir::OperationBinary *operation
     )
 {}
 void
@@ -458,7 +511,7 @@ CodeGeneratorLLVMContext::generate_operation_assign(
     std::map<size_t, llvm::Value *> & tmp_values,
     std::map<size_t, llvm::Value *> & tmp_lvalues,
     const JLang::mir::Function & mir_function,
-    const JLang::mir::OperationAssign *operation
+    const JLang::mir::OperationBinary *operation
     )
 {
     llvm::Value *lvalue = tmp_lvalues[operation->get_operands().at(0)];
@@ -548,19 +601,19 @@ CodeGeneratorLLVMContext::generate_basic_block(
 	    generate_operation_pre_decrement(tmp_values, mir_function, (OperationPreDecrement*)operation.get());
 	    break;
 	case Operation::OP_ADD:
-	    generate_operation_add(tmp_values, mir_function, (OperationAdd*)operation.get());
+	    generate_operation_add(tmp_values, mir_function, (OperationBinary*)operation.get());
 	    break;
 	case Operation::OP_SUBTRACT:
-	    generate_operation_subtract(tmp_values, mir_function, (OperationSubtract*)operation.get());
+	    generate_operation_subtract(tmp_values, mir_function, (OperationBinary*)operation.get());
 	    break;
 	case Operation::OP_MULTIPLY:
-	    generate_operation_multiply(tmp_values, mir_function, (OperationMultiply*)operation.get());
+	    generate_operation_multiply(tmp_values, mir_function, (OperationBinary*)operation.get());
 	    break;
 	case Operation::OP_DIVIDE:
-	    generate_operation_divide(tmp_values, mir_function, (OperationDivide*)operation.get());
+	    generate_operation_divide(tmp_values, mir_function, (OperationBinary*)operation.get());
 	    break;
 	case Operation::OP_ASSIGN:
-	    generate_operation_assign(tmp_values, tmp_lvalues, mir_function, (OperationAssign*)operation.get());
+	    generate_operation_assign(tmp_values, tmp_lvalues, mir_function, (OperationBinary*)operation.get());
 	    break;
 	case Operation::OP_JUMP_IF_EQUAL:
 	    generate_operation_jump_if_equal(tmp_values, mir_function, (OperationJumpIfEqual*)operation.get());

@@ -43,7 +43,7 @@ int main(int argc, char **argv)
     }
     
     std::string filename(argv[2]);
-    generate_code(*mir, filename);
+    generate_code(context, *mir, filename);
     
     return 0;
 }

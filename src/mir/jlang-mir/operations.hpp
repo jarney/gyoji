@@ -2,6 +2,7 @@
 
 #include <jlang-misc/pointers.hpp>
 #include <jlang-mir/types.hpp>
+#include <jlang-context.hpp>
 
 #include <string>
 #include <map>
@@ -83,15 +84,51 @@ namespace JLang::mir {
 	    OP_SUBTRACT,
 	    OP_MULTIPLY,
 	    OP_DIVIDE,
+	    OP_MODULO,
+
+	    OP_LOGICAL_AND,
+	    OP_LOGICAL_OR,
+
+	    OP_BITWISE_AND,
+	    OP_BITWISE_OR,
+	    OP_BITWISE_XOR,
+	    OP_SHIFT_LEFT,
+	    OP_SHIFT_RIGHT,
+
+	    OP_COMPARE_LT,
+	    OP_COMPARE_GT,
+	    OP_COMPARE_LE,
+	    OP_COMPARE_GE,
+	    OP_COMPARE_NE,
+	    OP_COMPARE_EQ,
+	    
 	    OP_ASSIGN,
+	    
 	    OP_JUMP_IF_EQUAL,
 	    OP_JUMP,
 	    OP_RETURN
 	} OperationType;
-	Operation(OperationType _type, size_t _result);
-	Operation(OperationType _type, size_t _result, size_t _operand);
-	Operation(OperationType _type, size_t _result, size_t _operand_a, size_t _operand_b);
-	Operation(const Operation & _other);
+	Operation(
+	    OperationType _type,
+	    const JLang::context::SourceReference & _src_ref,
+	    size_t _result
+	    );
+	Operation(
+	    OperationType _type,
+	    const JLang::context::SourceReference & _src_ref,
+	    size_t _result,
+	    size_t _operand
+	    );
+	Operation(
+	    OperationType _type,
+	    const JLang::context::SourceReference & _src_ref,
+	    size_t _result,
+	    size_t _operand_a,
+	    size_t _operand_b
+	    );
+	Operation(
+	    const Operation & _other
+	    );
 	~Operation();
 
 	std::string get_name() const;
@@ -100,22 +137,33 @@ namespace JLang::mir {
 	OperationType get_type() const;
 	const std::vector<size_t> & get_operands() const;
 	size_t get_result() const;
+
+	const JLang::context::SourceReference & get_source_ref() const;
 	
-    private:
+    protected:
 	OperationType type;
+	const JLang::context::SourceReference & src_ref;
 	std::vector<size_t> operands;
 	size_t result;
     };
 
     class OperationFunctionCall : public Operation {
     public:
-	OperationFunctionCall(size_t _result, size_t _callee_tmpvar);
+	OperationFunctionCall(
+	    const JLang::context::SourceReference & _src_ref,
+	    size_t _result,
+	    size_t _callee_tmpvar
+	    );
 	~OperationFunctionCall();
     };
     
     class OperationSymbol : public Operation {
     public:
-	OperationSymbol(size_t _result, std::string _symbol_name);
+	OperationSymbol(
+	    const JLang::context::SourceReference & _src_ref,
+	    size_t _result,
+	    std::string _symbol_name
+	    );
 	~OperationSymbol();
 	const std::string & get_symbol_name() const;
     private:
@@ -124,7 +172,12 @@ namespace JLang::mir {
 
     class OperationArrayIndex : public Operation {
     public:
-	OperationArrayIndex(size_t _result, size_t _index_tmpvar, const Type * _array_type);
+	OperationArrayIndex(
+	    const JLang::context::SourceReference & _src_ref,
+	    size_t _result,
+	    size_t _index_tmpvar,
+	    const Type * _array_type
+	    );
 	~OperationArrayIndex();
 	const Type *get_array_type() const;
     private:
@@ -133,7 +186,11 @@ namespace JLang::mir {
 
     class OperationDot : public Operation {
     public:
-	OperationDot(size_t _result, std::string _member_name);
+	OperationDot(
+	    const JLang::context::SourceReference & _src_ref,
+	    size_t _result,
+	    std::string _member_name
+	    );
 	~OperationDot();
 	const std::string & get_member_name() const;
     private:
@@ -142,7 +199,11 @@ namespace JLang::mir {
 
     class OperationArrow : public Operation {
     public:
-	OperationArrow(size_t _result, std::string _member_name);
+	OperationArrow(
+	    const JLang::context::SourceReference & _src_ref,
+	    size_t _result,
+	    std::string _member_name
+	    );
 	~OperationArrow();
 	const std::string & get_member_name() const;
     private:
@@ -151,7 +212,11 @@ namespace JLang::mir {
 
     class OperationLocalVariable : public Operation {
     public:
-	OperationLocalVariable(size_t _result, std::string _symbol_name, const Type * _var_type);
+	OperationLocalVariable(
+	    const JLang::context::SourceReference & _src_ref,
+	    size_t _result,
+	    std::string _symbol_name,
+	    const Type * _var_type);
 	~OperationLocalVariable();
 	const std::string & get_symbol_name() const;
 	const Type * get_var_type() const;
@@ -162,7 +227,11 @@ namespace JLang::mir {
 
     class OperationLiteralChar : public Operation {
     public:
-	OperationLiteralChar(size_t _result, std::string _literal_char);
+	OperationLiteralChar(
+	    const JLang::context::SourceReference & _src_ref,
+	    size_t _result,
+	    std::string _literal_char
+	    );
 	~OperationLiteralChar();
 	const std::string & get_literal_char() const;
     private:
@@ -170,7 +239,11 @@ namespace JLang::mir {
     };
     class OperationLiteralString : public Operation {
     public:
-	OperationLiteralString(size_t _result, std::string _literal_string);
+	OperationLiteralString(
+	    const JLang::context::SourceReference & _src_ref,
+	    size_t _result,
+	    std::string _literal_string
+	    );
 	~OperationLiteralString();
 	const std::string & get_literal_string() const;
     private:
@@ -178,7 +251,11 @@ namespace JLang::mir {
     };
     class OperationLiteralInt : public Operation {
     public:
-	OperationLiteralInt(size_t _result, std::string _literal_int);
+	OperationLiteralInt(
+	    const JLang::context::SourceReference & _src_ref,
+	    size_t _result,
+	    std::string _literal_int
+	    );
 	~OperationLiteralInt();
 	const std::string & get_literal_int() const;
     private:
@@ -186,7 +263,11 @@ namespace JLang::mir {
     };
     class OperationLiteralFloat : public Operation {
     public:
-	OperationLiteralFloat(size_t _result, std::string _literal_float);
+	OperationLiteralFloat(
+	    const JLang::context::SourceReference & _src_ref,
+	    size_t _result,
+	    std::string _literal_float
+	    );
 	~OperationLiteralFloat();
 	const std::string & get_literal_float() const;
     private:
@@ -194,100 +275,134 @@ namespace JLang::mir {
     };
     class OperationPreIncrement : public Operation {
     public:
-	OperationPreIncrement(size_t _result, size_t _operand);
+	OperationPreIncrement(
+	    const JLang::context::SourceReference & _src_ref,
+	    size_t _result,
+	    size_t _operand
+	    );
 	~OperationPreIncrement();
     private:
     };
     
     class OperationPostIncrement : public Operation {
     public:
-	OperationPostIncrement(size_t _result, size_t _operand);
+	OperationPostIncrement(
+	    const JLang::context::SourceReference & _src_ref,
+	    size_t _result,
+	    size_t _operand
+	    );
 	~OperationPostIncrement();
     private:
     };
     class OperationPreDecrement : public Operation {
     public:
-	OperationPreDecrement(size_t _result, size_t _operand);
+	OperationPreDecrement(
+	    const JLang::context::SourceReference & _src_ref,
+	    size_t _result,
+	    size_t _operand
+	    );
 	~OperationPreDecrement();
     private:
     };
     
     class OperationPostDecrement : public Operation {
     public:
-	OperationPostDecrement(size_t _result, size_t _operand);
+	OperationPostDecrement(
+	    const JLang::context::SourceReference & _src_ref,
+	    size_t _result,
+	    size_t _operand
+	    );
 	~OperationPostDecrement();
     private:
     };
 
     class OperationAddressOf : public Operation {
     public:
-	OperationAddressOf(size_t _result, size_t _operand);
+	OperationAddressOf(
+	    const JLang::context::SourceReference & _src_ref,
+	    size_t _result,
+	    size_t _operand
+	    );
 	~OperationAddressOf();
     private:
     };
+    
     class OperationDereference : public Operation {
     public:
-	OperationDereference(size_t _result, size_t _operand);
+	OperationDereference(
+	    const JLang::context::SourceReference & _src_ref,
+	    size_t _result,
+	    size_t _operand
+	    );
 	~OperationDereference();
     private:
     };
     
     class OperationNegate : public Operation {
     public:
-	OperationNegate(size_t _result, size_t _operand);
+	OperationNegate(
+	    const JLang::context::SourceReference & _src_ref,
+	    size_t _result,
+	    size_t _operand
+	    );
 	~OperationNegate();
     private:
     };
 
     class OperationBitwiseNot : public Operation {
     public:
-	OperationBitwiseNot(size_t _result, size_t _operand);
+	OperationBitwiseNot(
+	    const JLang::context::SourceReference & _src_ref,
+	    size_t _result,
+	    size_t _operand
+	    );
 	~OperationBitwiseNot();
     private:
     };
 
     class OperationLogicalNot : public Operation {
     public:
-	OperationLogicalNot(size_t _result, size_t _operand);
+	OperationLogicalNot(
+	    const JLang::context::SourceReference & _src_ref,
+	    size_t _result,
+	    size_t _operand
+	    );
 	~OperationLogicalNot();
     private:
     };
     
     class OperationSizeofType : public Operation {
     public:
-	OperationSizeofType(size_t _result, size_t _operand);
+	OperationSizeofType(
+	    const JLang::context::SourceReference & _src_ref,
+	    size_t _result,
+	    size_t _operand
+	    );
 	~OperationSizeofType();
     private:
     };
 
-    class OperationAdd : public Operation {
+    class OperationBinary : public Operation {
     public:
-	OperationAdd(
+	OperationBinary(
+	    OperationType _type,
+	    const JLang::context::SourceReference & _src_ref,
 	    size_t _result,
 	    size_t _operand_a,
 	    size_t _operand_b
 	    );
-	~OperationAdd();
-    };
-    class OperationSubtract : public Operation {
-    };
-    class OperationMultiply : public Operation {
-    };
-    class OperationDivide : public Operation {
-    };
-    class OperationAssign : public Operation {
-    public:
-	OperationAssign(
-	    size_t _result,
-	    size_t _operand_a,
-	    size_t _operand_b
-	    );
-	~OperationAssign();
+	~OperationBinary();
+	size_t get_a() const;
+	size_t get_b() const;
     };
 
     class OperationJumpIfEqual : public Operation {
     public:
-	OperationJumpIfEqual(size_t _operand, std::string _label);
+	OperationJumpIfEqual(
+	    const JLang::context::SourceReference & _src_ref,
+	    size_t _operand,
+	    std::string _label
+	    );
 	~OperationJumpIfEqual();
     private:
 	std::string label;
@@ -295,7 +410,10 @@ namespace JLang::mir {
     
     class OperationJump : public Operation {
     public:
-	OperationJump(std::string _label);
+	OperationJump(
+	    const JLang::context::SourceReference & _src_ref,
+	    std::string _label
+	    );
 	~OperationJump();
     private:
 	std::string label;
@@ -303,13 +421,20 @@ namespace JLang::mir {
     
     class OperationReturn : public Operation {
     public:
-	OperationReturn(size_t _operand);
+	OperationReturn(
+	    const JLang::context::SourceReference & _src_ref,
+	    size_t _operand
+	    );
 	~OperationReturn();
     };
 
     class OperationLocalDeclare : public Operation {
     public:
-	OperationLocalDeclare(std::string _variable, std::string _var_type);
+	OperationLocalDeclare(
+	    const JLang::context::SourceReference & _src_ref,
+	    std::string _variable,
+	    std::string _var_type
+	    );
 	~OperationLocalDeclare();
 	const std::string & get_variable() const;
 	const std::string & get_var_type() const;
@@ -319,7 +444,10 @@ namespace JLang::mir {
     };
     class OperationLocalUndeclare : public Operation {
     public:
-	OperationLocalUndeclare(std::string _variable);
+	OperationLocalUndeclare(
+	    const JLang::context::SourceReference & _src_ref,
+	    std::string _variable
+	    );
 	~OperationLocalUndeclare();
     private:
 	std::string variable;

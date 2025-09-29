@@ -15,16 +15,18 @@ namespace JLang::codegen {
      */
     class CodeGeneratorLLVM {
     public:
-	CodeGeneratorLLVM(const JLang::mir::MIR & mir);
+	CodeGeneratorLLVM(
+	    const JLang::context::CompilerContext & _compiler_context,
+	    const JLang::mir::MIR & _mir
+	    );
 	~CodeGeneratorLLVM();
 	void initialize();
 	void generate();
 	int output(const std::string & filename);
     private:
-	
 	JLang::owned<CodeGeneratorLLVMContext> context;
 	
     };
     
-    void generate_code(const JLang::mir::MIR & _mir, const std::string & _filename);
+    void generate_code(const JLang::context::CompilerContext & _context, const JLang::mir::MIR & _mir, const std::string & _filename);
 };

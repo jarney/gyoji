@@ -172,6 +172,7 @@ FunctionDefinitionResolver::extract_from_expression_primary_identifier(
 	if (localvar != nullptr) {
 	    returned_tmpvar = function.tmpvar_define(localvar->get_type());
 	    auto operation = std::make_unique<OperationLocalVariable>(
+		expression.get_identifier().get_source_ref(),
 		returned_tmpvar,
 		expression.get_identifier().get_value(),
 		localvar->get_type()
@@ -225,6 +226,7 @@ FunctionDefinitionResolver::extract_from_expression_primary_identifier(
 	returned_tmpvar = function.tmpvar_define(symbol->get_type());
 
 	auto operation = std::make_unique<OperationSymbol>(
+	    expression.get_identifier().get_source_ref(),
 	    returned_tmpvar,
 	    expression.get_identifier().get_fully_qualified_name()
 	    );
@@ -257,6 +259,7 @@ FunctionDefinitionResolver::extract_from_expression_primary_literal_char(
 {
     returned_tmpvar = function.tmpvar_define(mir.get_types().get_type("u8"));
     auto operation = std::make_unique<OperationLiteralChar>(
+	expression.get_source_ref(),
 	returned_tmpvar,
 	expression.get_value()
 	);
@@ -275,6 +278,7 @@ FunctionDefinitionResolver::extract_from_expression_primary_literal_string(
 {
     returned_tmpvar = function.tmpvar_define(mir.get_types().get_type("u8*"));
     auto operation = std::make_unique<OperationLiteralString>(
+	expression.get_source_ref(),	    
 	returned_tmpvar,
 	expression.get_value()
 	);
@@ -292,6 +296,7 @@ FunctionDefinitionResolver::extract_from_expression_primary_literal_int(
 {
     returned_tmpvar = function.tmpvar_define(mir.get_types().get_type(expression.get_type()));
     auto operation = std::make_unique<OperationLiteralInt>(
+	expression.get_source_ref(),
 	returned_tmpvar,
 	expression.get_value()
 	);
@@ -309,6 +314,7 @@ FunctionDefinitionResolver::extract_from_expression_primary_literal_float(
 {
     returned_tmpvar = function.tmpvar_define(mir.get_types().get_type(expression.get_type()));
     auto operation = std::make_unique<OperationLiteralFloat>(
+	expression.get_source_ref(),
 	returned_tmpvar,
 	expression.get_value()
 	);
@@ -369,6 +375,7 @@ FunctionDefinitionResolver::extract_from_expression_postfix_array_index(
     
     returned_tmpvar = function.tmpvar_define(array_type->get_pointer_target());
     auto operation = std::make_unique<OperationArrayIndex>(
+	expression.get_source_ref(),
 	returned_tmpvar,
 	index_tmpvar,
 	array_type
@@ -411,7 +418,11 @@ FunctionDefinitionResolver::extract_from_expression_postfix_function_call(
     // will return.
     returned_tmpvar = function.tmpvar_define(function_pointer_type->get_return_type());
     
-    auto operation = std::make_unique<OperationFunctionCall>(returned_tmpvar, function_type_tmpvar);
+    auto operation = std::make_unique<OperationFunctionCall>(
+	expression.get_source_ref(),
+	returned_tmpvar,
+	function_type_tmpvar
+	);
     
     std::string call_args = "";
     for (const auto & av : arg_types) {
@@ -458,7 +469,11 @@ FunctionDefinitionResolver::extract_from_expression_postfix_dot(
     }
 
     returned_tmpvar = function.tmpvar_define(member->get_type());
-    auto operation = std::make_unique<OperationDot>(returned_tmpvar, member_name);
+    auto operation = std::make_unique<OperationDot>(
+	expression.get_source_ref(),
+	returned_tmpvar,
+	member_name
+	);
     function
 	.get_basic_block(current_block)
 	.add_statement(std::move(operation));
@@ -509,7 +524,11 @@ FunctionDefinitionResolver::extract_from_expression_postfix_arrow(
     }
 
     returned_tmpvar = function.tmpvar_define(member->get_type());
-    auto operation = std::make_unique<OperationArrow>(returned_tmpvar, member_name);
+    auto operation = std::make_unique<OperationArrow>(
+	expression.get_source_ref(),
+	returned_tmpvar,
+	member_name
+	);
     function
 	.get_basic_block(current_block)
 	.add_statement(std::move(operation));
@@ -528,13 +547,21 @@ FunctionDefinitionResolver::extract_from_expression_postfix_incdec(
     returned_tmpvar = function.tmpvar_duplicate(operand_tmpvar);
     
     if (expression.get_type() == ExpressionPostfixIncDec::INCREMENT) {
-	auto operation = std::make_unique<OperationPostIncrement>(returned_tmpvar, operand_tmpvar);
+	auto operation = std::make_unique<OperationPostIncrement>(
+	    expression.get_source_ref(),
+	    returned_tmpvar,
+	    operand_tmpvar
+	    );
 	function
 	    .get_basic_block(current_block)
 	    .add_statement(std::move(operation));
     }
     else if (expression.get_type() == ExpressionPostfixIncDec::DECREMENT) {
-	auto operation = std::make_unique<OperationPostDecrement>(returned_tmpvar, operand_tmpvar);
+	auto operation = std::make_unique<OperationPostDecrement>(
+	    expression.get_source_ref(),
+	    returned_tmpvar,
+	    operand_tmpvar
+	    );
 	function
 	    .get_basic_block(current_block)
 	    .add_statement(std::move(operation));
@@ -584,14 +611,22 @@ FunctionDefinitionResolver::extract_from_expression_unary_prefix(
 
     if (expression.get_type() == ExpressionUnaryPrefix::INCREMENT) {
 	returned_tmpvar = function.tmpvar_duplicate(operand_tmpvar);
-	auto operation = std::make_unique<OperationPreIncrement>(returned_tmpvar, operand_tmpvar);
+	auto operation = std::make_unique<OperationPreIncrement>(
+	    expression.get_source_ref(),
+	    returned_tmpvar,
+	    operand_tmpvar
+	    );
 	function
 	    .get_basic_block(current_block)
 	    .add_statement(std::move(operation));
     }
     else if (expression.get_type() == ExpressionUnaryPrefix::DECREMENT) {
 	returned_tmpvar = function.tmpvar_duplicate(operand_tmpvar);
-	auto operation = std::make_unique<OperationPreDecrement>(returned_tmpvar, operand_tmpvar);
+	auto operation = std::make_unique<OperationPreDecrement>(
+	    expression.get_source_ref(),
+	    returned_tmpvar,
+	    operand_tmpvar
+	    );
 	function
 	    .get_basic_block(current_block)
 	    .add_statement(std::move(operation));
@@ -599,7 +634,11 @@ FunctionDefinitionResolver::extract_from_expression_unary_prefix(
     else if (expression.get_type() == ExpressionUnaryPrefix::ADDRESSOF) {
 	const Type * pointer_to_operand_type = mir.get_types().get_pointer_to(operand_type, expression.get_source_ref());
 	returned_tmpvar = function.tmpvar_define(pointer_to_operand_type);
-	auto operation = std::make_unique<OperationAddressOf>(returned_tmpvar, operand_tmpvar);
+	auto operation = std::make_unique<OperationAddressOf>(
+	    expression.get_source_ref(),
+	    returned_tmpvar,
+	    operand_tmpvar
+	    );
 	function
 	    .get_basic_block(current_block)
 	    .add_statement(std::move(operation));
@@ -616,7 +655,11 @@ FunctionDefinitionResolver::extract_from_expression_unary_prefix(
 	    return;
 	}
 	returned_tmpvar = function.tmpvar_define(operand_type);
-	auto operation = std::make_unique<OperationDereference>(returned_tmpvar, operand_tmpvar);
+	auto operation = std::make_unique<OperationDereference>(
+	    expression.get_source_ref(),	    
+	    returned_tmpvar,
+	    operand_tmpvar
+	    );
 	function
 	    .get_basic_block(current_block)
 	    .add_statement(std::move(operation));
@@ -629,14 +672,22 @@ FunctionDefinitionResolver::extract_from_expression_unary_prefix(
     }
     else if (expression.get_type() == ExpressionUnaryPrefix::MINUS) {
 	returned_tmpvar = function.tmpvar_duplicate(operand_tmpvar);
-	auto operation = std::make_unique<OperationNegate>(returned_tmpvar, operand_tmpvar);
+	auto operation = std::make_unique<OperationNegate>(
+	    expression.get_source_ref(),	    
+	    returned_tmpvar,
+	    operand_tmpvar
+	    );
 	function
 	    .get_basic_block(current_block)
 	    .add_statement(std::move(operation));
     }
     else if (expression.get_type() == ExpressionUnaryPrefix::BITWISE_NOT) {
 	returned_tmpvar = function.tmpvar_duplicate(operand_tmpvar);
-	auto operation = std::make_unique<OperationBitwiseNot>(returned_tmpvar, operand_tmpvar);
+	auto operation = std::make_unique<OperationBitwiseNot>(
+	    expression.get_source_ref(),	    
+	    returned_tmpvar,
+	    operand_tmpvar
+	    );
 	function
 	    .get_basic_block(current_block)
 	    .add_statement(std::move(operation));
@@ -652,7 +703,11 @@ FunctionDefinitionResolver::extract_from_expression_unary_prefix(
 		    );
 	}
 	returned_tmpvar = function.tmpvar_duplicate(operand_tmpvar);
-	auto operation = std::make_unique<OperationLogicalNot>(returned_tmpvar, operand_tmpvar);
+	auto operation = std::make_unique<OperationLogicalNot>(
+	    expression.get_source_ref(),	    
+	    returned_tmpvar,
+	    operand_tmpvar
+	    );
 	function
 	    .get_basic_block(current_block)
 	    .add_statement(std::move(operation));
@@ -679,7 +734,11 @@ FunctionDefinitionResolver::extract_from_expression_unary_sizeof_type(
     const Type * u64_type = mir.get_types().get_type("u64");
     size_t operand_tmpvar = function.tmpvar_define(operand_type);
     returned_tmpvar = function.tmpvar_define(u64_type);
-    auto operation = std::make_unique<OperationSizeofType>(returned_tmpvar, operand_tmpvar);
+    auto operation = std::make_unique<OperationSizeofType>(
+	expression.get_source_ref(),	    
+	returned_tmpvar,
+	operand_tmpvar
+	);
     function
 	.get_basic_block(current_block)
 	.add_statement(std::move(operation));
@@ -692,12 +751,12 @@ FunctionDefinitionResolver::extract_from_expression_binary(
     size_t & returned_tmpvar,
     const ExpressionBinary & expression)
 {
-    std::string op = "";
-
     size_t a_tmpvar;
     size_t b_tmpvar;
+    
     extract_from_expression(function, current_block, a_tmpvar, expression.get_a());
     extract_from_expression(function, current_block, b_tmpvar, expression.get_b());
+
     std::string atypename = function.tmpvar_get(a_tmpvar)->get_type()->get_name();
     std::string btypename = function.tmpvar_get(b_tmpvar)->get_type()->get_name();
     if (atypename != btypename) {
@@ -710,98 +769,14 @@ FunctionDefinitionResolver::extract_from_expression_binary(
 		);
 	return;
     }
-    switch (expression.get_operator()) {
-    case ExpressionBinary::ADD:
-	{
-	op = "+";
-	returned_tmpvar = function.tmpvar_duplicate(a_tmpvar);
-    
+    ExpressionBinary::OperationType op_type;
+    op_type = expression.get_operator();
 
-	auto operation = std::make_unique<OperationAdd>(
-	    returned_tmpvar,
-	    a_tmpvar,
-	    b_tmpvar
-	    );
-	function
-	    .get_basic_block(current_block)
-	    .add_statement(std::move(operation));
-	}	
-	break;
-    case ExpressionBinary::SUBTRACT:
-	op = "-";
-	returned_tmpvar = function.tmpvar_define(mir.get_types().get_type("u32"));
-	break;
-    case ExpressionBinary::MULTIPLY:
-	op = "*";
-	returned_tmpvar = function.tmpvar_define(mir.get_types().get_type("u32"));
-	break;
-    case ExpressionBinary::DIVIDE:
-	op = "/";
-	returned_tmpvar = function.tmpvar_define(mir.get_types().get_type("u32"));
-	break;
-    case ExpressionBinary::MODULO:
-	op = "%";
-	returned_tmpvar = function.tmpvar_define(mir.get_types().get_type("u32"));
-	break;
-    case ExpressionBinary::LOGICAL_AND:
-	op = "&&";
-	returned_tmpvar = function.tmpvar_define(mir.get_types().get_type("bool"));
-	break;
-    case ExpressionBinary::LOGICAL_OR:
-	op = "||";
-	returned_tmpvar = function.tmpvar_define(mir.get_types().get_type("bool"));
-	break;
-    case ExpressionBinary::BITWISE_AND:
-	op = "&";
-	returned_tmpvar = function.tmpvar_define(mir.get_types().get_type("u32"));
-	break;
-    case ExpressionBinary::BITWISE_OR:
-	op = "|";
-	returned_tmpvar = function.tmpvar_define(mir.get_types().get_type("u32"));
-	break;
-    case ExpressionBinary::BITWISE_XOR:
-	op = "^";
-	returned_tmpvar = function.tmpvar_define(mir.get_types().get_type("u32"));
-	break;
-    case ExpressionBinary::SHIFT_LEFT:
-	op = "<<";
-	returned_tmpvar = function.tmpvar_define(mir.get_types().get_type("u32"));
-	break;
-    case ExpressionBinary::SHIFT_RIGHT:
-	op = ">>";
-	returned_tmpvar = function.tmpvar_define(mir.get_types().get_type("u32"));
-	break;
-	
-    case ExpressionBinary::COMPARE_LT:
-	op = "<";
-	returned_tmpvar = function.tmpvar_define(mir.get_types().get_type("bool"));
-	break;
-    case ExpressionBinary::COMPARE_GT:
-	op = ">";
-	returned_tmpvar = function.tmpvar_define(mir.get_types().get_type("bool"));
-	break;
-    case ExpressionBinary::COMPARE_LE:
-	op = "<=";
-	returned_tmpvar = function.tmpvar_define(mir.get_types().get_type("bool"));
-	break;
-    case ExpressionBinary::COMPARE_GE:
-	op = ">=";
-	returned_tmpvar = function.tmpvar_define(mir.get_types().get_type("bool"));
-	break;
-    case ExpressionBinary::COMPARE_EQ:
-	op = "==";
-	returned_tmpvar = function.tmpvar_define(mir.get_types().get_type("bool"));
-	break;
-    case ExpressionBinary::COMPARE_NE:
-	op = "!=";
-	returned_tmpvar = function.tmpvar_define(mir.get_types().get_type("bool"));
-	break;
-	
-    case ExpressionBinary::EQUALS:
-    {
-	op = "=";
+    if (op_type == ExpressionBinary::ADD) {
 	returned_tmpvar = function.tmpvar_duplicate(a_tmpvar);
-	auto operation = std::make_unique<OperationAssign>(
+	auto operation = std::make_unique<OperationBinary>(
+	    Operation::OP_ADD,
+	    expression.get_source_ref(),	    
 	    returned_tmpvar,
 	    a_tmpvar,
 	    b_tmpvar
@@ -810,51 +785,278 @@ FunctionDefinitionResolver::extract_from_expression_binary(
 	    .get_basic_block(current_block)
 	    .add_statement(std::move(operation));
     }	
-        break;
-    case ExpressionBinary::MUL_ASSIGN:
-	op = "*=";
+    else if (op_type == ExpressionBinary::SUBTRACT) {
 	returned_tmpvar = function.tmpvar_duplicate(a_tmpvar);
-	break;
-    case ExpressionBinary::DIV_ASSIGN:
-	op = "/=";
+	auto operation = std::make_unique<OperationBinary>(
+	    Operation::OP_SUBTRACT,
+	    expression.get_source_ref(),	    
+	    returned_tmpvar,
+	    a_tmpvar,
+	    b_tmpvar
+	    );
+	function
+	    .get_basic_block(current_block)
+	    .add_statement(std::move(operation));
+    }
+    else if (op_type == ExpressionBinary::MULTIPLY) {
 	returned_tmpvar = function.tmpvar_duplicate(a_tmpvar);
-	break;
-    case ExpressionBinary::MOD_ASSIGN:
-	op = "%=";
+	auto operation = std::make_unique<OperationBinary>(
+	    Operation::OP_MULTIPLY,
+	    expression.get_source_ref(),	    
+	    returned_tmpvar,
+	    a_tmpvar,
+	    b_tmpvar
+	    );
+	function
+	    .get_basic_block(current_block)
+	    .add_statement(std::move(operation));
+    }
+    else if (op_type == ExpressionBinary::DIVIDE) {
 	returned_tmpvar = function.tmpvar_duplicate(a_tmpvar);
-	break;
-    case ExpressionBinary::ADD_ASSIGN:
-	op = "+=";
+	auto operation = std::make_unique<OperationBinary>(
+	    Operation::OP_MULTIPLY,
+	    expression.get_source_ref(),	    
+	    returned_tmpvar,
+	    a_tmpvar,
+	    b_tmpvar
+	    );
+	function
+	    .get_basic_block(current_block)
+	    .add_statement(std::move(operation));
+    }
+    else if (op_type == ExpressionBinary::MODULO) {
 	returned_tmpvar = function.tmpvar_duplicate(a_tmpvar);
-	break;
-    case ExpressionBinary::SUB_ASSIGN:
-	op = "-=";
+	auto operation = std::make_unique<OperationBinary>(
+	    Operation::OP_MODULO,
+	    expression.get_source_ref(),	    
+	    returned_tmpvar,
+	    a_tmpvar,
+	    b_tmpvar
+	    );
+	function
+	    .get_basic_block(current_block)
+	    .add_statement(std::move(operation));
+    }
+    else if (op_type == ExpressionBinary::LOGICAL_AND) {
+	returned_tmpvar = function.tmpvar_define(mir.get_types().get_type("bool"));
+	auto operation = std::make_unique<OperationBinary>(
+	    Operation::OP_LOGICAL_AND,
+	    expression.get_source_ref(),	    
+	    returned_tmpvar,
+	    a_tmpvar,
+	    b_tmpvar
+	    );
+	function
+	    .get_basic_block(current_block)
+	    .add_statement(std::move(operation));
+    }
+    else if (op_type == ExpressionBinary::LOGICAL_OR) {
+	returned_tmpvar = function.tmpvar_define(mir.get_types().get_type("bool"));
+	auto operation = std::make_unique<OperationBinary>(
+	    Operation::OP_LOGICAL_OR,
+	    expression.get_source_ref(),	    
+	    returned_tmpvar,
+	    a_tmpvar,
+	    b_tmpvar
+	    );
+	function
+	    .get_basic_block(current_block)
+	    .add_statement(std::move(operation));
+    }
+    else if (op_type == ExpressionBinary::BITWISE_AND) {
 	returned_tmpvar = function.tmpvar_duplicate(a_tmpvar);
-	break;
-    case ExpressionBinary::LEFT_ASSIGN:
-	op = "<<=";
+	auto operation = std::make_unique<OperationBinary>(
+	    Operation::OP_BITWISE_AND,
+	    expression.get_source_ref(),	    
+	    returned_tmpvar,
+	    a_tmpvar,
+	    b_tmpvar
+	    );
+	function
+	    .get_basic_block(current_block)
+	    .add_statement(std::move(operation));
+    }
+    else if (op_type == ExpressionBinary::BITWISE_OR) {
 	returned_tmpvar = function.tmpvar_duplicate(a_tmpvar);
-	break;
-    case ExpressionBinary::RIGHT_ASSIGN:
-	op = ">>=";
+	auto operation = std::make_unique<OperationBinary>(
+	    Operation::OP_BITWISE_OR,
+	    expression.get_source_ref(),	    
+	    returned_tmpvar,
+	    a_tmpvar,
+	    b_tmpvar
+	    );
+	function
+	    .get_basic_block(current_block)
+	    .add_statement(std::move(operation));
+    }
+    else if (op_type == ExpressionBinary::BITWISE_XOR) {
 	returned_tmpvar = function.tmpvar_duplicate(a_tmpvar);
-	break;
-    case ExpressionBinary::AND_ASSIGN:
-	op = "&=";
+	auto operation = std::make_unique<OperationBinary>(
+	    Operation::OP_BITWISE_XOR,
+	    expression.get_source_ref(),	    
+	    returned_tmpvar,
+	    a_tmpvar,
+	    b_tmpvar
+	    );
+	function
+	    .get_basic_block(current_block)
+	    .add_statement(std::move(operation));
+    }
+    else if (op_type == ExpressionBinary::SHIFT_LEFT) {
 	returned_tmpvar = function.tmpvar_duplicate(a_tmpvar);
-	break;
-    case ExpressionBinary::OR_ASSIGN:
-	op = "|=";
+	auto operation = std::make_unique<OperationBinary>(
+	    Operation::OP_SHIFT_LEFT,
+	    expression.get_source_ref(),	    
+	    returned_tmpvar,
+	    a_tmpvar,
+	    b_tmpvar
+	    );
+	function
+	    .get_basic_block(current_block)
+	    .add_statement(std::move(operation));
+    }
+    else if (op_type == ExpressionBinary::SHIFT_RIGHT) {
 	returned_tmpvar = function.tmpvar_duplicate(a_tmpvar);
-	break;
-    case ExpressionBinary::XOR_ASSIGN:
-	op = "^=";
+	auto operation = std::make_unique<OperationBinary>(
+	    Operation::OP_SHIFT_RIGHT,
+	    expression.get_source_ref(),	    
+	    returned_tmpvar,
+	    a_tmpvar,
+	    b_tmpvar
+	    );
+	function
+	    .get_basic_block(current_block)
+	    .add_statement(std::move(operation));
+    }
+    else if (op_type == ExpressionBinary::COMPARE_LT) {
+	returned_tmpvar = function.tmpvar_define(mir.get_types().get_type("bool"));
+	auto operation = std::make_unique<OperationBinary>(
+	    Operation::OP_COMPARE_LT,
+	    expression.get_source_ref(),	    
+	    returned_tmpvar,
+	    a_tmpvar,
+	    b_tmpvar
+	    );
+	function
+	    .get_basic_block(current_block)
+	    .add_statement(std::move(operation));
+    }
+    else if (op_type == ExpressionBinary::COMPARE_GT) {
+	returned_tmpvar = function.tmpvar_define(mir.get_types().get_type("bool"));
+	auto operation = std::make_unique<OperationBinary>(
+	    Operation::OP_COMPARE_GT,
+	    expression.get_source_ref(),	    
+	    returned_tmpvar,
+	    a_tmpvar,
+	    b_tmpvar
+	    );
+	function
+	    .get_basic_block(current_block)
+	    .add_statement(std::move(operation));
+    }
+    else if (op_type == ExpressionBinary::COMPARE_LE) {
+	returned_tmpvar = function.tmpvar_define(mir.get_types().get_type("bool"));
+	auto operation = std::make_unique<OperationBinary>(
+	    Operation::OP_COMPARE_LE,
+	    expression.get_source_ref(),	    
+	    returned_tmpvar,
+	    a_tmpvar,
+	    b_tmpvar
+	    );
+	function
+	    .get_basic_block(current_block)
+	    .add_statement(std::move(operation));
+    }
+    else if (op_type == ExpressionBinary::COMPARE_GE) {
+	returned_tmpvar = function.tmpvar_define(mir.get_types().get_type("bool"));
+	auto operation = std::make_unique<OperationBinary>(
+	    Operation::OP_COMPARE_GE,
+	    expression.get_source_ref(),	    
+	    returned_tmpvar,
+	    a_tmpvar,
+	    b_tmpvar
+	    );
+	function
+	    .get_basic_block(current_block)
+	    .add_statement(std::move(operation));
+    }
+    else if (op_type == ExpressionBinary::COMPARE_EQ) {
+	returned_tmpvar = function.tmpvar_define(mir.get_types().get_type("bool"));
+	auto operation = std::make_unique<OperationBinary>(
+	    Operation::OP_COMPARE_EQ,
+	    expression.get_source_ref(),	    
+	    returned_tmpvar,
+	    a_tmpvar,
+	    b_tmpvar
+	    );
+	function
+	    .get_basic_block(current_block)
+	    .add_statement(std::move(operation));
+    }
+    else if (op_type == ExpressionBinary::COMPARE_NE) {
+	returned_tmpvar = function.tmpvar_define(mir.get_types().get_type("bool"));
+	auto operation = std::make_unique<OperationBinary>(
+	    Operation::OP_COMPARE_NE,
+	    expression.get_source_ref(),	    
+	    returned_tmpvar,
+	    a_tmpvar,
+	    b_tmpvar
+	    );
+	function
+	    .get_basic_block(current_block)
+	    .add_statement(std::move(operation));
+    }
+    else if (op_type == ExpressionBinary::EQUALS) {
 	returned_tmpvar = function.tmpvar_duplicate(a_tmpvar);
-	break;
-    default:
-	fprintf(stderr, "Compiler bug! unknown binary operator\n");
-	exit(1);
-	break;
+	auto operation = std::make_unique<OperationBinary>(
+	    Operation::OP_ASSIGN,
+	    expression.get_source_ref(),	    
+	    returned_tmpvar,
+	    a_tmpvar,
+	    b_tmpvar
+	    );
+	function
+	    .get_basic_block(current_block)
+	    .add_statement(std::move(operation));
+    }	
+    else if (op_type == ExpressionBinary::MUL_ASSIGN) {
+	returned_tmpvar = function.tmpvar_duplicate(a_tmpvar);
+    }
+    else if (op_type == ExpressionBinary::DIV_ASSIGN) {
+	returned_tmpvar = function.tmpvar_duplicate(a_tmpvar);
+    }
+    else if (op_type == ExpressionBinary::MOD_ASSIGN) {
+	returned_tmpvar = function.tmpvar_duplicate(a_tmpvar);
+    }
+    else if (op_type == ExpressionBinary::ADD_ASSIGN) {
+	returned_tmpvar = function.tmpvar_duplicate(a_tmpvar);
+    }
+    else if (op_type == ExpressionBinary::SUB_ASSIGN) {
+	returned_tmpvar = function.tmpvar_duplicate(a_tmpvar);
+    }
+    else if (op_type == ExpressionBinary::LEFT_ASSIGN) {
+	returned_tmpvar = function.tmpvar_duplicate(a_tmpvar);
+    }
+    else if (op_type == ExpressionBinary::RIGHT_ASSIGN) {
+	returned_tmpvar = function.tmpvar_duplicate(a_tmpvar);
+    }
+    else if (op_type == ExpressionBinary::AND_ASSIGN) {
+	returned_tmpvar = function.tmpvar_duplicate(a_tmpvar);
+    }
+    else if (op_type == ExpressionBinary::OR_ASSIGN) {
+	returned_tmpvar = function.tmpvar_duplicate(a_tmpvar);
+    }
+    else if (op_type == ExpressionBinary::XOR_ASSIGN) {
+	returned_tmpvar = function.tmpvar_duplicate(a_tmpvar);
+    }
+    else {
+	compiler_context
+	    .get_errors()
+	    .add_simple_error(
+		expression.get_source_ref(),
+		"Compiler bug! unknown binary operator",
+		std::string("Invalid binary operator type ") + std::to_string(op_type)
+		);
     }
 }
 void
@@ -971,6 +1173,7 @@ FunctionDefinitionResolver::extract_from_statement_return(
     extract_from_expression(function, current_block, expression_tmpvar, statement.get_expression());
 
     auto operation = std::make_unique<OperationReturn>(
+	statement.get_source_ref(),
 	expression_tmpvar
 	);
     function.get_basic_block(current_block).add_statement(std::move(operation));
@@ -1001,6 +1204,7 @@ FunctionDefinitionResolver::extract_from_statement_ifelse(
     if (statement.has_else() || statement.has_else_if()) {
 	blockid_else = function.add_block();
 	auto operation = std::make_unique<OperationJumpIfEqual>(
+	    statement.get_source_ref(),
 	    condition_tmpvar,
 	    std::to_string(blockid_else)
 	    );
@@ -1008,6 +1212,7 @@ FunctionDefinitionResolver::extract_from_statement_ifelse(
     }
     else {
 	auto operation = std::make_unique<OperationJumpIfEqual>(
+	    statement.get_source_ref(),
 	    condition_tmpvar,
 	    std::to_string(blockid_done)
 	    );
@@ -1024,6 +1229,7 @@ FunctionDefinitionResolver::extract_from_statement_ifelse(
     
     if (statement.has_else()) {
 	auto operation = std::make_unique<OperationJump>(
+	    statement.get_source_ref(),
 	    std::to_string(blockid_done)
 	    );
 	function.get_basic_block(current_block).add_statement(std::move(operation));
@@ -1076,7 +1282,11 @@ FunctionDefinitionResolver::extract_from_statement_list(
 			);
 	    }
 
-	    auto operation = std::make_unique<OperationLocalDeclare>(statement->get_name(), mir_type->get_name());
+	    auto operation = std::make_unique<OperationLocalDeclare>(
+		statement->get_source_ref(),
+		statement->get_name(),
+		mir_type->get_name()
+		);
 	    function.get_basic_block(current_block).add_statement(std::move(operation));
 	    unwind.push_back(statement->get_name());
 	}
@@ -1130,7 +1340,9 @@ FunctionDefinitionResolver::extract_from_statement_list(
 	function.remove_local(undecl);
 	fprintf(stderr, "Undeclaring %s in block %ld\n", undecl.c_str(), current_block);
 	    
-	auto operation = std::make_unique<OperationLocalUndeclare>(undecl);
+	auto operation = std::make_unique<OperationLocalUndeclare>(
+	    statement_list.get_source_ref(),
+	    undecl);
 	function.get_basic_block(current_block).add_statement(std::move(operation));
     }
     start_block = current_block;
