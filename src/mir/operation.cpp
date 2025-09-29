@@ -33,9 +33,6 @@ void JLang::mir::operation_static_init()
     op_type_names.insert(std::pair(Operation::OP_RETURN, "return"));
 }
 
-
-
-
 Operation::Operation(
     OperationType _type,
     const JLang::context::SourceReference & _src_ref,
@@ -120,6 +117,47 @@ Operation::dump() const
     }
     fprintf(stderr, " )\n");
 }
+
+
+//////////////////////////////////////////////
+// OperationUnary
+//////////////////////////////////////////////
+OperationUnary::OperationUnary(
+	    OperationType _type,
+	    const JLang::context::SourceReference & _src_ref,
+	    size_t _result,
+	    size_t _operand
+	    )
+    : Operation(_type, _src_ref, _result, _operand)
+{}
+OperationUnary::~OperationUnary()
+{}
+size_t
+OperationUnary::get_a() const
+{ return operands.at(0); }
+
+//////////////////////////////////////////////
+// OperationBinary
+//////////////////////////////////////////////
+
+OperationBinary::OperationBinary(
+    OperationType _type,
+    const JLang::context::SourceReference & _src_ref,
+    size_t _result,
+    size_t _operand_a,
+    size_t _operand_b
+	    )
+    : Operation(_type, _src_ref, _result, _operand_a, _operand_b)
+{}
+OperationBinary::~OperationBinary()
+{}
+size_t
+OperationBinary::get_a() const
+{ return operands.at(0); }
+
+size_t
+OperationBinary::get_b() const
+{ return operands.at(1); }
 
 
 //////////////////////////////////////////////
@@ -304,163 +342,6 @@ OperationLiteralFloat::~OperationLiteralFloat()
 const std::string &
 OperationLiteralFloat::get_literal_float() const
 { return literal_float; }
-
-//////////////////////////////////////////////
-// OperationPreIncrement
-//////////////////////////////////////////////
-OperationPreIncrement::OperationPreIncrement(
-    const JLang::context::SourceReference & _src_ref,
-    size_t _result,
-    size_t _operand
-    )
-    : Operation(OP_PRE_INCREMENT, _src_ref, _result, _operand)
-{}
-OperationPreIncrement::~OperationPreIncrement()
-{}
-
-//////////////////////////////////////////////
-// OperationPostIncrement
-//////////////////////////////////////////////
-OperationPostIncrement::OperationPostIncrement(
-    const JLang::context::SourceReference & _src_ref,
-    size_t _result,
-    size_t _operand
-    )
-    : Operation(OP_PRE_INCREMENT, _src_ref, _result, _operand)
-{}
-
-OperationPostIncrement::~OperationPostIncrement()
-{}
-
-//////////////////////////////////////////////
-// OperationPreDecrement
-//////////////////////////////////////////////
-OperationPreDecrement::OperationPreDecrement(
-    const JLang::context::SourceReference & _src_ref,
-    size_t _result,
-    size_t _operand
-    )
-    : Operation(OP_PRE_INCREMENT, _src_ref, _result, _operand)
-{}
-OperationPreDecrement::~OperationPreDecrement()
-{}
-
-//////////////////////////////////////////////
-// OperationPostDecrement
-//////////////////////////////////////////////
-OperationPostDecrement::OperationPostDecrement(
-    const JLang::context::SourceReference & _src_ref,
-    size_t _result,
-    size_t _operand
-    )
-    : Operation(OP_PRE_INCREMENT, _src_ref, _result, _operand)
-{}
-
-OperationPostDecrement::~OperationPostDecrement()
-{}
-
-//////////////////////////////////////////////
-// OperationAddressOf
-//////////////////////////////////////////////
-OperationAddressOf::OperationAddressOf(
-    const JLang::context::SourceReference & _src_ref,
-    size_t _result,
-    size_t _operand
-    )
-    : Operation(OP_ADDRESSOF, _src_ref, _result, _operand)
-{}
-OperationAddressOf::~OperationAddressOf()
-{}
-
-//////////////////////////////////////////////
-// OperationDereference
-//////////////////////////////////////////////
-OperationDereference::OperationDereference(
-    const JLang::context::SourceReference & _src_ref,
-    size_t _result,
-    size_t _operand
-    )
-    : Operation(OP_DEREFERENCE, _src_ref, _result, _operand)
-{}
-OperationDereference::~OperationDereference()
-{}
-
-//////////////////////////////////////////////
-// OperationNegate
-//////////////////////////////////////////////
-OperationNegate::OperationNegate(
-    const JLang::context::SourceReference & _src_ref,
-    size_t _result,
-    size_t _operand
-    )
-    : Operation(OP_NEGATE, _src_ref, _result, _operand)
-{}
-OperationNegate::~OperationNegate()
-{}
-
-//////////////////////////////////////////////
-// OperationBitwiseNot
-//////////////////////////////////////////////
-OperationBitwiseNot::OperationBitwiseNot(
-    const JLang::context::SourceReference & _src_ref,
-    size_t _result,
-    size_t _operand
-    )
-    : Operation(OP_BITWISE_NOT, _src_ref, _result, _operand)
-{}
-OperationBitwiseNot::~OperationBitwiseNot()
-{}
-
-//////////////////////////////////////////////
-// OperationLogicalNot
-//////////////////////////////////////////////
-OperationLogicalNot::OperationLogicalNot(
-    const JLang::context::SourceReference & _src_ref,
-    size_t _result,
-    size_t _operand
-    )
-    : Operation(OP_LOGICAL_NOT, _src_ref, _result, _operand)
-{}
-OperationLogicalNot::~OperationLogicalNot()
-{}
-
-//////////////////////////////////////////////
-// OperationSizeofType
-//////////////////////////////////////////////
-OperationSizeofType::OperationSizeofType(
-    const JLang::context::SourceReference & _src_ref,
-    size_t _result,
-    size_t _operand
-    )
-    : Operation(OP_SIZEOF_TYPE, _src_ref, _result, _operand)
-{}
-OperationSizeofType::~OperationSizeofType()
-{}
-
-
-//////////////////////////////////////////////
-// OperationAdd
-//////////////////////////////////////////////
-
-OperationBinary::OperationBinary(
-    OperationType _type,
-    const JLang::context::SourceReference & _src_ref,
-    size_t _result,
-    size_t _operand_a,
-    size_t _operand_b
-	    )
-    : Operation(_type, _src_ref, _result, _operand_a, _operand_b)
-{}
-OperationBinary::~OperationBinary()
-{}
-size_t
-OperationBinary::get_a() const
-{ return operands.at(0); }
-
-size_t
-OperationBinary::get_b() const
-{ return operands.at(1); }
-
 
 //////////////////////////////////////////////
 // OperationJumpIfEqual

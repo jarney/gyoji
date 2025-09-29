@@ -53,58 +53,59 @@ namespace JLang::mir {
     class Operation {
     public:
 	typedef enum {
-	    OP_FUNCTION_CALL,
-	    OP_SYMBOL,
+	    // Operation        // Validations -> Result
+	    OP_FUNCTION_CALL,   // Any, but need to match function signatures -> Function return-value type
+	    OP_SYMBOL,          // N/A
 
-	    OP_ARRAY_INDEX,
-	    OP_DOT,
-	    OP_ARROW,
+	    OP_ARRAY_INDEX,     // Pointer types -> Pointer Target type
+	    OP_DOT,             // class types -> Found member type
+	    OP_ARROW,           // Pointer to class types -> Found member type
 	    
-	    OP_LOCAL_DECLARE,
-	    OP_LOCAL_UNDECLARE,
-	    OP_LOCAL_VARIABLE,
-	    OP_LITERAL_CHAR,
-	    OP_LITERAL_STRING,
-	    OP_LITERAL_INT,
-	    OP_LITERAL_FLOAT,
-	    OP_POST_INCREMENT,
-	    OP_POST_DECREMENT,
-	    OP_PRE_INCREMENT,
-	    OP_PRE_DECREMENT,
+	    OP_LOCAL_DECLARE,   // N/A
+	    OP_LOCAL_UNDECLARE, // N/A
+	    OP_LOCAL_VARIABLE,  // N/A
+	    OP_LITERAL_CHAR,    // N/A
+	    OP_LITERAL_STRING,  // N/A
+	    OP_LITERAL_INT,     // N/A
+	    OP_LITERAL_FLOAT,   // N/A
+	    OP_POST_INCREMENT,  // Pointer types, integer types -> Operand type
+	    OP_POST_DECREMENT,  // Pointer types, integer types -> Operand type
+	    OP_PRE_INCREMENT,   // Pointer types, integer types -> Operand type
+	    OP_PRE_DECREMENT,   // Pointer types, integer types -> Operand type
 
-	    OP_ADDRESSOF,
-	    OP_DEREFERENCE,
-	    OP_NEGATE,
-	    OP_BITWISE_NOT,
-	    OP_LOGICAL_NOT,
+	    OP_ADDRESSOF,   // Any type -> Pointer type
+	    OP_DEREFERENCE, // Pointer types -> Pointer Target type
+	    OP_NEGATE,      // Numeric types -> Numeric type
+	    OP_BITWISE_NOT, // Integer types -> Integer Type
+	    OP_LOGICAL_NOT, // Boolean types -> Boolean
 
-	    OP_SIZEOF_TYPE,
+	    OP_SIZEOF_TYPE, // Any type -> u64
 	    
-	    OP_ADD,
-	    OP_SUBTRACT,
-	    OP_MULTIPLY,
-	    OP_DIVIDE,
-	    OP_MODULO,
+	    OP_ADD,         // Matching Numeric types -> Operand type
+	    OP_SUBTRACT,    // Matching Numeric types -> Operand type
+	    OP_MULTIPLY,    // Matching Numeric types -> Operand type
+	    OP_DIVIDE,      // Matching Integer types -> Operand type
+	    OP_MODULO,      // Matching Integer types -> Operand type
 
-	    OP_LOGICAL_AND,
-	    OP_LOGICAL_OR,
+	    OP_LOGICAL_AND, // Boolean types -> Boolean
+	    OP_LOGICAL_OR,  // Boolean types -> Boolean
 
-	    OP_BITWISE_AND,
-	    OP_BITWISE_OR,
-	    OP_BITWISE_XOR,
-	    OP_SHIFT_LEFT,
-	    OP_SHIFT_RIGHT,
+	    OP_BITWISE_AND, // Matching integer types -> Integer type
+	    OP_BITWISE_OR,  // Matching integer types -> Integer type
+	    OP_BITWISE_XOR, // Matching integer types -> Integer type
+	    OP_SHIFT_LEFT,  // Matching integer types -> Integer type
+	    OP_SHIFT_RIGHT, // Matching integer types -> Integer type
 
-	    OP_COMPARE_LT,
-	    OP_COMPARE_GT,
-	    OP_COMPARE_LE,
-	    OP_COMPARE_GE,
-	    OP_COMPARE_NE,
-	    OP_COMPARE_EQ,
+	    OP_COMPARE_LT,  // Primitive types -> Boolean
+	    OP_COMPARE_GT,  // Primitive types -> Boolean
+	    OP_COMPARE_LE,  // Primitive types -> Boolean
+	    OP_COMPARE_GE,  // Primitive types -> Boolean
+	    OP_COMPARE_NE,  // Pointer types, Primitive types, recursive for class types.
+	    OP_COMPARE_EQ,  // Pointer types, Primitive types, recursive for class types.
 	    
-	    OP_ASSIGN,
+	    OP_ASSIGN,      // Primitive types, pointer types, recursive for class types.
 	    
-	    OP_JUMP_IF_EQUAL,
+	    OP_JUMP_IF_EQUAL, // Boolean types
 	    OP_JUMP,
 	    OP_RETURN
 	} OperationType;
@@ -145,6 +146,32 @@ namespace JLang::mir {
 	const JLang::context::SourceReference & src_ref;
 	std::vector<size_t> operands;
 	size_t result;
+    };
+
+    class OperationUnary : public Operation {
+    public:
+	OperationUnary(
+	    OperationType _type,
+	    const JLang::context::SourceReference & _src_ref,
+	    size_t _result,
+	    size_t _operand
+	    );
+	~OperationUnary();
+	size_t get_a() const;
+    };
+    
+    class OperationBinary : public Operation {
+    public:
+	OperationBinary(
+	    OperationType _type,
+	    const JLang::context::SourceReference & _src_ref,
+	    size_t _result,
+	    size_t _operand_a,
+	    size_t _operand_b
+	    );
+	~OperationBinary();
+	size_t get_a() const;
+	size_t get_b() const;
     };
 
     class OperationFunctionCall : public Operation {
@@ -273,82 +300,7 @@ namespace JLang::mir {
     private:
 	const std::string literal_float;
     };
-    class OperationPreIncrement : public Operation {
-    public:
-	OperationPreIncrement(
-	    const JLang::context::SourceReference & _src_ref,
-	    size_t _result,
-	    size_t _operand
-	    );
-	~OperationPreIncrement();
-    private:
-    };
     
-    class OperationPostIncrement : public Operation {
-    public:
-	OperationPostIncrement(
-	    const JLang::context::SourceReference & _src_ref,
-	    size_t _result,
-	    size_t _operand
-	    );
-	~OperationPostIncrement();
-    private:
-    };
-    class OperationPreDecrement : public Operation {
-    public:
-	OperationPreDecrement(
-	    const JLang::context::SourceReference & _src_ref,
-	    size_t _result,
-	    size_t _operand
-	    );
-	~OperationPreDecrement();
-    private:
-    };
-    
-    class OperationPostDecrement : public Operation {
-    public:
-	OperationPostDecrement(
-	    const JLang::context::SourceReference & _src_ref,
-	    size_t _result,
-	    size_t _operand
-	    );
-	~OperationPostDecrement();
-    private:
-    };
-
-    class OperationAddressOf : public Operation {
-    public:
-	OperationAddressOf(
-	    const JLang::context::SourceReference & _src_ref,
-	    size_t _result,
-	    size_t _operand
-	    );
-	~OperationAddressOf();
-    private:
-    };
-    
-    class OperationDereference : public Operation {
-    public:
-	OperationDereference(
-	    const JLang::context::SourceReference & _src_ref,
-	    size_t _result,
-	    size_t _operand
-	    );
-	~OperationDereference();
-    private:
-    };
-    
-    class OperationNegate : public Operation {
-    public:
-	OperationNegate(
-	    const JLang::context::SourceReference & _src_ref,
-	    size_t _result,
-	    size_t _operand
-	    );
-	~OperationNegate();
-    private:
-    };
-
     class OperationBitwiseNot : public Operation {
     public:
 	OperationBitwiseNot(
@@ -380,20 +332,6 @@ namespace JLang::mir {
 	    );
 	~OperationSizeofType();
     private:
-    };
-
-    class OperationBinary : public Operation {
-    public:
-	OperationBinary(
-	    OperationType _type,
-	    const JLang::context::SourceReference & _src_ref,
-	    size_t _result,
-	    size_t _operand_a,
-	    size_t _operand_b
-	    );
-	~OperationBinary();
-	size_t get_a() const;
-	size_t get_b() const;
     };
 
     class OperationJumpIfEqual : public Operation {

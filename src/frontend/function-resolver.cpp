@@ -547,7 +547,8 @@ FunctionDefinitionResolver::extract_from_expression_postfix_incdec(
     returned_tmpvar = function.tmpvar_duplicate(operand_tmpvar);
     
     if (expression.get_type() == ExpressionPostfixIncDec::INCREMENT) {
-	auto operation = std::make_unique<OperationPostIncrement>(
+	auto operation = std::make_unique<OperationUnary>(
+	    Operation::OP_POST_INCREMENT,
 	    expression.get_source_ref(),
 	    returned_tmpvar,
 	    operand_tmpvar
@@ -557,7 +558,8 @@ FunctionDefinitionResolver::extract_from_expression_postfix_incdec(
 	    .add_statement(std::move(operation));
     }
     else if (expression.get_type() == ExpressionPostfixIncDec::DECREMENT) {
-	auto operation = std::make_unique<OperationPostDecrement>(
+	auto operation = std::make_unique<OperationUnary>(
+	    Operation::OP_POST_DECREMENT,
 	    expression.get_source_ref(),
 	    returned_tmpvar,
 	    operand_tmpvar
@@ -611,7 +613,8 @@ FunctionDefinitionResolver::extract_from_expression_unary_prefix(
 
     if (expression.get_type() == ExpressionUnaryPrefix::INCREMENT) {
 	returned_tmpvar = function.tmpvar_duplicate(operand_tmpvar);
-	auto operation = std::make_unique<OperationPreIncrement>(
+	auto operation = std::make_unique<OperationUnary>(
+	    Operation::OP_PRE_INCREMENT,
 	    expression.get_source_ref(),
 	    returned_tmpvar,
 	    operand_tmpvar
@@ -622,7 +625,8 @@ FunctionDefinitionResolver::extract_from_expression_unary_prefix(
     }
     else if (expression.get_type() == ExpressionUnaryPrefix::DECREMENT) {
 	returned_tmpvar = function.tmpvar_duplicate(operand_tmpvar);
-	auto operation = std::make_unique<OperationPreDecrement>(
+	auto operation = std::make_unique<OperationUnary>(
+	    Operation::OP_PRE_DECREMENT,
 	    expression.get_source_ref(),
 	    returned_tmpvar,
 	    operand_tmpvar
@@ -634,7 +638,8 @@ FunctionDefinitionResolver::extract_from_expression_unary_prefix(
     else if (expression.get_type() == ExpressionUnaryPrefix::ADDRESSOF) {
 	const Type * pointer_to_operand_type = mir.get_types().get_pointer_to(operand_type, expression.get_source_ref());
 	returned_tmpvar = function.tmpvar_define(pointer_to_operand_type);
-	auto operation = std::make_unique<OperationAddressOf>(
+	auto operation = std::make_unique<OperationUnary>(
+	    Operation::OP_ADDRESSOF,
 	    expression.get_source_ref(),
 	    returned_tmpvar,
 	    operand_tmpvar
@@ -655,8 +660,9 @@ FunctionDefinitionResolver::extract_from_expression_unary_prefix(
 	    return;
 	}
 	returned_tmpvar = function.tmpvar_define(operand_type);
-	auto operation = std::make_unique<OperationDereference>(
-	    expression.get_source_ref(),	    
+	auto operation = std::make_unique<OperationUnary>(
+	    Operation::OP_DEREFERENCE,
+	    expression.get_source_ref(),
 	    returned_tmpvar,
 	    operand_tmpvar
 	    );
@@ -672,7 +678,8 @@ FunctionDefinitionResolver::extract_from_expression_unary_prefix(
     }
     else if (expression.get_type() == ExpressionUnaryPrefix::MINUS) {
 	returned_tmpvar = function.tmpvar_duplicate(operand_tmpvar);
-	auto operation = std::make_unique<OperationNegate>(
+	auto operation = std::make_unique<OperationUnary>(
+	    Operation::OP_NEGATE,
 	    expression.get_source_ref(),	    
 	    returned_tmpvar,
 	    operand_tmpvar
@@ -683,7 +690,8 @@ FunctionDefinitionResolver::extract_from_expression_unary_prefix(
     }
     else if (expression.get_type() == ExpressionUnaryPrefix::BITWISE_NOT) {
 	returned_tmpvar = function.tmpvar_duplicate(operand_tmpvar);
-	auto operation = std::make_unique<OperationBitwiseNot>(
+	auto operation = std::make_unique<OperationUnary>(
+	    Operation::OP_BITWISE_NOT,
 	    expression.get_source_ref(),	    
 	    returned_tmpvar,
 	    operand_tmpvar
@@ -703,7 +711,8 @@ FunctionDefinitionResolver::extract_from_expression_unary_prefix(
 		    );
 	}
 	returned_tmpvar = function.tmpvar_duplicate(operand_tmpvar);
-	auto operation = std::make_unique<OperationLogicalNot>(
+	auto operation = std::make_unique<OperationUnary>(
+	    Operation::OP_LOGICAL_NOT,
 	    expression.get_source_ref(),	    
 	    returned_tmpvar,
 	    operand_tmpvar
@@ -734,7 +743,8 @@ FunctionDefinitionResolver::extract_from_expression_unary_sizeof_type(
     const Type * u64_type = mir.get_types().get_type("u64");
     size_t operand_tmpvar = function.tmpvar_define(operand_type);
     returned_tmpvar = function.tmpvar_define(u64_type);
-    auto operation = std::make_unique<OperationSizeofType>(
+    auto operation = std::make_unique<OperationUnary>(
+	Operation::OP_SIZEOF_TYPE,
 	expression.get_source_ref(),	    
 	returned_tmpvar,
 	operand_tmpvar

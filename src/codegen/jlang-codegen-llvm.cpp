@@ -396,28 +396,28 @@ void
 CodeGeneratorLLVMContext::generate_operation_post_increment(
     std::map<size_t, llvm::Value *> & tmp_values,
     const JLang::mir::Function & mir_function,
-    const JLang::mir::OperationPostIncrement *operation
+    const JLang::mir::OperationUnary *operation
     )
 {}
 void
 CodeGeneratorLLVMContext::generate_operation_post_decrement(
     std::map<size_t, llvm::Value *> & tmp_values,
     const JLang::mir::Function & mir_function,
-    const JLang::mir::OperationPostDecrement *operation
+    const JLang::mir::OperationUnary *operation
     )
 {}
 void
 CodeGeneratorLLVMContext::generate_operation_pre_increment(
     std::map<size_t, llvm::Value *> & tmp_values,
     const JLang::mir::Function & mir_function,
-    const JLang::mir::OperationPreIncrement *operation
+    const JLang::mir::OperationUnary *operation
     )
 {}
 void
 CodeGeneratorLLVMContext::generate_operation_pre_decrement(
     std::map<size_t, llvm::Value *> & tmp_values,
     const JLang::mir::Function & mir_function,
-    const JLang::mir::OperationPreDecrement *operation
+    const JLang::mir::OperationUnary *operation
     )
 {}
 void
@@ -589,16 +589,16 @@ CodeGeneratorLLVMContext::generate_basic_block(
 	    generate_operation_literal_float(tmp_values, mir_function, (OperationLiteralFloat*)operation.get());
 	    break;
 	case Operation::OP_POST_INCREMENT:
-	    generate_operation_post_increment(tmp_values, mir_function, (OperationPostIncrement*)operation.get());
+	    generate_operation_post_increment(tmp_values, mir_function, (OperationUnary*)operation.get());
 	    break;
 	case Operation::OP_POST_DECREMENT:
-	    generate_operation_post_decrement(tmp_values, mir_function, (OperationPostDecrement*)operation.get());
+	    generate_operation_post_decrement(tmp_values, mir_function, (OperationUnary*)operation.get());
 	    break;
 	case Operation::OP_PRE_INCREMENT:
-	    generate_operation_pre_increment(tmp_values, mir_function, (OperationPreIncrement*)operation.get());
+	    generate_operation_pre_increment(tmp_values, mir_function, (OperationUnary*)operation.get());
 	    break;
 	case Operation::OP_PRE_DECREMENT:
-	    generate_operation_pre_decrement(tmp_values, mir_function, (OperationPreDecrement*)operation.get());
+	    generate_operation_pre_decrement(tmp_values, mir_function, (OperationUnary*)operation.get());
 	    break;
 	case Operation::OP_ADD:
 	    generate_operation_add(tmp_values, mir_function, (OperationBinary*)operation.get());

@@ -106,22 +106,22 @@ namespace JLang::codegen {
 	void generate_operation_post_increment(
 	    std::map<size_t, llvm::Value *> & tmp_values,
 	    const JLang::mir::Function & mir_function,
-	    const JLang::mir::OperationPostIncrement *operation
+	    const JLang::mir::OperationUnary *operation
 	    );
 	void generate_operation_post_decrement(
 	    std::map<size_t, llvm::Value *> & tmp_values,
 	    const JLang::mir::Function & mir_function,
-	    const JLang::mir::OperationPostDecrement *operation
+	    const JLang::mir::OperationUnary *operation
 	    );
 	void generate_operation_pre_increment(
 	    std::map<size_t, llvm::Value *> & tmp_values,
 	    const JLang::mir::Function & mir_function,
-	    const JLang::mir::OperationPreIncrement *operation
+	    const JLang::mir::OperationUnary *operation
 	    );
 	void generate_operation_pre_decrement(
 	    std::map<size_t, llvm::Value *> & tmp_values,
 	    const JLang::mir::Function & mir_function,
-	    const JLang::mir::OperationPreDecrement *operation
+	    const JLang::mir::OperationUnary *operation
 	    );
 	void generate_operation_add(
 	    std::map<size_t, llvm::Value *> & tmp_values,
