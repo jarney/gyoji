@@ -253,27 +253,26 @@ CodeGeneratorLLVMContext::create_type(const Type * type)
 	return it->second;
     }
     
-    Type::TypeType t = type->get_type();
     llvm::Type* llvm_type;
-    if (t == Type::TYPE_PRIMITIVE) {
+    if (type->is_primitive()) {
 	return create_type_primitive(type);
     }
-    else if (t == Type::TYPE_ENUM) {
+    else if (type->is_enum()) {
 	return create_type_enum(type);
     }
-    else if (t == Type::TYPE_COMPOSITE) {
+    else if (type->is_composite()) {
 	return create_type_composite(type);
     }
-    else if (t == Type::TYPE_POINTER) {
+    else if (type->is_pointer()) {
 	return create_type_pointer(type);
     }
-    else if (t == Type::TYPE_REFERENCE) {
+    else if (type->is_reference()) {
 	return create_type_reference(type);
     }
-    else if (t == Type::TYPE_FUNCTION_POINTER) {
+    else if (type->is_function_pointer()) {
 	return create_type_function_pointer(type);
     }
-    fprintf(stderr, "Compiler BUG!  Unknown type type passed to code generator %d\n", t);
+    fprintf(stderr, "Compiler BUG!  Unknown type type passed to code generator %s\n", type->get_name().c_str());
     exit(1);
     return nullptr;
 }
@@ -431,8 +430,8 @@ CodeGeneratorLLVMContext::generate_operation_add(
     size_t b = operation->get_b();
     const JLang::mir::Type *atype = mir_function.tmpvar_get(a)->get_type();
     const JLang::mir::Type *btype = mir_function.tmpvar_get(b)->get_type();
-    if ((atype->get_type() != JLang::mir::Type::TYPE_PRIMITIVE) ||
-	(btype->get_type() != JLang::mir::Type::TYPE_PRIMITIVE)) {
+    if ((!atype->is_numeric()) ||
+	(!btype->is_numeric())) {
 	compiler_context
 	    .get_errors()
 	    .add_simple_error(

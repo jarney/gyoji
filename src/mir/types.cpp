@@ -17,21 +17,21 @@ Types::Types()
     // it's a good enough place for now that I don't care
     // until we have a type system we can plug into this
     
-    define_type(std::make_unique<Type>("i8", Type::TYPE_PRIMITIVE, true, builtin_source_ref));
-    define_type(std::make_unique<Type>("i16", Type::TYPE_PRIMITIVE, true, builtin_source_ref));
-    define_type(std::make_unique<Type>("i32", Type::TYPE_PRIMITIVE, true, builtin_source_ref));
-    define_type(std::make_unique<Type>("i64", Type::TYPE_PRIMITIVE, true, builtin_source_ref));
+    define_type(std::make_unique<Type>("i8", Type::TYPE_PRIMITIVE_i8, true, builtin_source_ref));
+    define_type(std::make_unique<Type>("i16", Type::TYPE_PRIMITIVE_i16, true, builtin_source_ref));
+    define_type(std::make_unique<Type>("i32", Type::TYPE_PRIMITIVE_i32, true, builtin_source_ref));
+    define_type(std::make_unique<Type>("i64", Type::TYPE_PRIMITIVE_i64, true, builtin_source_ref));
     
-    define_type(std::make_unique<Type>("u8", Type::TYPE_PRIMITIVE, true, builtin_source_ref));
-    define_type(std::make_unique<Type>("u16", Type::TYPE_PRIMITIVE, true, builtin_source_ref));
-    define_type(std::make_unique<Type>("u32", Type::TYPE_PRIMITIVE, true, builtin_source_ref));
-    define_type(std::make_unique<Type>("u64", Type::TYPE_PRIMITIVE, true, builtin_source_ref));
+    define_type(std::make_unique<Type>("u8", Type::TYPE_PRIMITIVE_u8, true, builtin_source_ref));
+    define_type(std::make_unique<Type>("u16", Type::TYPE_PRIMITIVE_u16, true, builtin_source_ref));
+    define_type(std::make_unique<Type>("u32", Type::TYPE_PRIMITIVE_u32, true, builtin_source_ref));
+    define_type(std::make_unique<Type>("u64", Type::TYPE_PRIMITIVE_u64, true, builtin_source_ref));
     
-    define_type(std::make_unique<Type>("f32", Type::TYPE_PRIMITIVE, true, builtin_source_ref));
-    define_type(std::make_unique<Type>("f64", Type::TYPE_PRIMITIVE, true, builtin_source_ref));
+    define_type(std::make_unique<Type>("f32", Type::TYPE_PRIMITIVE_f32, true, builtin_source_ref));
+    define_type(std::make_unique<Type>("f64", Type::TYPE_PRIMITIVE_f64, true, builtin_source_ref));
     
-    define_type(std::make_unique<Type>("bool", Type::TYPE_PRIMITIVE, true, builtin_source_ref));
-    define_type(std::make_unique<Type>("void", Type::TYPE_PRIMITIVE, true, builtin_source_ref));
+    define_type(std::make_unique<Type>("bool", Type::TYPE_PRIMITIVE_bool, true, builtin_source_ref));
+    define_type(std::make_unique<Type>("void", Type::TYPE_PRIMITIVE_void, true, builtin_source_ref));
 }
 
 Types::~Types()

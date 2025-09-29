@@ -624,6 +624,59 @@ FunctionDefinitionResolver::extract_from_expression_unary_prefix(
 	    .add_statement(std::move(operation));
     }
     else if (expression.get_type() == ExpressionUnaryPrefix::DECREMENT) {
+	// Especially with operators like this, it would be good to
+	// validate their creation up-front.
+	// The validation should be done by the operator itself
+	// in the MIR so that other frontends don't have
+	// to duplicate this part of the logic.
+
+	// It should:
+	//     * Validate the arguments to make sure they're suitable.
+	//     * Select/nominate a return-value with appropriate type.
+	//     * Report errors (if appropriate)
+	//     * Signal halt of expression extraction if the
+	//     * return-value could not be configured.
+	//
+	// Ideal interface:
+	//        bool success = mir.add_operation(
+	//              errors,        -- Can we wrap these into a 'mir builder?'.
+	//              function,
+	//              basic_block,
+	//              Operation::OP_PRE_DECREMENT,
+	//              src_ref,
+	//              returned_tmpvar,
+	//              operand_tmpvar
+	//        );
+
+	// class MIROperationValidator {
+	//        bool validate();
+        // };
+	// Validate that an operand is numeric.
+	// class MIROPerationValidateOperandNumeric {
+        // };
+	// Validate that operands match.
+	// class MIROPerationValidateOperandsMatch {
+        // };
+	// Validate that operand is integer
+	// Validate that operand is boolean.
+	// Possibly custom validations for some operations.
+	// class MIROperationBuilder {
+	// public:
+	//        Look up validations based on _type
+	//        and execute them.
+	//
+	//        add_operation(
+	//            Operation::OperationType _type,
+	//            size_t & returned_var,
+	//            size_t operand_var,
+	//            );
+	// private:
+	//        CompilerContext compiler_context;
+	//        size_t current_block;
+	//        Function & function;
+        // };
+	//
+	
 	returned_tmpvar = function.tmpvar_duplicate(operand_tmpvar);
 	auto operation = std::make_unique<OperationUnary>(
 	    Operation::OP_PRE_DECREMENT,
@@ -786,7 +839,7 @@ FunctionDefinitionResolver::extract_from_expression_binary(
 	returned_tmpvar = function.tmpvar_duplicate(a_tmpvar);
 	auto operation = std::make_unique<OperationBinary>(
 	    Operation::OP_ADD,
-	    expression.get_source_ref(),	    
+	    expression.get_source_ref(),
 	    returned_tmpvar,
 	    a_tmpvar,
 	    b_tmpvar

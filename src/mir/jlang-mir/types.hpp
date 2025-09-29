@@ -44,7 +44,7 @@ namespace JLang::mir {
 	 * namespace and identifying a specific type.
 	 */
 	Type * get_type(std::string type) const;
-	
+
 	const Type * get_pointer_to(const Type *_type, const JLang::context::SourceReference & src_ref);
 	
 	const Type * get_reference_to(const Type *_type, const JLang::context::SourceReference & src_ref);
@@ -141,7 +141,21 @@ namespace JLang::mir {
 	    /**
 	     * This is a primitive type such as u8, u16, u32, etc.
 	     */
-	    TYPE_PRIMITIVE,
+	    TYPE_PRIMITIVE_u8,
+	    TYPE_PRIMITIVE_u16,
+	    TYPE_PRIMITIVE_u32,
+	    TYPE_PRIMITIVE_u64,
+
+	    TYPE_PRIMITIVE_i8,
+	    TYPE_PRIMITIVE_i16,
+	    TYPE_PRIMITIVE_i32,
+	    TYPE_PRIMITIVE_i64,
+
+	    TYPE_PRIMITIVE_f32,
+	    TYPE_PRIMITIVE_f64,
+
+	    TYPE_PRIMITIVE_bool,
+	    TYPE_PRIMITIVE_void,
 	    
 	    /**
 	     * This is a composite type consisting of
@@ -177,7 +191,7 @@ namespace JLang::mir {
 	     */
 	    TYPE_ENUM
 	} TypeType;
-	
+
 	/**
 	 * This defines a primitive type of the given
 	 * type as a primitive type.
@@ -200,6 +214,20 @@ namespace JLang::mir {
 	 * only later when the type resolution occurs.
 	 */
 	bool is_complete() const;
+
+	bool is_primitive() const;
+	bool is_pointer() const;
+	bool is_reference() const;
+	bool is_numeric() const;
+	bool is_integer() const;
+	bool is_unsigned() const;
+	bool is_signed() const;
+	bool is_float() const;
+	bool is_bool() const;
+	bool is_void() const;
+	bool is_enum() const;
+	bool is_composite() const;
+	bool is_function_pointer() const;
 	
 	TypeType get_type() const;
 	

@@ -29,6 +29,122 @@ bool
 Type::is_complete() const
 { return complete; }
 
+bool
+Type::is_primitive() const
+{
+    return
+	(type == TYPE_PRIMITIVE_u8) ||
+	(type == TYPE_PRIMITIVE_u16) ||
+	(type == TYPE_PRIMITIVE_u32) ||
+	(type == TYPE_PRIMITIVE_u64) ||
+	
+	(type == TYPE_PRIMITIVE_i8) ||
+	(type == TYPE_PRIMITIVE_i16) ||
+	(type == TYPE_PRIMITIVE_i32) ||
+	(type == TYPE_PRIMITIVE_i64) ||
+
+	(type == TYPE_PRIMITIVE_f32) ||
+	(type == TYPE_PRIMITIVE_f64) ||
+
+	(type == TYPE_PRIMITIVE_bool) ||
+	(type == TYPE_PRIMITIVE_void)
+	;
+}
+
+bool
+Type::is_pointer() const
+{ return (type == TYPE_POINTER); }
+
+bool
+Type::is_reference() const
+{ return (type == TYPE_REFERENCE); }
+
+bool
+Type::is_numeric() const
+{
+    return 
+	(type == TYPE_PRIMITIVE_u8) ||
+	(type == TYPE_PRIMITIVE_u16) ||
+	(type == TYPE_PRIMITIVE_u32) ||
+	(type == TYPE_PRIMITIVE_u64) ||
+	
+	(type == TYPE_PRIMITIVE_i8) ||
+	(type == TYPE_PRIMITIVE_i16) ||
+	(type == TYPE_PRIMITIVE_i32) ||
+	(type == TYPE_PRIMITIVE_i64) ||
+
+	(type == TYPE_PRIMITIVE_f32) ||
+	(type == TYPE_PRIMITIVE_f64);
+}
+
+bool
+Type::is_integer() const
+{
+    return 
+	(type == TYPE_PRIMITIVE_u8) ||
+	(type == TYPE_PRIMITIVE_u16) ||
+	(type == TYPE_PRIMITIVE_u32) ||
+	(type == TYPE_PRIMITIVE_u64) ||
+	
+	(type == TYPE_PRIMITIVE_i8) ||
+	(type == TYPE_PRIMITIVE_i16) ||
+	(type == TYPE_PRIMITIVE_i32) ||
+	(type == TYPE_PRIMITIVE_i64);
+}
+
+bool
+Type::is_signed() const
+{
+    return
+	(type == TYPE_PRIMITIVE_i8) ||
+	(type == TYPE_PRIMITIVE_i16) ||
+	(type == TYPE_PRIMITIVE_i32) ||
+	(type == TYPE_PRIMITIVE_i64);
+}
+
+bool
+Type::is_unsigned() const
+{
+    return
+	(type == TYPE_PRIMITIVE_u8) ||
+	(type == TYPE_PRIMITIVE_u16) ||
+	(type == TYPE_PRIMITIVE_u32) ||
+	(type == TYPE_PRIMITIVE_u64);
+}
+
+bool
+Type::is_float() const
+{
+    return
+	(type == TYPE_PRIMITIVE_f32) ||
+	(type == TYPE_PRIMITIVE_f64);
+}
+
+bool
+Type::is_bool() const
+{
+    return 
+	(type == TYPE_PRIMITIVE_bool);
+}
+
+bool
+Type::is_void() const
+{
+    return
+	(type == TYPE_PRIMITIVE_void);
+}
+bool
+Type::is_enum() const
+{ return (type == TYPE_ENUM); }
+
+bool
+Type::is_composite() const
+{ return (type == TYPE_COMPOSITE); }
+
+bool
+Type::is_function_pointer() const
+{ return (type == TYPE_FUNCTION_POINTER); }
+
 Type::TypeType
 Type::get_type() const
 { return type; }
@@ -108,33 +224,33 @@ Type::dump() const
 {
     std::string type_desc("unknown");
     
-    if (type == TYPE_PRIMITIVE) {
+    if (is_primitive()) {
 	type_desc = std::string("primitive");
     }
     else if (type == TYPE_COMPOSITE) {
 	type_desc = std::string("composite");
     }
-    else if (type == TYPE_POINTER) {
+    else if (is_pointer()) {
 	type_desc = std::string("pointer");
     }
-    else if (type == TYPE_REFERENCE) {
+    else if (is_reference()) {
 	type_desc = std::string("reference");
     }
-    else if (type == TYPE_ENUM) {
+    else if (is_enum()) {
 	type_desc = std::string("enum");
     }
-    else if (type == TYPE_FUNCTION_POINTER) {
+    else if (is_function_pointer()) {
 	type_desc = std::string("fptr");
     }
     
     if (!is_complete()) {
 	fprintf(stderr, "(incomplete) ");
     }
-    if (type == TYPE_PRIMITIVE) {
+    if (is_primitive()) {
 	fprintf(stderr, "Type %s : %s\n",
 		name.c_str(), type_desc.c_str());
     }
-    else if (type == TYPE_COMPOSITE) {
+    else if (is_composite()) {
 	fprintf(stderr, "Type %s : %s\n",
 		name.c_str(), type_desc.c_str());
 	
@@ -144,15 +260,15 @@ Type::dump() const
 	}
 	fprintf(stderr, "}\n");
     }
-    else if (type == TYPE_POINTER) {
+    else if (is_pointer()) {
 	fprintf(stderr, "Type %s : %s to %s\n",
 		name.c_str(), type_desc.c_str(), pointer_or_ref->get_name().c_str());
     }
-    else if (type == TYPE_REFERENCE) {
+    else if (is_reference()) {
 	fprintf(stderr, "Type %s : %s to %s\n",
 		name.c_str(), type_desc.c_str(), pointer_or_ref->get_name().c_str());
     }
-    else if (type == TYPE_FUNCTION_POINTER) {
+    else if (is_function_pointer()) {
 	std::string desc;
 	desc = desc + return_type->get_name();
 	std::vector<std::string> arglist;

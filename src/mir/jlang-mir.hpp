@@ -48,4 +48,63 @@ namespace JLang::mir {
 	Types types;
 	Symbols symbols;
     };
+
+#if 0
+    /**
+     * This class provides the interface to create
+     * new operations in a function.  Adding new operations
+     * to functions should never be done outside of this
+     * class because most operands require validation
+     * in order to produce sensible code, so this
+     * provides appropriate validations for each
+     * of the opcodes and ensures that they are added
+     * to the appropriate basic block only after being
+     * validated.  Most validations are recoverable
+     * meaning that further expression evaluation can
+     * take place.  Some validations, however, cannot
+     * be recovered because when determining the 'result'
+     * type of the expression, something went wrong (e.g. unknown function)
+     * and in those cases, it is not safe to continue
+     * adding operations *in that expression*.
+     */
+    class MIROperationBuilder {
+    public:
+	MIROperationBuilder(
+	    const CompilerContext & _compiler_context,
+	    const MIR & _mir,
+	    Function & _function,
+	    size_t & _current_block
+	    );
+	~MIROperationBuilder();
+
+	// Unary operations.
+	bool add_operation(
+	    Operation::OperationType _type,
+	    JLang::context::SourceReference & _src_ref,
+	    size_t & returned_tmpvar,
+	    size_t & operand_tmpvar
+	    );
+	
+	// Binary operations.
+	bool add_operation(
+	    Operation::OperationType _type,
+	    JLang::context::SourceReference & _src_ref,
+	    size_t & returned_tmpvar,
+	    size_t & operand_tmpvar
+	    );
+
+	// Other operations with possibly
+	// more complicated logic (function calls, literals, etc).
+	bool add_operation(
+	    JLang::owned<Operation> _operation
+	    );
+	
+    private:
+	const CompilerContext & compiler_context;
+	const MIR & mir;
+	Function & function;
+	size_t & current_block;
+    };
+#endif
+    
 };
