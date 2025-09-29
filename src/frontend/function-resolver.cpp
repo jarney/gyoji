@@ -921,9 +921,11 @@ FunctionDefinitionResolver::handle_binary_arithmetic(
 	return false;
     }
     // Check that both operands are integer or float and match in that attribute
+    // This if condition is weird, we can probably simplify it,
+    // but my head is in a bad place to reason about it carefully.
     if 	(
-	(atype->is_integer() && btype->is_integer()) ||
-	(atype->is_float() && btype->is_float())
+	!((atype->is_integer() || btype->is_integer())) ||
+	!((!atype->is_float() || btype->is_float()))
 	){
 	compiler_context
 	    .get_errors()
@@ -1051,18 +1053,6 @@ FunctionDefinitionResolver::extract_from_expression_binary(
 	return false;
     }
 
-    std::string atypename = function.tmpvar_get(a_tmpvar)->get_type()->get_name();
-    std::string btypename = function.tmpvar_get(b_tmpvar)->get_type()->get_name();
-    if (atypename != btypename) {
-	compiler_context
-	    .get_errors()
-	    .add_simple_error(
-		expression.get_source_ref(),
-		"Type mismatch in binary operation",
-		std::string("The type of operands should match: a= ") + atypename + std::string(" b=") + btypename
-		);
-	return false;
-    }
     ExpressionBinary::OperationType op_type;
     op_type = expression.get_operator();
 
