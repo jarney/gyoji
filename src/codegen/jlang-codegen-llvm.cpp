@@ -1093,6 +1093,81 @@ CodeGeneratorLLVMContext::generate_operation_comparison(
 }
 
 void
+CodeGeneratorLLVMContext::generate_operation_arithmetic_negate(
+    std::map<size_t, llvm::Value *> & tmp_values,
+    const JLang::mir::Function & mir_function,
+    const JLang::mir::OperationUnary *operation
+    )
+{
+    size_t a = operation->get_a();
+    const JLang::mir::Type *atype = mir_function.tmpvar_get(a)->get_type();
+    if (!atype->is_signed()) {
+	compiler_context
+	    .get_errors()
+	    .add_simple_error(
+		operation->get_source_ref(),
+		"Compiler bug! Invalid operand arithmetic negate",
+		std::string("Operand to arithmetic negate must be a signed integer but was ") + atype->get_name()
+		);
+	return;
+    }
+    
+    llvm::Value * avalue = tmp_values[a];
+    llvm::Value * result = Builder->CreateNeg(avalue);
+    tmp_values.insert(std::pair(operation->get_result(), result));
+}
+
+void
+CodeGeneratorLLVMContext::generate_operation_bitwise_not(
+    std::map<size_t, llvm::Value *> & tmp_values,
+    const JLang::mir::Function & mir_function,
+    const JLang::mir::OperationUnary *operation
+    )
+{
+    size_t a = operation->get_a();
+    const JLang::mir::Type *atype = mir_function.tmpvar_get(a)->get_type();
+    if (!atype->is_unsigned()) {
+	compiler_context
+	    .get_errors()
+	    .add_simple_error(
+		operation->get_source_ref(),
+		"Compiler bug! Invalid operand bitwise not",
+		std::string("Operand to bitwise not must be an unsigned integer but was ") + atype->get_name()
+		);
+	return;
+    }
+    
+    llvm::Value * avalue = tmp_values[a];
+    llvm::Value * result = Builder->CreateNot(avalue);
+    tmp_values.insert(std::pair(operation->get_result(), result));
+}
+
+void
+CodeGeneratorLLVMContext::generate_operation_logical_not(
+    std::map<size_t, llvm::Value *> & tmp_values,
+    const JLang::mir::Function & mir_function,
+    const JLang::mir::OperationUnary *operation
+    )
+{
+    size_t a = operation->get_a();
+    const JLang::mir::Type *atype = mir_function.tmpvar_get(a)->get_type();
+    if (!atype->is_bool()) {
+	compiler_context
+	    .get_errors()
+	    .add_simple_error(
+		operation->get_source_ref(),
+		"Compiler bug! Invalid operand logical not",
+		std::string("Operand to logical not must be a bool but was ") + atype->get_name()
+		);
+	return;
+    }
+    
+    llvm::Value * avalue = tmp_values[a];
+    llvm::Value * result = Builder->CreateNot(avalue);
+    tmp_values.insert(std::pair(operation->get_result(), result));
+}
+
+void
 CodeGeneratorLLVMContext::generate_operation_assign(
     std::map<size_t, llvm::Value *> & tmp_values,
     std::map<size_t, llvm::Value *> & tmp_lvalues,
@@ -1100,8 +1175,8 @@ CodeGeneratorLLVMContext::generate_operation_assign(
     const JLang::mir::OperationBinary *operation
     )
 {
-    llvm::Value *lvalue = tmp_lvalues[operation->get_operands().at(0)];
-    llvm::Value *value_b = tmp_values[operation->get_operands().at(1)];
+    llvm::Value *lvalue = tmp_lvalues[operation->get_a()];
+    llvm::Value *value_b = tmp_values[operation->get_b()];
     llvm::Value *value = Builder->CreateStore(value_b, lvalue);
     tmp_values.insert(std::pair(operation->get_result(), value));
 }
@@ -1248,6 +1323,15 @@ CodeGeneratorLLVMContext::generate_basic_block(
 	case Operation::OP_COMPARE_NE:
 	    generate_operation_comparison(tmp_values, mir_function, (OperationBinary*)operation.get());
 	    break;
+	case Operation::OP_NEGATE:
+	    generate_operation_arithmetic_negate(tmp_values, mir_function, (OperationUnary*)operation.get());
+	    break;
+	case Operation::OP_BITWISE_NOT:
+	    generate_operation_bitwise_not(tmp_values, mir_function, (OperationUnary*)operation.get());
+	    break;
+	case Operation::OP_LOGICAL_NOT:
+	    generate_operation_logical_not(tmp_values, mir_function, (OperationUnary*)operation.get());
+	    break;
 	case Operation::OP_ASSIGN:
 	    generate_operation_assign(tmp_values, tmp_lvalues, mir_function, (OperationBinary*)operation.get());
 	    break;
@@ -1375,7 +1459,8 @@ CodeGeneratorLLVMContext::output(const std::string & filename)
 	return 1;
     } 
 
-    TheModule->print(errs(), nullptr);
+    llvm::raw_fd_ostream  llvm_ll_ostream(filename + std::string(".ll"), EC);
+    TheModule->print(llvm_ll_ostream, nullptr);
     
     legacy::PassManager pass;
     auto FileType = CodeGenFileType::ObjectFile;

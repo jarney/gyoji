@@ -185,10 +185,26 @@ namespace JLang::codegen {
 	    const JLang::mir::Function & mir_function,
 	    const JLang::mir::OperationBinary *operation
 	    );
+
 	void generate_operation_comparison(
 	    std::map<size_t, llvm::Value *> & tmp_values,
 	    const JLang::mir::Function & mir_function,
 	    const JLang::mir::OperationBinary *operation
+	    );
+	void generate_operation_arithmetic_negate(
+	    std::map<size_t, llvm::Value *> & tmp_values,
+	    const JLang::mir::Function & mir_function,
+	    const JLang::mir::OperationUnary *operation
+	    );
+	void generate_operation_bitwise_not(
+	    std::map<size_t, llvm::Value *> & tmp_values,
+	    const JLang::mir::Function & mir_function,
+	    const JLang::mir::OperationUnary *operation
+	    );
+	void generate_operation_logical_not(
+	    std::map<size_t, llvm::Value *> & tmp_values,
+	    const JLang::mir::Function & mir_function,
+	    const JLang::mir::OperationUnary *operation
 	    );
 	void generate_operation_assign(
 	    std::map<size_t, llvm::Value *> & tmp_values,
