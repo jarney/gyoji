@@ -340,22 +340,6 @@ FunctionDefinitionResolver::extract_from_expression_primary_literal_float(
     return true;
 }
 
-static bool is_bool_type(const Type* value)
-{
-    if (value->get_name() == "bool") {
-	return true;
-    }
-    return false;
-}
-
-static bool is_index_type(const Type* value)
-{
-    if (value->get_name() == "u32") {
-	return true;
-    }
-    return false;
-}
-
 bool
 FunctionDefinitionResolver::extract_from_expression_postfix_array_index(
     JLang::mir::Function & function,
@@ -384,7 +368,7 @@ FunctionDefinitionResolver::extract_from_expression_postfix_array_index(
 	return false;
     }
     
-    if (!is_index_type(function.tmpvar_get(index_tmpvar)->get_type())) {
+    if (!function.tmpvar_get(index_tmpvar)->get_type()->is_unsigned()) {
 	compiler_context
 	    .get_errors()
 	    .add_simple_error(
@@ -800,7 +784,7 @@ FunctionDefinitionResolver::extract_from_expression_unary_prefix(
 	    .add_statement(std::move(operation));
     }
     else if (expression.get_type() == ExpressionUnaryPrefix::LOGICAL_NOT) {
-	if (!is_bool_type(function.tmpvar_get(operand_tmpvar)->get_type())) {
+	if (!function.tmpvar_get(operand_tmpvar)->get_type()->is_bool()) {
 	    compiler_context
 		.get_errors()
 		.add_simple_error(
@@ -895,9 +879,95 @@ FunctionDefinitionResolver::numeric_widen(
     _widen_var = widened_var;
     return true;
 }
+bool
+FunctionDefinitionResolver::numeric_widen_binary_operation(
+    JLang::mir::Function &function,
+    size_t current_block,
+    const JLang::context::SourceReference & _src_ref,
+    size_t & a_tmpvar,
+    size_t & b_tmpvar,
+    const JLang::mir::Type *atype,
+    const JLang::mir::Type *btype,
+    const JLang::mir::Type **widened
+    )
+{
+    if (atype->is_integer()) {
+	// Deal with signed-ness.  We can't mix signed and unsigned.
+	if (atype->is_signed() && btype->is_signed()) {
+	    if (atype->get_primitive_size() > btype->get_primitive_size()) {
+		if (!numeric_widen(function, current_block, _src_ref, b_tmpvar, atype)) {
+		    return false;
+		}
+		*widened = atype;
+	    }
+	    else if (atype->get_primitive_size() < btype->get_primitive_size()) {
+		if (!numeric_widen(function, current_block, _src_ref, a_tmpvar, btype)) {
+		    return false;
+		}
+		*widened = btype;
+	    }
+	    else {
+		// Both types are the same size already, so we do nothing
+		// and it doesn't matter whether we picked 'a' or 'b'.
+		*widened = atype;
+	    }
+	}
+	else if (atype->is_unsigned() && btype->is_unsigned()) {
+	    if (atype->get_primitive_size() > btype->get_primitive_size()) {
+		if (!numeric_widen(function, current_block, _src_ref, b_tmpvar, atype)) {
+		    return false;
+		}
+		*widened = atype;
+	    }
+	    else if (atype->get_primitive_size() < btype->get_primitive_size()) {
+		if (!numeric_widen(function, current_block, _src_ref, a_tmpvar, btype)) {
+		    return false;
+		}
+		fprintf(stderr, "Widened UA %ld %ld\n", a_tmpvar, b_tmpvar);
+		*widened = btype;
+	    }
+	    else {
+		// Both types are the same size already, so we do nothing
+		// and it doesn't matter whether we picked 'a' or 'b'.
+		*widened = atype;
+	    }
+	}
+	else {
+	    compiler_context
+		.get_errors()
+		.add_simple_error(
+		    _src_ref,
+		    "Type mismatch in binary operation",
+		    std::string("The type of operands both signed or unsigned.  Automatic cast from signed to unsigned is not supported. a= ") +
+		    atype->get_name() + std::string(" b=") + btype->get_name()
+		    );
+	    return false;
+	}
+    }
+    // We don't have to check because we already
+    // know that we have a float in the else.
+    else {
+	if (atype->get_primitive_size() > btype->get_primitive_size()) {
+	    if (!numeric_widen(function, current_block, _src_ref, b_tmpvar, atype)) {
+		return false;
+	    }
+	    *widened = atype;
+	}
+	else if (atype->get_primitive_size() < btype->get_primitive_size()) {
+	    if (!numeric_widen(function, current_block, _src_ref, a_tmpvar, btype)) {
+		return false;
+	    }
+	    *widened = btype;
+	}
+	else {
+	    *widened = atype;
+	}
+    }
+    return true;
+}
 
 bool
-FunctionDefinitionResolver::handle_binary_arithmetic(
+FunctionDefinitionResolver::handle_binary_operation_arithmetic(
     JLang::mir::Function & function,
     const JLang::context::SourceReference & _src_ref,
     Operation::OperationType type,
@@ -920,13 +990,26 @@ FunctionDefinitionResolver::handle_binary_arithmetic(
 		);
 	return false;
     }
-    // Check that both operands are integer or float and match in that attribute
-    // This if condition is weird, we can probably simplify it,
-    // but my head is in a bad place to reason about it carefully.
-    if 	(
-	!((atype->is_integer() || btype->is_integer())) ||
-	!((!atype->is_float() || btype->is_float()))
-	){
+    // Special-case for modulo because it doesn't support floating-point types.
+    if (type == Operation::OP_MODULO) {
+	if (atype->is_float() || btype->is_float()) {
+	    compiler_context
+		.get_errors()
+		.add_simple_error(
+		    _src_ref,
+		    "Type mismatch in binary operation",
+		    std::string("The type of operands should be integer, but were a= ") + atype->get_name() + std::string(" b=") + btype->get_name()
+		    );
+	    return false;
+	}
+    }
+    
+    // The arguments must be either both integer
+    // or both float.
+    if 	(!(
+	     (atype->is_integer() && btype->is_integer()) ||
+	     (atype->is_float() && btype->is_float())
+        )) {
 	compiler_context
 	    .get_errors()
 	    .add_simple_error(
@@ -941,82 +1024,100 @@ FunctionDefinitionResolver::handle_binary_arithmetic(
     // Now, both of them are either int or float, so we need to handle each separately
     // so that we can choose the appropriate cast type.
     const Type *widened = nullptr;
-    if (atype->is_integer()) {
-	// Deal with signed-ness.  We can't mix signed and unsigned.
-	if (atype->is_signed() && btype->is_signed()) {
-	    if (atype->get_primitive_size() > btype->get_primitive_size()) {
-		if (!numeric_widen(function, current_block, _src_ref, b_tmpvar, atype)) {
-		    return false;
-		}
-		fprintf(stderr, "Widened B %ld %ld\n", a_tmpvar, b_tmpvar);
-		widened = atype;
-	    }
-	    else if (atype->get_primitive_size() < btype->get_primitive_size()) {
-		if (!numeric_widen(function, current_block, _src_ref, a_tmpvar, btype)) {
-		    return false;
-		}
-		fprintf(stderr, "Widened A %ld %ld\n", a_tmpvar, b_tmpvar);
-		widened = btype;
-	    }
-	    else {
-		// Both types are the same size already, so we do nothing
-		// and it doesn't matter whether we picked 'a' or 'b'.
-		widened = atype;
-	    }
-	}
-	else if (atype->is_unsigned() && btype->is_unsigned()) {
-	    if (atype->get_primitive_size() > btype->get_primitive_size()) {
-		if (!numeric_widen(function, current_block, _src_ref, b_tmpvar, atype)) {
-		    return false;
-		}
-		fprintf(stderr, "Widened UB %ld %ld\n", a_tmpvar, b_tmpvar);
-		widened = atype;
-	    }
-	    else if (atype->get_primitive_size() < btype->get_primitive_size()) {
-		if (!numeric_widen(function, current_block, _src_ref, a_tmpvar, btype)) {
-		    return false;
-		}
-		fprintf(stderr, "Widened UA %ld %ld\n", a_tmpvar, b_tmpvar);
-		widened = btype;
-	    }
-	    else {
-		// Both types are the same size already, so we do nothing
-		// and it doesn't matter whether we picked 'a' or 'b'.
-		widened = atype;
-	    }
-	}
-	else {
-	    compiler_context
-		.get_errors()
-		.add_simple_error(
-		    _src_ref,
-		    "Type mismatch in binary operation",
-		    std::string("The type of operands both signed or unsigned.  Automatic cast from signed to unsigned is not supported. a= ") +
-		    atype->get_name() + std::string(" b=") + btype->get_name()
-		    );
-	    return false;
-	}
+    if (!numeric_widen_binary_operation(function, current_block, _src_ref, a_tmpvar, b_tmpvar, atype, btype, &widened)) {
+	return false;
     }
-    // We don't have to check because we already
-    // know that we have a float in the else.
-    else {
-	if (atype->get_primitive_size() > btype->get_primitive_size()) {
-	    if (!numeric_widen(function, current_block, _src_ref, b_tmpvar, atype)) {
-		return false;
-	    }
-	    widened = atype;
-	}
-	else if (atype->get_primitive_size() < btype->get_primitive_size()) {
-	    if (!numeric_widen(function, current_block, _src_ref, a_tmpvar, btype)) {
-		return false;
-	    }
-	    widened = btype;
-	}
-	else {
-	    widened = atype;
-	}
-    }
+
+    // The return type is whatever
+    // we widened the add to be.
+    returned_tmpvar = function.tmpvar_define(widened);
     
+    // We emit the appropriate operation as either an integer or
+    // floating-point add depending on which one it was.
+    // The back-end may assume that the operand types are both
+    // integer or floating point of the same type and
+    // the return type will also be of the same type.
+    auto operation = std::make_unique<OperationBinary>(
+	type,
+	_src_ref,
+	returned_tmpvar,
+	a_tmpvar,
+	b_tmpvar
+	);
+    function
+	.get_basic_block(current_block)
+	.add_statement(std::move(operation));
+    
+    return true;
+}
+
+bool
+FunctionDefinitionResolver::handle_binary_operation_logical(
+    JLang::mir::Function & function,
+    const JLang::context::SourceReference & _src_ref,
+    Operation::OperationType type,
+    size_t & current_block,
+    size_t & returned_tmpvar,
+    size_t a_tmpvar,
+    size_t b_tmpvar
+    )
+{
+    const Type *atype = function.tmpvar_get(a_tmpvar)->get_type();
+    const Type *btype = function.tmpvar_get(b_tmpvar)->get_type();
+    // Check that both operands are numeric.
+    if (!atype->is_bool() || !btype->is_bool()) {
+	compiler_context
+	    .get_errors()
+	    .add_simple_error(
+		_src_ref,
+		"Type mismatch in logical operation",
+		std::string("The type of operands should be bool , but were: a= ") + atype->get_name() + std::string(" b=") + btype->get_name()
+		);
+	return false;
+    }
+    auto operation = std::make_unique<OperationBinary>(
+	type,
+	_src_ref,
+	returned_tmpvar,
+	a_tmpvar,
+	b_tmpvar
+	);
+    function
+	.get_basic_block(current_block)
+	.add_statement(std::move(operation));
+    return true;
+}
+
+bool
+FunctionDefinitionResolver::handle_binary_operation_bitwise(
+    JLang::mir::Function & function,
+    const JLang::context::SourceReference & _src_ref,
+    Operation::OperationType type,
+    size_t & current_block,
+    size_t & returned_tmpvar,
+    size_t a_tmpvar,
+    size_t b_tmpvar
+    )
+{
+    const Type *atype = function.tmpvar_get(a_tmpvar)->get_type();
+    const Type *btype = function.tmpvar_get(b_tmpvar)->get_type();
+    // Check that both operands are numeric.
+    if (!atype->is_unsigned() || !btype->is_unsigned()) {
+	compiler_context
+	    .get_errors()
+	    .add_simple_error(
+		_src_ref,
+		"Type mismatch in binary operation",
+		std::string("The type of operands should be unsigned integers, but were: a= ") + atype->get_name() + std::string(" b=") + btype->get_name()
+		);
+	return false;
+    }
+    // Now widen them to the appropriate sizes.
+    const Type *widened = nullptr;
+    if (!numeric_widen_binary_operation(function, current_block, _src_ref, a_tmpvar, b_tmpvar, atype, btype, &widened)) {
+	return false;
+    }
+
     // The return type is whatever
     // we widened the add to be.
     returned_tmpvar = function.tmpvar_define(widened);
@@ -1062,7 +1163,7 @@ FunctionDefinitionResolver::extract_from_expression_binary(
     op_type = expression.get_operator();
 
     if (op_type == ExpressionBinary::ADD) {
-	if (!handle_binary_arithmetic(
+	if (!handle_binary_operation_arithmetic(
 	    function,
 	    expression.get_source_ref(),
 	    Operation::OP_ADD,
@@ -1074,7 +1175,7 @@ FunctionDefinitionResolver::extract_from_expression_binary(
 	}
     }	
     else if (op_type == ExpressionBinary::SUBTRACT) {
-	if (!handle_binary_arithmetic(
+	if (!handle_binary_operation_arithmetic(
 	    function,
 	    expression.get_source_ref(),
 	    Operation::OP_SUBTRACT,
@@ -1086,7 +1187,7 @@ FunctionDefinitionResolver::extract_from_expression_binary(
 	}
     }
     else if (op_type == ExpressionBinary::MULTIPLY) {
-	if (!handle_binary_arithmetic(
+	if (!handle_binary_operation_arithmetic(
 	    function,
 	    expression.get_source_ref(),
 	    Operation::OP_MULTIPLY,
@@ -1098,7 +1199,7 @@ FunctionDefinitionResolver::extract_from_expression_binary(
 	}
     }
     else if (op_type == ExpressionBinary::DIVIDE) {
-	if (!handle_binary_arithmetic(
+	if (!handle_binary_operation_arithmetic(
 	    function,
 	    expression.get_source_ref(),
 	    Operation::OP_DIVIDE,
@@ -1110,7 +1211,7 @@ FunctionDefinitionResolver::extract_from_expression_binary(
 	}
     }
     else if (op_type == ExpressionBinary::MODULO) {
-	if (!handle_binary_arithmetic(
+	if (!handle_binary_operation_arithmetic(
 	    function,
 	    expression.get_source_ref(),
 	    Operation::OP_MODULO,
@@ -1122,69 +1223,64 @@ FunctionDefinitionResolver::extract_from_expression_binary(
 	}
     }
     else if (op_type == ExpressionBinary::LOGICAL_AND) {
-	returned_tmpvar = function.tmpvar_define(mir.get_types().get_type("bool"));
-	auto operation = std::make_unique<OperationBinary>(
+	if (!handle_binary_operation_logical(
+	    function,
+	    expression.get_source_ref(),
 	    Operation::OP_LOGICAL_AND,
-	    expression.get_source_ref(),	    
+	    current_block,
 	    returned_tmpvar,
 	    a_tmpvar,
-	    b_tmpvar
-	    );
-	function
-	    .get_basic_block(current_block)
-	    .add_statement(std::move(operation));
+	    b_tmpvar)) {
+	    return false;
+	}
     }
     else if (op_type == ExpressionBinary::LOGICAL_OR) {
-	returned_tmpvar = function.tmpvar_define(mir.get_types().get_type("bool"));
-	auto operation = std::make_unique<OperationBinary>(
+	if (!handle_binary_operation_logical(
+	    function,
+	    expression.get_source_ref(),
 	    Operation::OP_LOGICAL_OR,
-	    expression.get_source_ref(),	    
+	    current_block,
 	    returned_tmpvar,
 	    a_tmpvar,
-	    b_tmpvar
-	    );
-	function
-	    .get_basic_block(current_block)
-	    .add_statement(std::move(operation));
+	    b_tmpvar)) {
+	    return false;
+	}
     }
     else if (op_type == ExpressionBinary::BITWISE_AND) {
-	returned_tmpvar = function.tmpvar_duplicate(a_tmpvar);
-	auto operation = std::make_unique<OperationBinary>(
+	if (!handle_binary_operation_bitwise(
+	    function,
+	    expression.get_source_ref(),
 	    Operation::OP_BITWISE_AND,
-	    expression.get_source_ref(),	    
+	    current_block,
 	    returned_tmpvar,
 	    a_tmpvar,
-	    b_tmpvar
-	    );
-	function
-	    .get_basic_block(current_block)
-	    .add_statement(std::move(operation));
+	    b_tmpvar)) {
+	    return false;
+	}
     }
     else if (op_type == ExpressionBinary::BITWISE_OR) {
-	returned_tmpvar = function.tmpvar_duplicate(a_tmpvar);
-	auto operation = std::make_unique<OperationBinary>(
+	if (!handle_binary_operation_bitwise(
+	    function,
+	    expression.get_source_ref(),
 	    Operation::OP_BITWISE_OR,
-	    expression.get_source_ref(),	    
+	    current_block,
 	    returned_tmpvar,
 	    a_tmpvar,
-	    b_tmpvar
-	    );
-	function
-	    .get_basic_block(current_block)
-	    .add_statement(std::move(operation));
+	    b_tmpvar)) {
+	    return false;
+	}
     }
     else if (op_type == ExpressionBinary::BITWISE_XOR) {
-	returned_tmpvar = function.tmpvar_duplicate(a_tmpvar);
-	auto operation = std::make_unique<OperationBinary>(
+	if (!handle_binary_operation_bitwise(
+	    function,
+	    expression.get_source_ref(),
 	    Operation::OP_BITWISE_XOR,
-	    expression.get_source_ref(),	    
+	    current_block,
 	    returned_tmpvar,
 	    a_tmpvar,
-	    b_tmpvar
-	    );
-	function
-	    .get_basic_block(current_block)
-	    .add_statement(std::move(operation));
+	    b_tmpvar)) {
+	    return false;
+	}
     }
     else if (op_type == ExpressionBinary::SHIFT_LEFT) {
 	returned_tmpvar = function.tmpvar_duplicate(a_tmpvar);
@@ -1482,7 +1578,7 @@ FunctionDefinitionResolver::extract_from_statement_ifelse(
     if (!extract_from_expression(function, current_block, condition_tmpvar, statement.get_expression())) {
 	return false;
     }
-    if (!is_bool_type(function.tmpvar_get(condition_tmpvar)->get_type())) {
+    if (!function.tmpvar_get(condition_tmpvar)->get_type()->is_bool()) {
 	compiler_context
 	    .get_errors()
 	    .add_simple_error(

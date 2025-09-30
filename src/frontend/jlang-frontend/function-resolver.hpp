@@ -30,8 +30,42 @@ namespace JLang::frontend {
 	    size_t & _widen_var,
 	    const JLang::mir::Type *widen_to
 	    );
+
+	// Widen the shorter
+	// of the two operands to be the
+	// larger one.
+	bool numeric_widen_binary_operation(
+	    JLang::mir::Function &function,
+	    size_t current_block,
+	    const JLang::context::SourceReference & _src_ref,
+	    size_t & a_tmpvar,
+	    size_t & b_tmpvar,
+	    const JLang::mir::Type *atype,
+	    const JLang::mir::Type *btype,
+	    const JLang::mir::Type **widened
+	    );
 	
-	bool handle_binary_arithmetic(
+	bool handle_binary_operation_arithmetic(
+	    JLang::mir::Function & function,
+	    const JLang::context::SourceReference & _src_ref,
+	    JLang::mir::Operation::OperationType type,
+	    size_t & current_block,
+	    size_t & returned_tmpvar,
+	    size_t a_tmpvar,
+	    size_t b_tmpvar
+	    );
+	
+	bool handle_binary_operation_logical(
+	    JLang::mir::Function & function,
+	    const JLang::context::SourceReference & _src_ref,
+	    JLang::mir::Operation::OperationType type,
+	    size_t & current_block,
+	    size_t & returned_tmpvar,
+	    size_t a_tmpvar,
+	    size_t b_tmpvar
+	    );
+	
+	bool handle_binary_operation_bitwise(
 	    JLang::mir::Function & function,
 	    const JLang::context::SourceReference & _src_ref,
 	    JLang::mir::Operation::OperationType type,
