@@ -378,11 +378,10 @@ namespace JLang::mir {
     public:
 	OperationJump(
 	    const JLang::context::SourceReference & _src_ref,
-	    std::string _label
+	    size_t _block
 	    );
 	~OperationJump();
     private:
-	std::string label;
     };
     
     class OperationReturn : public Operation {

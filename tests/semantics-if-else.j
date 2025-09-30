@@ -18,8 +18,8 @@ u32 unconditional_function_call();
 
 u32 main(u32 argc, u8 **argv)
 {
-u8 *str;
-str = "abcd";
+	u8 *str;
+	str = "abcd";
 
         u32 a = 2;
 	a = 19u32;
@@ -27,7 +27,16 @@ str = "abcd";
         if (a == 2u32) {
 	   u32 scope_var;
            a_a();
-	   if (a == 4u32) {
+        }
+	else {
+           bar();
+        }
+	unconditional_function_call();
+	return 33;
+}
+
+/*
+           if (a == 4u32) {
 	   }
            if (!(a == 19u32)) {
                nineteen();
@@ -35,21 +44,13 @@ str = "abcd";
 	       if (scope_var == 2222) {
 	           printf_first();
 	       }
-//	       else {
-//	           printf_second("nested");
-//	       }
+	       else {
+	           printf_second("nested");
+	       }
 	       nineteen_ish();
            }
-/*
            else {
                twenty_one_nofun();
            }
            a_b();
 */
-        }
- //       else {
-//           bar();
-//        }
-        unconditional_function_call();
-return 33;
-}

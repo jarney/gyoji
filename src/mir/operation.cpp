@@ -398,10 +398,9 @@ OperationJumpIfEqual::~OperationJumpIfEqual()
 //////////////////////////////////////////////
 OperationJump::OperationJump(
     const JLang::context::SourceReference & _src_ref,
-    std::string _label
+    size_t _block
     )
-    : Operation(OP_JUMP, _src_ref, 0)
-    , label(_label)
+    : Operation(OP_JUMP, _src_ref, 0, _block)
 {}
 OperationJump::~OperationJump()
 {}

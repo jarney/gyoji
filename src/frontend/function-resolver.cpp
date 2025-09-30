@@ -2080,9 +2080,17 @@ FunctionDefinitionResolver::extract_from_statement_ifelse(
 	    )) {
 	return false;
     }
+    
+    // Unconditionally jump to done.
+    auto operation = std::make_unique<OperationJump>(
+	statement.get_source_ref(),
+	blockid_done
+	);
+    function.get_basic_block(current_block).add_statement(std::move(operation));
     function.push_block(current_block);
-
+    
     if (statement.has_else()) {
+	
 	// Perform the stuff in the 'else' block.
 	if (extract_from_statement_list(
 	    function,

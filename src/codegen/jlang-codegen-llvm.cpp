@@ -955,6 +955,144 @@ CodeGeneratorLLVMContext::generate_operation_shift(
 }
 
 void
+CodeGeneratorLLVMContext::generate_operation_comparison(
+    std::map<size_t, llvm::Value *> & tmp_values,
+    const JLang::mir::Function & mir_function,
+    const JLang::mir::OperationBinary *operation
+    )
+{
+    size_t a = operation->get_a();
+    size_t b = operation->get_b();
+    Operation::OperationType type = operation->get_type();
+    
+    const JLang::mir::Type *atype = mir_function.tmpvar_get(a)->get_type();
+    const JLang::mir::Type *btype = mir_function.tmpvar_get(b)->get_type();
+    if (atype->get_name() != btype->get_name()) {
+	compiler_context
+	    .get_errors()
+	    .add_simple_error(
+		operation->get_source_ref(),
+		"Compiler bug! Invalid operand for comparison operator.",
+		std::string("Invalid operands for comparison operation.  Operands must be the same type, but were ") + atype->get_name() + std::string(" and ") + btype->get_name()
+		);
+	return;
+    }
+    if (atype->is_void()) {
+	compiler_context
+	    .get_errors()
+	    .add_simple_error(
+		operation->get_source_ref(),
+		"Compiler bug! Invalid operand for comparison operation.",
+		std::string("The operands of a comparison must not be void, but were: a= ") + atype->get_name() + std::string(" b=") + btype->get_name()
+		);
+	return;
+    }
+    if (atype->is_composite()) {
+	compiler_context
+	    .get_errors()
+	    .add_simple_error(
+		operation->get_source_ref(),
+		"Compiler bug! Invalid operand for comparison operation.",
+		std::string("The operands of a comparison must not be composite structures or classes, but were: a= ") + atype->get_name() + std::string(" b=") + btype->get_name()
+		);
+	return;
+    }
+    if (
+	(atype->is_pointer() || atype->is_reference())
+	&&
+	!(type == Operation::OP_COMPARE_EQ ||
+	  type == Operation::OP_COMPARE_NE)
+	) {
+	compiler_context
+	    .get_errors()
+	    .add_simple_error(
+		operation->get_source_ref(),
+		"Compiler bug! Invalid operand for comparison operation.",
+		std::string("The operands of a comparison of pointers and references may not be used except for equality comparisions, but were: a= ") +
+		atype->get_name() + std::string(" b=") + btype->get_name()
+		);
+	return;
+    }
+    
+    llvm::Value *value_a = tmp_values[a];
+    llvm::Value *value_b = tmp_values[b];
+
+    llvm::Value * result = nullptr;
+
+    switch (type) {
+    case Operation::OP_COMPARE_LT:
+	if (atype->is_float()) {
+	    result = Builder->CreateFCmpULT(value_a, value_b);
+	}
+	else if (atype->is_signed()) {
+	    result = Builder->CreateICmpSLT(value_a, value_b);
+	}
+	else {
+	    result = Builder->CreateICmpULT(value_a, value_b);
+	}
+	break;
+    case Operation::OP_COMPARE_GT:
+	if (atype->is_float()) {
+	    result = Builder->CreateFCmpUGT(value_a, value_b);
+	}
+	else if (atype->is_signed()) {
+	    result = Builder->CreateICmpSGT(value_a, value_b);
+	}
+	else {
+	    result = Builder->CreateICmpUGT(value_a, value_b);
+	}
+	break;
+    case Operation::OP_COMPARE_LE:
+	if (atype->is_float()) {
+	    result = Builder->CreateFCmpULE(value_a, value_b);
+	}
+	else if (atype->is_signed()) {
+	    result = Builder->CreateICmpSLE(value_a, value_b);
+	}
+	else {
+	    result = Builder->CreateICmpULE(value_a, value_b);
+	}
+	break;
+    case Operation::OP_COMPARE_GE:
+	if (atype->is_float()) {
+	    result = Builder->CreateFCmpUGE(value_a, value_b);
+	}
+	else if (atype->is_signed()) {
+	    result = Builder->CreateICmpSGE(value_a, value_b);
+	}
+	else {
+	    result = Builder->CreateICmpUGE(value_a, value_b);
+	}
+	break;
+    case Operation::OP_COMPARE_EQ:
+	if (atype->is_float()) {
+	    result = Builder->CreateFCmpUEQ(value_a, value_b);
+	}
+	else {
+	    result = Builder->CreateICmpEQ(value_a, value_b);
+	}
+	break;
+    case Operation::OP_COMPARE_NE:
+	if (atype->is_float()) {
+	    result = Builder->CreateFCmpUNE(value_a, value_b);
+	}
+	else {
+	    result = Builder->CreateICmpNE(value_a, value_b);
+	}
+	break;
+    default:
+	compiler_context
+	    .get_errors()
+	    .add_simple_error(
+		operation->get_source_ref(),
+		"Compiler bug! Invalid operand for comparison operation.",
+		std::string("Unknown operand type")
+		);
+    }
+    tmp_values.insert(std::pair(operation->get_result(), result));
+}
+
+void
 CodeGeneratorLLVMContext::generate_operation_assign(
     std::map<size_t, llvm::Value *> & tmp_values,
     std::map<size_t, llvm::Value *> & tmp_lvalues,
@@ -982,10 +1120,6 @@ CodeGeneratorLLVMContext::generate_operation_jump_if_equal(
     llvm::BasicBlock *bbIf = blocks[operation->get_operands().at(1)];
     llvm::BasicBlock *bbElse = blocks[operation->get_operands().at(2)];
     Builder->CreateCondBr(condition, bbIf, bbElse);
-//  CondV = Builder->CreateFCmpONE(
-//      CondV, ConstantFP::get(*TheContext, APFloat(0.0)), "ifcond");
-//  Builder->CreateCondBr(CondV, ThenBB, ElseBB);
-    
 }
 void
 CodeGeneratorLLVMContext::generate_operation_jump(
@@ -994,6 +1128,8 @@ CodeGeneratorLLVMContext::generate_operation_jump(
     const JLang::mir::OperationJump *operation
     )
 {
+    llvm::BasicBlock *target = blocks[operation->get_operands().at(0)];
+    Builder->CreateBr(target);
 }
 
 llvm::Value *
@@ -1101,26 +1237,16 @@ CodeGeneratorLLVMContext::generate_basic_block(
 	    generate_operation_bitwise_xor(tmp_values, mir_function, (OperationBinary*)operation.get());
 	    break;
 	case Operation::OP_SHIFT_LEFT:
-	    generate_operation_shift(tmp_values, mir_function, (OperationBinary*)operation.get());
-	    break;
 	case Operation::OP_SHIFT_RIGHT:
 	    generate_operation_shift(tmp_values, mir_function, (OperationBinary*)operation.get());
 	    break;
-	    // TODO:
-	    // Ahhh.  We need to add the conditionals
-	    // here so we can actually have comparision work for
-	    // the if statements.
 	case Operation::OP_COMPARE_LT:
-	    break;
 	case Operation::OP_COMPARE_GT:
-	    break;
 	case Operation::OP_COMPARE_LE:
-	    break;
 	case Operation::OP_COMPARE_GE:
-	    break;
 	case Operation::OP_COMPARE_EQ:
-	    break;
 	case Operation::OP_COMPARE_NE:
+	    generate_operation_comparison(tmp_values, mir_function, (OperationBinary*)operation.get());
 	    break;
 	case Operation::OP_ASSIGN:
 	    generate_operation_assign(tmp_values, tmp_lvalues, mir_function, (OperationBinary*)operation.get());
@@ -1181,10 +1307,12 @@ CodeGeneratorLLVMContext::generate_function(const JLang::mir::Function & functio
 	llvm::BasicBlock *BB = llvm::BasicBlock::Create(*TheContext, block_name, TheFunction);
 	blocks[blockid] = BB;
     }
+    // Jump from the entry block into the first 'real' block.
+    Builder->CreateBr(blocks[function.get_blocks_in_order().at(0)]);
+    
     for (const auto blockid : function.get_blocks_in_order()) {
 	// Create a new basic block to start insertion into.
 	llvm::BasicBlock *BB = blocks[blockid];
-	Builder->CreateBr(BB);
 	Builder->SetInsertPoint(BB);
 	return_value = generate_basic_block(function, blockid);
     }
