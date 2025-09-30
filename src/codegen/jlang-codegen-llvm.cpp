@@ -315,14 +315,19 @@ CodeGeneratorLLVMContext::generate_operation_function_call(
     const JLang::mir::OperationFunctionCall *operation
     )
 {
+    fprintf(stderr, "Generate function call\n");
 }
+
 void
 CodeGeneratorLLVMContext::generate_operation_symbol(
     std::map<size_t, llvm::Value *> & tmp_values,
     const JLang::mir::Function & mir_function,
     const JLang::mir::OperationSymbol *operation
     )
-{}
+{
+    fprintf(stderr, "Generate symbol lookup\n");
+}
+
 void
 CodeGeneratorLLVMContext::generate_operation_local_variable(
     std::map<size_t, llvm::Value *> & tmp_values,

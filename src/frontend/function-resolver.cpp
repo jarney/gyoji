@@ -403,6 +403,7 @@ FunctionDefinitionResolver::extract_from_expression_postfix_function_call(
     // Extract the expression itself from the arguments.
     size_t function_type_tmpvar;
     if (!extract_from_expression(function, current_block, function_type_tmpvar, expression.get_function())) {
+	fprintf(stderr, "Not extracting function early return\n");
 	return false;
     }
     
@@ -410,6 +411,7 @@ FunctionDefinitionResolver::extract_from_expression_postfix_function_call(
     for (const auto & arg_expr : expression.get_arguments().get_arguments()) {
 	size_t arg_returned_value;
 	if (!extract_from_expression(function, current_block, arg_returned_value, *arg_expr)) {
+	    fprintf(stderr, "Not extracting function arg expression\n");
 	    return false;
 	}
 	arg_types.push_back(arg_returned_value);
@@ -417,6 +419,7 @@ FunctionDefinitionResolver::extract_from_expression_postfix_function_call(
 
     const Type *function_pointer_type = function.tmpvar_get(function_type_tmpvar)->get_type();
     if (function_pointer_type->get_type() != Type::TYPE_FUNCTION_POINTER) {
+	fprintf(stderr, "Not extracting function invalid type\n");
 	compiler_context
 	    .get_errors()
 	    .add_simple_error(
@@ -424,12 +427,14 @@ FunctionDefinitionResolver::extract_from_expression_postfix_function_call(
 		"Called object is not a function.",
 		std::string("Type of object being called is not a function, but is a ") + function_pointer_type->get_name() + std::string(" instead.")
 		);
+	return false;
     }
 	
     // We declare that we return the vale that the function
     // will return.
     returned_tmpvar = function.tmpvar_define(function_pointer_type->get_return_type());
     
+    fprintf(stderr, "Extracting function, adding to bb\n");
     auto operation = std::make_unique<OperationFunctionCall>(
 	expression.get_source_ref(),
 	returned_tmpvar,
@@ -1157,7 +1162,6 @@ FunctionDefinitionResolver::extract_from_expression_binary(
     if (!extract_from_expression(function, current_block, b_tmpvar, expression.get_b())) {
 	return false;
     }
-    fprintf(stderr, "Handling binary operator %ld %ld\n", a_tmpvar, b_tmpvar);
 
     ExpressionBinary::OperationType op_type;
     op_type = expression.get_operator();

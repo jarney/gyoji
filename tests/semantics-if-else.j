@@ -16,6 +16,7 @@ u32 main(u32 argc, u8 **argv)
         u32 a = 2;
 	a = 19;
         preamble_function_call();
+/*
         if (a == 2) {
 	   u32 scope_var;
            a_a();
@@ -41,4 +42,5 @@ u32 main(u32 argc, u8 **argv)
            bar();
         }
         unconditional_function_call();
+*/
 }

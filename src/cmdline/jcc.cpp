@@ -45,5 +45,9 @@ int main(int argc, char **argv)
     std::string filename(argv[2]);
     generate_code(context, *mir, filename);
     
+    if (context.has_errors()) {
+	context.get_errors().print();
+	return -1;
+    }
     return 0;
 }
