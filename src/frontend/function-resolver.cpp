@@ -2090,15 +2090,19 @@ FunctionDefinitionResolver::extract_from_statement_ifelse(
     function.push_block(current_block);
     
     if (statement.has_else()) {
-	
 	// Perform the stuff in the 'else' block.
-	if (extract_from_statement_list(
+	if (!extract_from_statement_list(
 	    function,
 	    blockid_else,
 	    statement.get_else_scope_body().get_statements()
 		)) {
 	    return false;
 	}
+	auto operation = std::make_unique<OperationJump>(
+	    statement.get_source_ref(),
+	    blockid_done
+	    );
+	function.get_basic_block(blockid_else).add_statement(std::move(operation));
 	// Jump to the 'done' block when the 'else' block is finished.
 	function.push_block(blockid_else);
     }

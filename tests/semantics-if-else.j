@@ -27,17 +27,6 @@ u32 main(u32 argc, u8 **argv)
         if (a == 2u32) {
 	   u32 scope_var;
            a_a();
-        }
-	else {
-           bar();
-        }
-	unconditional_function_call();
-	return 33;
-}
-
-/*
-           if (a == 4u32) {
-	   }
            if (!(a == 19u32)) {
                nineteen();
 	       u32 inner_scope_var;
@@ -53,4 +42,13 @@ u32 main(u32 argc, u8 **argv)
                twenty_one_nofun();
            }
            a_b();
+        }
+	else {
+           bar();
+        }
+	unconditional_function_call();
+	return 33;
+}
+
+/*
 */
