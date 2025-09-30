@@ -152,7 +152,7 @@ CodeGeneratorLLVMContext::create_type_reference(const JLang::mir::Type *referenc
 		     llvm_type
 		     )
 	);
-    return llvm_type;  return llvm_type;
+    return llvm_type;
 }
 
 llvm::Type *
@@ -171,6 +171,11 @@ CodeGeneratorLLVMContext::create_type_function_pointer(const JLang::mir::Type *f
     llvm::ArrayRef<llvm::Type *> llvm_args_ref(llvm_fptr_args);
     llvm::FunctionType *llvm_fptr_type = llvm::FunctionType::get(llvm_return_type, llvm_args_ref, false);
     
+    types.insert(std::pair<std::string, llvm::Type*>(
+		     fptr_type->get_name(),
+		     llvm_fptr_type
+		     )
+	);
     return llvm_fptr_type;
 }
 
@@ -315,7 +320,23 @@ CodeGeneratorLLVMContext::generate_operation_function_call(
     const JLang::mir::OperationFunctionCall *operation
     )
 {
-    fprintf(stderr, "Generate function call\n");
+
+    // First argument of this operand is the function to call.
+    size_t function_operand = operation->get_operands().at(0);
+    llvm::Value *llvm_function = tmp_values[function_operand];
+
+    // The remaining operands are the values to pass to it.
+    std::vector<llvm::Value *> llvm_args;
+    const std::vector<size_t> & operands = operation->get_operands();;
+    for (size_t i = 0; i < operands.size()-1; i++) {
+	llvm::Value *llvm_arg = tmp_values[operands.at(i+1)];
+	llvm_args.push_back(llvm_arg);
+    }
+    const Type *mir_type = mir_function.tmpvar_get(function_operand)->get_type();
+    llvm::Type *llvm_fptr_type = types[mir_type->get_name()];
+
+    Builder->CreateCall((llvm::FunctionType*)llvm_fptr_type, (llvm::Function*)llvm_function, llvm_args);
+
 }
 
 void
@@ -325,7 +346,30 @@ CodeGeneratorLLVMContext::generate_operation_symbol(
     const JLang::mir::OperationSymbol *operation
     )
 {
-    fprintf(stderr, "Generate symbol lookup\n");
+    std::string symbol_name = operation->get_symbol_name();
+    const JLang::mir::Symbol *symbol = mir.get_symbols().get_symbol(symbol_name);
+    
+    llvm::Type *fptr_type = types[symbol->get_type()->get_name()];
+    if (fptr_type == nullptr) {
+	fprintf(stderr, "Could not find function pointer type for %s\n", symbol->get_type()->get_name().c_str());
+	exit(1);
+    }
+
+    // TODO : We handle functions here,
+    // but we should also handle global variables
+    // when we get to it, even though globals
+    // and statics are evil incarnate.
+
+    llvm::Function *F = TheModule->getFunction(symbol_name);
+    if (F == nullptr) {
+	F = llvm::Function::Create((llvm::FunctionType*)fptr_type, llvm::Function::ExternalLinkage, symbol_name, TheModule.get());
+	if (F == nullptr) {
+	    fprintf(stderr, "Could not find function for symbol %s\n", symbol_name.c_str());
+	    exit(1);
+	}
+    }
+
+    tmp_values.insert(std::pair(operation->get_result(), F));
 }
 
 void
