@@ -45,6 +45,8 @@ namespace JLang::codegen {
 
 	std::map<std::string, llvm::Value *> local_lvalues;
 	std::map<std::string, llvm::Value *> local_variables;
+	std::map<size_t, llvm::BasicBlock *> blocks;
+    
 	
 	void create_types(const JLang::mir::MIR & mir);
 	llvm::Type *create_type(const JLang::mir::Type * type);

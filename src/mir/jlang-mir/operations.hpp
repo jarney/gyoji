@@ -133,6 +133,14 @@ namespace JLang::mir {
 	    size_t _operand_b
 	    );
 	Operation(
+	    OperationType _type,
+	    const JLang::context::SourceReference & _src_ref,
+	    size_t _result,
+	    size_t _operand_a,
+	    size_t _operand_b,
+	    size_t _operand_c
+	    );
+	Operation(
 	    const Operation & _other
 	    );
 	~Operation();
@@ -359,11 +367,11 @@ namespace JLang::mir {
 	OperationJumpIfEqual(
 	    const JLang::context::SourceReference & _src_ref,
 	    size_t _operand,
-	    std::string _label
+	    size_t _if_block,
+	    size_t _else_block
 	    );
 	~OperationJumpIfEqual();
     private:
-	std::string label;
     };
     
     class OperationJump : public Operation {

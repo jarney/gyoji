@@ -68,6 +68,22 @@ Operation::Operation(
     add_operand(_operand_a);
     add_operand(_operand_b);
 }
+Operation::Operation(
+    OperationType _type,
+    const JLang::context::SourceReference & _src_ref,
+    size_t _result,
+    size_t _operand_a,
+    size_t _operand_b,
+    size_t _operand_c
+    )
+    : type(_type)
+    , src_ref(_src_ref)
+    , result(_result)
+{
+    add_operand(_operand_a);
+    add_operand(_operand_b);
+    add_operand(_operand_c);
+}
 Operation::~Operation()
 {}
 
@@ -368,10 +384,10 @@ OperationLiteralFloat::get_literal_float() const
 OperationJumpIfEqual::OperationJumpIfEqual(
     const JLang::context::SourceReference & _src_ref,
     size_t _operand,
-    std::string _label
+    size_t _if_block,
+    size_t _else_block
     )
-    : Operation(OP_JUMP_IF_EQUAL, _src_ref, 0, _operand)
-    , label(_label)
+    : Operation(OP_JUMP_IF_EQUAL, _src_ref, 0, _operand, _if_block, _else_block)
 {}
 
 OperationJumpIfEqual::~OperationJumpIfEqual()

@@ -973,14 +973,28 @@ CodeGeneratorLLVMContext::generate_operation_jump_if_equal(
     const JLang::mir::Function & mir_function,
     const JLang::mir::OperationJumpIfEqual *operation
     )
-{}
+{
+    fprintf(stderr, "Operands: %ld %ld %ld\n",
+	    operation->get_operands().at(0),
+	    operation->get_operands().at(1),
+	    operation->get_operands().at(2));
+    llvm::Value *condition = tmp_values[operation->get_operands().at(0)];
+    llvm::BasicBlock *bbIf = blocks[operation->get_operands().at(1)];
+    llvm::BasicBlock *bbElse = blocks[operation->get_operands().at(2)];
+    Builder->CreateCondBr(condition, bbIf, bbElse);
+//  CondV = Builder->CreateFCmpONE(
+//      CondV, ConstantFP::get(*TheContext, APFloat(0.0)), "ifcond");
+//  Builder->CreateCondBr(CondV, ThenBB, ElseBB);
+    
+}
 void
 CodeGeneratorLLVMContext::generate_operation_jump(
     std::map<size_t, llvm::Value *> & tmp_values,
     const JLang::mir::Function & mir_function,
     const JLang::mir::OperationJump *operation
     )
-{}
+{
+}
 
 llvm::Value *
 CodeGeneratorLLVMContext::generate_operation_return(
@@ -1000,7 +1014,6 @@ CodeGeneratorLLVMContext::generate_basic_block(
     size_t blockid
     )
 {
-    fprintf(stderr, "Generating code for block BB%ld\n", blockid);
     const JLang::mir::BasicBlock & mir_block = mir_function.get_basic_block(blockid);
     std::map<size_t, llvm::Value *> tmp_values;
     std::map<size_t, llvm::Value *> tmp_lvalues;
@@ -1093,6 +1106,22 @@ CodeGeneratorLLVMContext::generate_basic_block(
 	case Operation::OP_SHIFT_RIGHT:
 	    generate_operation_shift(tmp_values, mir_function, (OperationBinary*)operation.get());
 	    break;
+	    // TODO:
+	    // Ahhh.  We need to add the conditionals
+	    // here so we can actually have comparision work for
+	    // the if statements.
+	case Operation::OP_COMPARE_LT:
+	    break;
+	case Operation::OP_COMPARE_GT:
+	    break;
+	case Operation::OP_COMPARE_LE:
+	    break;
+	case Operation::OP_COMPARE_GE:
+	    break;
+	case Operation::OP_COMPARE_EQ:
+	    break;
+	case Operation::OP_COMPARE_NE:
+	    break;
 	case Operation::OP_ASSIGN:
 	    generate_operation_assign(tmp_values, tmp_lvalues, mir_function, (OperationBinary*)operation.get());
 	    break;
@@ -1126,7 +1155,6 @@ CodeGeneratorLLVMContext::generate_function(const JLang::mir::Function & functio
     llvm::BasicBlock *BB = llvm::BasicBlock::Create(*TheContext, "entry", TheFunction);
     Builder->SetInsertPoint(BB);
 
-    
     size_t i = 0;
     for (const auto & function_argument : function.get_arguments()) {
 	// Create an alloca for this variable.
@@ -1147,11 +1175,15 @@ CodeGeneratorLLVMContext::generate_function(const JLang::mir::Function & functio
     }
 
     llvm::Value *return_value = nullptr;
-    
+
     for (const auto blockid : function.get_blocks_in_order()) {
-	// Create a new basic block to start insertion into.
 	std::string block_name = std::string("BB") + std::to_string(blockid);
 	llvm::BasicBlock *BB = llvm::BasicBlock::Create(*TheContext, block_name, TheFunction);
+	blocks[blockid] = BB;
+    }
+    for (const auto blockid : function.get_blocks_in_order()) {
+	// Create a new basic block to start insertion into.
+	llvm::BasicBlock *BB = blocks[blockid];
 	Builder->CreateBr(BB);
 	Builder->SetInsertPoint(BB);
 	return_value = generate_basic_block(function, blockid);

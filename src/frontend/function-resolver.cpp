@@ -2030,6 +2030,7 @@ FunctionDefinitionResolver::extract_from_statement_ifelse(
     if (!extract_from_expression(function, current_block, condition_tmpvar, statement.get_expression())) {
 	return false;
     }
+    // First, evaluate the expression to get our condition.
     if (!function.tmpvar_get(condition_tmpvar)->get_type()->is_bool()) {
 	compiler_context
 	    .get_errors()
@@ -2041,28 +2042,37 @@ FunctionDefinitionResolver::extract_from_statement_ifelse(
 	return false;
     }
     
+    size_t blockid_if = function.add_block();
     size_t blockid_done = function.add_block();
     size_t blockid_else = -1;
     if (statement.has_else() || statement.has_else_if()) {
+	// If we have an 'else', then
+	// dump to it based on the condition.
 	blockid_else = function.add_block();
 	auto operation = std::make_unique<OperationJumpIfEqual>(
 	    statement.get_source_ref(),
 	    condition_tmpvar,
-	    std::to_string(blockid_else)
+	    blockid_if,
+	    blockid_else
 	    );
 	function.get_basic_block(current_block).add_statement(std::move(operation));
     }
     else {
+	// Otherwise, jump to done
+	// based on condition.
 	auto operation = std::make_unique<OperationJumpIfEqual>(
 	    statement.get_source_ref(),
 	    condition_tmpvar,
-	    std::to_string(blockid_done)
+	    blockid_if,
+	    blockid_done
 	    );
 	function.get_basic_block(current_block).add_statement(std::move(operation));
     }
-    function.push_block(current_block);
-    current_block = function.add_block();
     
+    function.push_block(current_block);
+    current_block = blockid_if;
+
+    // Perform the stuff inside the 'if' block.
     if (!extract_from_statement_list(
 	function,
 	current_block,
@@ -2070,15 +2080,10 @@ FunctionDefinitionResolver::extract_from_statement_ifelse(
 	    )) {
 	return false;
     }
-    
+    function.push_block(current_block);
+
     if (statement.has_else()) {
-	auto operation = std::make_unique<OperationJump>(
-	    statement.get_source_ref(),
-	    std::to_string(blockid_done)
-	    );
-	function.get_basic_block(current_block).add_statement(std::move(operation));
-	function.push_block(current_block);
-	
+	// Perform the stuff in the 'else' block.
 	if (extract_from_statement_list(
 	    function,
 	    blockid_else,
@@ -2086,6 +2091,7 @@ FunctionDefinitionResolver::extract_from_statement_ifelse(
 		)) {
 	    return false;
 	}
+	// Jump to the 'done' block when the 'else' block is finished.
 	function.push_block(blockid_else);
     }
     else if (statement.has_else_if()) {
