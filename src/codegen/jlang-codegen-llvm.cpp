@@ -421,7 +421,18 @@ CodeGeneratorLLVMContext::generate_operation_literal_string(
     const JLang::mir::Function & mir_function,
     const JLang::mir::OperationLiteralString *operation
     )
-{}
+{
+    llvm::Constant *string_constant = llvm::ConstantDataArray::getString(*TheContext, operation->get_literal_string());
+    llvm::GlobalVariable* v = new llvm::GlobalVariable(
+	*TheModule,
+	string_constant->getType(),
+	true,
+	llvm::GlobalValue::InternalLinkage,
+	string_constant
+	);
+    
+    tmp_values.insert(std::pair(operation->get_result(), v));
+}
 void
 CodeGeneratorLLVMContext::generate_operation_literal_int(
     std::map<size_t, llvm::Value *> & tmp_values,
@@ -877,6 +888,73 @@ CodeGeneratorLLVMContext::generate_operation_bitwise_xor(
 }
 
 void
+CodeGeneratorLLVMContext::generate_operation_shift(
+    std::map<size_t, llvm::Value *> & tmp_values,
+    const JLang::mir::Function & mir_function,
+    const JLang::mir::OperationBinary *operation
+    )
+{
+    size_t a = operation->get_a();
+    size_t b = operation->get_b();
+    const JLang::mir::Type *atype = mir_function.tmpvar_get(a)->get_type();
+    const JLang::mir::Type *btype = mir_function.tmpvar_get(b)->get_type();
+    if (!atype->is_unsigned() || !btype->is_unsigned()) {
+	compiler_context
+	    .get_errors()
+	    .add_simple_error(
+		operation->get_source_ref(),
+		"Compiler bug! Invalid operand for bitwise shift left operator.",
+		std::string("Invalid operands for logical shift left operation.  Operands must be unsigned, but were ") + atype->get_name() + std::string(" and ") + btype->get_name()
+		);
+	return;
+    }
+    llvm::Value *value_a = tmp_values[a];
+    llvm::Value *value_b = tmp_values[b];
+
+    unsigned short mask = 0x07;
+    size_t a_size = atype->get_primitive_size();
+    switch (a_size) {
+    case 8:
+	mask = 0x07;
+	break;
+    case 16:
+	mask = 0x0f;
+	break;
+    case 32:
+	mask = 0x1f;
+	break;
+    case 64:
+	mask = 0x3f;
+	break;
+    default:
+	compiler_context
+	    .get_errors()
+	    .add_simple_error(
+		operation->get_source_ref(),
+		"Compiler bug! Invalid operand for bitwise shift left operator.",
+		std::string("Invalid operands for logical shift left operation.  Left operand must be 8, 16, 32, or 64 bits but operands were ") + atype->get_name() + std::string(" and ") + btype->get_name()
+		);
+	return;
+    }
+
+    // Here, if the right-hand argument
+    // must be less than the number of bits in the
+    // right hand argument, so in order to make sure
+    // that's the case, we need to mask the right-hand
+    // argument appropriately.
+    llvm::Value *shr_bits_mask = Builder->getInt8(mask);
+    llvm::Value *shr_bits = Builder->CreateAnd(value_b, shr_bits_mask);
+    llvm::Value *shifted_value;
+    if (operation->get_type() == Operation::OP_SHIFT_LEFT) {
+	shifted_value = Builder->CreateShl(value_a, value_b);
+    }
+    else {
+	shifted_value = Builder->CreateLShr(value_a, shr_bits);
+    }
+    tmp_values.insert(std::pair(operation->get_result(), shifted_value));
+}
+
+void
 CodeGeneratorLLVMContext::generate_operation_assign(
     std::map<size_t, llvm::Value *> & tmp_values,
     std::map<size_t, llvm::Value *> & tmp_lvalues,
@@ -1008,6 +1086,12 @@ CodeGeneratorLLVMContext::generate_basic_block(
 	    break;
 	case Operation::OP_BITWISE_XOR:
 	    generate_operation_bitwise_xor(tmp_values, mir_function, (OperationBinary*)operation.get());
+	    break;
+	case Operation::OP_SHIFT_LEFT:
+	    generate_operation_shift(tmp_values, mir_function, (OperationBinary*)operation.get());
+	    break;
+	case Operation::OP_SHIFT_RIGHT:
+	    generate_operation_shift(tmp_values, mir_function, (OperationBinary*)operation.get());
 	    break;
 	case Operation::OP_ASSIGN:
 	    generate_operation_assign(tmp_values, tmp_lvalues, mir_function, (OperationBinary*)operation.get());

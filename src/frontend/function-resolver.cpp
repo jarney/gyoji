@@ -292,7 +292,7 @@ FunctionDefinitionResolver::extract_from_expression_primary_literal_string(
 {
     returned_tmpvar = function.tmpvar_define(mir.get_types().get_type("u8*"));
     auto operation = std::make_unique<OperationLiteralString>(
-	expression.get_source_ref(),	    
+	expression.get_source_ref(),
 	returned_tmpvar,
 	expression.get_value()
 	);
@@ -1146,6 +1146,222 @@ FunctionDefinitionResolver::handle_binary_operation_bitwise(
     return true;
 }
 
+
+bool
+FunctionDefinitionResolver::handle_binary_operation_shift(
+    JLang::mir::Function & function,
+    const JLang::context::SourceReference & _src_ref,
+    Operation::OperationType type,
+    size_t & current_block,
+    size_t & returned_tmpvar,
+    size_t a_tmpvar,
+    size_t b_tmpvar
+    )
+{
+    const Type *atype = function.tmpvar_get(a_tmpvar)->get_type();
+    const Type *btype = function.tmpvar_get(b_tmpvar)->get_type();
+    // Check that both operands are numeric.
+    if (!atype->is_unsigned() || !btype->is_unsigned()) {
+	compiler_context
+	    .get_errors()
+	    .add_simple_error(
+		_src_ref,
+		"Type mismatch in binary operation",
+		std::string("The type of operands should be unsigned integers, but were: a= ") + atype->get_name() + std::string(" b=") + btype->get_name()
+		);
+	return false;
+    }
+
+    // Notably, we never widen a shift operation.
+    // Instead, we operate on whatever it is because
+    // it will end up being masked down to an 8-bit
+    // value to avoid overflowing the LHS when the
+    // shift happens if it's any bigger.
+
+    // We always return the same size that the LHS is.
+    returned_tmpvar = function.tmpvar_define(atype);
+    
+    // We emit the appropriate operation as either an integer or
+    // floating-point add depending on which one it was.
+    // The back-end may assume that the operand types are both
+    // integer or floating point of the same type and
+    // the return type will also be of the same type.
+    auto operation = std::make_unique<OperationBinary>(
+	type,
+	_src_ref,
+	returned_tmpvar,
+	a_tmpvar,
+	b_tmpvar
+	);
+    function
+	.get_basic_block(current_block)
+	.add_statement(std::move(operation));
+    
+    return true;
+}
+
+bool
+FunctionDefinitionResolver::handle_binary_operation_compare(
+    JLang::mir::Function & function,
+    const JLang::context::SourceReference & _src_ref,
+    Operation::OperationType type,
+    size_t & current_block,
+    size_t & returned_tmpvar,
+    size_t a_tmpvar,
+    size_t b_tmpvar
+    )
+{
+    const Type *atype = function.tmpvar_get(a_tmpvar)->get_type();
+    const Type *btype = function.tmpvar_get(b_tmpvar)->get_type();
+    // Check that both operands are the same type.
+    if (atype->get_name() != btype->get_name()) {
+	compiler_context
+	    .get_errors()
+	    .add_simple_error(
+		_src_ref,
+		"Type mismatch in compare operation",
+		std::string("The operands of a comparision should be the same type, but were: a= ") + atype->get_name() + std::string(" b=") + btype->get_name()
+		);
+	return false;
+    }
+    if (atype->is_void()) {
+	compiler_context
+	    .get_errors()
+	    .add_simple_error(
+		_src_ref,
+		"Type mismatch in compare operation",
+		std::string("The operands of a comparison must not be void, but were: a= ") + atype->get_name() + std::string(" b=") + btype->get_name()
+		);
+	return false;
+    }
+    if (atype->is_composite()) {
+	compiler_context
+	    .get_errors()
+	    .add_simple_error(
+		_src_ref,
+		"Type mismatch in compare operation",
+		std::string("The operands of a comparison must not be composite structures or classes, but were: a= ") + atype->get_name() + std::string(" b=") + btype->get_name()
+		);
+	return false;
+    }
+    if (
+	(atype->is_pointer() || atype->is_reference())
+	&&
+	!(type == Operation::OP_COMPARE_EQ ||
+	  type == Operation::OP_COMPARE_NE)
+	) {
+	compiler_context
+	    .get_errors()
+	    .add_simple_error(
+		_src_ref,
+		"Type mismatch in compare operation",
+		std::string("The operands of a comparison of pointers and references may not be used except for equality comparisions, but were: a= ") + atype->get_name() + std::string(" b=") + btype->get_name()
+		);
+	return false;	
+    }
+    
+
+    // Notably, we never widen a shift operation.
+    // Instead, we operate on whatever it is because
+    // it will end up being masked down to an 8-bit
+    // value to avoid overflowing the LHS when the
+    // shift happens if it's any bigger.
+
+    // We always return the same size that the LHS is.
+    returned_tmpvar = function.tmpvar_define(mir.get_types().get_type("bool"));
+    
+    // We emit the appropriate operation as either an integer or
+    // floating-point add depending on which one it was.
+    // The back-end may assume that the operand types are both
+    // integer or floating point of the same type and
+    // the return type will also be of the same type.
+    auto operation = std::make_unique<OperationBinary>(
+	type,
+	_src_ref,
+	returned_tmpvar,
+	a_tmpvar,
+	b_tmpvar
+	);
+    function
+	.get_basic_block(current_block)
+	.add_statement(std::move(operation));
+    
+    return true;
+}
+
+bool
+FunctionDefinitionResolver::handle_binary_operation_assignment(
+    JLang::mir::Function & function,
+    const JLang::context::SourceReference & _src_ref,
+    Operation::OperationType type,
+    size_t & current_block,
+    size_t & returned_tmpvar,
+    size_t a_tmpvar,
+    size_t b_tmpvar
+    )
+{
+    const Type *atype = function.tmpvar_get(a_tmpvar)->get_type();
+    const Type *btype = function.tmpvar_get(b_tmpvar)->get_type();
+    // Check that both operands are the same type.
+    if (atype->get_name() != btype->get_name()) {
+	compiler_context
+	    .get_errors()
+	    .add_simple_error(
+		_src_ref,
+		"Type mismatch in compare operation",
+		std::string("The operands of an assignment should be the same type, but were: a= ") + atype->get_name() + std::string(" b=") + btype->get_name()
+		);
+	return false;
+    }
+    if (atype->is_void()) {
+	compiler_context
+	    .get_errors()
+	    .add_simple_error(
+		_src_ref,
+		"Type mismatch in assignment operation",
+		std::string("The operands of an assignment must not be void, but were: a= ") + atype->get_name() + std::string(" b=") + btype->get_name()
+		);
+	return false;
+    }
+    if (atype->is_composite()) {
+	compiler_context
+	    .get_errors()
+	    .add_simple_error(
+		_src_ref,
+		"Type mismatch in assignment operation",
+		std::string("The operands of an assignment must not be composite structures or classes, but were: a= ") + atype->get_name() + std::string(" b=") + btype->get_name()
+		);
+	return false;
+    }
+
+    // Notably, we never widen a shift operation.
+    // Instead, we operate on whatever it is because
+    // it will end up being masked down to an 8-bit
+    // value to avoid overflowing the LHS when the
+    // shift happens if it's any bigger.
+
+    // We always return the same size that the LHS is.
+    returned_tmpvar = function.tmpvar_define(atype);
+    
+    // We emit the appropriate operation as either an integer or
+    // floating-point add depending on which one it was.
+    // The back-end may assume that the operand types are both
+    // integer or floating point of the same type and
+    // the return type will also be of the same type.
+    auto operation = std::make_unique<OperationBinary>(
+	type,
+	_src_ref,
+	returned_tmpvar,
+	a_tmpvar,
+	b_tmpvar
+	);
+    function
+	.get_basic_block(current_block)
+	.add_statement(std::move(operation));
+    
+    return true;
+}
+
 bool
 FunctionDefinitionResolver::extract_from_expression_binary(
     JLang::mir::Function & function,
@@ -1270,7 +1486,8 @@ FunctionDefinitionResolver::extract_from_expression_binary(
 	    current_block,
 	    returned_tmpvar,
 	    a_tmpvar,
-	    b_tmpvar)) {
+	    b_tmpvar
+		)) {
 	    return false;
 	}
     }
@@ -1282,156 +1499,387 @@ FunctionDefinitionResolver::extract_from_expression_binary(
 	    current_block,
 	    returned_tmpvar,
 	    a_tmpvar,
-	    b_tmpvar)) {
+	    b_tmpvar
+		)) {
 	    return false;
 	}
     }
     else if (op_type == ExpressionBinary::SHIFT_LEFT) {
-	returned_tmpvar = function.tmpvar_duplicate(a_tmpvar);
-	auto operation = std::make_unique<OperationBinary>(
+	if (!handle_binary_operation_shift(
+	    function,
+	    expression.get_source_ref(),
 	    Operation::OP_SHIFT_LEFT,
-	    expression.get_source_ref(),	    
+	    current_block,
 	    returned_tmpvar,
 	    a_tmpvar,
 	    b_tmpvar
-	    );
-	function
-	    .get_basic_block(current_block)
-	    .add_statement(std::move(operation));
+		)) {
+	    return false;
+	}
     }
     else if (op_type == ExpressionBinary::SHIFT_RIGHT) {
-	returned_tmpvar = function.tmpvar_duplicate(a_tmpvar);
-	auto operation = std::make_unique<OperationBinary>(
+	if (!handle_binary_operation_shift(
+	    function,
+	    expression.get_source_ref(),
 	    Operation::OP_SHIFT_RIGHT,
-	    expression.get_source_ref(),	    
+	    current_block,
 	    returned_tmpvar,
 	    a_tmpvar,
 	    b_tmpvar
-	    );
-	function
-	    .get_basic_block(current_block)
-	    .add_statement(std::move(operation));
+		)) {
+	    return false;
+	}
     }
     else if (op_type == ExpressionBinary::COMPARE_LT) {
-	returned_tmpvar = function.tmpvar_define(mir.get_types().get_type("bool"));
-	auto operation = std::make_unique<OperationBinary>(
-	    Operation::OP_COMPARE_LT,
-	    expression.get_source_ref(),	    
-	    returned_tmpvar,
-	    a_tmpvar,
-	    b_tmpvar
-	    );
-	function
-	    .get_basic_block(current_block)
-	    .add_statement(std::move(operation));
+	if (!handle_binary_operation_compare(
+		function,
+		expression.get_source_ref(),
+		Operation::OP_COMPARE_LT,
+		current_block,
+		returned_tmpvar,
+		a_tmpvar,
+		b_tmpvar
+		)) {
+	    return false;
+	}
     }
     else if (op_type == ExpressionBinary::COMPARE_GT) {
-	returned_tmpvar = function.tmpvar_define(mir.get_types().get_type("bool"));
-	auto operation = std::make_unique<OperationBinary>(
-	    Operation::OP_COMPARE_GT,
-	    expression.get_source_ref(),	    
-	    returned_tmpvar,
-	    a_tmpvar,
-	    b_tmpvar
-	    );
-	function
-	    .get_basic_block(current_block)
-	    .add_statement(std::move(operation));
+	if (!handle_binary_operation_compare(
+		function,
+		expression.get_source_ref(),
+		Operation::OP_COMPARE_GT,
+		current_block,
+		returned_tmpvar,
+		a_tmpvar,
+		b_tmpvar
+		)) {
+	    return false;
+	}
     }
     else if (op_type == ExpressionBinary::COMPARE_LE) {
-	returned_tmpvar = function.tmpvar_define(mir.get_types().get_type("bool"));
-	auto operation = std::make_unique<OperationBinary>(
-	    Operation::OP_COMPARE_LE,
-	    expression.get_source_ref(),	    
-	    returned_tmpvar,
-	    a_tmpvar,
-	    b_tmpvar
-	    );
-	function
-	    .get_basic_block(current_block)
-	    .add_statement(std::move(operation));
+	if (!handle_binary_operation_compare(
+		function,
+		expression.get_source_ref(),
+		Operation::OP_COMPARE_LE,
+		current_block,
+		returned_tmpvar,
+		a_tmpvar,
+		b_tmpvar
+		)) {
+	    return false;
+	}
     }
     else if (op_type == ExpressionBinary::COMPARE_GE) {
-	returned_tmpvar = function.tmpvar_define(mir.get_types().get_type("bool"));
-	auto operation = std::make_unique<OperationBinary>(
-	    Operation::OP_COMPARE_GE,
-	    expression.get_source_ref(),	    
-	    returned_tmpvar,
-	    a_tmpvar,
-	    b_tmpvar
-	    );
-	function
-	    .get_basic_block(current_block)
-	    .add_statement(std::move(operation));
+	if (!handle_binary_operation_compare(
+		function,
+		expression.get_source_ref(),
+		Operation::OP_COMPARE_GE,
+		current_block,
+		returned_tmpvar,
+		a_tmpvar,
+		b_tmpvar
+		)) {
+	    return false;
+	}
     }
     else if (op_type == ExpressionBinary::COMPARE_EQ) {
-	returned_tmpvar = function.tmpvar_define(mir.get_types().get_type("bool"));
-	auto operation = std::make_unique<OperationBinary>(
-	    Operation::OP_COMPARE_EQ,
-	    expression.get_source_ref(),	    
-	    returned_tmpvar,
-	    a_tmpvar,
-	    b_tmpvar
-	    );
-	function
-	    .get_basic_block(current_block)
-	    .add_statement(std::move(operation));
+	if (!handle_binary_operation_compare(
+		function,
+		expression.get_source_ref(),
+		Operation::OP_COMPARE_EQ,
+		current_block,
+		returned_tmpvar,
+		a_tmpvar,
+		b_tmpvar
+		)) {
+	    return false;
+	}
     }
     else if (op_type == ExpressionBinary::COMPARE_NE) {
-	returned_tmpvar = function.tmpvar_define(mir.get_types().get_type("bool"));
-	auto operation = std::make_unique<OperationBinary>(
-	    Operation::OP_COMPARE_NE,
-	    expression.get_source_ref(),	    
-	    returned_tmpvar,
-	    a_tmpvar,
-	    b_tmpvar
-	    );
-	function
-	    .get_basic_block(current_block)
-	    .add_statement(std::move(operation));
+	if (!handle_binary_operation_compare(
+		function,
+		expression.get_source_ref(),
+		Operation::OP_COMPARE_NE,
+		current_block,
+		returned_tmpvar,
+		a_tmpvar,
+		b_tmpvar
+		)) {
+	    return false;
+	}
     }
     else if (op_type == ExpressionBinary::EQUALS) {
-	returned_tmpvar = function.tmpvar_duplicate(a_tmpvar);
-	auto operation = std::make_unique<OperationBinary>(
-	    Operation::OP_ASSIGN,
-	    expression.get_source_ref(),	    
-	    returned_tmpvar,
-	    a_tmpvar,
-	    b_tmpvar
-	    );
-	function
-	    .get_basic_block(current_block)
-	    .add_statement(std::move(operation));
+	if (!handle_binary_operation_assignment(
+		function,
+		expression.get_source_ref(),
+		Operation::OP_ASSIGN,
+		current_block,
+		returned_tmpvar,
+		a_tmpvar,
+		b_tmpvar
+		)) {
+	    return false;
+	}
     }	
     else if (op_type == ExpressionBinary::MUL_ASSIGN) {
-	returned_tmpvar = function.tmpvar_duplicate(a_tmpvar);
+	// This is just syntax sugar for * followed by =
+	size_t arithmetic_tmpvar;
+	if (!handle_binary_operation_arithmetic(
+		function,
+		expression.get_source_ref(),
+		Operation::OP_MULTIPLY,
+		current_block,
+		arithmetic_tmpvar,
+		a_tmpvar,
+		b_tmpvar
+		)) {
+	    return false;
+	}
+	if (!handle_binary_operation_assignment(
+		function,
+		expression.get_source_ref(),
+		Operation::OP_ASSIGN,
+		current_block,
+		returned_tmpvar,
+		a_tmpvar,
+		arithmetic_tmpvar
+		)) {
+	    return false;
+	}
     }
     else if (op_type == ExpressionBinary::DIV_ASSIGN) {
-	returned_tmpvar = function.tmpvar_duplicate(a_tmpvar);
+	// This is just syntax sugar for / followed by =
+	size_t arithmetic_tmpvar;
+	if (!handle_binary_operation_arithmetic(
+		function,
+		expression.get_source_ref(),
+		Operation::OP_DIVIDE,
+		current_block,
+		arithmetic_tmpvar,
+		a_tmpvar,
+		b_tmpvar
+		)) {
+	    return false;
+	}
+	if (!handle_binary_operation_assignment(
+		function,
+		expression.get_source_ref(),
+		Operation::OP_ASSIGN,
+		current_block,
+		returned_tmpvar,
+		a_tmpvar,
+		arithmetic_tmpvar
+		)) {
+	    return false;
+	}
     }
     else if (op_type == ExpressionBinary::MOD_ASSIGN) {
-	returned_tmpvar = function.tmpvar_duplicate(a_tmpvar);
+	// This is just syntax sugar for % followed by =
+	size_t arithmetic_tmpvar;
+	if (!handle_binary_operation_arithmetic(
+		function,
+		expression.get_source_ref(),
+		Operation::OP_MODULO,
+		current_block,
+		arithmetic_tmpvar,
+		a_tmpvar,
+		b_tmpvar
+		)) {
+	    return false;
+	}
+	if (!handle_binary_operation_assignment(
+		function,
+		expression.get_source_ref(),
+		Operation::OP_ASSIGN,
+		current_block,
+		returned_tmpvar,
+		a_tmpvar,
+		arithmetic_tmpvar
+		)) {
+	    return false;
+	}
     }
     else if (op_type == ExpressionBinary::ADD_ASSIGN) {
-	returned_tmpvar = function.tmpvar_duplicate(a_tmpvar);
+	// This is just syntax sugar for + followed by =
+	size_t arithmetic_tmpvar;
+	if (!handle_binary_operation_arithmetic(
+		function,
+		expression.get_source_ref(),
+		Operation::OP_ADD,
+		current_block,
+		arithmetic_tmpvar,
+		a_tmpvar,
+		b_tmpvar
+		)) {
+	    return false;
+	}
+	if (!handle_binary_operation_assignment(
+		function,
+		expression.get_source_ref(),
+		Operation::OP_ASSIGN,
+		current_block,
+		returned_tmpvar,
+		a_tmpvar,
+		arithmetic_tmpvar
+		)) {
+	    return false;
+	}
     }
     else if (op_type == ExpressionBinary::SUB_ASSIGN) {
-	returned_tmpvar = function.tmpvar_duplicate(a_tmpvar);
+	// This is just syntax sugar for - followed by =
+	size_t arithmetic_tmpvar;
+	if (!handle_binary_operation_arithmetic(
+		function,
+		expression.get_source_ref(),
+		Operation::OP_SUBTRACT,
+		current_block,
+		arithmetic_tmpvar,
+		a_tmpvar,
+		b_tmpvar
+		)) {
+	    return false;
+	}
+	if (!handle_binary_operation_assignment(
+		function,
+		expression.get_source_ref(),
+		Operation::OP_ASSIGN,
+		current_block,
+		returned_tmpvar,
+		a_tmpvar,
+		arithmetic_tmpvar
+		)) {
+	    return false;
+	}
     }
     else if (op_type == ExpressionBinary::LEFT_ASSIGN) {
-	returned_tmpvar = function.tmpvar_duplicate(a_tmpvar);
+	// This is just syntax sugar for << followed by =
+	size_t arithmetic_tmpvar;
+	if (!handle_binary_operation_shift(
+		function,
+		expression.get_source_ref(),
+		Operation::OP_SHIFT_LEFT,
+		current_block,
+		arithmetic_tmpvar,
+		a_tmpvar,
+		b_tmpvar
+		)) {
+	    return false;
+	}
+	if (!handle_binary_operation_assignment(
+		function,
+		expression.get_source_ref(),
+		Operation::OP_ASSIGN,
+		current_block,
+		returned_tmpvar,
+		a_tmpvar,
+		arithmetic_tmpvar
+		)) {
+	    return false;
+	}
     }
     else if (op_type == ExpressionBinary::RIGHT_ASSIGN) {
-	returned_tmpvar = function.tmpvar_duplicate(a_tmpvar);
+	// This is just syntax sugar for >> followed by =
+	size_t arithmetic_tmpvar;
+	if (!handle_binary_operation_shift(
+		function,
+		expression.get_source_ref(),
+		Operation::OP_SHIFT_RIGHT,
+		current_block,
+		arithmetic_tmpvar,
+		a_tmpvar,
+		b_tmpvar
+		)) {
+	    return false;
+	}
+	if (!handle_binary_operation_assignment(
+		function,
+		expression.get_source_ref(),
+		Operation::OP_ASSIGN,
+		current_block,
+		returned_tmpvar,
+		a_tmpvar,
+		arithmetic_tmpvar
+		)) {
+	    return false;
+	}
     }
     else if (op_type == ExpressionBinary::AND_ASSIGN) {
-	returned_tmpvar = function.tmpvar_duplicate(a_tmpvar);
+	// This is just syntax sugar for & followed by =
+	size_t arithmetic_tmpvar;
+	if (!handle_binary_operation_bitwise(
+		function,
+		expression.get_source_ref(),
+		Operation::OP_BITWISE_AND,
+		current_block,
+		arithmetic_tmpvar,
+		a_tmpvar,
+		b_tmpvar
+		)) {
+	    return false;
+	}
+	if (!handle_binary_operation_assignment(
+		function,
+		expression.get_source_ref(),
+		Operation::OP_ASSIGN,
+		current_block,
+		returned_tmpvar,
+		a_tmpvar,
+		arithmetic_tmpvar
+		)) {
+	    return false;
+	}
     }
     else if (op_type == ExpressionBinary::OR_ASSIGN) {
-	returned_tmpvar = function.tmpvar_duplicate(a_tmpvar);
+	// This is just syntax sugar for | followed by =
+	size_t arithmetic_tmpvar;
+	if (!handle_binary_operation_bitwise(
+		function,
+		expression.get_source_ref(),
+		Operation::OP_BITWISE_OR,
+		current_block,
+		arithmetic_tmpvar,
+		a_tmpvar,
+		b_tmpvar
+		)) {
+	    return false;
+	}
+	if (!handle_binary_operation_assignment(
+		function,
+		expression.get_source_ref(),
+		Operation::OP_ASSIGN,
+		current_block,
+		returned_tmpvar,
+		a_tmpvar,
+		arithmetic_tmpvar
+		)) {
+	    return false;
+	}
     }
     else if (op_type == ExpressionBinary::XOR_ASSIGN) {
-	returned_tmpvar = function.tmpvar_duplicate(a_tmpvar);
+	// This is just syntax sugar for ^ followed by =
+	size_t arithmetic_tmpvar;
+	if (!handle_binary_operation_bitwise(
+		function,
+		expression.get_source_ref(),
+		Operation::OP_BITWISE_XOR,
+		current_block,
+		arithmetic_tmpvar,
+		a_tmpvar,
+		b_tmpvar
+		)) {
+	    return false;
+	}
+	if (!handle_binary_operation_assignment(
+		function,
+		expression.get_source_ref(),
+		Operation::OP_ASSIGN,
+		current_block,
+		returned_tmpvar,
+		a_tmpvar,
+		arithmetic_tmpvar
+		)) {
+	    return false;
+	}
     }
     else {
 	compiler_context

@@ -74,7 +74,37 @@ namespace JLang::frontend {
 	    size_t a_tmpvar,
 	    size_t b_tmpvar
 	    );
-	
+
+	bool handle_binary_operation_shift(
+	    JLang::mir::Function & function,
+	    const JLang::context::SourceReference & _src_ref,
+	    JLang::mir::Operation::OperationType type,
+	    size_t & current_block,
+	    size_t & returned_tmpvar,
+	    size_t a_tmpvar,
+	    size_t b_tmpvar
+	    );
+
+	bool handle_binary_operation_compare(
+	    JLang::mir::Function & function,
+	    const JLang::context::SourceReference & _src_ref,
+	    JLang::mir::Operation::OperationType type,
+	    size_t & current_block,
+	    size_t & returned_tmpvar,
+	    size_t a_tmpvar,
+	    size_t b_tmpvar
+	    );
+
+	bool handle_binary_operation_assignment(
+	    JLang::mir::Function & function,
+	    const JLang::context::SourceReference & _src_ref,
+	    JLang::mir::Operation::OperationType type,
+	    size_t & current_block,
+	    size_t & returned_tmpvar,
+	    size_t a_tmpvar,
+	    size_t b_tmpvar
+	    );
+
 	bool extract_from_expression_primary_identifier(
 	    JLang::mir::Function & function,
 	    size_t & current_block,
