@@ -228,7 +228,11 @@ namespace JLang::codegen {
 	    const JLang::mir::OperationReturn & operation
 	    );
 	
-	llvm::Value *generate_basic_block(const JLang::mir::Function & function, size_t blockid);
+	llvm::Value *generate_basic_block(
+	    const JLang::mir::Function & function,
+	    const JLang::mir::BasicBlock & mir_block
+	    );
+
 	void generate_function(const JLang::mir::Function & function);
 	
 	llvm::Function * create_function(const JLang::mir::Function & function);

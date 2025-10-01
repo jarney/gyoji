@@ -87,12 +87,12 @@ void AnalysisPassBorrowChecker::check(const Function & function) const
 {
     // We start with mapping the "edges" of the graph
     // from the basic-blocks of the function.
-    auto blocks = function.get_blocks_in_order();
+    const auto & blocks = function.get_blocks();
 
     std::vector<CFGEdge> cfg_edges;
     
-    for (const auto & blockid : blocks) {
-	const BasicBlock & block = function.get_basic_block(blockid);
+    for (const auto & block_it : blocks) {
+	const BasicBlock & block = *block_it.second;
 	const std::vector<JLang::owned<Operation>> & operations = block.get_operations();
 
 	// Each basic block must have at least one operation.
@@ -109,8 +109,8 @@ void AnalysisPassBorrowChecker::check(const Function & function) const
 	// TODO: Finish the logic of
 	// tying blocks together in a graph
 	// by traversing it.
-	BasicBlockOperation startblock(blockid, 0);
-	BasicBlockOperation endblock(blockid, 1);
+	BasicBlockOperation startblock(block_it.first, 0);
+	BasicBlockOperation endblock(block_it.first, 1);
 	cfg_edges.push_back(CFGEdge(startblock, endblock));
 	for (const auto & operation_ptr : block.get_operations()) {
 	    const Operation & operation = *operation_ptr;

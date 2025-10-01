@@ -332,7 +332,7 @@ CodeGeneratorLLVMContext::generate_operation_function_call(
 	llvm::Value *llvm_arg = tmp_values[operands.at(i+1)];
 	llvm_args.push_back(llvm_arg);
     }
-    const Type *mir_type = mir_function.tmpvar_get(function_operand)->get_type();
+    const Type *mir_type = mir_function.tmpvar_get(function_operand);
     llvm::Type *llvm_fptr_type = types[mir_type->get_name()];
 
     Builder->CreateCall((llvm::FunctionType*)llvm_fptr_type, (llvm::Function*)llvm_function, llvm_args);
@@ -484,7 +484,7 @@ CodeGeneratorLLVMContext::generate_operation_widen_numeric(
     )
 {
     size_t a = operation.get_a();
-    const JLang::mir::Type *atype = mir_function.tmpvar_get(a)->get_type();
+    const JLang::mir::Type *atype = mir_function.tmpvar_get(a);
     if (!atype->is_numeric()) {
 	compiler_context
 	    .get_errors()
@@ -516,8 +516,8 @@ CodeGeneratorLLVMContext::generate_operation_add(
 {
     size_t a = operation.get_a();
     size_t b = operation.get_b();
-    const JLang::mir::Type *atype = mir_function.tmpvar_get(a)->get_type();
-    const JLang::mir::Type *btype = mir_function.tmpvar_get(b)->get_type();
+    const JLang::mir::Type *atype = mir_function.tmpvar_get(a);
+    const JLang::mir::Type *btype = mir_function.tmpvar_get(b);
     if (!atype->is_numeric() || !btype->is_numeric()) {
 	compiler_context
 	    .get_errors()
@@ -560,8 +560,8 @@ CodeGeneratorLLVMContext::generate_operation_subtract(
 {
     size_t a = operation.get_a();
     size_t b = operation.get_b();
-    const JLang::mir::Type *atype = mir_function.tmpvar_get(a)->get_type();
-    const JLang::mir::Type *btype = mir_function.tmpvar_get(b)->get_type();
+    const JLang::mir::Type *atype = mir_function.tmpvar_get(a);
+    const JLang::mir::Type *btype = mir_function.tmpvar_get(b);
     if (!atype->is_numeric() || !btype->is_numeric()) {
 	compiler_context
 	    .get_errors()
@@ -604,8 +604,8 @@ CodeGeneratorLLVMContext::generate_operation_multiply(
 {
     size_t a = operation.get_a();
     size_t b = operation.get_b();
-    const JLang::mir::Type *atype = mir_function.tmpvar_get(a)->get_type();
-    const JLang::mir::Type *btype = mir_function.tmpvar_get(b)->get_type();
+    const JLang::mir::Type *atype = mir_function.tmpvar_get(a);
+    const JLang::mir::Type *btype = mir_function.tmpvar_get(b);
     if (!atype->is_numeric() || !atype->is_numeric()) {
 	compiler_context
 	    .get_errors()
@@ -648,8 +648,8 @@ CodeGeneratorLLVMContext::generate_operation_divide(
 {
     size_t a = operation.get_a();
     size_t b = operation.get_b();
-    const JLang::mir::Type *atype = mir_function.tmpvar_get(a)->get_type();
-    const JLang::mir::Type *btype = mir_function.tmpvar_get(b)->get_type();
+    const JLang::mir::Type *atype = mir_function.tmpvar_get(a);
+    const JLang::mir::Type *btype = mir_function.tmpvar_get(b);
     if (!atype->is_numeric() || !btype->is_numeric()) {
 	compiler_context
 	    .get_errors()
@@ -706,8 +706,8 @@ CodeGeneratorLLVMContext::generate_operation_modulo(
 {
     size_t a = operation.get_a();
     size_t b = operation.get_b();
-    const JLang::mir::Type *atype = mir_function.tmpvar_get(a)->get_type();
-    const JLang::mir::Type *btype = mir_function.tmpvar_get(b)->get_type();
+    const JLang::mir::Type *atype = mir_function.tmpvar_get(a);
+    const JLang::mir::Type *btype = mir_function.tmpvar_get(b);
     if (!atype->is_integer() || !btype->is_integer()) {
 	compiler_context
 	    .get_errors()
@@ -750,8 +750,8 @@ CodeGeneratorLLVMContext::generate_operation_logical_and(
 {
     size_t a = operation.get_a();
     size_t b = operation.get_b();
-    const JLang::mir::Type *atype = mir_function.tmpvar_get(a)->get_type();
-    const JLang::mir::Type *btype = mir_function.tmpvar_get(b)->get_type();
+    const JLang::mir::Type *atype = mir_function.tmpvar_get(a);
+    const JLang::mir::Type *btype = mir_function.tmpvar_get(b);
     if (!atype->is_bool() || !btype->is_bool()) {
 	compiler_context
 	    .get_errors()
@@ -779,8 +779,8 @@ CodeGeneratorLLVMContext::generate_operation_logical_or(
 {
     size_t a = operation.get_a();
     size_t b = operation.get_b();
-    const JLang::mir::Type *atype = mir_function.tmpvar_get(a)->get_type();
-    const JLang::mir::Type *btype = mir_function.tmpvar_get(b)->get_type();
+    const JLang::mir::Type *atype = mir_function.tmpvar_get(a);
+    const JLang::mir::Type *btype = mir_function.tmpvar_get(b);
     if (!atype->is_bool() || !btype->is_bool()) {
 	compiler_context
 	    .get_errors()
@@ -808,8 +808,8 @@ CodeGeneratorLLVMContext::generate_operation_bitwise_and(
 {
     size_t a = operation.get_a();
     size_t b = operation.get_b();
-    const JLang::mir::Type *atype = mir_function.tmpvar_get(a)->get_type();
-    const JLang::mir::Type *btype = mir_function.tmpvar_get(b)->get_type();
+    const JLang::mir::Type *atype = mir_function.tmpvar_get(a);
+    const JLang::mir::Type *btype = mir_function.tmpvar_get(b);
     if (!atype->is_unsigned() || !btype->is_unsigned()) {
 	compiler_context
 	    .get_errors()
@@ -836,8 +836,8 @@ CodeGeneratorLLVMContext::generate_operation_bitwise_or(
 {
     size_t a = operation.get_a();
     size_t b = operation.get_b();
-    const JLang::mir::Type *atype = mir_function.tmpvar_get(a)->get_type();
-    const JLang::mir::Type *btype = mir_function.tmpvar_get(b)->get_type();
+    const JLang::mir::Type *atype = mir_function.tmpvar_get(a);
+    const JLang::mir::Type *btype = mir_function.tmpvar_get(b);
     if (!atype->is_unsigned() || !btype->is_unsigned()) {
 	compiler_context
 	    .get_errors()
@@ -864,8 +864,8 @@ CodeGeneratorLLVMContext::generate_operation_bitwise_xor(
 {
     size_t a = operation.get_a();
     size_t b = operation.get_b();
-    const JLang::mir::Type *atype = mir_function.tmpvar_get(a)->get_type();
-    const JLang::mir::Type *btype = mir_function.tmpvar_get(b)->get_type();
+    const JLang::mir::Type *atype = mir_function.tmpvar_get(a);
+    const JLang::mir::Type *btype = mir_function.tmpvar_get(b);
     if (!atype->is_unsigned() || !btype->is_unsigned()) {
 	compiler_context
 	    .get_errors()
@@ -892,8 +892,8 @@ CodeGeneratorLLVMContext::generate_operation_shift(
 {
     size_t a = operation.get_a();
     size_t b = operation.get_b();
-    const JLang::mir::Type *atype = mir_function.tmpvar_get(a)->get_type();
-    const JLang::mir::Type *btype = mir_function.tmpvar_get(b)->get_type();
+    const JLang::mir::Type *atype = mir_function.tmpvar_get(a);
+    const JLang::mir::Type *btype = mir_function.tmpvar_get(b);
     if (!atype->is_unsigned() || !btype->is_unsigned()) {
 	compiler_context
 	    .get_errors()
@@ -961,8 +961,8 @@ CodeGeneratorLLVMContext::generate_operation_comparison(
     size_t b = operation.get_b();
     Operation::OperationType type = operation.get_type();
     
-    const JLang::mir::Type *atype = mir_function.tmpvar_get(a)->get_type();
-    const JLang::mir::Type *btype = mir_function.tmpvar_get(b)->get_type();
+    const JLang::mir::Type *atype = mir_function.tmpvar_get(a);
+    const JLang::mir::Type *btype = mir_function.tmpvar_get(b);
     if (atype->get_name() != btype->get_name()) {
 	compiler_context
 	    .get_errors()
@@ -1096,7 +1096,7 @@ CodeGeneratorLLVMContext::generate_operation_arithmetic_negate(
     )
 {
     size_t a = operation.get_a();
-    const JLang::mir::Type *atype = mir_function.tmpvar_get(a)->get_type();
+    const JLang::mir::Type *atype = mir_function.tmpvar_get(a);
     if (!atype->is_signed()) {
 	compiler_context
 	    .get_errors()
@@ -1121,7 +1121,7 @@ CodeGeneratorLLVMContext::generate_operation_bitwise_not(
     )
 {
     size_t a = operation.get_a();
-    const JLang::mir::Type *atype = mir_function.tmpvar_get(a)->get_type();
+    const JLang::mir::Type *atype = mir_function.tmpvar_get(a);
     if (!atype->is_unsigned()) {
 	compiler_context
 	    .get_errors()
@@ -1146,7 +1146,7 @@ CodeGeneratorLLVMContext::generate_operation_logical_not(
     )
 {
     size_t a = operation.get_a();
-    const JLang::mir::Type *atype = mir_function.tmpvar_get(a)->get_type();
+    const JLang::mir::Type *atype = mir_function.tmpvar_get(a);
     if (!atype->is_bool()) {
 	compiler_context
 	    .get_errors()
@@ -1214,10 +1214,9 @@ CodeGeneratorLLVMContext::generate_operation_return(
 llvm::Value *
 CodeGeneratorLLVMContext::generate_basic_block(
     const JLang::mir::Function & mir_function,
-    size_t blockid
+    const JLang::mir::BasicBlock & mir_block
     )
 {
-    const JLang::mir::BasicBlock & mir_block = mir_function.get_basic_block(blockid);
     std::map<size_t, llvm::Value *> tmp_values;
     std::map<size_t, llvm::Value *> tmp_lvalues;
 
@@ -1376,19 +1375,26 @@ CodeGeneratorLLVMContext::generate_function(const JLang::mir::Function & functio
 
     llvm::Value *return_value = nullptr;
 
-    for (const auto blockid : function.get_blocks_in_order()) {
-	std::string block_name = std::string("BB") + std::to_string(blockid);
+    for (const auto & block_it : function.get_blocks()) {
+	std::string block_name = std::string("BB") + std::to_string(block_it.first);
 	llvm::BasicBlock *BB = llvm::BasicBlock::Create(*TheContext, block_name, TheFunction);
-	blocks[blockid] = BB;
+	blocks[block_it.first] = BB;
     }
     // Jump from the entry block into the first 'real' block.
-    Builder->CreateBr(blocks[function.get_blocks_in_order().at(0)]);
+    Builder->CreateBr(blocks[0]);
     
-    for (const auto blockid : function.get_blocks_in_order()) {
+    for (const auto & block_it : function.get_blocks()) {
 	// Create a new basic block to start insertion into.
-	llvm::BasicBlock *BB = blocks[blockid];
+	llvm::BasicBlock *BB = blocks[block_it.first];
 	Builder->SetInsertPoint(BB);
-	return_value = generate_basic_block(function, blockid);
+	llvm::Value *return_value_block = generate_basic_block(function, *block_it.second);
+	
+	// Technically, we should be using 'PHI'
+	// here and reconciling multiple possible
+	// return paths.
+	if (return_value_block != nullptr) {
+	    return_value = return_value_block;
+	}
     }
 
     if (return_value == nullptr) {

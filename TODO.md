@@ -41,6 +41,10 @@
     * Global variables, etc.
 
   * Random bugs:
+    * Better formatting for int/float literals that includes a "_" digit
+      marker for readability.
+    * Cast integer/float constants into an int/float type inside the
+      operation rather than formatting it at the point of codegen.
     * String literal handling, remove the quote (") and also
       figure out a convenient way to express multiline strings.
       with multiple string literals concatenated.

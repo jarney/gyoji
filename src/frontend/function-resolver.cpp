@@ -356,7 +356,7 @@ FunctionDefinitionResolver::extract_from_expression_postfix_array_index(
 	return false;
     }
 
-    const Type *array_type = function.tmpvar_get(array_tmpvar)->get_type();
+    const Type *array_type = function.tmpvar_get(array_tmpvar);
     if (array_type->get_type() != Type::TYPE_POINTER) {
 	compiler_context
 	    .get_errors()
@@ -368,7 +368,7 @@ FunctionDefinitionResolver::extract_from_expression_postfix_array_index(
 	return false;
     }
     
-    if (!function.tmpvar_get(index_tmpvar)->get_type()->is_unsigned()) {
+    if (!function.tmpvar_get(index_tmpvar)->is_unsigned()) {
 	compiler_context
 	    .get_errors()
 	    .add_simple_error(
@@ -417,7 +417,7 @@ FunctionDefinitionResolver::extract_from_expression_postfix_function_call(
 	arg_types.push_back(arg_returned_value);
     }
 
-    const Type *function_pointer_type = function.tmpvar_get(function_type_tmpvar)->get_type();
+    const Type *function_pointer_type = function.tmpvar_get(function_type_tmpvar);
     if (function_pointer_type->get_type() != Type::TYPE_FUNCTION_POINTER) {
 	fprintf(stderr, "Not extracting function invalid type\n");
 	compiler_context
@@ -465,7 +465,7 @@ FunctionDefinitionResolver::extract_from_expression_postfix_dot(
 	return false;
     }
 
-    const Type *class_type = function.tmpvar_get(class_tmpvar)->get_type();
+    const Type *class_type = function.tmpvar_get(class_tmpvar);
     if (class_type->get_type() != Type::TYPE_COMPOSITE) {
 	compiler_context
 	    .get_errors()
@@ -514,7 +514,7 @@ FunctionDefinitionResolver::extract_from_expression_postfix_arrow(
 	return false;
     }
 
-    const Type *classptr_type = function.tmpvar_get(classptr_tmpvar)->get_type();
+    const Type *classptr_type = function.tmpvar_get(classptr_tmpvar);
     if (classptr_type->get_type() != Type::TYPE_POINTER) {
 	compiler_context
 	    .get_errors()
@@ -637,7 +637,7 @@ FunctionDefinitionResolver::extract_from_expression_unary_prefix(
 	return false;
     }
     
-    const Type *operand_type = function.tmpvar_get(operand_tmpvar)->get_type();
+    const Type *operand_type = function.tmpvar_get(operand_tmpvar);
     if (operand_type == nullptr) {
 	compiler_context
 	    .get_errors()
@@ -791,13 +791,13 @@ FunctionDefinitionResolver::extract_from_expression_unary_prefix(
 	    .add_operation(std::move(operation));
     }
     else if (expression.get_type() == ExpressionUnaryPrefix::LOGICAL_NOT) {
-	if (!function.tmpvar_get(operand_tmpvar)->get_type()->is_bool()) {
+	if (!function.tmpvar_get(operand_tmpvar)->is_bool()) {
 	    compiler_context
 		.get_errors()
 		.add_simple_error(
 		    expression.get_expression().get_source_ref(),
 		    "Logical not (!) must operate on 'bool' expressions.",
-		    std::string("Type of condition expression should be 'bool' and was ") + function.tmpvar_get(operand_tmpvar)->get_type()->get_name()
+		    std::string("Type of condition expression should be 'bool' and was ") + function.tmpvar_get(operand_tmpvar)->get_name()
 		    );
 	}
 	returned_tmpvar = function.tmpvar_duplicate(operand_tmpvar);
@@ -984,8 +984,8 @@ FunctionDefinitionResolver::handle_binary_operation_arithmetic(
     size_t b_tmpvar
     )
 {
-    const Type *atype = function.tmpvar_get(a_tmpvar)->get_type();
-    const Type *btype = function.tmpvar_get(b_tmpvar)->get_type();
+    const Type *atype = function.tmpvar_get(a_tmpvar);
+    const Type *btype = function.tmpvar_get(b_tmpvar);
     // Check that both operands are numeric.
     if (!atype->is_numeric() ||	!btype->is_numeric()) {
 	compiler_context
@@ -1069,8 +1069,8 @@ FunctionDefinitionResolver::handle_binary_operation_logical(
     size_t b_tmpvar
     )
 {
-    const Type *atype = function.tmpvar_get(a_tmpvar)->get_type();
-    const Type *btype = function.tmpvar_get(b_tmpvar)->get_type();
+    const Type *atype = function.tmpvar_get(a_tmpvar);
+    const Type *btype = function.tmpvar_get(b_tmpvar);
     // Check that both operands are numeric.
     if (!atype->is_bool() || !btype->is_bool()) {
 	compiler_context
@@ -1106,8 +1106,8 @@ FunctionDefinitionResolver::handle_binary_operation_bitwise(
     size_t b_tmpvar
     )
 {
-    const Type *atype = function.tmpvar_get(a_tmpvar)->get_type();
-    const Type *btype = function.tmpvar_get(b_tmpvar)->get_type();
+    const Type *atype = function.tmpvar_get(a_tmpvar);
+    const Type *btype = function.tmpvar_get(b_tmpvar);
     // Check that both operands are numeric.
     if (!atype->is_unsigned() || !btype->is_unsigned()) {
 	compiler_context
@@ -1160,8 +1160,8 @@ FunctionDefinitionResolver::handle_binary_operation_shift(
     size_t b_tmpvar
     )
 {
-    const Type *atype = function.tmpvar_get(a_tmpvar)->get_type();
-    const Type *btype = function.tmpvar_get(b_tmpvar)->get_type();
+    const Type *atype = function.tmpvar_get(a_tmpvar);
+    const Type *btype = function.tmpvar_get(b_tmpvar);
     // Check that both operands are numeric.
     if (!atype->is_unsigned() || !btype->is_unsigned()) {
 	compiler_context
@@ -1213,8 +1213,8 @@ FunctionDefinitionResolver::handle_binary_operation_compare(
     size_t b_tmpvar
     )
 {
-    const Type *atype = function.tmpvar_get(a_tmpvar)->get_type();
-    const Type *btype = function.tmpvar_get(b_tmpvar)->get_type();
+    const Type *atype = function.tmpvar_get(a_tmpvar);
+    const Type *btype = function.tmpvar_get(b_tmpvar);
     // Check that both operands are the same type.
     if (atype->get_name() != btype->get_name()) {
 	compiler_context
@@ -1302,8 +1302,8 @@ FunctionDefinitionResolver::handle_binary_operation_assignment(
     size_t b_tmpvar
     )
 {
-    const Type *atype = function.tmpvar_get(a_tmpvar)->get_type();
-    const Type *btype = function.tmpvar_get(b_tmpvar)->get_type();
+    const Type *atype = function.tmpvar_get(a_tmpvar);
+    const Type *btype = function.tmpvar_get(b_tmpvar);
     // Check that both operands are the same type.
     if (atype->get_name() != btype->get_name()) {
 	compiler_context
@@ -2033,13 +2033,13 @@ FunctionDefinitionResolver::extract_from_statement_ifelse(
 	return false;
     }
     // First, evaluate the expression to get our condition.
-    if (!function.tmpvar_get(condition_tmpvar)->get_type()->is_bool()) {
+    if (!function.tmpvar_get(condition_tmpvar)->is_bool()) {
 	compiler_context
 	    .get_errors()
 	    .add_simple_error(
 		statement.get_expression().get_source_ref(),
 		"Invalid condition in if statement.",
-		std::string("Type of condition expression should be 'bool' and was ") + function.tmpvar_get(condition_tmpvar)->get_type()->get_name()
+		std::string("Type of condition expression should be 'bool' and was ") + function.tmpvar_get(condition_tmpvar)->get_name()
 		);
 	return false;
     }
@@ -2071,7 +2071,6 @@ FunctionDefinitionResolver::extract_from_statement_ifelse(
 	function.get_basic_block(current_block).add_operation(std::move(operation));
     }
     
-    function.push_block(current_block);
     current_block = blockid_if;
 
     // Perform the stuff inside the 'if' block.
@@ -2089,7 +2088,6 @@ FunctionDefinitionResolver::extract_from_statement_ifelse(
 	blockid_done
 	);
     function.get_basic_block(current_block).add_operation(std::move(operation));
-    function.push_block(current_block);
     
     if (statement.has_else()) {
 	// Perform the stuff in the 'else' block.
@@ -2106,7 +2104,6 @@ FunctionDefinitionResolver::extract_from_statement_ifelse(
 	    );
 	function.get_basic_block(blockid_else).add_operation(std::move(operation));
 	// Jump to the 'done' block when the 'else' block is finished.
-	function.push_block(blockid_else);
     }
     else if (statement.has_else_if()) {
 	if (!extract_from_statement_ifelse(
@@ -2271,8 +2268,6 @@ FunctionDefinitionResolver::extract_from_function_definition(const FileStatement
     if (!extract_from_statement_list(*fn, start_block, function_definition.get_scope_body().get_statements())) {
 	return false;
     }
-    
-    fn->push_block(start_block);
     
     mir.get_functions().add_function(std::move(fn));
 

@@ -20,17 +20,6 @@ Functions::add_function(JLang::owned<Function> _function)
     functions.push_back(std::move(_function));
 }
 
-const Function * 
-Functions::function_get(std::string _name) const
-{
-    for (const auto & fn : functions) {
-	if (fn->get_name() == _name) {
-	    return fn.get();
-	}
-    }
-    return nullptr;
-}
-
 const std::vector<JLang::owned<Function>> &
 Functions::get_functions() const
 { return functions; }
@@ -71,21 +60,6 @@ LocalVariable::get_type() const
 const JLang::context::SourceReference &
 LocalVariable::get_source_ref() const
 { return src_ref; }
-/////////////////////////////////////
-// TmpValue
-/////////////////////////////////////
-TmpValue::TmpValue(const Type* _type)
-    : type(_type)
-{}
-TmpValue::TmpValue(const TmpValue & _other)
-    : type(_other.type)
-{}
-
-TmpValue::~TmpValue()
-{}
-const Type*
-TmpValue::get_type() const
-{ return type; }
 
 /////////////////////////////////////
 // Function
@@ -147,14 +121,10 @@ Function::add_block()
     blockid++;
     return blockid_created;
 }
-void
-Function::push_block(size_t blockid)
-{
-    blocks_in_order.push_back(blockid);
-}
-const std::vector<size_t> &
-Function::get_blocks_in_order() const
-{ return blocks_in_order; }
+
+const std::map<size_t, JLang::owned<BasicBlock>> &
+Function::get_blocks() const
+{ return blocks; }
 
 const LocalVariable *
 Function::get_local(std::string local_name)
@@ -176,20 +146,20 @@ Function::add_local(const LocalVariable & local)
     return true;
 }
 
-const TmpValue *
+const Type *
 Function::tmpvar_get(size_t tmpvar_id) const
-{ return &tmpvars.at(tmpvar_id); }
+{ return tmpvars.at(tmpvar_id); }
 
 size_t
 Function::tmpvar_define(const Type* type)
 {
-    tmpvars.push_back(TmpValue(type));
+    tmpvars.push_back(type);
     return tmpvars.size()-1;
 }
 size_t
 Function::tmpvar_duplicate(size_t tempvar_id)
 {
-    return tmpvar_define(tmpvar_get(tempvar_id)->get_type());
+    return tmpvar_define(tmpvar_get(tempvar_id));
 }
 void
 Function::remove_local(std::string local_name)
@@ -208,14 +178,14 @@ Function::dump(FILE *out) const
     fprintf(out, "    temporary variables\n");
     size_t varid = 0;
     for (const auto & value : tmpvars) {
-	fprintf(out, "        _%ld : %s\n", varid, value.get_type()->get_name().c_str());
+	fprintf(out, "        _%ld : %s\n", varid, value->get_name().c_str());
 	varid++;
     }
 
     fprintf(out, "    {\n");
-    for (const size_t & i : blocks_in_order) {
-	fprintf(out, "        BB%ld:\n", i);
-	const BasicBlock & block = get_basic_block(i);
+    for (const auto & block_it : blocks) {
+	fprintf(out, "        BB%ld:\n", block_it.first);
+	const BasicBlock & block = *block_it.second;
 	block.dump(out);
     }
     fprintf(out, "    }\n");
