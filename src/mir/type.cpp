@@ -20,7 +20,23 @@ Type::Type(
     , complete(_complete)
     , defined_source_ref(&_source_ref)
     , declared_source_ref(&_source_ref)
+    , pointer_or_ref(nullptr)
+    , return_type(nullptr)
+    , argument_types()
+    , members()
 {}
+Type::Type(std::string _name, const SourceReference & _source_ref, const Type & _other)
+    : name(_name)
+    , type(_other.type)
+    , complete(_other.complete)
+    , defined_source_ref(&_source_ref)
+    , declared_source_ref(&_source_ref)
+    , pointer_or_ref(_other.pointer_or_ref)
+    , return_type(_other.return_type)
+    , argument_types(_other.argument_types)
+    , members(_other.members)
+{
+}
 
 Type::~Type()
 {}
@@ -244,53 +260,29 @@ Type::get_defined_source_ref() const
 { return *defined_source_ref; }
 
 void
-Type::dump() const
+Type::dump(FILE *out) const
 {
     std::string type_desc("unknown");
     
-    if (is_primitive()) {
+    if (!is_complete()) {
+	type_desc = std::string("class (forward declaration)");
+    }
+    else if (is_primitive()) {
 	type_desc = std::string("primitive");
     }
     else if (type == TYPE_COMPOSITE) {
-	type_desc = std::string("composite");
+	type_desc = std::string("class");
     }
     else if (is_pointer()) {
 	type_desc = std::string("pointer");
+	type_desc += std::string(" to ") + pointer_or_ref->get_name();
     }
     else if (is_reference()) {
 	type_desc = std::string("reference");
+	type_desc += std::string(" to ") + pointer_or_ref->get_name();
     }
     else if (is_enum()) {
 	type_desc = std::string("enum");
-    }
-    else if (is_function_pointer()) {
-	type_desc = std::string("fptr");
-    }
-    
-    if (!is_complete()) {
-	fprintf(stderr, "(incomplete) ");
-    }
-    if (is_primitive()) {
-	fprintf(stderr, "Type %s : %s\n",
-		name.c_str(), type_desc.c_str());
-    }
-    else if (is_composite()) {
-	fprintf(stderr, "Type %s : %s\n",
-		name.c_str(), type_desc.c_str());
-	
-	fprintf(stderr, "{\n");
-	for (const auto & m : members) {
-	    fprintf(stderr, "    %s %s\n", m.get_type()->get_name().c_str(), m.get_name().c_str());
-	}
-	fprintf(stderr, "}\n");
-    }
-    else if (is_pointer()) {
-	fprintf(stderr, "Type %s : %s to %s\n",
-		name.c_str(), type_desc.c_str(), pointer_or_ref->get_name().c_str());
-    }
-    else if (is_reference()) {
-	fprintf(stderr, "Type %s : %s to %s\n",
-		name.c_str(), type_desc.c_str(), pointer_or_ref->get_name().c_str());
     }
     else if (is_function_pointer()) {
 	std::string desc;
@@ -301,7 +293,23 @@ Type::dump() const
 	}
 	desc = desc + std::string("(*)");
 	desc = desc + std::string("(") + JLang::misc::join(arglist, ",") + std::string(")");
-	fprintf(stderr, "Type %s : pointer to a function %s : %s\n", type_desc.c_str(), name.c_str(), desc.c_str());
+	type_desc = std::string("function-pointer ") + desc;
+    }
+    else {
+	fprintf(stderr, "Compiler Bug!  Unknown type of type when dumping types.\n");
+	exit(1);
+    }
+
+    
+    if (is_composite()) {
+        fprintf(out, "    %s : %s {\n", name.c_str(), type_desc.c_str());
+	for (const auto & m : members) {
+	    fprintf(out, "        %s : %s\n", m.get_name().c_str(), m.get_type()->get_name().c_str());
+	}
+	fprintf(out, "    }\n");
+    }
+    else {
+        fprintf(out, "    %s : %s\n", name.c_str(), type_desc.c_str());
     }
 }
 

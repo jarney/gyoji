@@ -1,29 +1,90 @@
 # TODO list
 
+## Syntax processing
+* Build more unit-tests to verify that the syntax is what we expect and
+  the operator precedence rules work correctly.
+
+* Check for various compiler errors and handle recovery a bit better.
+  Probably defer this until we have more 'examples' of what goes wrong
+  frequently and how to recover better.
+
+* Allow declarations to come from translation units (current)
+  and in future, annotate the .o and .a files with 'extra' ELF
+  data that allows us to 'compile' against a library without
+  a header file (because the relevant declarations are already
+  present in the ELF).  This requires reading the ELF headers
+  and specific sections.  Annotate with specific compiler ABI
+  tag so we can structure it in a way that survives future versions
+  and is backward-compatible.
+
+## Borrow checker
+* Implement the inputs to the borrow checker, going through
+  the polonius rules and putting the 'facts' together
+  that it will need.
+
+* Figure out the 'reasoning' engine we want to use for it.
+  Probably some type of HornSAT solver, possibly even one that
+  we can incorporate into the standard library so we can
+  write the borrow checker in JLang itself instead of in C
+
 ## Semantic processing
-* Basic block operations:
-  * Define the semantic operations of the MIR.
-  * Read/write some Rust examples and look at the rust MIR
-    for inspiration.
-  * Write some of the basics and implement them at the codegen/llvm
-    level to make sure they can actually work.
+  * Merge blocks for assignments in control-flow statements.
+    i.e. the PHI operation in LLVM
+
+  * Clean up the interface to basic blocks so it's easier to grok
+
+  * Finish/audit remaining OP_ operations in MIR
+    * Support them in syntax layer
+    * Support them in codegen layer
+
+  * Finish/audit syntax tree parsing
+    * Global variables, etc.
+
+  * Random bugs:
+    * String literal handling, remove the quote (") and also
+      figure out a convenient way to express multiline strings.
+      with multiple string literals concatenated.
+    * Handle newline \n and escape characters so we can
+      format output.
+
   * Include enough semantic information like 'live' and 'dead'
     storage as well as use and mutation of borrwowed items
     so that we have enough information to satisfy the borrow checker.
-  * Don't try to support everything yet, just a minimal set
-    of things so we can get a 'working' linked function that
-    we can write some unit-tests around.
+
+  * Write a load of unit-tests for various operations to ensure
+    that they behave the way we expect with operator precedence
+    and other stuff.  Focus on 'internal' consistency (i.e. we know
+    what to expect)
+    
   * End result should be a unit-test that compiles a sample
     function, links against it, and runs it to verify its
     behavior for simple if/else and a few basic operations
     like arithmetic on u32.  We can support other operations
     later as time allows, but we should have basic calculation
     and conditional support for this first pass.
-  
-* Error Handling
-  * More MIR for types : Enums and such.
-  
-  * Basic MIR lowering for functions/expressions.
+
+  * Support classes and enums since those aren't supported yet.
+    * Class = structure with functions.
+    * Enum = symbol with constant typed integers.
+
+  * Build some tests that verify compatibility with
+    most of the expectations of the C-style
+    expressions we know and love by using the preprocessor
+    to execute the same expression in C and Jlang
+    to make sure we get the same results in both cases.
+
+    We have the basics of this, but we should try to
+
+## Bootstrapping
+  * Figure out what parts of the compiler we can *already* write
+    in J.  Need to pick out specific points that can easily be
+    implemented.
+
+## Marketing (after we've bootstrapped)
+  * Figure out how to compile down to WASM modules so we can
+    build a website that has the compiler inside it.
+
+# Compiler stability/elegance
 
 * Size of "tree.o"
   Investigate why the libjlang-frontend.a is so damn big.
@@ -39,42 +100,35 @@
   we can make doxygen, graphviz, and gcov into
   optional dependencies.
 
-* Build some tests that verify compatibility with
-  most of the expectations of the C-style
-  expressions we know and love by using the preprocessor
-  to execute the same expression in C and Jlang
-  to make sure we get the same results in both cases.
-
 ## Compilation: Resolve some design questions
-* Figure out how to handle header files and declarations/imports.
-  Should we require a pre-processor, or can we do without?
+Some rules for classes and such:
+* Single inheritance only
+* Generics just "erasure" level constructs
+  a-la Java to ensure we're using types
+  consistently but not generating additional
+  code for them.
+
+* Interface types are basically 'vtables' on-demand
+  for classes when we "implement" an interface.
+  Multiple inheritance of interfaces (like the Java model)
   
-* Do we need keywords for 'super' and 'this'.
+* Do we need keywords for 'super' and 'this'
+  We do need these, but we should be super-careful
+  about them leaking for memory safety reasons.
 
-* What's our feeling about inheritance?
-
-* What about traits and interfaces?
-
-* What about generics and type parameters?
-
-* Is this just going to end up being a messy bloat like C++?
-
-* Where's the cutoff point between simple syntax and complete functionality?
-
-## Code generation
-* Start building basic LLVM code generation capabilities.
-* Should be based on the MIR representation of basic blocks
-  in a graph structure (CFG) of basic blocks, flattened
-  control-structure, removing the heirarchy of scopes
-  and flattening into a linear instruction format.
-
-## Syntax verifications
-* Build some unit-tests to verify that the syntax is what we expect and
-  the operator precedence rules work correctly.
+* This design should give us just enough OO stuff
+  without cluttering the design and causing too much
+  bloat.
 
 ## Start writing the standard library in JLang
+
 * Basic string manipulation functions
+
 * Containers: map, list, string, vector, set
+
+* Unix/Posix system calls, wrap them in a good way
+  to allow memory safety all the way down
+  to the system-call level.
 
 ---------------------------------------------------------------
 

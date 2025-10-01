@@ -63,7 +63,7 @@ namespace JLang::mir {
 	 * This is used for debugging purposes to dump
 	 * the content of the type database.
 	 */
-	void dump();
+	void dump(FILE *out) const;
 	
 	const std::map<std::string, JLang::owned<Type>> & get_types() const;
     private:
@@ -197,6 +197,7 @@ namespace JLang::mir {
 	 * type as a primitive type.
 	 */
 	Type(std::string _name, TypeType _type, bool _complete, const JLang::context::SourceReference & _source_ref);
+	Type(std::string _name, const JLang::context::SourceReference & _source_ref, const Type & _other);
 	
 	/**
 	 * Destructor, nothing special.
@@ -265,7 +266,7 @@ namespace JLang::mir {
 	 * Used for debugging purposes to dump the content
 	 * of the type database.
 	 */
-	void dump() const;
+	void dump(FILE *out) const;
 	
 	/**
 	 * Where the type was first declared.

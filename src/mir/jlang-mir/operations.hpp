@@ -61,46 +61,54 @@ namespace JLang::mir {
 	    OP_WIDEN_SIGNED,    // Widen a signed integer to a larger type.
 	    OP_WIDEN_UNSIGNED,  // Widen an unsigned integer to a larger type.
 	    OP_WIDEN_FLOAT,     // Widen a floating-point to a larger type.
-	    
+
+	    // Indirect access
 	    OP_ARRAY_INDEX,     // Pointer types -> Pointer Target type
 	    OP_DOT,             // class types -> Found member type
 	    OP_ARROW,           // Pointer to class types -> Found member type
-	    
+
+	    // Variable access
 	    OP_LOCAL_DECLARE,   // N/A
 	    OP_LOCAL_UNDECLARE, // N/A
 	    OP_LOCAL_VARIABLE,  // N/A
+	    
+            // Literals
 	    OP_LITERAL_CHAR,    // N/A
 	    OP_LITERAL_STRING,  // N/A
 	    OP_LITERAL_INT,     // N/A
 	    OP_LITERAL_FLOAT,   // N/A
+	    
+            // Unary operations
 	    OP_POST_INCREMENT,  // Pointer types, integer types -> Operand type
 	    OP_POST_DECREMENT,  // Pointer types, integer types -> Operand type
 	    OP_PRE_INCREMENT,   // Pointer types, integer types -> Operand type
 	    OP_PRE_DECREMENT,   // Pointer types, integer types -> Operand type
-
 	    OP_ADDRESSOF,   // Any type -> Pointer type
 	    OP_DEREFERENCE, // Pointer types -> Pointer Target type
 	    OP_NEGATE,      // Numeric types -> Numeric type
 	    OP_BITWISE_NOT, // Integer types -> Integer Type
 	    OP_LOGICAL_NOT, // Boolean types -> Boolean
-
 	    OP_SIZEOF_TYPE, // Any type -> u64
-	    
+
+	    // Binary operations: arithmetic
 	    OP_ADD,         // Matching Numeric types -> Operand type
 	    OP_SUBTRACT,    // Matching Numeric types -> Operand type
 	    OP_MULTIPLY,    // Matching Numeric types -> Operand type
 	    OP_DIVIDE,      // Matching Integer types -> Operand type
 	    OP_MODULO,      // Matching Integer types -> Operand type
 
+	    // Binary operations: logical
 	    OP_LOGICAL_AND, // Boolean types -> Boolean
 	    OP_LOGICAL_OR,  // Boolean types -> Boolean
 
+	    // Binary operations: bitwise
 	    OP_BITWISE_AND, // Matching integer types -> Integer type
 	    OP_BITWISE_OR,  // Matching integer types -> Integer type
 	    OP_BITWISE_XOR, // Matching integer types -> Integer type
 	    OP_SHIFT_LEFT,  // Matching integer types -> Integer type
 	    OP_SHIFT_RIGHT, // Matching integer types -> Integer type
 
+	    // Binary operations: comparisons
 	    OP_COMPARE_LT,  // Primitive types -> Boolean
 	    OP_COMPARE_GT,  // Primitive types -> Boolean
 	    OP_COMPARE_LE,  // Primitive types -> Boolean
@@ -108,8 +116,10 @@ namespace JLang::mir {
 	    OP_COMPARE_NE,  // Pointer types, Primitive types, recursive for class types.
 	    OP_COMPARE_EQ,  // Pointer types, Primitive types, recursive for class types.
 	    
+	    // Binary operations: assignments
 	    OP_ASSIGN,      // Primitive types, pointer types, recursive for class types.
-	    
+
+	    // Branch and flow control
 	    OP_JUMP_IF_EQUAL, // Boolean types
 	    OP_JUMP,
 	    OP_RETURN
@@ -143,10 +153,10 @@ namespace JLang::mir {
 	Operation(
 	    const Operation & _other
 	    );
-	~Operation();
+	virtual ~Operation();
 
-	std::string get_name() const;
-	void dump() const;
+	virtual std::string get_description() const;
+	void dump(FILE *out) const;
 	void add_operand(size_t operand);
 	OperationType get_type() const;
 	const std::vector<size_t> & get_operands() const;
@@ -169,7 +179,7 @@ namespace JLang::mir {
 	    size_t _result,
 	    size_t _operand
 	    );
-	~OperationUnary();
+	virtual ~OperationUnary();
 	size_t get_a() const;
     };
     
@@ -182,8 +192,9 @@ namespace JLang::mir {
 	    size_t _operand,
 	    const Type *_cast_type
 	    );
-	~OperationCast();
+	virtual ~OperationCast();
 	const Type* get_cast_type() const;
+	virtual std::string get_description() const;
     private:
 	const Type *cast_type;
     };
@@ -197,7 +208,7 @@ namespace JLang::mir {
 	    size_t _operand_a,
 	    size_t _operand_b
 	    );
-	~OperationBinary();
+	virtual ~OperationBinary();
 	size_t get_a() const;
 	size_t get_b() const;
     };
@@ -209,7 +220,7 @@ namespace JLang::mir {
 	    size_t _result,
 	    size_t _callee_tmpvar
 	    );
-	~OperationFunctionCall();
+	virtual ~OperationFunctionCall();
     };
     
     class OperationSymbol : public Operation {
@@ -219,8 +230,10 @@ namespace JLang::mir {
 	    size_t _result,
 	    std::string _symbol_name
 	    );
-	~OperationSymbol();
+	virtual ~OperationSymbol();
 	const std::string & get_symbol_name() const;
+	
+	virtual std::string get_description() const;
     private:
 	const std::string symbol_name;
     };
@@ -233,8 +246,10 @@ namespace JLang::mir {
 	    size_t _index_tmpvar,
 	    const Type * _array_type
 	    );
-	~OperationArrayIndex();
+	virtual ~OperationArrayIndex();
 	const Type *get_array_type() const;
+	
+	virtual std::string get_description() const;
     private:
 	const Type *array_type;
     };
@@ -244,10 +259,13 @@ namespace JLang::mir {
 	OperationDot(
 	    const JLang::context::SourceReference & _src_ref,
 	    size_t _result,
+	    size_t _operand,
 	    std::string _member_name
 	    );
-	~OperationDot();
+	virtual ~OperationDot();
 	const std::string & get_member_name() const;
+	
+	virtual std::string get_description() const;
     private:
 	const std::string member_name;
     };
@@ -257,10 +275,13 @@ namespace JLang::mir {
 	OperationArrow(
 	    const JLang::context::SourceReference & _src_ref,
 	    size_t _result,
+	    size_t _operand,
 	    std::string _member_name
 	    );
-	~OperationArrow();
+	virtual ~OperationArrow();
 	const std::string & get_member_name() const;
+	
+	virtual std::string get_description() const;
     private:
 	const std::string member_name;
     };
@@ -272,9 +293,11 @@ namespace JLang::mir {
 	    size_t _result,
 	    std::string _symbol_name,
 	    const Type * _var_type);
-	~OperationLocalVariable();
+	virtual ~OperationLocalVariable();
 	const std::string & get_symbol_name() const;
 	const Type * get_var_type() const;
+	
+	virtual std::string get_description() const;
     private:
 	const std::string symbol_name;
 	const Type * var_type;
@@ -287,8 +310,9 @@ namespace JLang::mir {
 	    size_t _result,
 	    std::string _literal_char
 	    );
-	~OperationLiteralChar();
+	virtual ~OperationLiteralChar();
 	const std::string & get_literal_char() const;
+	virtual std::string get_description() const;
     private:
 	const std::string literal_char;
     };
@@ -299,8 +323,9 @@ namespace JLang::mir {
 	    size_t _result,
 	    std::string _literal_string
 	    );
-	~OperationLiteralString();
+	virtual ~OperationLiteralString();
 	const std::string & get_literal_string() const;
+	virtual std::string get_description() const;
     private:
 	const std::string literal_string;
     };
@@ -311,8 +336,9 @@ namespace JLang::mir {
 	    size_t _result,
 	    std::string _literal_int
 	    );
-	~OperationLiteralInt();
+	virtual ~OperationLiteralInt();
 	const std::string & get_literal_int() const;
+	virtual std::string get_description() const;
     private:
 	const std::string literal_int;
     };
@@ -323,8 +349,9 @@ namespace JLang::mir {
 	    size_t _result,
 	    std::string _literal_float
 	    );
-	~OperationLiteralFloat();
+	virtual ~OperationLiteralFloat();
 	const std::string & get_literal_float() const;
+	virtual std::string get_description() const;
     private:
 	const std::string literal_float;
     };
@@ -336,7 +363,7 @@ namespace JLang::mir {
 	    size_t _result,
 	    size_t _operand
 	    );
-	~OperationBitwiseNot();
+	virtual ~OperationBitwiseNot();
     private:
     };
 
@@ -347,7 +374,7 @@ namespace JLang::mir {
 	    size_t _result,
 	    size_t _operand
 	    );
-	~OperationLogicalNot();
+	virtual ~OperationLogicalNot();
     private:
     };
     
@@ -358,7 +385,7 @@ namespace JLang::mir {
 	    size_t _result,
 	    size_t _operand
 	    );
-	~OperationSizeofType();
+	virtual ~OperationSizeofType();
     private:
     };
 
@@ -370,7 +397,8 @@ namespace JLang::mir {
 	    size_t _if_block,
 	    size_t _else_block
 	    );
-	~OperationJumpIfEqual();
+	virtual ~OperationJumpIfEqual();
+	virtual std::string get_description() const;
     private:
     };
     
@@ -380,7 +408,8 @@ namespace JLang::mir {
 	    const JLang::context::SourceReference & _src_ref,
 	    size_t _block
 	    );
-	~OperationJump();
+	virtual ~OperationJump();
+	virtual std::string get_description() const;
     private:
     };
     
@@ -390,7 +419,8 @@ namespace JLang::mir {
 	    const JLang::context::SourceReference & _src_ref,
 	    size_t _operand
 	    );
-	~OperationReturn();
+	virtual ~OperationReturn();
+	virtual std::string get_description() const;
     };
 
     class OperationLocalDeclare : public Operation {
@@ -400,9 +430,10 @@ namespace JLang::mir {
 	    std::string _variable,
 	    std::string _var_type
 	    );
-	~OperationLocalDeclare();
+	virtual ~OperationLocalDeclare();
 	const std::string & get_variable() const;
 	const std::string & get_var_type() const;
+	virtual std::string get_description() const;
     private:
 	std::string variable;
 	std::string var_type;
@@ -413,7 +444,8 @@ namespace JLang::mir {
 	    const JLang::context::SourceReference & _src_ref,
 	    std::string _variable
 	    );
-	~OperationLocalUndeclare();
+	virtual ~OperationLocalUndeclare();
+	virtual std::string get_description() const;
     private:
 	std::string variable;
     };

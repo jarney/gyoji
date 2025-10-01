@@ -29,6 +29,8 @@ namespace JLang::mir {
 	 * Read-only representation of functions.
 	 */
 	const std::vector<JLang::owned<Function>> & get_functions() const;
+
+	void dump(FILE *out) const;
 	
     private:
 	std::vector<JLang::owned<Function>> functions;
@@ -52,11 +54,11 @@ namespace JLang::mir {
     public:
 	BasicBlock();
 	~BasicBlock();
-	void add_statement(JLang::owned<Operation> operation);
+	void add_operation(JLang::owned<Operation> operation);
 	const std::vector<JLang::owned<Operation>> & get_operations() const;
-	void dump() const;
+	void dump(FILE *out) const;
     private:
-	std::vector<JLang::owned<Operation>> statements;
+	std::vector<JLang::owned<Operation>> operations;
     };
     
     class FunctionArgument {
@@ -132,7 +134,7 @@ namespace JLang::mir {
 	bool add_local(const LocalVariable & local);
 	void remove_local(std::string local_name);
 
-	void dump() const;
+	void dump(FILE *out) const;
 	
 	const JLang::context::SourceReference & get_source_ref() const;
 

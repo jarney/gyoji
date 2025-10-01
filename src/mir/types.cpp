@@ -90,10 +90,10 @@ Types::get_types() const
 
 
 void
-Types::dump()
+Types::dump(FILE *out) const
 {
     for (const auto & t : type_map) {
-	t.second->dump();
+	t.second->dump(out);
     }
 }
 

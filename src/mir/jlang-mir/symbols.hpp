@@ -28,6 +28,7 @@ namespace JLang::mir {
 
 	void define_symbol(std::string name, const Type *symbol_type);
 	const Symbol * get_symbol(std::string name) const;
+	void dump(FILE *out) const;
     private:
 	std::map<std::string, JLang::owned<Symbol>> symbols;
     };

@@ -42,7 +42,8 @@ namespace JLang::frontend {
 	void extract_from_class_declaration(const JLang::frontend::tree::ClassDeclaration & declaration);
 	void extract_from_class_members(JLang::mir::Type & type, const JLang::frontend::tree::ClassDefinition & definition);
 	void extract_from_class_definition(const JLang::frontend::tree::ClassDefinition & definition);
-	void extract_from_enum(const JLang::frontend::tree::EnumDefinition & enum_definition);
+	void extract_from_enum_definition(const JLang::frontend::tree::EnumDefinition & enum_definition);
+	void extract_from_type_definition(const JLang::frontend::tree::TypeDefinition & type_definition);
 	void extract_from_namespace(const JLang::frontend::tree::FileStatementNamespace & namespace_declaration);
 	void extract_types(const std::vector<JLang::owned<JLang::frontend::tree::FileStatement>> & statements);
 	

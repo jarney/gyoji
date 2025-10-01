@@ -186,7 +186,7 @@ FunctionDefinitionResolver::extract_from_expression_primary_identifier(
 		expression.get_identifier().get_value(),
 		localvar->get_type()
 		);
-	    function.get_basic_block(current_block).add_statement(std::move(operation));
+	    function.get_basic_block(current_block).add_operation(std::move(operation));
 
 	    return true;
 	}
@@ -241,7 +241,7 @@ FunctionDefinitionResolver::extract_from_expression_primary_identifier(
 	    returned_tmpvar,
 	    expression.get_identifier().get_fully_qualified_name()
 	    );
-	function.get_basic_block(current_block).add_statement(std::move(operation));
+	function.get_basic_block(current_block).add_operation(std::move(operation));
 	return true;
     }
     return false;
@@ -279,7 +279,7 @@ FunctionDefinitionResolver::extract_from_expression_primary_literal_char(
 
     function
 	.get_basic_block(current_block)
-	.add_statement(std::move(operation));
+	.add_operation(std::move(operation));
     return true;
 }
 
@@ -298,7 +298,7 @@ FunctionDefinitionResolver::extract_from_expression_primary_literal_string(
 	);
     function
 	.get_basic_block(current_block)
-	.add_statement(std::move(operation));
+	.add_operation(std::move(operation));
     return true;
 }
 
@@ -317,7 +317,7 @@ FunctionDefinitionResolver::extract_from_expression_primary_literal_int(
 	);
     function
 	.get_basic_block(current_block)
-	.add_statement(std::move(operation));
+	.add_operation(std::move(operation));
     return true;
 }
 
@@ -336,7 +336,7 @@ FunctionDefinitionResolver::extract_from_expression_primary_literal_float(
 	);
     function
 	.get_basic_block(current_block)
-	.add_statement(std::move(operation));
+	.add_operation(std::move(operation));
     return true;
 }
 
@@ -388,7 +388,7 @@ FunctionDefinitionResolver::extract_from_expression_postfix_array_index(
 	);
     function
 	.get_basic_block(current_block)
-	.add_statement(std::move(operation));
+	.add_operation(std::move(operation));
 
     return true;
 }
@@ -448,7 +448,7 @@ FunctionDefinitionResolver::extract_from_expression_postfix_function_call(
     }
     function
 	.get_basic_block(current_block)
-	.add_statement(std::move(operation));
+	.add_operation(std::move(operation));
 
     return true;
 }
@@ -493,11 +493,12 @@ FunctionDefinitionResolver::extract_from_expression_postfix_dot(
     auto operation = std::make_unique<OperationDot>(
 	expression.get_source_ref(),
 	returned_tmpvar,
+	class_tmpvar,
 	member_name
 	);
     function
 	.get_basic_block(current_block)
-	.add_statement(std::move(operation));
+	.add_operation(std::move(operation));
     return true;
 }
 
@@ -554,11 +555,12 @@ FunctionDefinitionResolver::extract_from_expression_postfix_arrow(
     auto operation = std::make_unique<OperationArrow>(
 	expression.get_source_ref(),
 	returned_tmpvar,
+	classptr_tmpvar,
 	member_name
 	);
     function
 	.get_basic_block(current_block)
-	.add_statement(std::move(operation));
+	.add_operation(std::move(operation));
     return true;
 
 }
@@ -586,7 +588,7 @@ FunctionDefinitionResolver::extract_from_expression_postfix_incdec(
 	    );
 	function
 	    .get_basic_block(current_block)
-	    .add_statement(std::move(operation));
+	    .add_operation(std::move(operation));
     }
     else if (expression.get_type() == ExpressionPostfixIncDec::DECREMENT) {
 	auto operation = std::make_unique<OperationUnary>(
@@ -597,7 +599,7 @@ FunctionDefinitionResolver::extract_from_expression_postfix_incdec(
 	    );
 	function
 	    .get_basic_block(current_block)
-	    .add_statement(std::move(operation));
+	    .add_operation(std::move(operation));
     }
     else {
 	compiler_context
@@ -656,7 +658,7 @@ FunctionDefinitionResolver::extract_from_expression_unary_prefix(
 	    );
 	function
 	    .get_basic_block(current_block)
-	    .add_statement(std::move(operation));
+	    .add_operation(std::move(operation));
     }
     else if (expression.get_type() == ExpressionUnaryPrefix::DECREMENT) {
 	// Especially with operators like this, it would be good to
@@ -721,7 +723,7 @@ FunctionDefinitionResolver::extract_from_expression_unary_prefix(
 	    );
 	function
 	    .get_basic_block(current_block)
-	    .add_statement(std::move(operation));
+	    .add_operation(std::move(operation));
     }
     else if (expression.get_type() == ExpressionUnaryPrefix::ADDRESSOF) {
 	const Type * pointer_to_operand_type = mir.get_types().get_pointer_to(operand_type, expression.get_source_ref());
@@ -734,7 +736,7 @@ FunctionDefinitionResolver::extract_from_expression_unary_prefix(
 	    );
 	function
 	    .get_basic_block(current_block)
-	    .add_statement(std::move(operation));
+	    .add_operation(std::move(operation));
     }
     else if (expression.get_type() == ExpressionUnaryPrefix::DEREFERENCE) {
 	if (operand_type->get_type() != Type::TYPE_POINTER) {
@@ -756,7 +758,7 @@ FunctionDefinitionResolver::extract_from_expression_unary_prefix(
 	    );
 	function
 	    .get_basic_block(current_block)
-	    .add_statement(std::move(operation));
+	    .add_operation(std::move(operation));
     }
     else if (expression.get_type() == ExpressionUnaryPrefix::PLUS) {
 	// Unary plus does nothing, really, so why bother?  We just don't
@@ -774,7 +776,7 @@ FunctionDefinitionResolver::extract_from_expression_unary_prefix(
 	    );
 	function
 	    .get_basic_block(current_block)
-	    .add_statement(std::move(operation));
+	    .add_operation(std::move(operation));
     }
     else if (expression.get_type() == ExpressionUnaryPrefix::BITWISE_NOT) {
 	returned_tmpvar = function.tmpvar_duplicate(operand_tmpvar);
@@ -786,7 +788,7 @@ FunctionDefinitionResolver::extract_from_expression_unary_prefix(
 	    );
 	function
 	    .get_basic_block(current_block)
-	    .add_statement(std::move(operation));
+	    .add_operation(std::move(operation));
     }
     else if (expression.get_type() == ExpressionUnaryPrefix::LOGICAL_NOT) {
 	if (!function.tmpvar_get(operand_tmpvar)->get_type()->is_bool()) {
@@ -807,7 +809,7 @@ FunctionDefinitionResolver::extract_from_expression_unary_prefix(
 	    );
 	function
 	    .get_basic_block(current_block)
-	    .add_statement(std::move(operation));
+	    .add_operation(std::move(operation));
     }
     else {
 	compiler_context
@@ -840,7 +842,7 @@ FunctionDefinitionResolver::extract_from_expression_unary_sizeof_type(
 	);
     function
 	.get_basic_block(current_block)
-	.add_statement(std::move(operation));
+	.add_operation(std::move(operation));
     return true;
 }
 
@@ -880,7 +882,7 @@ FunctionDefinitionResolver::numeric_widen(
 	);
     function
 	.get_basic_block(current_block)
-	.add_statement(std::move(operation));
+	.add_operation(std::move(operation));
     _widen_var = widened_var;
     return true;
 }
@@ -1051,7 +1053,7 @@ FunctionDefinitionResolver::handle_binary_operation_arithmetic(
 	);
     function
 	.get_basic_block(current_block)
-	.add_statement(std::move(operation));
+	.add_operation(std::move(operation));
     
     return true;
 }
@@ -1089,7 +1091,7 @@ FunctionDefinitionResolver::handle_binary_operation_logical(
 	);
     function
 	.get_basic_block(current_block)
-	.add_statement(std::move(operation));
+	.add_operation(std::move(operation));
     return true;
 }
 
@@ -1141,7 +1143,7 @@ FunctionDefinitionResolver::handle_binary_operation_bitwise(
 	);
     function
 	.get_basic_block(current_block)
-	.add_statement(std::move(operation));
+	.add_operation(std::move(operation));
     
     return true;
 }
@@ -1195,7 +1197,7 @@ FunctionDefinitionResolver::handle_binary_operation_shift(
 	);
     function
 	.get_basic_block(current_block)
-	.add_statement(std::move(operation));
+	.add_operation(std::move(operation));
     
     return true;
 }
@@ -1284,7 +1286,7 @@ FunctionDefinitionResolver::handle_binary_operation_compare(
 	);
     function
 	.get_basic_block(current_block)
-	.add_statement(std::move(operation));
+	.add_operation(std::move(operation));
     
     return true;
 }
@@ -1357,7 +1359,7 @@ FunctionDefinitionResolver::handle_binary_operation_assignment(
 	);
     function
 	.get_basic_block(current_block)
-	.add_statement(std::move(operation));
+	.add_operation(std::move(operation));
     
     return true;
 }
@@ -1902,7 +1904,7 @@ FunctionDefinitionResolver::extract_from_expression_trinary(
 {
 //    function
 //	.get_basic_block(current_block)
-//	.add_statement(std::string("trinary operator "));
+//	.add_operation(std::string("trinary operator "));
     return false;
 }
 bool
@@ -1914,7 +1916,7 @@ FunctionDefinitionResolver::extract_from_expression_cast(
 {
 //    function
 //	.get_basic_block(current_block)
-//	.add_statement(std::string("cast"));
+//	.add_operation(std::string("cast"));
     return false;
 }
 
@@ -2014,7 +2016,7 @@ FunctionDefinitionResolver::extract_from_statement_return(
 	statement.get_source_ref(),
 	expression_tmpvar
 	);
-    function.get_basic_block(current_block).add_statement(std::move(operation));
+    function.get_basic_block(current_block).add_operation(std::move(operation));
     return true;
 }
 
@@ -2055,7 +2057,7 @@ FunctionDefinitionResolver::extract_from_statement_ifelse(
 	    blockid_if,
 	    blockid_else
 	    );
-	function.get_basic_block(current_block).add_statement(std::move(operation));
+	function.get_basic_block(current_block).add_operation(std::move(operation));
     }
     else {
 	// Otherwise, jump to done
@@ -2066,7 +2068,7 @@ FunctionDefinitionResolver::extract_from_statement_ifelse(
 	    blockid_if,
 	    blockid_done
 	    );
-	function.get_basic_block(current_block).add_statement(std::move(operation));
+	function.get_basic_block(current_block).add_operation(std::move(operation));
     }
     
     function.push_block(current_block);
@@ -2086,7 +2088,7 @@ FunctionDefinitionResolver::extract_from_statement_ifelse(
 	statement.get_source_ref(),
 	blockid_done
 	);
-    function.get_basic_block(current_block).add_statement(std::move(operation));
+    function.get_basic_block(current_block).add_operation(std::move(operation));
     function.push_block(current_block);
     
     if (statement.has_else()) {
@@ -2102,7 +2104,7 @@ FunctionDefinitionResolver::extract_from_statement_ifelse(
 	    statement.get_source_ref(),
 	    blockid_done
 	    );
-	function.get_basic_block(blockid_else).add_statement(std::move(operation));
+	function.get_basic_block(blockid_else).add_operation(std::move(operation));
 	// Jump to the 'done' block when the 'else' block is finished.
 	function.push_block(blockid_else);
     }
@@ -2155,7 +2157,7 @@ FunctionDefinitionResolver::extract_from_statement_list(
 		statement->get_name(),
 		mir_type->get_name()
 		);
-	    function.get_basic_block(current_block).add_statement(std::move(operation));
+	    function.get_basic_block(current_block).add_operation(std::move(operation));
 	    unwind.push_back(statement->get_name());
 	}
 	else if (std::holds_alternative<JLang::owned<StatementBlock>>(statement_type)) {
@@ -2219,7 +2221,7 @@ FunctionDefinitionResolver::extract_from_statement_list(
 	auto operation = std::make_unique<OperationLocalUndeclare>(
 	    statement_list.get_source_ref(),
 	    undecl);
-	function.get_basic_block(current_block).add_statement(std::move(operation));
+	function.get_basic_block(current_block).add_operation(std::move(operation));
     }
     start_block = current_block;
     return true;
@@ -2271,9 +2273,6 @@ FunctionDefinitionResolver::extract_from_function_definition(const FileStatement
     }
     
     fn->push_block(start_block);
-    
-    // Debug dump basic blocks.
-    fn->dump();
     
     mir.get_functions().add_function(std::move(fn));
 

@@ -32,6 +32,18 @@ Symbols::define_symbol(std::string name, const Type *symbol_type)
     symbols.insert(std::pair(name, std::make_unique<Symbol>(name, symbol_type)));
 }
 
+void
+Symbols::dump(FILE *out) const
+{
+    for (const auto & symbol : symbols) {
+	const JLang::owned<Symbol> & sym = symbol.second;
+        fprintf(out, "    %s : %s\n",
+		sym->get_name().c_str(),
+		sym->get_type()->get_name().c_str());
+    }
+}
+
+
 const Symbol *
 Symbols::get_symbol(std::string name) const
 {

@@ -156,6 +156,9 @@ namespace JLang::context {
 	 * multi-line comments.
 	 */
 	void append_token(std::string _value);
+
+	static const SourceReference & get_zero_source_ref();
+
     private:
 	
 	std::vector<JLang::owned<Token>> tokens;

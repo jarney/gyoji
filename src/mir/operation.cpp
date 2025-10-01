@@ -10,26 +10,78 @@ void JLang::mir::operation_static_init()
 {
     // This doesn't really belong here, but I don't have a
     // better place to globally initialize static data.
+
+
+    // Functions and global symbols
     op_type_names.insert(std::pair(Operation::OP_FUNCTION_CALL, "function-call"));
     op_type_names.insert(std::pair(Operation::OP_SYMBOL, "symbol"));
-    op_type_names.insert(std::pair(Operation::OP_LOCAL_VARIABLE, "load"));
+    
+    // Cast operations.
+    op_type_names.insert(std::pair(Operation::OP_WIDEN_SIGNED, "widen-signed"));
+    op_type_names.insert(std::pair(Operation::OP_WIDEN_UNSIGNED, "widen-unsigned"));
+    op_type_names.insert(std::pair(Operation::OP_WIDEN_FLOAT, "widen-float"));
+    
+    // Indirect access
+    op_type_names.insert(std::pair(Operation::OP_ARRAY_INDEX, "array-index"));
+    op_type_names.insert(std::pair(Operation::OP_DOT, "dot"));
+    op_type_names.insert(std::pair(Operation::OP_ARROW, "arrow"));
+
+    // Variable access
+	    
     op_type_names.insert(std::pair(Operation::OP_LOCAL_DECLARE, "declare"));
     op_type_names.insert(std::pair(Operation::OP_LOCAL_UNDECLARE, "undeclare"));
+    op_type_names.insert(std::pair(Operation::OP_LOCAL_VARIABLE, "load"));
+		
+    // Literals
     op_type_names.insert(std::pair(Operation::OP_LITERAL_CHAR, "literal-char"));
     op_type_names.insert(std::pair(Operation::OP_LITERAL_STRING, "literal-string"));
     op_type_names.insert(std::pair(Operation::OP_LITERAL_INT, "literal-int"));
     op_type_names.insert(std::pair(Operation::OP_LITERAL_FLOAT, "literal-float"));
-    op_type_names.insert(std::pair(Operation::OP_PRE_INCREMENT, "prefix++"));
-    op_type_names.insert(std::pair(Operation::OP_POST_INCREMENT, "postfix++"));
-    op_type_names.insert(std::pair(Operation::OP_PRE_DECREMENT, "prefix--"));
-    op_type_names.insert(std::pair(Operation::OP_POST_DECREMENT, "postfix--"));
+    
+    // Unary operations
+    op_type_names.insert(std::pair(Operation::OP_POST_INCREMENT, "post-increment"));
+    op_type_names.insert(std::pair(Operation::OP_POST_DECREMENT, "post-decrement"));
+    op_type_names.insert(std::pair(Operation::OP_PRE_INCREMENT, "pre-increment"));
+    op_type_names.insert(std::pair(Operation::OP_PRE_INCREMENT, "pre-decrement"));
+    op_type_names.insert(std::pair(Operation::OP_ADDRESSOF, "addressof"));
+    op_type_names.insert(std::pair(Operation::OP_DEREFERENCE, "dereference"));
+    op_type_names.insert(std::pair(Operation::OP_NEGATE, "negate"));
+    op_type_names.insert(std::pair(Operation::OP_BITWISE_NOT, "bitwise-not"));
+    op_type_names.insert(std::pair(Operation::OP_LOGICAL_NOT, "logical-not"));
+    op_type_names.insert(std::pair(Operation::OP_SIZEOF_TYPE, "sizeof"));
+
+    // Binary operations: arithmetic
     op_type_names.insert(std::pair(Operation::OP_ADD, "add"));
     op_type_names.insert(std::pair(Operation::OP_SUBTRACT, "subtract"));
     op_type_names.insert(std::pair(Operation::OP_MULTIPLY, "multiply"));
     op_type_names.insert(std::pair(Operation::OP_DIVIDE, "divide"));
-    op_type_names.insert(std::pair(Operation::OP_ASSIGN, "assign"));
-    op_type_names.insert(std::pair(Operation::OP_JUMP_IF_EQUAL, "je"));
-    op_type_names.insert(std::pair(Operation::OP_JUMP, "jmp"));
+    op_type_names.insert(std::pair(Operation::OP_MODULO, "modulo"));
+	    
+    // Binary operations: logical
+    op_type_names.insert(std::pair(Operation::OP_LOGICAL_AND, "logical-and"));
+    op_type_names.insert(std::pair(Operation::OP_LOGICAL_OR, "logical-or"));
+
+    // Binary operations: bitwise
+    op_type_names.insert(std::pair(Operation::OP_BITWISE_AND, "bitwise-and"));
+    op_type_names.insert(std::pair(Operation::OP_BITWISE_OR, "bitwise-or"));
+    op_type_names.insert(std::pair(Operation::OP_BITWISE_XOR, "bitwise-xor"));
+    op_type_names.insert(std::pair(Operation::OP_SHIFT_LEFT, "bitwise-shift-left"));
+    op_type_names.insert(std::pair(Operation::OP_SHIFT_RIGHT, "bitwise-shift-right"));
+
+    // Binary operations: comparisons
+    op_type_names.insert(std::pair(Operation::OP_COMPARE_LT, "compare-lt"));
+    op_type_names.insert(std::pair(Operation::OP_COMPARE_GT, "compare-gt"));
+    op_type_names.insert(std::pair(Operation::OP_COMPARE_LE, "compare-le"));
+    op_type_names.insert(std::pair(Operation::OP_COMPARE_GE, "compare-ge"));
+    op_type_names.insert(std::pair(Operation::OP_COMPARE_NE, "compare-ne"));
+    op_type_names.insert(std::pair(Operation::OP_COMPARE_EQ, "compare-eq"));
+
+    // Binary operations: assignment
+    op_type_names.insert(std::pair(Operation::OP_ASSIGN, "store"));
+	    
+    // Branch and flow control
+    op_type_names.insert(std::pair(Operation::OP_JUMP_IF_EQUAL, "jump-if"));
+    op_type_names.insert(std::pair(Operation::OP_JUMP, "jump"));
     op_type_names.insert(std::pair(Operation::OP_RETURN, "return"));
 }
 
@@ -101,10 +153,18 @@ Operation::add_operand(size_t operand)
 }
 
 std::string
-Operation::get_name() const
+Operation::get_description() const
 {
     const auto & it = op_type_names.find(type);
-    return it->second;
+    const std::string & op_name = it->second;
+
+    std::string desc = std::string("_") + std::to_string(result) + std::string(" = ") + op_name + std::string(" (");
+    for (const auto & operand : operands) {
+	desc = desc + std::string(" _") + std::to_string(operand);
+    }
+    desc = desc + std::string(" )");
+    
+    return desc;
 }
 
 Operation::OperationType
@@ -124,14 +184,9 @@ Operation::get_source_ref() const
 { return src_ref; }
 
 void
-Operation::dump() const
+Operation::dump(FILE *out) const
 {
-    std::string name = get_name();
-    fprintf(stderr, "_%ld = %s (", result, name.c_str());
-    for (const auto & operand : operands) {
-	fprintf(stderr, " %ld", operand);
-    }
-    fprintf(stderr, " )\n");
+    fprintf(out, "            %s\n", get_description().c_str());
 }
 
 
@@ -170,6 +225,19 @@ OperationCast::~OperationCast()
 const Type*
 OperationCast::get_cast_type() const
 { return cast_type; }
+
+std::string
+OperationCast::get_description() const
+{
+    const auto & it = op_type_names.find(type);
+    const std::string & op_name = it->second;
+
+    std::string desc = std::string("_") + std::to_string(result) + std::string(" = ") + op_name + std::string(" (");
+    desc = desc + std::string(" _") + std::to_string(operands.at(0));
+    desc = desc + std::string(" ") + cast_type->get_name();
+    desc = desc + std::string(" )");
+    return desc;
+}
 
 //////////////////////////////////////////////
 // OperationBinary
@@ -228,6 +296,18 @@ const std::string &
 OperationSymbol::get_symbol_name() const
 { return symbol_name; }
 
+std::string
+OperationSymbol::get_description() const
+{
+    const auto & it = op_type_names.find(type);
+    const std::string & op_name = it->second;
+
+    std::string desc = std::string("_") + std::to_string(result) + std::string(" = ") + op_name + std::string(" (");
+    desc = desc + std::string(" ") + symbol_name;
+    desc = desc + std::string(" )");
+    return desc;
+}
+
 //////////////////////////////////////////////
 // OperationArrayIndex
 //////////////////////////////////////////////
@@ -245,15 +325,30 @@ OperationArrayIndex::~OperationArrayIndex()
 const Type *
 OperationArrayIndex::get_array_type() const
 { return array_type; }
+
+std::string
+OperationArrayIndex::get_description() const
+{
+    const auto & it = op_type_names.find(type);
+    const std::string & op_name = it->second;
+
+    std::string desc = std::string("_") + std::to_string(result) + std::string(" = ") + op_name + std::string(" (");
+    desc = desc + std::string(" _") + std::to_string(operands.at(0));
+    desc = desc + std::string(" ") + array_type->get_name();
+    desc = desc + std::string(" )");
+    return desc;
+}
+
 //////////////////////////////////////////////
 // OperationDot
 //////////////////////////////////////////////
 OperationDot::OperationDot(
     const JLang::context::SourceReference & _src_ref,
     size_t _result,
+    size_t _operand,
     std::string _member_name
     )
-    : Operation(OP_DOT, _src_ref, _result)
+    : Operation(OP_DOT, _src_ref, _result, _operand)
     , member_name(_member_name)
 {}
 
@@ -263,12 +358,27 @@ OperationDot::~OperationDot()
 const std::string &
 OperationDot::get_member_name() const
 { return member_name; }
+
+std::string
+OperationDot::get_description() const
+{
+    const auto & it = op_type_names.find(type);
+    const std::string & op_name = it->second;
+
+    std::string desc = std::string("_") + std::to_string(result) + std::string(" = ") + op_name + std::string(" (");
+    desc = desc + std::string(" _") + std::to_string(operands.at(0));
+    desc = desc + std::string(" ") + member_name;
+    desc = desc + std::string(" )");
+    return desc;
+}
+
 //////////////////////////////////////////////
 // OperationArrow
 //////////////////////////////////////////////
 OperationArrow::OperationArrow(
     const JLang::context::SourceReference & _src_ref,
     size_t _result,
+    size_t _operand,
     std::string _member_name
     )
     : Operation(OP_ARROW, _src_ref, _result)
@@ -281,6 +391,19 @@ OperationArrow::~OperationArrow()
 const std::string &
 OperationArrow::get_member_name() const
 { return member_name; }
+
+std::string
+OperationArrow::get_description() const
+{
+    const auto & it = op_type_names.find(type);
+    const std::string & op_name = it->second;
+
+    std::string desc = std::string("_") + std::to_string(result) + std::string(" = ") + op_name + std::string(" (");
+    desc = desc + std::string(" _") + std::to_string(operands.at(0));
+    desc = desc + std::string(" ") + member_name;
+    desc = desc + std::string(" )");
+    return desc;
+}
 
 //////////////////////////////////////////////
 // OperationLocalVariable
@@ -306,6 +429,19 @@ const Type *
 OperationLocalVariable::get_var_type() const
 { return var_type; }
 
+std::string
+OperationLocalVariable::get_description() const
+{
+    const auto & it = op_type_names.find(type);
+    const std::string & op_name = it->second;
+
+    std::string desc = std::string("_") + std::to_string(result) + std::string(" = ") + op_name + std::string(" (");
+    desc = desc + std::string(" ") + symbol_name;
+    desc = desc + std::string(" ") + var_type->get_name();
+    desc = desc + std::string(" )");
+    return desc;
+}
+
 //////////////////////////////////////////////
 // OperationLiteralChar
 //////////////////////////////////////////////
@@ -323,6 +459,18 @@ OperationLiteralChar::~OperationLiteralChar()
 const std::string &
 OperationLiteralChar::get_literal_char() const
 { return literal_char; }
+
+std::string
+OperationLiteralChar::get_description() const
+{
+    const auto & it = op_type_names.find(type);
+    const std::string & op_name = it->second;
+
+    std::string desc = std::string("_") + std::to_string(result) + std::string(" = ") + op_name + std::string(" (");
+    desc = desc + std::string(" ") + literal_char;
+    desc = desc + std::string(" )");
+    return desc;
+}
 
 //////////////////////////////////////////////
 // OperationLiteralString
@@ -342,6 +490,18 @@ const std::string &
 OperationLiteralString::get_literal_string() const
 { return literal_string; }
 
+std::string
+OperationLiteralString::get_description() const
+{
+    const auto & it = op_type_names.find(type);
+    const std::string & op_name = it->second;
+
+    std::string desc = std::string("_") + std::to_string(result) + std::string(" = ") + op_name + std::string(" (");
+    desc = desc + std::string(" ") + literal_string;
+    desc = desc + std::string(" )");
+    return desc;
+}
+
 //////////////////////////////////////////////
 // OperationLiteralInt
 //////////////////////////////////////////////
@@ -359,6 +519,18 @@ OperationLiteralInt::~OperationLiteralInt()
 const std::string &
 OperationLiteralInt::get_literal_int() const
 { return literal_int; }
+
+std::string
+OperationLiteralInt::get_description() const
+{
+    const auto & it = op_type_names.find(type);
+    const std::string & op_name = it->second;
+
+    std::string desc = std::string("_") + std::to_string(result) + std::string(" = ") + op_name + std::string(" (");
+    desc = desc + std::string(" ") + literal_int;
+    desc = desc + std::string(" )");
+    return desc;
+}
 
 //////////////////////////////////////////////
 // OperationLiteralFloat
@@ -378,6 +550,18 @@ const std::string &
 OperationLiteralFloat::get_literal_float() const
 { return literal_float; }
 
+std::string
+OperationLiteralFloat::get_description() const
+{
+    const auto & it = op_type_names.find(type);
+    const std::string & op_name = it->second;
+
+    std::string desc = std::string("_") + std::to_string(result) + std::string(" = ") + op_name + std::string(" (");
+    desc = desc + std::string(" ") + literal_float;
+    desc = desc + std::string(" )");
+    return desc;
+}
+
 //////////////////////////////////////////////
 // OperationJumpIfEqual
 //////////////////////////////////////////////
@@ -393,6 +577,20 @@ OperationJumpIfEqual::OperationJumpIfEqual(
 OperationJumpIfEqual::~OperationJumpIfEqual()
 {}
     
+std::string
+OperationJumpIfEqual::get_description() const
+{
+    const auto & it = op_type_names.find(type);
+    const std::string & op_name = it->second;
+
+    std::string desc = op_name + std::string(" (");
+    desc = desc + std::string(" _") + std::to_string(operands.at(0));
+    desc = desc + std::string(" BB") + std::to_string(operands.at(1));
+    desc = desc + std::string(" BB") + std::to_string(operands.at(2));
+    desc = desc + std::string(" )");
+    return desc;
+}
+
 //////////////////////////////////////////////
 // OperationJump
 //////////////////////////////////////////////
@@ -404,6 +602,18 @@ OperationJump::OperationJump(
 {}
 OperationJump::~OperationJump()
 {}
+
+std::string
+OperationJump::get_description() const
+{
+    const auto & it = op_type_names.find(type);
+    const std::string & op_name = it->second;
+
+    std::string desc = op_name + std::string(" (");
+    desc = desc + std::string(" BB") + std::to_string(operands.at(0));
+    desc = desc + std::string(" )");
+    return desc;
+}
     
 //////////////////////////////////////////////
 // OperationReturn
@@ -416,6 +626,18 @@ OperationReturn::OperationReturn(
 {}
 OperationReturn::~OperationReturn()
 {}
+
+std::string
+OperationReturn::get_description() const
+{
+    const auto & it = op_type_names.find(type);
+    const std::string & op_name = it->second;
+
+    std::string desc = op_name + std::string(" (");
+    desc = desc + std::string(" _") + std::to_string(operands.at(0));
+    desc = desc + std::string(" )");
+    return desc;
+}
 
 //////////////////////////////////////////////
 // OperationLocalDeclare
@@ -438,6 +660,18 @@ const std::string &
 OperationLocalDeclare::get_var_type() const
 { return var_type; }
 
+std::string
+OperationLocalDeclare::get_description() const
+{
+    const auto & it = op_type_names.find(type);
+    const std::string & op_name = it->second;
+
+    std::string desc = op_name + std::string(" (");
+    desc = desc + std::string(" ") + variable;
+    desc = desc + std::string(" ") + var_type;
+    desc = desc + std::string(" )");
+    return desc;
+}
 //////////////////////////////////////////////
 // OperationLocalUndeclare
 //////////////////////////////////////////////
@@ -452,3 +686,14 @@ OperationLocalUndeclare::OperationLocalUndeclare(
 OperationLocalUndeclare::~OperationLocalUndeclare()
 {}
 
+std::string
+OperationLocalUndeclare::get_description() const
+{
+    const auto & it = op_type_names.find(type);
+    const std::string & op_name = it->second;
+
+    std::string desc = op_name + std::string(" (");
+    desc = desc + std::string(" ") + variable;
+    desc = desc + std::string(" )");
+    return desc;
+}

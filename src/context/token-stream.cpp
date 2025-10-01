@@ -4,6 +4,12 @@ using namespace JLang::context;
 
 static const SourceReference zero_source_ref("", 1, 0);
 
+const SourceReference &
+TokenStream::get_zero_source_ref()
+{
+    return zero_source_ref;
+}
+
 TokenStream::TokenStream()
 {}
 

@@ -35,6 +35,14 @@ const std::vector<JLang::owned<Function>> &
 Functions::get_functions() const
 { return functions; }
 
+void
+Functions::dump(FILE *out) const
+{
+    for (const auto & function : functions) {
+	function->dump(out);
+    }
+}
+
 /////////////////////////////////////
 // LocalVariable
 /////////////////////////////////////
@@ -190,17 +198,27 @@ Function::remove_local(std::string local_name)
 }
 
 void
-Function::dump() const
+Function::dump(FILE *out) const
 {
-    fprintf(stderr, "Function %s %s\n", get_name().c_str(), return_type->get_name().c_str());
+    fprintf(out, "    %s\n", get_name().c_str());
+    fprintf(out, "        return-value : %s\n", return_type->get_name().c_str());
     for (const auto & arg : arguments) {
-	fprintf(stderr, "    arg %s %s\n", arg.get_type()->get_name().c_str(), arg.get_name().c_str());
+	fprintf(out, "        arg %s : %s\n", arg.get_name().c_str(), arg.get_type()->get_name().c_str());
     }
+    fprintf(out, "    temporary variables\n");
+    size_t varid = 0;
+    for (const auto & value : tmpvars) {
+	fprintf(out, "        _%ld : %s\n", varid, value.get_type()->get_name().c_str());
+	varid++;
+    }
+
+    fprintf(out, "    {\n");
     for (const size_t & i : blocks_in_order) {
-	fprintf(stderr, "BB%ld:\n", i);
+	fprintf(out, "        BB%ld:\n", i);
 	const BasicBlock & block = get_basic_block(i);
-	block.dump();
+	block.dump(out);
     }
+    fprintf(out, "    }\n");
 }
 /////////////////////////////////////
 // BasicBlock
@@ -213,21 +231,21 @@ BasicBlock::~BasicBlock()
 {}
 
 void
-BasicBlock::add_statement(JLang::owned<Operation> _operation)
+BasicBlock::add_operation(JLang::owned<Operation> _operation)
 {
-    statements.push_back(std::move(_operation));
+    operations.push_back(std::move(_operation));
 }
 
 void
-BasicBlock::dump() const
+BasicBlock::dump(FILE *out) const
 {
-    for (const auto & statement : statements) {
-	statement->dump();
+    for (const auto & operation : operations) {
+	operation->dump(out);
     }
 }
 const std::vector<JLang::owned<Operation>> &
 BasicBlock::get_operations() const
-{ return statements; }
+{ return operations; }
 
 /////////////////////////////////////
 // FunctionArgument

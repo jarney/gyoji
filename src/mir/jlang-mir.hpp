@@ -43,6 +43,8 @@ namespace JLang::mir {
 	
 	const Functions & get_functions() const;
 	Functions & get_functions();
+
+	void dump(FILE *out) const;
     private:
 	Functions functions;
 	Types types;

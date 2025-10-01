@@ -203,7 +203,7 @@ TypeResolver::extract_from_class_definition(const ClassDefinition & definition)
 }
 
 void
-TypeResolver::extract_from_enum(const EnumDefinition & enum_definition)
+TypeResolver::extract_from_enum_definition(const EnumDefinition & enum_definition)
 {
     const auto it = mir.get_types().get_types().find(enum_definition.get_name());
     if (it == mir.get_types().get_types().end()) {
@@ -221,6 +221,44 @@ TypeResolver::extract_from_enum(const EnumDefinition & enum_definition)
 			   "Originally defined here"
 	    );
 	error->add_message(enum_definition.get_name_source_ref(),
+			   "Re-declared here"
+	    );
+	compiler_context
+	    .get_errors()
+	    .add_error(std::move(error));
+    }
+}
+
+void
+TypeResolver::extract_from_type_definition(const TypeDefinition & type_definition)
+{
+    const auto it = mir.get_types().get_types().find(type_definition.get_name());
+    if (it == mir.get_types().get_types().end()) {
+	// No definition exists, create it.
+	const Type *defined_type = extract_from_type_specifier(type_definition.get_type_specifier());
+
+	// We effectively make a new type as a copy of the old one.
+	// This may seem redundant, but it's done
+	// so that we can later modify the type by "instantiating"
+	// it as a generic with specific type parameters
+	// when we get to that point.
+	JLang::owned<Type> type = std::make_unique<Type>(
+	    type_definition.get_name(),
+	    type_definition.get_type_specifier().get_source_ref(),
+	    *defined_type
+	    );
+	mir.get_types().define_type(std::move(type));
+    }
+    else {
+	// This is a duplicate, reference the original definition.
+	// Case 3: Class is declared and complete, but does not match our current definition,
+	// so this is a duplicate.  Raise an error to avoid ambiguity.
+	auto & type = *it->second;
+	std::unique_ptr<JLang::context::Error> error = std::make_unique<JLang::context::Error>(std::string("Duplicate enum definition: ") + type_definition.get_name());
+	error->add_message(type.get_defined_source_ref(),
+			   "Originally defined here"
+	    );
+	error->add_message(type_definition.get_name_source_ref(),
 			   "Re-declared here"
 	    );
 	compiler_context
@@ -332,10 +370,10 @@ TypeResolver::extract_types(const std::vector<JLang::owned<FileStatement>> & sta
 	    extract_from_class_definition(*std::get<JLang::owned<ClassDefinition>>(file_statement));
 	}
 	else if (std::holds_alternative<JLang::owned<EnumDefinition>>(file_statement)) {
-	    extract_from_enum(*std::get<JLang::owned<EnumDefinition>>(file_statement));
+	    extract_from_enum_definition(*std::get<JLang::owned<EnumDefinition>>(file_statement));
 	}
 	else if (std::holds_alternative<JLang::owned<TypeDefinition>>(file_statement)) {
-	    // Nothing, no statements can be declared inside here.
+	    extract_from_type_definition(*std::get<JLang::owned<TypeDefinition>>(file_statement));
 	}
 	else if (std::holds_alternative<JLang::owned<FileStatementNamespace>>(file_statement)) {
 	    extract_from_namespace(*std::get<JLang::owned<FileStatementNamespace>>(file_statement));

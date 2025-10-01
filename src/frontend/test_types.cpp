@@ -28,7 +28,7 @@ int main(int argc, char **argv)
     
     auto mir = std::move(parse_to_mir(path, context, "tests/type-resolution.j"));
     
-    mir->get_types().dump();
+    mir->get_types().dump(stderr);
     
     printf("    PASSED\n");
 }
