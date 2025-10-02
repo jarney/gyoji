@@ -139,13 +139,6 @@ Operation::Operation(
 Operation::~Operation()
 {}
 
-Operation::Operation(const Operation & _other)
-    : type(_other.type)
-    , src_ref(_other.src_ref)
-    , operands(_other.operands)
-    , result(_other.result)
-{}
-
 void
 Operation::add_operand(size_t operand)
 {
@@ -269,10 +262,15 @@ OperationBinary::get_b() const
 OperationFunctionCall::OperationFunctionCall(
     const JLang::context::SourceReference & _src_ref,
     size_t _result,
-    size_t _callee_tmpvar
+    size_t _callee_tmpvar,
+    std::vector<size_t> _arg_args
     )
     : Operation(OP_FUNCTION_CALL, _src_ref, _result, _callee_tmpvar)
-{}
+{
+    for (const auto & av : _arg_args) {
+	add_operand(av);
+    }
+}
 
 OperationFunctionCall::~OperationFunctionCall()
 {}
@@ -314,30 +312,13 @@ OperationSymbol::get_description() const
 OperationArrayIndex::OperationArrayIndex(
     const JLang::context::SourceReference & _src_ref,
     size_t _result,
-    size_t _index_tmpvar,
-    const Type * _array_type
+    size_t _array_tmpvar,
+    size_t _index_tmpvar
     )
-    : Operation(OP_ARRAY_INDEX, _src_ref, _result, _index_tmpvar)
-    , array_type(_array_type)
+    : OperationBinary(OP_ARRAY_INDEX, _src_ref, _result, _array_tmpvar, _index_tmpvar)
 {}
 OperationArrayIndex::~OperationArrayIndex()
 {}
-const Type *
-OperationArrayIndex::get_array_type() const
-{ return array_type; }
-
-std::string
-OperationArrayIndex::get_description() const
-{
-    const auto & it = op_type_names.find(type);
-    const std::string & op_name = it->second;
-
-    std::string desc = std::string("_") + std::to_string(result) + std::string(" = ") + op_name + std::string(" (");
-    desc = desc + std::string(" _") + std::to_string(operands.at(0));
-    desc = desc + std::string(" ") + array_type->get_name();
-    desc = desc + std::string(" )");
-    return desc;
-}
 
 //////////////////////////////////////////////
 // OperationDot

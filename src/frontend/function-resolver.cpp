@@ -383,8 +383,8 @@ FunctionDefinitionResolver::extract_from_expression_postfix_array_index(
     auto operation = std::make_unique<OperationArrayIndex>(
 	expression.get_source_ref(),
 	returned_tmpvar,
-	index_tmpvar,
-	array_type
+	array_tmpvar,
+	index_tmpvar
 	);
     function
 	.get_basic_block(current_block)
@@ -438,14 +438,10 @@ FunctionDefinitionResolver::extract_from_expression_postfix_function_call(
     auto operation = std::make_unique<OperationFunctionCall>(
 	expression.get_source_ref(),
 	returned_tmpvar,
-	function_type_tmpvar
+	function_type_tmpvar,
+	arg_types
 	);
     
-    std::string call_args = "";
-    for (const auto & av : arg_types) {
-	call_args += std::string("_") + std::to_string(av) + " ";
-	operation->add_operand(av);
-    }
     function
 	.get_basic_block(current_block)
 	.add_operation(std::move(operation));
