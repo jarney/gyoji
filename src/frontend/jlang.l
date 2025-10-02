@@ -98,7 +98,7 @@ void move_array(
 %x COMMENT
 
 opt_sign            (\-?)
-radix               ("0x"|"0b"|"0")
+radix               ("0x"|"0b"|"0o")
 opt_radix           ({radix}?)
 dseq                (([[:digit:]]|[aAbBcCdDeEfF]|\_)+)
 dseq_opt            ({dseq}?)

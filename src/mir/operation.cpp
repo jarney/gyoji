@@ -524,8 +524,25 @@ OperationLiteralInt::get_description() const
     const auto & it = op_type_names.find(type);
     const std::string & op_name = it->second;
 
+    std::string radixstr;
+    if (radix == 16) {
+	radixstr = "0x";
+    }
+    else if (radix == 10) {
+	radixstr = "";
+    }
+    else if (radix == 8) {
+	radixstr = "0o";
+    }
+    else if (radix == 2) {
+	radixstr = "0b";
+    }
+    else {
+	radixstr = "Error: Unsupported radix";
+    }
+    std::string signstr(sign_positive ? "" : "-");
     std::string desc = std::string("_") + std::to_string(result) + std::string(" = ") + op_name + std::string(" (");
-    desc = desc + std::string(" ") + literal_int;
+    desc = desc + std::string(" ") + signstr + radixstr + literal_int + std::string(" : ") + literal_type->get_name();
     desc = desc + std::string(" )");
     return desc;
 }

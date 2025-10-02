@@ -412,19 +412,23 @@ FunctionDefinitionResolver::extract_from_expression_primary_literal_int(
     // Remove the superfluous '_' which are only
     // supported for readability purposes and play
     // no semantic role.
+    // Hex is supported
     integer_part = JLang::misc::string_remove(integer_part, "_");
     if (JLang::misc::startswith(integer_part, "0x")) {
 	integer_part = JLang::misc::string_remove(integer_part, "0x");
 	radix = 16;
     }
+    // Binary is supported
     else if (JLang::misc::startswith(integer_part, "0b")) {
 	integer_part = JLang::misc::string_remove(integer_part, "0b");
 	radix = 2;
     }
-    else if (JLang::misc::startswith(integer_part, "0")) {
-	integer_part = JLang::misc::string_remove(integer_part, "0");
+    // Octal is supported.
+    else if (JLang::misc::startswith(integer_part, "0o")) {
+	integer_part = JLang::misc::string_remove(integer_part, "0o");
 	radix = 8;
     }
+    // If radix is not specified, assume decimal.
 
     returned_tmpvar = function.tmpvar_define(literal_type);
     auto operation = std::make_unique<OperationLiteralInt>(
