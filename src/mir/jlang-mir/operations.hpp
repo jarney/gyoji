@@ -9,36 +9,32 @@
 #include <vector>
 
 namespace JLang::mir {
-    // This is a basic operation in the MIR.
-    // It can represent things like loading
-    // variables, calling functions, incrementing
-    // variables, etc.
-    // a++ is represented as _a = INC _a
-    // indicating that it increments 'a' and puts the
-    // result back in 'a'.
-    //
-    // a + b is represented as
-    // _c = ADD _a, _b
-    //
-    // We should look at the Rust MIR for inspiration
-    // on the design of this representation.  Once we
-    // have the basic operations, we can simply wire them up
-    // to the MIR generation logic.
-    //
-    // Note that operations are "sometimes" type-aware
-    // for example == operates on any type but always
-    // returns a boolean, but the actual implementation/opcode of "=="
-    // may depend on the types being compared.
-
-
-    //! Operations inside basic blocks.
     /**
+     * @brief Operations inside basic blocks, the virtual instruction-set of the MIR.
+     *
+     * @details
      * This represents a variation on the
-     * "Three Address Code" form.  There are some
+     * "Three Address Code" form.  These
+     * operations make up the virtual instruction-set
+     * of the MIR virtual machine.
+     *
+     * Each operation such as 'add' c =  a + b is represented as
+     * @code{.unparsed}
+     *     _c = add _a, _b
+     * @endcode
+     *
+     * where '_c' is the returned value and
+     * '_a' and '_b' are the operands.
+     *
+     * There are some
      * operations (like function calls) that take
      * more than three addresses, but for most,
      * the operation performs an operation on
      * one or two operands and returns a result.
+     *
+     * Some operations carry additional information
+     * such as branch locations (basic-block IDs)
+     * or string literals (in the case of the literal-string opcode).
      *
      * Each operation has a "Type" field representing the
      * concrete operation being performed.
@@ -48,18 +44,138 @@ namespace JLang::mir {
      * The operands are identified in terms of
      * the ID of the temporary value they operate on.
      * Type information is carried there, not inside
-     * the operation.
+     * the operation although operations do have
+     * strict conditions on the types of the operands
+     * and the types of the returned values.  Those
+     * conditions are enforced outside of this
+     * structure.
      */
     class Operation {
     public:
 	typedef enum {
-	    // Operation        // Validations -> Result
-	    OP_FUNCTION_CALL,   // Any, but need to match function signatures -> Function return-value type
-	    OP_SYMBOL,          // N/A
+	    // Global symbols
+	    /**
+	     * @brief Function call
+	     * @details
+	     * Directs the MIR to call a function.  The first
+	     * operand is the function to call and the remaining
+	     * operands are the arguments to the function.
+	     *
+	     * The opcode will return the same type that the
+	     * function returns and the operand types will match
+	     * the arguments of the function.
+	     *
+	     * Examples:
+	     * @code{.unparsed}
+	     * Symbols:
+	     *    main : u8(*)(u32, u8**)
+	     * Operations:
+	     * _0: (u8)(*)(u32, u8**) = symbol("main")
+	     * _1: u32 = literal-int(0)
+	     * _2: u8** = nullptr
+	     * _3: u8 = function-call (_0, _1, _2)
+	     * @endcode
+	     */
+	    OP_FUNCTION_CALL,
+	    /**
+	     * @brief Load a symbol from the symbol-table.
+	     * @details
+	     * This opcode directs the MIR to load a symbol
+	     * from the symbol table.  This will be either
+	     * a function pointer (to be used by the OP_FUNCTION_CALL opcode)
+	     * or by another opcode in evaluating an expression like
+	     * a global variable.
+	     *
+	     * This opcode will return the type of the symbol found.
+	     * In the case of a function, this is the function-pointer
+	     * type signature and in the case of a global variable, it will
+	     * be whatever type that variable is declared as.
+	     *
+	     * @code{.unparsed}
+	     * Symbols:
+	     *    main : u8(*)(u32, u8**)
+	     * Operations:
+	     * _0: (u8)(*)(u32, u8**) = symbol("main")
+	     * _1: u32 = literal-int(0)
+	     * _2: u8** = nullptr
+	     * _3: u8 = function-call (_0, _1, _2)
+	     * @endcode
+	     */
+	    OP_SYMBOL,
 
 	    // Cast operations
+	    /**
+	     * @brief Widen a signed integer to a larger type.
+	     * @details
+	     * This opcode widens a value from a signed integer
+	     * to another signed integer type by "sign-extending" the
+	     * value.  For example, it can convert a signed i8 to a
+	     * signed i32.  This operation takes a single
+	     * operand, the variable to be extended, and a type
+	     * to which it should be extended.  The type should also
+	     * be a signed integer.
+	     *
+	     * The result will be the value of the integer, sign-extended
+	     * to the type given.
+	     *
+	     * It is an error to pass any operand which is not a signed
+	     * integer or a Type which is not a signed integer type.
+	     *
+	     * Examples:
+	     * @code{.unparsed}
+	     * _0 : i8
+	     * _1: i16 = widen-signed ( _0, i16 )
+	     * _2: i32 = widen-signed ( _1, i32 )
+	     * _3: i64 = widen-signed ( _2, i64 )
+	     * @endcode
+	     */
 	    OP_WIDEN_SIGNED,    // Widen a signed integer to a larger type.
+
+	    /**
+	     * @brief Widen an unsigned integer to a larger type.
+	     * @details
+	     * This opcode widens a value from an unsigned integer
+	     * to another unsigned integer type by "zero-extending" the
+	     * value.  For example, it can convert an unsigned u8
+	     * to a u64 by zero-extending it.
+	     *
+	     * The result will be the value of the unsigned integer,
+	     * zero-extended to the type given.
+	     *
+	     * It is an error to pass any operand which is not
+	     * an unsigned integer or a Type which is not an unsigned
+	     * integer type.
+	     *
+	     * Examples:
+	     * @code{.unparsed}
+	     * _0 : u8
+	     * _1: u16 = widen-unsigned ( _0, u16 )
+	     * _2: u32 = widen-unsigned ( _1, u32 )
+	     * _3: u64 = widen-unsigned ( _2, u64 )
+	     * @endcode
+	     */
 	    OP_WIDEN_UNSIGNED,  // Widen an unsigned integer to a larger type.
+
+	    /**
+	     * @brief Widen a floating-point integer to wider type.
+	     *
+	     * @details
+	     * This opcode widens a value from a floating-point (f32)
+	     * to a double-precision floating point (f64).
+	     *
+	     * The result will be the value of the floating-point,
+	     * converted and widened to larger type (f64).
+	     *
+	     * It is an error to pass any operand which is not
+	     * a floating-point number of a Type which is not a floating-point
+	     * number.
+	     *
+	     * Examples:
+	     * @code{.unparsed}
+	     * _0 : f32
+	     * _1: f64 = widen-float ( _0, f64 )
+	     * @endcode
+	     */
 	    OP_WIDEN_FLOAT,     // Widen a floating-point to a larger type.
 
 	    // Indirect access
@@ -68,15 +184,74 @@ namespace JLang::mir {
 	    OP_ARROW,           // Pointer to class types -> Found member type
 
 	    // Variable access
+	    /**
+	     * @brief Declare local variable
+	     *
+	     * @details
+	     * This declares a local variable on the stack of a given type.  This
+	     * takes no opcodes and returns no value.  Instead, it operates on the
+	     * virtual machine by bringing a variable into scope so that it can
+	     * be loaded and stored by other opcodes.
+	     *
+	     * This opcode has the name of the variable to declare and the
+	     * type of variable it is so that it can be appropriately allocated.
+	     */
 	    OP_LOCAL_DECLARE,   // N/A
+
+	    /**
+	     * @breif Undeclare local variable
+	     * @details
+	     * This de-allocates a local variable on the stack of a given type.  This
+	     * takes no opcodes and returns no value.  Instead, it operates
+	     * on the virtual machine by removing that variable from scope.  Access
+	     * to this variable after it has gone out of scope is an error.
+	     *
+	     * This opcode carries the name of the variable to de-allocate.
+	     */
 	    OP_LOCAL_UNDECLARE, // N/A
-	    OP_LOCAL_VARIABLE,  // N/A
+	    /**
+	     * @brief Load value from variable.
+	     * @details
+	     * This loads the value of a variable from its storage and places
+	     * the result in the return-value.
+	     *
+	     * @code{.unparsed}
+	     * RET: variable-type = load (variable)
+	     * @endcode
+	     *
+	     * This opcode takes no operands.
+	     */
+	    OP_LOCAL_VARIABLE,
 	    
             // Literals
-	    OP_LITERAL_CHAR,    // N/A
-	    OP_LITERAL_STRING,  // N/A
-	    OP_LITERAL_INT,     // N/A
-	    OP_LITERAL_FLOAT,   // N/A
+	    /**
+	     * @brief Loads a literal character constant.
+	     *
+	     * @details
+	     * This loads a literal character constant into
+	     * the return-value of the operation.
+	     *
+	     * @code{.unparsed}
+	     * RET: u8 = literal-char( 'x' )
+	     * @endcode
+	     */
+	    OP_LITERAL_CHAR,
+	    /**
+	     * @brief Loads a string constant.
+	     *
+	     * @details
+	     * This loads a pointer to a u8 that points to a
+	     * string literal defined in the static constant
+	     * data area.
+	     *
+	     * @code{.unparsed}
+	     * RET: u8* = literal-string( "Hello World" )
+	     * @endcode
+	     *
+	     */
+	    OP_LITERAL_STRING,
+	    OP_LITERAL_INT,
+	    OP_LITERAL_FLOAT,
 	    
             // Unary operations
 	    OP_POST_INCREMENT,  // Pointer types, integer types -> Operand type
