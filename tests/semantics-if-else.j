@@ -3,7 +3,10 @@ u32 write(u32 fd, u8 *buf, u32 size);
 
 u32 preamble_function_call()
 {
-    write(0, "abcXXdef", 5);
+    write(0,
+    "abcXXdef"
+    "012345"
+    , 5);
 }
 u32 nineteen();
 u32 nineteen_ish();

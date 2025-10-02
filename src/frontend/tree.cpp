@@ -1620,15 +1620,37 @@ ExpressionPrimaryLiteralString::ExpressionPrimaryLiteralString(
     , literal_token(std::move(_literal_token))
 {
     add_child(*literal_token);
+    const std::string & token_value = literal_token->get_value();
+    size_t size = token_value.size();
+    if (size < 2) {
+	fprintf(stderr, "Compiler Bug: String literal must have at least two characters, one for start, one for end\n");
+	fprintf(stderr, "String literal was :%s:\n", token_value.c_str());
+	exit(1);
+    }
+    just_the_string = token_value.substr(1, size-2);
 }
 ExpressionPrimaryLiteralString::~ExpressionPrimaryLiteralString()
 {}
 const std::string &
 ExpressionPrimaryLiteralString::get_value() const
-{ return literal_token->get_value(); }
+{ return just_the_string; }
 const SourceReference &
 ExpressionPrimaryLiteralString::get_value_source_ref() const
 { return literal_token->get_source_ref(); }
+void
+ExpressionPrimaryLiteralString::add_string(JLang::owned<Terminal> _added)
+{
+    add_child(*_added);
+    const std::string & token_value = _added->get_value();
+    size_t size = token_value.size();
+    if (size < 2) {
+	fprintf(stderr, "Compiler Bug: String literal must have at least two characters, one for start, one for end\n");
+	fprintf(stderr, "String literal was :%s:\n", token_value.c_str());
+	exit(1);
+    }
+    just_the_string += token_value.substr(1, size-2);
+    additional_strings.push_back(std::move(_added));
+}
 ///////////////////////////////////////////////////
 
 static std::string f32_type("f32");
