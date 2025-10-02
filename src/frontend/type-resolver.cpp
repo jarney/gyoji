@@ -280,7 +280,15 @@ TypeResolver::extract_from_function_specifications(
 	name.get_fully_qualified_name();
     
     const Type *type = extract_from_type_specifier(type_specifier);
-    
+    if (type == nullptr) {
+	compiler_context
+	    .get_errors()
+	    .add_simple_error(type_specifier.get_source_ref(),
+			      "Compiler bug!  Please report this message",
+			      "Function pointer type declared with invalid type"
+		);
+	return;
+    }    
 //////
 // Define the type of a function pointer.
 //////
@@ -294,17 +302,12 @@ TypeResolver::extract_from_function_specifications(
 	fptr_arguments.push_back(
 	    Argument(t, function_definition_arg->get_type_specifier().get_source_ref())
 	    );
-	fprintf(stderr, "Added function argument name %s\n", t->get_name().c_str());
     }
     std::string arg_string = JLang::misc::join(arg_list, ",");
     std::string pointer_name = type->get_name() + std::string("(*)") + std::string("(") + arg_string + std::string(")");
     Type *pointer_type = get_or_create(pointer_name, Type::TYPE_FUNCTION_POINTER, false, name.get_source_ref());
-    fprintf(stderr, "Creating function pointer type\n");
-    if (type == nullptr) {
-	fprintf(stderr, "This is bad, there is no return type\n");
-    }
+
     if (!pointer_type->is_complete()) {
-	fprintf(stderr, "Completing function pointer type\n");
 	pointer_type->complete_function_pointer_definition(
 	    type,
 	    fptr_arguments,

@@ -84,6 +84,14 @@ std::string JLang::misc::string_remove_nonidentifier(const std::string & str)
     return newStr; 
 }
 
+bool JLang::misc::startswith(const std::string & s, const std::string & prefix)
+{
+    size_t found_pos = s.find(prefix);
+    if (found_pos == 0) {
+	return true;
+    }
+    return false;
+}
 bool JLang::misc::endswith(const std::string & s, const std::string & suffix)
 {
     size_t found_pos = s.find(suffix);
@@ -101,8 +109,25 @@ bool JLang::misc::contains(const std::string & s, const std::string &v)
     return true;
 }
 
+std::string
+JLang::misc::string_remove(const std::string & str, const std::string & remove)
+{
+    std::string ret(str);
+    while (true) {
+	size_t start_pos = ret.find(remove);
+	// String is not found at all.
+	if (start_pos == std::string::npos) {
+	    break;
+	}
 
-std::string JLang::misc::string_replace_start(std::string str, const std::string from, const std::string to)
+	ret.erase(start_pos, remove.length());
+    }
+    return ret;
+    
+}
+
+std::string
+JLang::misc::string_replace_start(std::string str, const std::string from, const std::string to)
 {
     std::string ret(str);
     size_t start_pos = str.find(from);

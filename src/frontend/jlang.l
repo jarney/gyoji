@@ -90,19 +90,23 @@ void move_array(
     RETURN_NODE(nodetype);
 
 // \&\& { PROCESS_NODE(AND_OP);}
+//|"0b"|"0")
 %}
  
 %option reentrant interactive noyywrap nodefault
 
 %x COMMENT
 
-dseq                ([[:digit:]]+)
+opt_sign            (\-?)
+radix               ("0x"|"0b"|"0")
+opt_radix           ({radix}?)
+dseq                (([[:digit:]]|[aAbBcCdDeEfF]|\_)+)
 dseq_opt            ({dseq}?)
 frac                (({dseq_opt}"."{dseq})|{dseq}".")
 exp                 ([eE][+-]?{dseq})
 exp_opt             ({exp}?)
 
-integer             ({dseq})({opt_integer_size})
+integer             ({opt_sign}{opt_radix})({dseq})({opt_integer_size})
 integer_size        ("u64"|"u32"|"u16"|"u8"|"i64"|"i32"|"i16"|"i8")
 opt_integer_size    ({integer_size}?)
 

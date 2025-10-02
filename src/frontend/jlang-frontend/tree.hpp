@@ -1957,29 +1957,13 @@ namespace JLang::frontend::tree {
 	 * Destructor, nothing special.
 	 */
 	~ExpressionPrimaryLiteralInt();
-	/**
-	 * For int literals, this returns only
-	 * the part of the string that includes
-	 * the number, not the part that encodes
-	 * the type.  For example, in 178u32, this
-	 * returns only the '178' part of it.
+        /**
+	 * Returns the string literal exactly as it appeared in the source-file.
 	 */
 	const std::string & get_value() const;
-	/**
-	 * For integer literals, this returns
-	 * only the part of the string that
-	 * is the type.  If no type is given,
-	 * the default is 'u32'.  For example,
-	 * in the literal '178u64', this returns
-	 * 'u64' and in '178' this returns
-	 * the default of 'u32'.
-	 */
-	const std::string & get_type() const;
 	const JLang::context::SourceReference & get_value_source_ref() const;
     private:
 	JLang::owned<Terminal> literal_token;
-	std::string integer_part;
-	std::string type_part;
     };
     class ExpressionPrimaryLiteralChar : public JLang::frontend::ast::SyntaxNode {
     public:

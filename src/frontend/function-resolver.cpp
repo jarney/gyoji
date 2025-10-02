@@ -1,4 +1,5 @@
 #include <jlang-frontend/function-resolver.hpp>
+#include <jlang-misc/jstring.hpp>
 #include <variant>
 #include <stdio.h>
 
@@ -302,6 +303,16 @@ FunctionDefinitionResolver::extract_from_expression_primary_literal_string(
     return true;
 }
 
+static std::string u8_type("u8");
+static std::string u16_type("u16");
+static std::string u32_type("u32");
+static std::string u64_type("u64");
+    
+static std::string i8_type("i8");
+static std::string i16_type("i16");
+static std::string i32_type("i32");
+static std::string i64_type("i64");
+
 bool
 FunctionDefinitionResolver::extract_from_expression_primary_literal_int(
     JLang::mir::Function & function,
@@ -309,13 +320,120 @@ FunctionDefinitionResolver::extract_from_expression_primary_literal_int(
     size_t & returned_tmpvar,
     const JLang::frontend::tree::ExpressionPrimaryLiteralInt & expression)
 {
-    returned_tmpvar = function.tmpvar_define(mir.get_types().get_type(expression.get_type()));
-    const Type * literal_type = mir.get_types().get_type(expression.get_type());
+
+    size_t radix = 10;
+    // Extremely ineficcient, but we need to resolve
+    // the specific type of integer here
+    // so that the MIR layer knows what we mean.
+    // Actually, the whole of this logic
+    // should probably move down one notch to the
+    // construction OP_LITERAL in the FunctionResolver
+
+    std::string integer_part;
+    std::string type_part;
+    bool sign_positive = true;
+
+    const std::string & token_value = expression.get_value();
+    size_t len = token_value.size();
+    if (JLang::misc::endswith(token_value, u8_type)) {
+	integer_part = token_value.substr(0, len - u8_type.size());
+	type_part = u8_type;
+    }
+    else if (JLang::misc::endswith(token_value, u16_type)) {
+	integer_part = token_value.substr(0, len - u16_type.size());
+	type_part = u16_type;
+    }
+    else if (JLang::misc::endswith(token_value, u32_type)) {
+	integer_part = token_value.substr(0, len - u32_type.size());
+	type_part = u32_type;
+    }
+    else if (JLang::misc::endswith(token_value, u64_type)) {
+	integer_part = token_value.substr(0, len - u64_type.size());
+	type_part = u64_type;
+    }
+    else if (JLang::misc::endswith(token_value, i8_type)) {
+	integer_part = token_value.substr(0, len - i8_type.size());
+	type_part = i8_type;
+    }
+    else if (JLang::misc::endswith(token_value, i16_type)) {
+	integer_part = token_value.substr(0, len - i16_type.size());
+	type_part = i16_type;
+    }
+    else if (JLang::misc::endswith(token_value, i32_type)) {
+	integer_part = token_value.substr(0, len - i32_type.size());
+	type_part = i32_type;
+    }
+    else if (JLang::misc::endswith(token_value, i64_type)) {
+	integer_part = token_value.substr(0, len - i64_type.size());
+	type_part = i64_type;
+    }
+    else {
+	// If not specified, we assume u32 or i32 depending
+	// on whether there's a '-' at the start.
+	integer_part = token_value;
+	if (integer_part[0] == '-') {
+	    type_part = i32_type;
+	    sign_positive = false;
+	}
+	else {
+	    type_part = u32_type;
+	    sign_positive = true;
+	}
+    }
+    // If the remaining part of the number
+    // starts with a '-' then we flip the sign bit
+    // to make it negative and remove the '-' so
+    // we can parse the radix part.
+    if (JLang::misc::startswith(integer_part, "-")) {
+	sign_positive = false;
+	integer_part = JLang::misc::string_remove(integer_part, "-");
+    }
+    else {
+	sign_positive = true;
+    }
+
+    const Type * literal_type = mir.get_types().get_type(type_part);
+    
+    // Next, we need to check that
+    // if it's a negative number, it is
+    // consistent with the signedness of the type.
+    if (!sign_positive && literal_type->is_unsigned()) {
+	compiler_context
+	    .get_errors()
+	    .add_simple_error(
+		expression.get_source_ref(),
+		"Integer literal type mismatch",
+		std::string("Type of integer literal was unsigned, but a negative value was given")
+		);
+	return false;
+    }
+    
+    
+    // Remove the superfluous '_' which are only
+    // supported for readability purposes and play
+    // no semantic role.
+    integer_part = JLang::misc::string_remove(integer_part, "_");
+    if (JLang::misc::startswith(integer_part, "0x")) {
+	integer_part = JLang::misc::string_remove(integer_part, "0x");
+	radix = 16;
+    }
+    else if (JLang::misc::startswith(integer_part, "0b")) {
+	integer_part = JLang::misc::string_remove(integer_part, "0b");
+	radix = 2;
+    }
+    else if (JLang::misc::startswith(integer_part, "0")) {
+	integer_part = JLang::misc::string_remove(integer_part, "0");
+	radix = 8;
+    }
+
+    returned_tmpvar = function.tmpvar_define(literal_type);
     auto operation = std::make_unique<OperationLiteralInt>(
 	expression.get_source_ref(),
 	returned_tmpvar,
-	expression.get_value(),
-	literal_type
+	integer_part,
+	literal_type,
+	sign_positive,
+	radix
 	);
     function
 	.get_basic_block(current_block)
@@ -891,7 +1009,6 @@ FunctionDefinitionResolver::numeric_widen_binary_operation(
 		if (!numeric_widen(function, current_block, _src_ref, a_tmpvar, btype)) {
 		    return false;
 		}
-		fprintf(stderr, "Widened UA %ld %ld\n", a_tmpvar, b_tmpvar);
 		*widened = btype;
 	    }
 	    else {
@@ -2174,8 +2291,6 @@ FunctionDefinitionResolver::extract_from_statement_list(
     }
     for (const auto & undecl : unwind) {
 	function.remove_local(undecl);
-	fprintf(stderr, "Undeclaring %s in block %ld\n", undecl.c_str(), current_block);
-	    
 	auto operation = std::make_unique<OperationLocalUndeclare>(
 	    statement_list.get_source_ref(),
 	    undecl);

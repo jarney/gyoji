@@ -1276,7 +1276,9 @@ namespace JLang::mir {
 	    const JLang::context::SourceReference & _src_ref,
 	    size_t _result,
 	    std::string _literal_int,
-	    const Type *_type
+	    const Type *_type,
+	    bool _sign_positive,
+	    size_t _radix
 	    );
 	/**
 	 * @brief Move along, nothing to see here.
@@ -1287,11 +1289,15 @@ namespace JLang::mir {
 	virtual ~OperationLiteralInt();
 	const std::string & get_literal_int() const;
 	const Type *get_literal_type() const;
+	bool get_sign_positive() const;
+	size_t get_radix() const;
     protected:
 	virtual std::string get_description() const;
     private:
 	const std::string literal_int;
 	const Type *literal_type;
+	bool sign_positive;
+	size_t radix;
     };
     /**
      * @brief Literal float

@@ -499,53 +499,68 @@ CodeGeneratorLLVMContext::generate_operation_literal_int(
 {
     llvm::Value *value;
     const char *valptr = operation.get_literal_int().c_str();
+    Type::TypeType type = operation.get_literal_type()->get_type();
+    bool sign_positive = operation.get_sign_positive();
+    size_t radix = operation.get_radix();
     
-    switch (operation.get_literal_type()->get_type()) {
+    switch (type) {
     case Type::TYPE_PRIMITIVE_u8:
         {
-	unsigned long long val = strtoul(valptr, nullptr, 10);
+	unsigned long long val = strtoul(valptr, nullptr, radix);
 	value = Builder->getInt8((unsigned char)val);
         }
 	break;
     case Type::TYPE_PRIMITIVE_u16:
         {
-	unsigned long long val = strtoul(valptr, nullptr, 10);
+	unsigned long long val = strtoul(valptr, nullptr, radix);
 	value = Builder->getInt16((unsigned short)val);
         }
         break;
     case Type::TYPE_PRIMITIVE_u32:
         {
-	unsigned long long val = strtoul(valptr, nullptr, 10);
+	unsigned long long val = strtoul(valptr, nullptr, radix);
 	value = Builder->getInt32(val);
         }
 	break;
     case Type::TYPE_PRIMITIVE_u64:
         {
-	unsigned long long val = strtoull(valptr, nullptr, 10);
+	unsigned long long val = strtoull(valptr, nullptr, radix);
 	value = Builder->getInt64(val);
         }
 	break;
     case Type::TYPE_PRIMITIVE_i8:
         {
-	long val = strtoull(valptr, nullptr, 10);
+	long val = strtoull(valptr, nullptr, radix);
+	if (!sign_positive) {
+	    val = -val;
+	}
 	value = Builder->getInt8(val);
         }
         break;
     case Type::TYPE_PRIMITIVE_i16:
         {
-	long val = strtol(valptr, nullptr, 10);
+	long val = strtol(valptr, nullptr, radix);
+	if (!sign_positive) {
+	    val = -val;
+	}
 	value = Builder->getInt16(val);
         }
         break;
     case Type::TYPE_PRIMITIVE_i32:
         {
-	long val = strtol(valptr, nullptr, 10);
+	long val = strtol(valptr, nullptr, radix);
+	if (!sign_positive) {
+	    val = -val;
+	}
 	value = Builder->getInt32(val);
         }
 	break;
     case Type::TYPE_PRIMITIVE_i64:
         {
-	long long val = strtoll(valptr, nullptr, 10);
+	long long val = strtoll(valptr, nullptr, radix);
+	if (!sign_positive) {
+	    val = -val;
+	}
 	value = Builder->getInt64(val);
         }
 	break;
@@ -1612,6 +1627,13 @@ CodeGeneratorLLVMContext::output(const std::string & filename)
 
     llvm::raw_fd_ostream  llvm_ll_ostream(filename + std::string(".ll"), EC);
     TheModule->print(llvm_ll_ostream, nullptr);
+
+    // For now, until we have a cmdline parser
+    // we will default to no optimization so we
+    // can actually follow the generated assembly.
+    // When we want to run a 'real' build, we will
+    // want to turn on better optimizations.
+    TheTargetMachine->setOptLevel(CodeGenOptLevel::None);
     
     legacy::PassManager pass;
     auto FileType = CodeGenFileType::ObjectFile;

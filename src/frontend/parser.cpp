@@ -66,7 +66,7 @@ Parser::parse_to_mir(
     JLang::mir::operation_static_init();
 
     fprintf(stderr, "============================\n");
-    fprintf(stderr, "Symbol table resolution pass\n");
+    fprintf(stderr, "Type and symbol table resolution pass\n");
     fprintf(stderr, "============================\n");
     // First, resolve all of the type definitions.
     // Also at this stage, we resolve the function declarations.

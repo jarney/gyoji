@@ -490,11 +490,15 @@ OperationLiteralInt::OperationLiteralInt(
     const JLang::context::SourceReference & _src_ref,
     size_t _result,
     std::string _literal_int,
-    const Type *_type
+    const Type *_type,
+    bool _sign_positive,
+    size_t _radix
     )
     : Operation(OP_LITERAL_INT, _src_ref, _result)
     , literal_int(_literal_int)
     , literal_type(_type)
+    , sign_positive(_sign_positive)
+    , radix(_radix)
 {}
 OperationLiteralInt::~OperationLiteralInt()
 {}
@@ -505,6 +509,14 @@ OperationLiteralInt::get_literal_int() const
 const Type *
 OperationLiteralInt::get_literal_type() const
 { return literal_type; }
+
+bool
+OperationLiteralInt::get_sign_positive() const
+{ return sign_positive; }
+
+size_t
+OperationLiteralInt::get_radix() const
+{ return radix; }
 
 std::string
 OperationLiteralInt::get_description() const
