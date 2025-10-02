@@ -19,5 +19,9 @@ namespace JLang::misc {
     std::string string_remove(const std::string & str, const std::string & remove);
     
     std::string string_replace_start(std::string str, const std::string from, const std::string to);
+
+    std::string string_c_escape(const std::string & unescaped_string);
+    std::string string_c_unescape(const std::string & escaped_string);
+    
     
 };

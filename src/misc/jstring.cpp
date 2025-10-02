@@ -145,3 +145,26 @@ JLang::misc::string_replace_start(std::string str, const std::string from, const
     ret.replace(start_pos, from.length(), to);
     return ret;
 }
+
+// TODO: These need to be implemented and
+// must guarantee that they are reversible
+// in all cases.
+std::string
+JLang::misc::string_c_escape(const std::string & unescaped_string)
+{
+    // Take an un-escaped string and insert the \n, \r, \e
+    // escapes exactly as if it were a string literal expressed
+    // in C.  Choose exactly one set of escapes as the 'core'
+    // standard set from C, but no more and no less.  This should
+    // be the least common denominator for escapes.
+    return unescaped_string;
+}
+
+std::string
+JLang::misc::string_c_unescape(const std::string & escaped_string)
+{
+    // Take the 'traditional' C escape sequences
+    // and turn them into their 'traditional' counterparts.
+    return escaped_string;
+}
+

@@ -1,4 +1,5 @@
 #include <jlang-mir/operations.hpp>
+#include <jlang-misc/jstring.hpp>
 
 using namespace JLang::mir;
 
@@ -478,8 +479,8 @@ OperationLiteralString::get_description() const
     const std::string & op_name = it->second;
 
     std::string desc = std::string("_") + std::to_string(result) + std::string(" = ") + op_name + std::string(" (");
-    desc = desc + std::string(" ") + literal_string;
-    desc = desc + std::string(" )");
+    desc = desc + std::string(" \"") + JLang::misc::string_c_escape(literal_string);
+    desc = desc + std::string(" \")");
     return desc;
 }
 

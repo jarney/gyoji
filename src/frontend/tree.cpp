@@ -1627,7 +1627,8 @@ ExpressionPrimaryLiteralString::ExpressionPrimaryLiteralString(
 	fprintf(stderr, "String literal was :%s:\n", token_value.c_str());
 	exit(1);
     }
-    just_the_string = token_value.substr(1, size-2);
+    std::string nextpart = token_value.substr(1, size-2);
+    just_the_string = JLang::misc::string_c_unescape(nextpart);
 }
 ExpressionPrimaryLiteralString::~ExpressionPrimaryLiteralString()
 {}
@@ -1648,7 +1649,8 @@ ExpressionPrimaryLiteralString::add_string(JLang::owned<Terminal> _added)
 	fprintf(stderr, "String literal was :%s:\n", token_value.c_str());
 	exit(1);
     }
-    just_the_string += token_value.substr(1, size-2);
+    std::string nextpart = token_value.substr(1, size-2);
+    just_the_string += JLang::misc::string_c_unescape(nextpart);
     additional_strings.push_back(std::move(_added));
 }
 ///////////////////////////////////////////////////
