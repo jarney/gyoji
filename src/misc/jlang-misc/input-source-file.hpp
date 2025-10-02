@@ -33,6 +33,7 @@ namespace JLang::misc {
 	 * represents the number of bytes actually read.
 	 */
 	void yy_input(char *buf, int &result, int max_size);
+
     private:
 	int fd;
     };

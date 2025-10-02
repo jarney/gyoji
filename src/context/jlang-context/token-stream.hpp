@@ -30,9 +30,10 @@ namespace JLang::context {
 	Token(
 	    std::string _typestr,
 	    std::string _value,
-	    std::string _filename,
+	    const std::string & _filename,
 	    size_t _line,
-	    size_t _column
+	    size_t _column,
+	    size_t _length
 	    );
 	/**
 	 * Destructor, nothing fancy.

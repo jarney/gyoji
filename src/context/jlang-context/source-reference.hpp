@@ -15,16 +15,19 @@ namespace JLang::context {
 	SourceReference(
 	    std::string _filename,
 	    size_t _line,
-	    size_t _column
+	    size_t _column,
+	    size_t _length
 	    );
 	SourceReference(const SourceReference & _other);
 	~SourceReference();
 	const std::string & get_filename() const;
 	size_t get_line() const;
 	size_t get_column() const;
+	size_t get_length() const;
     private:
 	std::string filename;
 	size_t line;
 	size_t column;
+	size_t length;
     };
 };

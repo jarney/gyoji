@@ -15,7 +15,7 @@ LexContext::LexContext(
     , input_source(_input_source)
     , compiler_context(_compiler_context)
     , line(1)
-    , column(1)
+    , column(0)
 {}
 
 LexContext::~LexContext()

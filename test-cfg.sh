@@ -41,7 +41,7 @@ for TEST_FILE in ${TEST_FILES} ; do
     fi
     
     # 2. Process .ll into a dot call-graph (intermediate)
-    opt-18 --passes=dot-cfg --cfg-dot-filename-prefix=${TEST_CFG_DIR}/${TEST_FILE} ${TEST_CFG_DIR}/${TEST_FILE}.o.ll
+    opt-18 --passes=dot-cfg --cfg-dot-filename-prefix=${TEST_CFG_DIR}/${TEST_FILE} ${TEST_CFG_DIR}/${TEST_FILE}.o.ll >/dev/null
     if [ $? -ne 0 ] ; then
 	failed_message="Failure generating dot graph ${TEST_CFG_DIR}/${TEST_FILE}.o.ll"
 	failed=1

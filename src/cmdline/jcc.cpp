@@ -23,9 +23,10 @@ int main(int argc, char **argv)
 	fprintf(stderr, "Cannot open file %s\n", argv[1]);
 	exit(1);
     }
-    std::string filename(argv[2]);
+    std::string input_filename(argv[1]);
+    std::string output_filename(argv[2]);
     
-    CompilerContext context;
+    CompilerContext context(input_filename);
     JLang::misc::InputSourceFile input_source(input);
     
     JLang::owned<MIR> mir =
@@ -40,7 +41,7 @@ int main(int argc, char **argv)
     // before any analysis or code-generation
     // passes.
     {
-	std::string mir_filename = filename + std::string(".mir");
+	std::string mir_filename = output_filename + std::string(".mir");
 	FILE *mir_output = fopen(mir_filename.c_str(), "w");
 	mir->dump(mir_output);
 	fclose(mir_output);
@@ -63,7 +64,7 @@ int main(int argc, char **argv)
     // stage is a bit problematic
     // because we're not really cleaning up the
     // LLVM stuff at the moment.
-    generate_code(context, *mir, filename);
+    generate_code(context, *mir, output_filename);
     
     if (context.has_errors()) {
 	context.get_errors().print();

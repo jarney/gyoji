@@ -52,16 +52,16 @@ void move_array(
 
 #define TOKEN_ADD(nodetype)                                          \
     LexContext *lc = (LexContext*)yyget_extra(yyscanner);            \
+    lc->column += strlen(yytext);                                    \
     const Token &tok =                                               \
         lc->compiler_context.get_token_stream()                      \
             .add_token(                                              \
                 std::string(#nodetype),                              \
                 std::string(yytext),                                 \
-                std::string("Some filename"),                        \
+                lc->compiler_context.get_filename(),                 \
                 lc->line,                                            \
-                lc->column                                           \
+                lc->column-1                                         \
             );                                                       \
-    lc->column += strlen(yytext);                                    \
 
 #define START_NODE(nodetype)                                         \
     TOKEN_ADD(nodetype);                                             \

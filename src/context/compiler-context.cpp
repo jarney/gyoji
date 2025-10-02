@@ -3,6 +3,11 @@
 using namespace JLang::context;
 
 CompilerContext::CompilerContext()
+    : CompilerContext("unknown-file")
+{}
+
+CompilerContext::CompilerContext(const std::string & _filename)
+    : filename(_filename)
 {
     token_stream = std::make_unique<TokenStream>();
     errors = std::make_unique<Errors>(*token_stream);
@@ -21,3 +26,7 @@ CompilerContext::get_errors() const
 TokenStream &
 CompilerContext::get_token_stream() const
 { return *token_stream; }
+
+const std::string &
+CompilerContext::get_filename() const
+{ return filename; }

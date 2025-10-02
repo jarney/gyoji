@@ -2,7 +2,7 @@
 
 using namespace JLang::context;
 
-static const SourceReference zero_source_ref("", 1, 0);
+static const SourceReference zero_source_ref("internal", 1, 0, 0);
 
 const SourceReference &
 TokenStream::get_zero_source_ref()
@@ -76,7 +76,7 @@ TokenStream::add_token(
     size_t _column
     )
 {
-    JLang::owned<Token> token = std::make_unique<Token>(_typestr, _value, _filename, _line, _column);
+    JLang::owned<Token> token = std::make_unique<Token>(_typestr, _value, _filename, _line, _column, _value.size());
     const Token & token_ref = *token;
     tokens_by_lineno[_line].push_back(token.get());
     tokens.push_back(std::move(token));
@@ -94,13 +94,14 @@ TokenStream::append_token(std::string _value)
 Token::Token(
     std::string _typestr,
     std::string _value,
-    std::string _filename,
+    const std::string & _filename,
     size_t _line,
-    size_t _column
+    size_t _column,
+    size_t _length
     )
     : typestr(_typestr)
     , value(_value)
-    , src_ref(_filename, _line, _column)
+    , src_ref(_filename, _line, _column, _length)
 {}
 
 Token::~Token()

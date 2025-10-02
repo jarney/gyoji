@@ -58,7 +58,8 @@ Error::~Error()
 void
 Error::print()
 {
-    fprintf(stderr, "Error: %s\n", error_message.c_str());
+    const std::string filename = messages.size() > 0 ? messages.back()->get_source_ref().get_filename() : std::string("unknown filename");
+    fprintf(stderr, "%s: Error: %s\n", filename.c_str(), error_message.c_str());
     for (const JLang::owned<ErrorMessage> & msg : messages) {
 	msg->print();
     }
@@ -118,10 +119,6 @@ void
 ErrorMessage::add_context(const std::vector<std::pair<size_t, std::string>> & _context)
 { context = _context; }
 
-const std::vector<std::pair<size_t, std::string>> &
-ErrorMessage::get_context() const
-{ return context; }
-
 const SourceReference & 
 ErrorMessage::get_source_ref() const
 { return src_ref; }
@@ -134,17 +131,8 @@ size_t
 ErrorMessage::get_line() const
 { return src_ref.get_line(); }
 
-size_t
-ErrorMessage::get_column() const
-{ return src_ref.get_column(); }
-
-std::string
-ErrorMessage::get_filename() const
-{ return src_ref.get_filename(); }
-
 // Case 1.
 //    ^
-//    |
 //    +---------message goes here, wrapped
 //              to indent level
 
@@ -154,24 +142,26 @@ ErrorMessage::get_filename() const
 //  message goes here, wrapped -------+
 //  to indent level
 
-static std::string pad_string(size_t length)
+static std::string pad_string(size_t length, std::string padder)
 {
     std::string prefix;
     for (size_t i = 0; i < length; i++) {
-	prefix = prefix + std::string(" ");
+	prefix = prefix + padder;
     }
     return prefix;
 }
 
-static void draw_arrow(size_t column)
+static void draw_arrow(size_t column, size_t length)
 {
     std::string arrowhead_line("^");
-    std::string pipe_line("|");
-    std::string prefix = pad_string(column);
+    std::string prefix = pad_string(column, std::string(" "));
     arrowhead_line = prefix + arrowhead_line;
-    pipe_line = prefix + pipe_line;
+    length = std::min(length, (size_t)80);
+    if (length >= 2) {
+	arrowhead_line = arrowhead_line + pad_string(length-2, std::string("~"));
+	arrowhead_line = arrowhead_line + std::string("^");
+    }
     fprintf(stderr, "%s\n", arrowhead_line.c_str());
-    fprintf(stderr, "%s\n", pipe_line.c_str());
 }
 
 static std::string wrap_text(size_t max_width, std::string input)
@@ -203,8 +193,9 @@ static std::string indent_text(size_t indent, std::string input)
 {
     std::string wrapped;
     
-    std::string pad = pad_string(indent);
+    std::string pad = pad_string(indent, std::string(" "));
     wrapped.append(pad);
+    wrapped.append("|--");
     for (size_t i = 0; i < input.size(); i++) {
 	char c = input[i];
 	wrapped += c;
@@ -221,6 +212,7 @@ ErrorMessage::print()
 {
     size_t line = src_ref.get_line();
     size_t column = src_ref.get_column();
+    size_t length = src_ref.get_length();
     for (const std::pair<size_t, std::string> & linepair : context) {
 	fprintf(stderr, "%4ld: %s", linepair.first, linepair.second.c_str());
 	if (linepair.second.size() > 0) {
@@ -229,7 +221,7 @@ ErrorMessage::print()
 	    }
 	}
 	if (line == linepair.first) {
-	    draw_arrow(column+6);
+	    draw_arrow(column+5, length);
 	    if (column < 40) {
 		std::string wrapped = wrap_text(80-column, errormsg);
 		std::string indented = indent_text(column+5, wrapped);
