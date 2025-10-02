@@ -9,9 +9,9 @@ SyntaxNode::SyntaxNode(
     SyntaxNode::specific_type_t _data,
     const JLang::context::SourceReference & _source_ref
     )
-    : type(_type)
+    : source_ref(_source_ref)
+    , type(_type)
     , data(_data)
-    , source_ref(_source_ref)
 {}
 SyntaxNode::~SyntaxNode()
 {}

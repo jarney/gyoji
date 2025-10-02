@@ -12,8 +12,8 @@ LexContext::LexContext(
     JLang::context::CompilerContext & _compiler_context,
     JLang::misc::InputSource &_input_source)
     : namespace_context(_namespace_context)
-    , compiler_context(_compiler_context)
     , input_source(_input_source)
+    , compiler_context(_compiler_context)
     , line(1)
     , column(1)
 {}

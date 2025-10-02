@@ -19,16 +19,16 @@ NamespaceFoundReason::~NamespaceFoundReason()
 {}
 
 Namespace::Namespace(std::string _name, int _type, int _visibility)
-    : name(_name)
+    : parent(nullptr)
     , type(_type)
     , visibility(_visibility)
-    , parent(nullptr)
+    , name(_name)
 {}
 Namespace::Namespace(std::string _name, int _type, int _visibility, Namespace* _parent)
-    : name(_name)
+    : parent(_parent)
     , type(_type)
     , visibility(_visibility)
-    , parent(_parent)
+    , name(_name)
 {}
 
 Namespace::~Namespace()

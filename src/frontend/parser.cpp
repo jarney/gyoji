@@ -36,10 +36,10 @@ Parser::parse(
     yyset_extra(&lex_context, scanner);
     
     yacc::YaccParser parser { scanner, *result };
-    int rc = parser.parse();
+    parser.parse();
     yylex_destroy(scanner);
     
-    return std::move(result);
+    return result;
 }
 
 JLang::owned<MIR>
@@ -84,5 +84,5 @@ Parser::parse_to_mir(
 				       type_resolver);
     function_resolver.resolve();
     
-    return std::move(mir);
+    return mir;
 }

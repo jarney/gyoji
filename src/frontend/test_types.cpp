@@ -26,7 +26,7 @@ int main(int argc, char **argv)
     
     CompilerContext context;
     
-    auto mir = std::move(parse_to_mir(path, context, "tests/type-resolution.j"));
+    auto mir = parse_to_mir(path, context, "tests/type-resolution.j");
     
     mir->get_types().dump(stderr);
     
@@ -52,5 +52,5 @@ parse_to_mir(std::string & path, CompilerContext & context, std::string base_fil
 	    input_source
 	    );
     close(input);
-    return std::move(mir);
+    return mir;
 }

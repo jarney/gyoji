@@ -279,9 +279,9 @@ namespace JLang::mir {
 	const JLang::context::SourceReference & get_defined_source_ref() const;
 	
     private:
-	bool complete;
 	std::string name;
 	TypeType type;
+	bool complete;
 	
 	const JLang::context::SourceReference *declared_source_ref;
 	const JLang::context::SourceReference *defined_source_ref;

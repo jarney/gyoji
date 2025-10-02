@@ -258,7 +258,6 @@ CodeGeneratorLLVMContext::create_type(const Type * type)
 	return it->second;
     }
     
-    llvm::Type* llvm_type;
     if (type->is_primitive()) {
 	return create_type_primitive(type);
     }

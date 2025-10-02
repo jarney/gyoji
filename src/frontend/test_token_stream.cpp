@@ -39,7 +39,7 @@ parse(std::string & filename, CompilerContext & context)
 	return nullptr;
     }
     
-    return std::move(parse_result);
+    return parse_result;
 }
 
 

@@ -12,9 +12,9 @@ TypeResolver::TypeResolver(
     JLang::context::CompilerContext & _compiler_context,
     const JLang::frontend::tree::TranslationUnit & _translation_unit,
     JLang::mir::MIR & _mir)
-    : compiler_context(_compiler_context)
+    : mir(_mir)
+    , compiler_context(_compiler_context)
     , translation_unit(_translation_unit)
-    , mir(_mir)
 {}
 TypeResolver::~TypeResolver()
 {}

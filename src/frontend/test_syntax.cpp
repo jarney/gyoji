@@ -26,7 +26,7 @@ parse(std::string & path, CompilerContext & compiler_context, std::string base_f
 
     close(input);
     
-    return std::move(parse_result);
+    return parse_result;
 }
 
 int main(int argc, char **argv)

@@ -120,8 +120,8 @@ AccessModifier::AccessModifier(JLang::owned<Terminal> _modifier)
 }
 AccessModifier::AccessModifier(const JLang::context::SourceReference & _source_ref)
     : SyntaxNode("access_modifier", this, _source_ref)
-    , modifier(nullptr)
     , type(JLang::frontend::tree::AccessModifier::AccessModifierType::PUBLIC)
+    , modifier(nullptr)
 {}
 AccessModifier::~AccessModifier()
 {}
@@ -1874,9 +1874,9 @@ ExpressionPostfixIncDec::ExpressionPostfixIncDec(
     OperationType _type
     )
     : SyntaxNode("expression_postfix_incdec", this, _expression->get_source_ref())
-    , expression(std::move(_expression))
-    , operator_token(std::move(_operator_token))
     , type(_type)
+    , operator_token(std::move(_operator_token))
+    , expression(std::move(_expression))
 {
     add_child(*expression);
     add_child(*operator_token);
@@ -1896,9 +1896,9 @@ ExpressionUnaryPrefix::ExpressionUnaryPrefix(
     OperationType _type
     )
     : SyntaxNode("expression_unary_prefix", this, _operator_token->get_source_ref())
+    , type(_type)
     , operator_token(std::move(_operator_token))
     , expression(std::move(_expression))
-    , type(_type)
 {
     add_child(*operator_token);
     add_child(*expression);

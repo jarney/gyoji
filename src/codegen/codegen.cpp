@@ -14,5 +14,5 @@ void JLang::codegen::generate_code(
     CodeGeneratorLLVM generator(_compiler_context, _mir);
     generator.initialize();  
     generator.generate();
-    int rc = generator.output(_filename);
+    generator.output(_filename);
 }

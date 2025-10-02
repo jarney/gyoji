@@ -157,7 +157,7 @@ ErrorMessage::get_filename() const
 static std::string pad_string(size_t length)
 {
     std::string prefix;
-    for (int i = 0; i < length; i++) {
+    for (size_t i = 0; i < length; i++) {
 	prefix = prefix + std::string(" ");
     }
     return prefix;

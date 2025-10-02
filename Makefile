@@ -8,6 +8,8 @@ docs: build/Makefile
 
 test: build/Makefile
 	cd build; $(MAKE) all; $(MAKE) test
+	mkdir build/gcov
+	gcovr  --html build/gcov/report.html --html-details
 
 clean: build/Makefile
 	cd build; $(MAKE) clean
@@ -23,5 +25,6 @@ build/Makefile: CMakeLists.txt
 		-DCMAKE_INSTALL_PREFIX=install \
 		-DCMAKE_BUILD_TYPE=Debug \
 		-B build -S .
+
 
 

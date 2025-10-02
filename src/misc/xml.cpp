@@ -8,7 +8,7 @@ std::string JLang::misc::xml_to_cdata(const std::string & str)
 {
     std::string output;
     std::vector<std::string> split = string_split(str, "]]>");
-    for (int i = 0; i < split.size(); i++) {
+    for (size_t i = 0; i < split.size(); i++) {
 	bool has_prev = i > 0;
 	bool has_next = i < split.size()-1;
 	std::string next(has_next ? "]]" : "");

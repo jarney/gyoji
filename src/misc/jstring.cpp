@@ -73,7 +73,7 @@ std::string JLang::misc::string_remove_nonidentifier(const std::string & str)
     std::string newStr;
     newStr.assign(str);  
     
-    for(int i = 0; i < str.length(); i++){
+    for(size_t i = 0; i < str.length(); i++){
 	char c = str.at(i);
 	if (isalnum(c) || c == ':' || c == '_') {
 	    continue;

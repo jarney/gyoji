@@ -2666,8 +2666,8 @@ namespace JLang::frontend::tree {
 	 */
 	const std::vector<JLang::owned<FileStatement>> & get_statements() const;
     private:
-	JLang::owned<Terminal> yyeof_token;
 	JLang::owned<FileStatementList> file_statement_list;
+	JLang::owned<Terminal> yyeof_token;
 	
     };
     

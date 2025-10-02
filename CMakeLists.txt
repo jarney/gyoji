@@ -11,6 +11,16 @@ project(
   VERSION 1.0
   LANGUAGES CXX)
 
+#set(CMAKE_CXX_STANDARD 14)
+
+set(CMAKE_CXX_OUTPUT_EXTENSION_REPLACE ON)
+
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+message("Doing a debug build, so we're including gcov and lots of stuff.")
+#set(CMAKE_CXX_FLAGS "-g -O0 -Wall -fprofile-arcs -ftest-coverage")
+set(CMAKE_CXX_FLAGS "-g -O0 -Wall -fprofile-arcs -ftest-coverage")
+endif()
+
 option(BUILD_DOC "Build documentation" ON)
 find_package(Doxygen)
 if (DOXYGEN_FOUND)

@@ -30,7 +30,7 @@
 #if DEBUG_NONTERMINALS
 #define PRINT_NONTERMINALS(s) printf("%s\n", s->get_syntax_node()->get_type().c_str())
 #else
-#define PRINT_NONTERMINALS(s) (0)
+#define PRINT_NONTERMINALS(s) /**/
 #endif
 
 int visibility_from_modifier(JLang::frontend::tree::AccessModifier::AccessModifierType visibility_ast);
@@ -425,8 +425,6 @@ file_statement_global_definition
 	        // In future, we may support name mangling, but again, that's not the concern of the
 	        // back-end layers.
 	        std::string global_name = $4->get_value();
-	        const Symbol *sym = return_data.symbol_get_or_create(global_name, $4->get_source_ref());
-	    
 	        $$ = std::make_unique<JLang::frontend::tree::FileStatementGlobalDefinition>(
                                                                                       std::move($1),
                                                                                       std::move($2),
@@ -596,7 +594,6 @@ namespace_declaration
 
 file_statement_namespace
         : namespace_declaration BRACE_L opt_file_statement_list BRACE_R SEMICOLON {
-          const auto p = $3.get();
                 $$ = std::make_unique<JLang::frontend::tree::FileStatementNamespace>(
                                                                                         std::move($1),
                                                                                         std::move($2),
@@ -2368,7 +2365,7 @@ void JLang::frontend::yacc::YaccParser::error(const std::string& msg) {
     // We want to consume more context from the next few
     // lines so we can produce a good syntax error with
     // following context.
-    int error_context_lines = 5;
+    size_t error_context_lines = 5;
     while (true) {
 	JLang::frontend::yacc::YaccParser::semantic_type lvalue;
 	int rc = yylex (&lvalue, scanner);
