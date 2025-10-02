@@ -50,7 +50,7 @@ const Type *
 Types::get_pointer_to(const Type *_type, const SourceReference & src_ref)
 {
     std::string pointer_type_name = _type->get_name() + std::string("*");
-    Type* pointer_type = get_type(pointer_type_name);
+    const Type* pointer_type = get_type(pointer_type_name);
     if (pointer_type != nullptr) {
 	return pointer_type;
     }
@@ -66,7 +66,7 @@ Types::get_reference_to(const Type *_type, const SourceReference & src_ref)
 {
     std::string pointer_type_name = _type->get_name() + std::string("&");
 
-    Type* pointer_type = get_type(pointer_type_name);
+    const Type* pointer_type = get_type(pointer_type_name);
     if (pointer_type != nullptr) {
 	return pointer_type;
     }

@@ -63,7 +63,7 @@ TypeResolver::extract_from_type_specifier(const TypeSpecifier & type_specifier)
 	    return nullptr;
 	}
 	std::string name = type_name.get_name();
-	Type *type = mir.get_types().get_type(name);
+	const Type *type = mir.get_types().get_type(name);
 	if (type == nullptr) {
 	    compiler_context
 		.get_errors()

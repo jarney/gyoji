@@ -206,6 +206,12 @@ namespace JLang::codegen {
 	    const JLang::mir::Function & mir_function,
 	    const JLang::mir::OperationUnary & operation
 	    );
+	void generate_operation_sizeof_type(
+	    std::map<size_t, llvm::Value *> & tmp_values,
+	    std::map<size_t, llvm::Value *> & tmp_lvalues,
+	    const JLang::mir::Function & mir_function,
+	    const JLang::mir::OperationSizeofType & operation
+	    );
 	void generate_operation_assign(
 	    std::map<size_t, llvm::Value *> & tmp_values,
 	    std::map<size_t, llvm::Value *> & tmp_lvalues,

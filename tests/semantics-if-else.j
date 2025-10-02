@@ -47,7 +47,7 @@ u32 main(u32 argc, u8 **argv)
            bar();
         }
 	unconditional_function_call();
-	return 33;
+	return 33u32;
 }
 
 /*

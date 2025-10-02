@@ -179,6 +179,9 @@ Type::get_primitive_size() const
     case TYPE_PRIMITIVE_i64:
     case TYPE_PRIMITIVE_f64:
 	return 8;
+    default:
+	fprintf(stderr, "Compiler Bug!  This function should only be called for integer and floating-point types\n");
+	exit(1);
     }
     return 0;
     

@@ -189,50 +189,49 @@ llvm::Type *
 CodeGeneratorLLVMContext::create_type_primitive(const Type *primitive)
 {
     llvm::Type *llvm_type;
-    
-    if (primitive->get_name() == "i8") {
-	llvm_type = llvm::Type::getInt8Ty(*TheContext);
-    }
-    // Signed integer types
-    else if (primitive->get_name() == "i16") {
-	llvm_type = llvm::Type::getInt16Ty(*TheContext);
-    }
-    else if (primitive->get_name() == "i32") {
-	llvm_type = llvm::Type::getInt32Ty(*TheContext);
-    }
-    else if (primitive->get_name() == "i64") {
-	llvm_type = llvm::Type::getInt64Ty(*TheContext);
-    }
+
+    switch (primitive->get_type()) {
     // Unsigned integer types
-    else if (primitive->get_name() == "u8") {
+    case Type::TYPE_PRIMITIVE_u8:
 	llvm_type = llvm::Type::getInt8Ty(*TheContext);
-    }
-    else if (primitive->get_name() == "u16") {
+	break;
+    case Type::TYPE_PRIMITIVE_u16:
 	llvm_type = llvm::Type::getInt16Ty(*TheContext);
-    }
-    else if (primitive->get_name() == "u32") {
+	break;
+    case Type::TYPE_PRIMITIVE_u32:
 	llvm_type = llvm::Type::getInt32Ty(*TheContext);
-    }
-    else if (primitive->get_name() == "u64") {
+	break;
+    case Type::TYPE_PRIMITIVE_u64:
 	llvm_type = llvm::Type::getInt64Ty(*TheContext);
-    }
-    // Floating-point types.
-    else if (primitive->get_name() == "f32") {
-	llvm_type = llvm::Type::getFloatTy(*TheContext);
-    }
-    else if (primitive->get_name() == "f64") {
-	llvm_type = llvm::Type::getDoubleTy(*TheContext);
-    }
-    // "Special" types
-    else if (primitive->get_name() == "void") {
-	llvm_type = llvm::Type::getVoidTy(*TheContext);
-    }
-    else if (primitive->get_name() == "bool") {
-	// Bool is just a u32 under the covers.
+	break;
+
+    // Signed integer types
+    case Type::TYPE_PRIMITIVE_i8:
+	llvm_type = llvm::Type::getInt8Ty(*TheContext);
+	break;
+    case Type::TYPE_PRIMITIVE_i16:
+	llvm_type = llvm::Type::getInt16Ty(*TheContext);
+	break;
+    case Type::TYPE_PRIMITIVE_i32:
 	llvm_type = llvm::Type::getInt32Ty(*TheContext);
-    }
-    // Other (unknown, this must be a bug)
-    else {
+	break;
+    case Type::TYPE_PRIMITIVE_i64:
+	llvm_type = llvm::Type::getInt64Ty(*TheContext);
+	break;
+    case Type::TYPE_PRIMITIVE_f32:
+	llvm_type = llvm::Type::getFloatTy(*TheContext);
+	break;
+    case Type::TYPE_PRIMITIVE_f64:
+	llvm_type = llvm::Type::getDoubleTy(*TheContext);
+	break;
+    // "Special" types
+    case Type::TYPE_PRIMITIVE_bool:
+	llvm_type = llvm::Type::getInt32Ty(*TheContext);
+	break;
+    case Type::TYPE_PRIMITIVE_void:
+	llvm_type = llvm::Type::getVoidTy(*TheContext);
+	break;
+    default:
 	fprintf(stderr, "Compiler BUG!  Unknown primitive type passed to code generator\n");
 	exit(1);
     }
@@ -436,7 +435,70 @@ CodeGeneratorLLVMContext::generate_operation_literal_int(
     const JLang::mir::OperationLiteralInt & operation
     )
 {
-    llvm::Value *value = Builder->getInt32(atol(operation.get_literal_int().c_str()));
+    llvm::Value *value;
+    const char *valptr = operation.get_literal_int().c_str();
+    
+    switch (operation.get_literal_type()->get_type()) {
+    case Type::TYPE_PRIMITIVE_u8:
+        {
+	unsigned long long val = strtoul(valptr, nullptr, 10);
+	value = Builder->getInt8((unsigned char)val);
+        }
+	break;
+    case Type::TYPE_PRIMITIVE_u16:
+        {
+	unsigned long long val = strtoul(valptr, nullptr, 10);
+	value = Builder->getInt16((unsigned short)val);
+        }
+        break;
+    case Type::TYPE_PRIMITIVE_u32:
+        {
+	unsigned long long val = strtoul(valptr, nullptr, 10);
+	value = Builder->getInt32(val);
+        }
+	break;
+    case Type::TYPE_PRIMITIVE_u64:
+        {
+	unsigned long long val = strtoull(valptr, nullptr, 10);
+	value = Builder->getInt64(val);
+        }
+	break;
+    case Type::TYPE_PRIMITIVE_i8:
+        {
+	long val = strtoull(valptr, nullptr, 10);
+	value = Builder->getInt8(val);
+        }
+        break;
+    case Type::TYPE_PRIMITIVE_i16:
+        {
+	long val = strtol(valptr, nullptr, 10);
+	value = Builder->getInt16(val);
+        }
+        break;
+    case Type::TYPE_PRIMITIVE_i32:
+        {
+	long val = strtol(valptr, nullptr, 10);
+	value = Builder->getInt32(val);
+        }
+	break;
+    case Type::TYPE_PRIMITIVE_i64:
+        {
+	long long val = strtoll(valptr, nullptr, 10);
+	value = Builder->getInt64(val);
+        }
+	break;
+    default:
+	compiler_context
+	    .get_errors()
+	    .add_simple_error(
+		operation.get_source_ref(),
+		"Compiler bug! Invalid operand for literal int.",
+		std::string("Literal int has unknown type") + operation.get_literal_type()->get_name()
+		);
+	return;
+	
+    }
+    
     tmp_values.insert(std::pair(operation.get_result(), value));
 }
 void
@@ -1163,6 +1225,19 @@ CodeGeneratorLLVMContext::generate_operation_logical_not(
 }
 
 void
+CodeGeneratorLLVMContext::generate_operation_sizeof_type(
+    std::map<size_t, llvm::Value *> & tmp_values,
+    std::map<size_t, llvm::Value *> & tmp_lvalues,
+    const JLang::mir::Function & mir_function,
+    const JLang::mir::OperationSizeofType & operation
+    )
+{
+    llvm::Type *llvm_type = types[operation.get_type()->get_name()];
+    llvm::Value * result = llvm::ConstantInt::get(llvm::Type::getInt64Ty(*TheContext), TheModule->getDataLayout().getTypeAllocSize(llvm_type));
+    tmp_values.insert(std::pair(operation.get_result(), result));
+}
+
+void
 CodeGeneratorLLVMContext::generate_operation_assign(
     std::map<size_t, llvm::Value *> & tmp_values,
     std::map<size_t, llvm::Value *> & tmp_lvalues,
@@ -1323,6 +1398,9 @@ CodeGeneratorLLVMContext::generate_basic_block(
 	    break;
 	case Operation::OP_ASSIGN:
 	    generate_operation_assign(tmp_values, tmp_lvalues, mir_function, (const OperationBinary &)operation);
+	    break;
+	case Operation::OP_SIZEOF_TYPE:
+	    generate_operation_sizeof_type(tmp_values, tmp_lvalues, mir_function, (const OperationSizeofType &)operation);
 	    break;
 	case Operation::OP_JUMP_IF_EQUAL:
 	    generate_operation_jump_if_equal(tmp_values, mir_function, (const OperationJumpIfEqual &)operation);

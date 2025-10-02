@@ -8,7 +8,7 @@ docs: build/Makefile
 
 test: build/Makefile
 	cd build; $(MAKE) all; $(MAKE) test
-	mkdir build/gcov
+	mkdir -p build/gcov
 	gcovr  --html build/gcov/report.html --html-details
 
 clean: build/Makefile

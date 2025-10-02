@@ -1163,9 +1163,19 @@ namespace JLang::mir {
     private:
 	const std::string member_name;
     };
-
+    /**
+     * @brief Load a local variable
+     * @details
+     * This operation is a load of a local variable
+     * into a register (see OP_LOCAL_VARIABLE).
+     */
     class OperationLocalVariable : public Operation {
     public:
+	/**
+	 * Construct an operation to load a local
+	 * variable given by symbol_name into
+	 * the operation's return-value.
+	 */
 	OperationLocalVariable(
 	    const JLang::context::SourceReference & _src_ref,
 	    size_t _result,
@@ -1188,8 +1198,18 @@ namespace JLang::mir {
 	const Type * var_type;
     };
 
+    /**
+     * @brief Literal character
+     * @details
+     * This operation loads a constant character (u8)
+     * literal into the return-value.  See OP_LITERAL_CHAR.
+     */
     class OperationLiteralChar : public Operation {
     public:
+	/**
+	 * Loads the literal character constant into
+	 * the return-value.
+	 */
 	OperationLiteralChar(
 	    const JLang::context::SourceReference & _src_ref,
 	    size_t _result,
@@ -1208,8 +1228,20 @@ namespace JLang::mir {
     private:
 	const std::string literal_char;
     };
+    /**
+     * @brief Literal string
+     * @details
+     * This operation loads a constant character (u8)
+     * literal into the return-value.  See OP_LITERAL_STRING.
+     */
     class OperationLiteralString : public Operation {
     public:
+	/**
+	 * Loads the literal string (u8*) constant into
+	 * the return-value.  The string literal is
+	 * stored in the global variable area
+	 * and a pointer to it is returned in the return-value.
+	 */
 	OperationLiteralString(
 	    const JLang::context::SourceReference & _src_ref,
 	    size_t _result,
@@ -1228,12 +1260,23 @@ namespace JLang::mir {
     private:
 	const std::string literal_string;
     };
+    /**
+     * @brief Literal integer
+     * @details
+     * This operation loads a constant integer one of (i8,i16,i32,i64,u8,u16,u32,u64)
+     * into the return-value.  See OP_LITERAL_INT
+     */
     class OperationLiteralInt : public Operation {
     public:
+	/**
+	 * Create an operation to load the given constant
+	 * literal integer into the return-value.
+	 */
 	OperationLiteralInt(
 	    const JLang::context::SourceReference & _src_ref,
 	    size_t _result,
-	    std::string _literal_int
+	    std::string _literal_int,
+	    const Type *_type
 	    );
 	/**
 	 * @brief Move along, nothing to see here.
@@ -1243,13 +1286,25 @@ namespace JLang::mir {
 	 */
 	virtual ~OperationLiteralInt();
 	const std::string & get_literal_int() const;
+	const Type *get_literal_type() const;
     protected:
 	virtual std::string get_description() const;
     private:
 	const std::string literal_int;
+	const Type *literal_type;
     };
+    /**
+     * @brief Literal float
+     * @details
+     * This operation loads a constant integer one of (f32,f64)
+     * into the return-value.  See OP_LITERAL_FLOAT
+     */
     class OperationLiteralFloat : public Operation {
     public:
+	/**
+	 * Create an operation to load the given constant
+	 * literal float into the return-value.
+	 */
 	OperationLiteralFloat(
 	    const JLang::context::SourceReference & _src_ref,
 	    size_t _result,
@@ -1269,46 +1324,12 @@ namespace JLang::mir {
 	const std::string literal_float;
     };
     
-    class OperationBitwiseNot : public Operation {
-    public:
-	OperationBitwiseNot(
-	    const JLang::context::SourceReference & _src_ref,
-	    size_t _result,
-	    size_t _operand
-	    );
-	/**
-	 * @brief Move along, nothing to see here.
-	 *
-	 * @details
-	 * Move along, nothing to see here.
-	 */
-	virtual ~OperationBitwiseNot();
-    private:
-    };
-
-    class OperationLogicalNot : public Operation {
-    public:
-	OperationLogicalNot(
-	    const JLang::context::SourceReference & _src_ref,
-	    size_t _result,
-	    size_t _operand
-	    );
-	/**
-	 * @brief Move along, nothing to see here.
-	 *
-	 * @details
-	 * Move along, nothing to see here.
-	 */
-	virtual ~OperationLogicalNot();
-    private:
-    };
-    
     class OperationSizeofType : public Operation {
     public:
 	OperationSizeofType(
 	    const JLang::context::SourceReference & _src_ref,
 	    size_t _result,
-	    size_t _operand
+	    const Type *_type
 	    );
 	/**
 	 * @brief Move along, nothing to see here.
@@ -1317,7 +1338,10 @@ namespace JLang::mir {
 	 * Move along, nothing to see here.
 	 */
 	virtual ~OperationSizeofType();
+
+	const Type * get_type() const;
     private:
+	const Type* type;
     };
 
     class OperationJumpIfEqual : public Operation {

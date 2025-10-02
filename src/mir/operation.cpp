@@ -489,10 +489,12 @@ OperationLiteralString::get_description() const
 OperationLiteralInt::OperationLiteralInt(
     const JLang::context::SourceReference & _src_ref,
     size_t _result,
-    std::string _literal_int
+    std::string _literal_int,
+    const Type *_type
     )
     : Operation(OP_LITERAL_INT, _src_ref, _result)
     , literal_int(_literal_int)
+    , literal_type(_type)
 {}
 OperationLiteralInt::~OperationLiteralInt()
 {}
@@ -500,6 +502,9 @@ OperationLiteralInt::~OperationLiteralInt()
 const std::string &
 OperationLiteralInt::get_literal_int() const
 { return literal_int; }
+const Type *
+OperationLiteralInt::get_literal_type() const
+{ return literal_type; }
 
 std::string
 OperationLiteralInt::get_description() const
@@ -678,3 +683,21 @@ OperationLocalUndeclare::get_description() const
     desc = desc + std::string(" )");
     return desc;
 }
+//////////////////////////////////////////////
+// OperationSizeofType
+//////////////////////////////////////////////
+OperationSizeofType::OperationSizeofType(
+    const JLang::context::SourceReference & _src_ref,
+    size_t _result,
+    const Type *_type
+    )
+    : Operation(OP_SIZEOF_TYPE, _src_ref, _result)
+    , type(_type)
+{}
+OperationSizeofType::~OperationSizeofType()
+{}
+
+const Type *
+OperationSizeofType::get_type() const
+{ return type; }
+

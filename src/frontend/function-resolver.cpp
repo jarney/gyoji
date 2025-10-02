@@ -310,10 +310,12 @@ FunctionDefinitionResolver::extract_from_expression_primary_literal_int(
     const JLang::frontend::tree::ExpressionPrimaryLiteralInt & expression)
 {
     returned_tmpvar = function.tmpvar_define(mir.get_types().get_type(expression.get_type()));
+    const Type * literal_type = mir.get_types().get_type(expression.get_type());
     auto operation = std::make_unique<OperationLiteralInt>(
 	expression.get_source_ref(),
 	returned_tmpvar,
-	expression.get_value()
+	expression.get_value(),
+	literal_type
 	);
     function
 	.get_basic_block(current_block)
@@ -644,7 +646,10 @@ FunctionDefinitionResolver::extract_from_expression_unary_prefix(
 		);
     }
 
-    if (expression.get_type() == ExpressionUnaryPrefix::INCREMENT) {
+    ExpressionUnaryPrefix::OperationType op_type = expression.get_type();
+    switch (op_type) {    
+    case ExpressionUnaryPrefix::INCREMENT:
+        {
 	returned_tmpvar = function.tmpvar_duplicate(operand_tmpvar);
 	auto operation = std::make_unique<OperationUnary>(
 	    Operation::OP_PRE_INCREMENT,
@@ -655,61 +660,10 @@ FunctionDefinitionResolver::extract_from_expression_unary_prefix(
 	function
 	    .get_basic_block(current_block)
 	    .add_operation(std::move(operation));
-    }
-    else if (expression.get_type() == ExpressionUnaryPrefix::DECREMENT) {
-	// Especially with operators like this, it would be good to
-	// validate their creation up-front.
-	// The validation should be done by the operator itself
-	// in the MIR so that other frontends don't have
-	// to duplicate this part of the logic.
-
-	// It should:
-	//     * Validate the arguments to make sure they're suitable.
-	//     * Select/nominate a return-value with appropriate type.
-	//     * Report errors (if appropriate)
-	//     * Signal halt of expression extraction if the
-	//     * return-value could not be configured.
-	//
-	// Ideal interface:
-	//        bool success = mir.add_operation(
-	//              errors,        -- Can we wrap these into a 'mir builder?'.
-	//              function,
-	//              basic_block,
-	//              Operation::OP_PRE_DECREMENT,
-	//              src_ref,
-	//              returned_tmpvar,
-	//              operand_tmpvar
-	//        );
-
-	// class MIROperationValidator {
-	//        bool validate();
-        // };
-	// Validate that an operand is numeric.
-	// class MIROPerationValidateOperandNumeric {
-        // };
-	// Validate that operands match.
-	// class MIROPerationValidateOperandsMatch {
-        // };
-	// Validate that operand is integer
-	// Validate that operand is boolean.
-	// Possibly custom validations for some operations.
-	// class MIROperationBuilder {
-	// public:
-	//        Look up validations based on _type
-	//        and execute them.
-	//
-	//        add_operation(
-	//            Operation::OperationType _type,
-	//            size_t & returned_var,
-	//            size_t operand_var,
-	//            );
-	// private:
-	//        CompilerContext compiler_context;
-	//        size_t current_block;
-	//        Function & function;
-        // };
-	//
-	
+        }
+        break;
+    case ExpressionUnaryPrefix::DECREMENT:
+        {
 	returned_tmpvar = function.tmpvar_duplicate(operand_tmpvar);
 	auto operation = std::make_unique<OperationUnary>(
 	    Operation::OP_PRE_DECREMENT,
@@ -720,8 +674,10 @@ FunctionDefinitionResolver::extract_from_expression_unary_prefix(
 	function
 	    .get_basic_block(current_block)
 	    .add_operation(std::move(operation));
-    }
-    else if (expression.get_type() == ExpressionUnaryPrefix::ADDRESSOF) {
+        }
+        break;
+    case ExpressionUnaryPrefix::ADDRESSOF:
+        {
 	const Type * pointer_to_operand_type = mir.get_types().get_pointer_to(operand_type, expression.get_source_ref());
 	returned_tmpvar = function.tmpvar_define(pointer_to_operand_type);
 	auto operation = std::make_unique<OperationUnary>(
@@ -733,8 +689,10 @@ FunctionDefinitionResolver::extract_from_expression_unary_prefix(
 	function
 	    .get_basic_block(current_block)
 	    .add_operation(std::move(operation));
-    }
-    else if (expression.get_type() == ExpressionUnaryPrefix::DEREFERENCE) {
+	}
+        break;
+    case ExpressionUnaryPrefix::DEREFERENCE:
+        {
 	if (operand_type->get_type() != Type::TYPE_POINTER) {
 	    compiler_context
 		.get_errors()
@@ -755,14 +713,18 @@ FunctionDefinitionResolver::extract_from_expression_unary_prefix(
 	function
 	    .get_basic_block(current_block)
 	    .add_operation(std::move(operation));
-    }
-    else if (expression.get_type() == ExpressionUnaryPrefix::PLUS) {
+        }
+        break;
+    case ExpressionUnaryPrefix::PLUS:
+        {
 	// Unary plus does nothing, really, so why bother?  We just don't
 	// bother to do anything and just wire the return into the operand
 	// directly instead of creating a new tmpvar and assigning it.
 	returned_tmpvar = operand_tmpvar;
-    }
-    else if (expression.get_type() == ExpressionUnaryPrefix::MINUS) {
+        }
+    break;
+    case ExpressionUnaryPrefix::MINUS:
+        {
 	returned_tmpvar = function.tmpvar_duplicate(operand_tmpvar);
 	auto operation = std::make_unique<OperationUnary>(
 	    Operation::OP_NEGATE,
@@ -773,8 +735,10 @@ FunctionDefinitionResolver::extract_from_expression_unary_prefix(
 	function
 	    .get_basic_block(current_block)
 	    .add_operation(std::move(operation));
-    }
-    else if (expression.get_type() == ExpressionUnaryPrefix::BITWISE_NOT) {
+        }
+        break;
+    case ExpressionUnaryPrefix::BITWISE_NOT:
+        {
 	returned_tmpvar = function.tmpvar_duplicate(operand_tmpvar);
 	auto operation = std::make_unique<OperationUnary>(
 	    Operation::OP_BITWISE_NOT,
@@ -785,8 +749,10 @@ FunctionDefinitionResolver::extract_from_expression_unary_prefix(
 	function
 	    .get_basic_block(current_block)
 	    .add_operation(std::move(operation));
-    }
-    else if (expression.get_type() == ExpressionUnaryPrefix::LOGICAL_NOT) {
+        }
+        break;
+    case ExpressionUnaryPrefix::LOGICAL_NOT:
+        {
 	if (!function.tmpvar_get(operand_tmpvar)->is_bool()) {
 	    compiler_context
 		.get_errors()
@@ -806,8 +772,9 @@ FunctionDefinitionResolver::extract_from_expression_unary_prefix(
 	function
 	    .get_basic_block(current_block)
 	    .add_operation(std::move(operation));
-    }
-    else {
+	}
+        break;
+    default:
 	compiler_context
 	    .get_errors()
 	    .add_simple_error(
@@ -828,13 +795,11 @@ FunctionDefinitionResolver::extract_from_expression_unary_sizeof_type(
 {
     const Type * operand_type = type_resolver.extract_from_type_specifier(expression.get_type_specifier());
     const Type * u64_type = mir.get_types().get_type("u64");
-    size_t operand_tmpvar = function.tmpvar_define(operand_type);
     returned_tmpvar = function.tmpvar_define(u64_type);
-    auto operation = std::make_unique<OperationUnary>(
-	Operation::OP_SIZEOF_TYPE,
+    auto operation = std::make_unique<OperationSizeofType>(
 	expression.get_source_ref(),	    
 	returned_tmpvar,
-	operand_tmpvar
+	operand_type
 	);
     function
 	.get_basic_block(current_block)
