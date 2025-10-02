@@ -311,6 +311,7 @@ CodeGeneratorLLVMContext::generate()
     }
 }
 
+// Global symbols
 void
 CodeGeneratorLLVMContext::generate_operation_function_call(
     std::map<size_t, llvm::Value *> & tmp_values,
@@ -370,6 +371,65 @@ CodeGeneratorLLVMContext::generate_operation_symbol(
     tmp_values.insert(std::pair(operation.get_result(), F));
 }
 
+// Cast operations
+void
+CodeGeneratorLLVMContext::generate_operation_widen_numeric(
+    std::map<size_t, llvm::Value *> & tmp_values,
+    const JLang::mir::Function & mir_function,
+    const JLang::mir::OperationCast & operation
+    )
+{
+    size_t a = operation.get_a();
+    const JLang::mir::Type *atype = mir_function.tmpvar_get(a);
+    if (!atype->is_numeric()) {
+	compiler_context
+	    .get_errors()
+	    .add_simple_error(
+		operation.get_source_ref(),
+		"Compiler bug! Invalid operand for add operator.",
+		std::string("Invalid operands for add operation.  Operand must be a numeric type, but were ") + atype->get_name()
+		);
+	return;
+    }
+    llvm::Value *value_a = tmp_values[a];
+    llvm::Type *llvm_cast_type = types[operation.get_cast_type()->get_name()];
+    if (atype->is_integer()) {
+	llvm::Value *sum = Builder->CreateIntCast(value_a, llvm_cast_type, atype->is_signed());
+	tmp_values.insert(std::pair(operation.get_result(), sum));
+    }
+    else {
+	llvm::Value *sum = Builder->CreateFPCast(value_a, llvm_cast_type);
+	tmp_values.insert(std::pair(operation.get_result(), sum));
+    }
+}
+
+// Indirect access
+void
+CodeGeneratorLLVMContext::generate_operation_array_index(
+    std::map<size_t, llvm::Value *> & tmp_values,
+    std::map<size_t, llvm::Value *> & tmp_lvalues,
+    const JLang::mir::Function & mir_function,
+    const JLang::mir::OperationArrayIndex & operation
+    )
+{}
+void
+CodeGeneratorLLVMContext::generate_operation_dot(
+    std::map<size_t, llvm::Value *> & tmp_values,
+    std::map<size_t, llvm::Value *> & tmp_lvalues,
+    const JLang::mir::Function & mir_function,
+    const JLang::mir::OperationDot & operation
+    )
+{}
+void
+CodeGeneratorLLVMContext::generate_operation_arrow(
+    std::map<size_t, llvm::Value *> & tmp_values,
+    std::map<size_t, llvm::Value *> & tmp_lvalues,
+    const JLang::mir::Function & mir_function,
+    const JLang::mir::OperationArrow & operation
+    )
+{}
+
+// Variable access
 void
 CodeGeneratorLLVMContext::generate_operation_local_variable(
     std::map<size_t, llvm::Value *> & tmp_values,
@@ -402,6 +462,8 @@ CodeGeneratorLLVMContext::generate_operation_local_undeclare(
     const JLang::mir::OperationLocalUndeclare & operation
     )
 {}
+
+// Literals
 void
 CodeGeneratorLLVMContext::generate_operation_literal_char(
     std::map<size_t, llvm::Value *> & tmp_values,
@@ -508,6 +570,8 @@ CodeGeneratorLLVMContext::generate_operation_literal_float(
     const JLang::mir::OperationLiteralFloat & operation
     )
 {}
+
+// Unary operations
 void
 CodeGeneratorLLVMContext::generate_operation_post_increment(
     std::map<size_t, llvm::Value *> & tmp_values,
@@ -538,36 +602,112 @@ CodeGeneratorLLVMContext::generate_operation_pre_decrement(
 {}
 
 void
-CodeGeneratorLLVMContext::generate_operation_widen_numeric(
+CodeGeneratorLLVMContext::generate_operation_addressof(
+    std::map<size_t, llvm::Value *> & tmp_values,
+    std::map<size_t, llvm::Value *> & tmp_lvalues,
+    const JLang::mir::Function & mir_function,
+    const JLang::mir::OperationUnary & operation
+    )
+{}
+
+void
+CodeGeneratorLLVMContext::generate_operation_dereference(
+    std::map<size_t, llvm::Value *> & tmp_values,
+    std::map<size_t, llvm::Value *> & tmp_lvalues,
+    const JLang::mir::Function & mir_function,
+    const JLang::mir::OperationUnary & operation
+    )
+{}
+
+void
+CodeGeneratorLLVMContext::generate_operation_arithmetic_negate(
     std::map<size_t, llvm::Value *> & tmp_values,
     const JLang::mir::Function & mir_function,
-    const JLang::mir::OperationCast & operation
+    const JLang::mir::OperationUnary & operation
     )
 {
     size_t a = operation.get_a();
     const JLang::mir::Type *atype = mir_function.tmpvar_get(a);
-    if (!atype->is_numeric()) {
+    if (!atype->is_signed()) {
 	compiler_context
 	    .get_errors()
 	    .add_simple_error(
 		operation.get_source_ref(),
-		"Compiler bug! Invalid operand for add operator.",
-		std::string("Invalid operands for add operation.  Operand must be a numeric type, but were ") + atype->get_name()
+		"Compiler bug! Invalid operand arithmetic negate",
+		std::string("Operand to arithmetic negate must be a signed integer but was ") + atype->get_name()
 		);
 	return;
     }
-    llvm::Value *value_a = tmp_values[a];
-    llvm::Type *llvm_cast_type = types[operation.get_cast_type()->get_name()];
-    if (atype->is_integer()) {
-	llvm::Value *sum = Builder->CreateIntCast(value_a, llvm_cast_type, atype->is_signed());
-	tmp_values.insert(std::pair(operation.get_result(), sum));
+    
+    llvm::Value * avalue = tmp_values[a];
+    llvm::Value * result = Builder->CreateNeg(avalue);
+    tmp_values.insert(std::pair(operation.get_result(), result));
+}
+void
+CodeGeneratorLLVMContext::generate_operation_bitwise_not(
+    std::map<size_t, llvm::Value *> & tmp_values,
+    const JLang::mir::Function & mir_function,
+    const JLang::mir::OperationUnary & operation
+    )
+{
+    size_t a = operation.get_a();
+    const JLang::mir::Type *atype = mir_function.tmpvar_get(a);
+    if (!atype->is_unsigned()) {
+	compiler_context
+	    .get_errors()
+	    .add_simple_error(
+		operation.get_source_ref(),
+		"Compiler bug! Invalid operand bitwise not",
+		std::string("Operand to bitwise not must be an unsigned integer but was ") + atype->get_name()
+		);
+	return;
     }
-    else {
-	llvm::Value *sum = Builder->CreateFPCast(value_a, llvm_cast_type);
-	tmp_values.insert(std::pair(operation.get_result(), sum));
-    }
+    
+    llvm::Value * avalue = tmp_values[a];
+    llvm::Value * result = Builder->CreateNot(avalue);
+    tmp_values.insert(std::pair(operation.get_result(), result));
 }
 
+void
+CodeGeneratorLLVMContext::generate_operation_logical_not(
+    std::map<size_t, llvm::Value *> & tmp_values,
+    const JLang::mir::Function & mir_function,
+    const JLang::mir::OperationUnary & operation
+    )
+{
+    size_t a = operation.get_a();
+    const JLang::mir::Type *atype = mir_function.tmpvar_get(a);
+    if (!atype->is_bool()) {
+	compiler_context
+	    .get_errors()
+	    .add_simple_error(
+		operation.get_source_ref(),
+		"Compiler bug! Invalid operand logical not",
+		std::string("Operand to logical not must be a bool but was ") + atype->get_name()
+		);
+	return;
+    }
+    
+    llvm::Value * avalue = tmp_values[a];
+    llvm::Value * result = Builder->CreateNot(avalue);
+    tmp_values.insert(std::pair(operation.get_result(), result));
+}
+
+void
+CodeGeneratorLLVMContext::generate_operation_sizeof_type(
+    std::map<size_t, llvm::Value *> & tmp_values,
+    std::map<size_t, llvm::Value *> & tmp_lvalues,
+    const JLang::mir::Function & mir_function,
+    const JLang::mir::OperationSizeofType & operation
+    )
+{
+    llvm::Type *llvm_type = types[operation.get_type()->get_name()];
+    llvm::Value * result = llvm::ConstantInt::get(llvm::Type::getInt64Ty(*TheContext), TheModule->getDataLayout().getTypeAllocSize(llvm_type));
+    tmp_values.insert(std::pair(operation.get_result(), result));
+}
+
+
+// Binary operations: arithmetic
 void
 CodeGeneratorLLVMContext::generate_operation_add(
     std::map<size_t, llvm::Value *> & tmp_values,
@@ -802,6 +942,7 @@ CodeGeneratorLLVMContext::generate_operation_modulo(
     }
 }
 
+// Binary operations: logical
 void
 CodeGeneratorLLVMContext::generate_operation_logical_and(
     std::map<size_t, llvm::Value *> & tmp_values,
@@ -860,6 +1001,7 @@ CodeGeneratorLLVMContext::generate_operation_logical_or(
 }
 
 
+// Binary operations: bitwise
 void
 CodeGeneratorLLVMContext::generate_operation_bitwise_and(
     std::map<size_t, llvm::Value *> & tmp_values,
@@ -1011,6 +1153,7 @@ CodeGeneratorLLVMContext::generate_operation_shift(
     tmp_values.insert(std::pair(operation.get_result(), shifted_value));
 }
 
+// Binary operations: comparisons
 void
 CodeGeneratorLLVMContext::generate_operation_comparison(
     std::map<size_t, llvm::Value *> & tmp_values,
@@ -1149,94 +1292,7 @@ CodeGeneratorLLVMContext::generate_operation_comparison(
     tmp_values.insert(std::pair(operation.get_result(), result));
 }
 
-void
-CodeGeneratorLLVMContext::generate_operation_arithmetic_negate(
-    std::map<size_t, llvm::Value *> & tmp_values,
-    const JLang::mir::Function & mir_function,
-    const JLang::mir::OperationUnary & operation
-    )
-{
-    size_t a = operation.get_a();
-    const JLang::mir::Type *atype = mir_function.tmpvar_get(a);
-    if (!atype->is_signed()) {
-	compiler_context
-	    .get_errors()
-	    .add_simple_error(
-		operation.get_source_ref(),
-		"Compiler bug! Invalid operand arithmetic negate",
-		std::string("Operand to arithmetic negate must be a signed integer but was ") + atype->get_name()
-		);
-	return;
-    }
-    
-    llvm::Value * avalue = tmp_values[a];
-    llvm::Value * result = Builder->CreateNeg(avalue);
-    tmp_values.insert(std::pair(operation.get_result(), result));
-}
-
-void
-CodeGeneratorLLVMContext::generate_operation_bitwise_not(
-    std::map<size_t, llvm::Value *> & tmp_values,
-    const JLang::mir::Function & mir_function,
-    const JLang::mir::OperationUnary & operation
-    )
-{
-    size_t a = operation.get_a();
-    const JLang::mir::Type *atype = mir_function.tmpvar_get(a);
-    if (!atype->is_unsigned()) {
-	compiler_context
-	    .get_errors()
-	    .add_simple_error(
-		operation.get_source_ref(),
-		"Compiler bug! Invalid operand bitwise not",
-		std::string("Operand to bitwise not must be an unsigned integer but was ") + atype->get_name()
-		);
-	return;
-    }
-    
-    llvm::Value * avalue = tmp_values[a];
-    llvm::Value * result = Builder->CreateNot(avalue);
-    tmp_values.insert(std::pair(operation.get_result(), result));
-}
-
-void
-CodeGeneratorLLVMContext::generate_operation_logical_not(
-    std::map<size_t, llvm::Value *> & tmp_values,
-    const JLang::mir::Function & mir_function,
-    const JLang::mir::OperationUnary & operation
-    )
-{
-    size_t a = operation.get_a();
-    const JLang::mir::Type *atype = mir_function.tmpvar_get(a);
-    if (!atype->is_bool()) {
-	compiler_context
-	    .get_errors()
-	    .add_simple_error(
-		operation.get_source_ref(),
-		"Compiler bug! Invalid operand logical not",
-		std::string("Operand to logical not must be a bool but was ") + atype->get_name()
-		);
-	return;
-    }
-    
-    llvm::Value * avalue = tmp_values[a];
-    llvm::Value * result = Builder->CreateNot(avalue);
-    tmp_values.insert(std::pair(operation.get_result(), result));
-}
-
-void
-CodeGeneratorLLVMContext::generate_operation_sizeof_type(
-    std::map<size_t, llvm::Value *> & tmp_values,
-    std::map<size_t, llvm::Value *> & tmp_lvalues,
-    const JLang::mir::Function & mir_function,
-    const JLang::mir::OperationSizeofType & operation
-    )
-{
-    llvm::Type *llvm_type = types[operation.get_type()->get_name()];
-    llvm::Value * result = llvm::ConstantInt::get(llvm::Type::getInt64Ty(*TheContext), TheModule->getDataLayout().getTypeAllocSize(llvm_type));
-    tmp_values.insert(std::pair(operation.get_result(), result));
-}
-
+// Binary operations: assignments
 void
 CodeGeneratorLLVMContext::generate_operation_assign(
     std::map<size_t, llvm::Value *> & tmp_values,
@@ -1250,6 +1306,8 @@ CodeGeneratorLLVMContext::generate_operation_assign(
     llvm::Value *value = Builder->CreateStore(value_b, lvalue);
     tmp_values.insert(std::pair(operation.get_result(), value));
 }
+
+// Branch and flow control
 void
 CodeGeneratorLLVMContext::generate_operation_jump_if_equal(
     std::map<size_t, llvm::Value *> & tmp_values,
@@ -1299,11 +1357,28 @@ CodeGeneratorLLVMContext::generate_basic_block(
     for (const auto & operation_el : mir_block.get_operations()) {
 	const Operation & operation = *operation_el;
 	switch (operation.get_type()) {
+        // Global symbols
 	case Operation::OP_FUNCTION_CALL:
 	    generate_operation_function_call(tmp_values, mir_function, (const OperationFunctionCall &)operation);
 	    break;
 	case Operation::OP_SYMBOL:
 	    generate_operation_symbol(tmp_values, mir_function, (const OperationSymbol &)operation);
+	    break;
+        // Cast operations
+	case Operation::OP_WIDEN_SIGNED:
+	case Operation::OP_WIDEN_UNSIGNED:
+	case Operation::OP_WIDEN_FLOAT:
+	    generate_operation_widen_numeric(tmp_values, mir_function, (const OperationCast &)operation);
+	    break;
+        // Indirect access
+	case Operation::OP_ARRAY_INDEX:
+	    generate_operation_array_index(tmp_values, tmp_lvalues, mir_function, (const OperationArrayIndex &)operation);
+	    break;
+	case Operation::OP_DOT:
+	    generate_operation_dot(tmp_values, tmp_lvalues, mir_function, (const OperationDot &)operation);
+	    break;
+	case Operation::OP_ARROW:
+	    generate_operation_arrow(tmp_values, tmp_lvalues, mir_function, (const OperationArrow &)operation);
 	    break;
 	case Operation::OP_LOCAL_VARIABLE:
 	    generate_operation_local_variable(tmp_values, tmp_lvalues, mir_function, (const OperationLocalVariable &)operation);
@@ -1326,6 +1401,8 @@ CodeGeneratorLLVMContext::generate_basic_block(
 	case Operation::OP_LITERAL_FLOAT:
 	    generate_operation_literal_float(tmp_values, mir_function, (const OperationLiteralFloat &)operation);
 	    break;
+	    
+        // Unary operations	    
 	case Operation::OP_POST_INCREMENT:
 	    generate_operation_post_increment(tmp_values, mir_function, (const OperationUnary &)operation);
 	    break;
@@ -1338,13 +1415,22 @@ CodeGeneratorLLVMContext::generate_basic_block(
 	case Operation::OP_PRE_DECREMENT:
 	    generate_operation_pre_decrement(tmp_values, mir_function, (const OperationUnary &)operation);
 	    break;
-	case Operation::OP_WIDEN_SIGNED:
-	    generate_operation_widen_numeric(tmp_values, mir_function, (const OperationCast &)operation);
+	case Operation::OP_ADDRESSOF:
+	    generate_operation_addressof(tmp_values, tmp_lvalues, mir_function, (const OperationUnary &)operation);
 	    break;
-	case Operation::OP_WIDEN_UNSIGNED:
-	case Operation::OP_WIDEN_FLOAT:
-	    generate_operation_widen_numeric(tmp_values, mir_function, (const OperationCast &)operation);
+	case Operation::OP_DEREFERENCE:
+	    generate_operation_dereference(tmp_values, tmp_lvalues, mir_function, (const OperationUnary &)operation);
 	    break;
+	case Operation::OP_NEGATE:
+	    generate_operation_arithmetic_negate(tmp_values, mir_function, (const OperationUnary &)operation);
+	    break;
+	case Operation::OP_BITWISE_NOT:
+	    generate_operation_bitwise_not(tmp_values, mir_function, (const OperationUnary &)operation);
+	    break;
+	case Operation::OP_LOGICAL_NOT:
+	    generate_operation_logical_not(tmp_values, mir_function, (const OperationUnary &)operation);
+	    break;
+        // Binary operations
 	case Operation::OP_ADD:
 	    generate_operation_add(tmp_values, mir_function, (const OperationBinary &)operation);
 	    break;
@@ -1379,6 +1465,7 @@ CodeGeneratorLLVMContext::generate_basic_block(
 	case Operation::OP_SHIFT_RIGHT:
 	    generate_operation_shift(tmp_values, mir_function, (const OperationBinary &)operation);
 	    break;
+        // Binary operations: comparisons
 	case Operation::OP_COMPARE_LT:
 	case Operation::OP_COMPARE_GT:
 	case Operation::OP_COMPARE_LE:
@@ -1386,15 +1473,6 @@ CodeGeneratorLLVMContext::generate_basic_block(
 	case Operation::OP_COMPARE_EQ:
 	case Operation::OP_COMPARE_NE:
 	    generate_operation_comparison(tmp_values, mir_function, (const OperationBinary &)operation);
-	    break;
-	case Operation::OP_NEGATE:
-	    generate_operation_arithmetic_negate(tmp_values, mir_function, (const OperationUnary &)operation);
-	    break;
-	case Operation::OP_BITWISE_NOT:
-	    generate_operation_bitwise_not(tmp_values, mir_function, (const OperationUnary &)operation);
-	    break;
-	case Operation::OP_LOGICAL_NOT:
-	    generate_operation_logical_not(tmp_values, mir_function, (const OperationUnary &)operation);
 	    break;
 	case Operation::OP_ASSIGN:
 	    generate_operation_assign(tmp_values, tmp_lvalues, mir_function, (const OperationBinary &)operation);

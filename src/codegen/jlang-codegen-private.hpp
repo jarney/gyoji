@@ -58,6 +58,7 @@ namespace JLang::codegen {
 	llvm::Type *create_type_function_pointer(const JLang::mir::Type *fptr_type);
 	
 
+	// Global symbols
 	void generate_operation_function_call(
 	    std::map<size_t, llvm::Value *> & tmp_values,
 	    const JLang::mir::Function & mir_function,
@@ -68,13 +69,41 @@ namespace JLang::codegen {
 	    const JLang::mir::Function & mir_function,
 	    const JLang::mir::OperationSymbol & operation
 	    );
+	
+	// Cast operations
+	void generate_operation_widen_numeric(
+	    std::map<size_t, llvm::Value *> & tmp_values,
+	    const JLang::mir::Function & mir_function,
+	    const JLang::mir::OperationCast & operation
+	    );
+
+	// Indirect access
+	void generate_operation_array_index(
+	    std::map<size_t, llvm::Value *> & tmp_values,
+	    std::map<size_t, llvm::Value *> & tmp_lvalues,
+	    const JLang::mir::Function & mir_function,
+	    const JLang::mir::OperationArrayIndex & operation
+	    );
+	void generate_operation_dot(
+	    std::map<size_t, llvm::Value *> & tmp_values,
+	    std::map<size_t, llvm::Value *> & tmp_lvalues,
+	    const JLang::mir::Function & mir_function,
+	    const JLang::mir::OperationDot & operation
+	    );
+	void generate_operation_arrow(
+	    std::map<size_t, llvm::Value *> & tmp_values,
+	    std::map<size_t, llvm::Value *> & tmp_lvalues,
+	    const JLang::mir::Function & mir_function,
+	    const JLang::mir::OperationArrow & operation
+	    );
+	
+	// Variable access
 	void generate_operation_local_variable(
 	    std::map<size_t, llvm::Value *> & tmp_values,
 	    std::map<size_t, llvm::Value *> & tmp_lvalues,
 	    const JLang::mir::Function & mir_function,
 	    const JLang::mir::OperationLocalVariable & operation
 	    );
-	
 	void generate_operation_local_declare(
 	    std::map<size_t, llvm::Value *> & tmp_values,
 	    const JLang::mir::Function & mir_function,
@@ -85,6 +114,8 @@ namespace JLang::codegen {
 	    const JLang::mir::Function & mir_function,
 	    const JLang::mir::OperationLocalUndeclare & operation
 	    );
+
+	// Literals
 	void generate_operation_literal_char(
 	    std::map<size_t, llvm::Value *> & tmp_values,
 	    const JLang::mir::Function & mir_function,
@@ -105,6 +136,8 @@ namespace JLang::codegen {
 	    const JLang::mir::Function & mir_function,
 	    const JLang::mir::OperationLiteralFloat & operation
 	    );
+
+	// Unary operations
 	void generate_operation_post_increment(
 	    std::map<size_t, llvm::Value *> & tmp_values,
 	    const JLang::mir::Function & mir_function,
@@ -125,11 +158,35 @@ namespace JLang::codegen {
 	    const JLang::mir::Function & mir_function,
 	    const JLang::mir::OperationUnary & operation
 	    );
-	void generate_operation_widen_numeric(
+	void generate_operation_addressof(
+	    std::map<size_t, llvm::Value *> & tmp_values,
+	    std::map<size_t, llvm::Value *> & tmp_lvalues,
+	    const JLang::mir::Function & mir_function,
+	    const JLang::mir::OperationUnary & operation
+	    );
+	void generate_operation_dereference(
+	    std::map<size_t, llvm::Value *> & tmp_values,
+	    std::map<size_t, llvm::Value *> & tmp_lvalues,
+	    const JLang::mir::Function & mir_function,
+	    const JLang::mir::OperationUnary & operation
+	    );
+	void generate_operation_arithmetic_negate(
 	    std::map<size_t, llvm::Value *> & tmp_values,
 	    const JLang::mir::Function & mir_function,
-	    const JLang::mir::OperationCast & operation
+	    const JLang::mir::OperationUnary & operation
 	    );
+	void generate_operation_bitwise_not(
+	    std::map<size_t, llvm::Value *> & tmp_values,
+	    const JLang::mir::Function & mir_function,
+	    const JLang::mir::OperationUnary & operation
+	    );
+	void generate_operation_logical_not(
+	    std::map<size_t, llvm::Value *> & tmp_values,
+	    const JLang::mir::Function & mir_function,
+	    const JLang::mir::OperationUnary & operation
+	    );
+	
+        // Binary operations
 	void generate_operation_add(
 	    std::map<size_t, llvm::Value *> & tmp_values,
 	    const JLang::mir::Function & mir_function,
@@ -186,25 +243,11 @@ namespace JLang::codegen {
 	    const JLang::mir::OperationBinary & operation
 	    );
 
+        // Binary operations: comparisons
 	void generate_operation_comparison(
 	    std::map<size_t, llvm::Value *> & tmp_values,
 	    const JLang::mir::Function & mir_function,
 	    const JLang::mir::OperationBinary & operation
-	    );
-	void generate_operation_arithmetic_negate(
-	    std::map<size_t, llvm::Value *> & tmp_values,
-	    const JLang::mir::Function & mir_function,
-	    const JLang::mir::OperationUnary & operation
-	    );
-	void generate_operation_bitwise_not(
-	    std::map<size_t, llvm::Value *> & tmp_values,
-	    const JLang::mir::Function & mir_function,
-	    const JLang::mir::OperationUnary & operation
-	    );
-	void generate_operation_logical_not(
-	    std::map<size_t, llvm::Value *> & tmp_values,
-	    const JLang::mir::Function & mir_function,
-	    const JLang::mir::OperationUnary & operation
 	    );
 	void generate_operation_sizeof_type(
 	    std::map<size_t, llvm::Value *> & tmp_values,
@@ -212,12 +255,15 @@ namespace JLang::codegen {
 	    const JLang::mir::Function & mir_function,
 	    const JLang::mir::OperationSizeofType & operation
 	    );
+        // Binary operations: assignments
 	void generate_operation_assign(
 	    std::map<size_t, llvm::Value *> & tmp_values,
 	    std::map<size_t, llvm::Value *> & tmp_lvalues,
 	    const JLang::mir::Function & mir_function,
 	    const JLang::mir::OperationBinary & operation
 	    );
+
+        // Branch and flow control
 	void generate_operation_jump_if_equal(
 	    std::map<size_t, llvm::Value *> & tmp_values,
 	    const JLang::mir::Function & mir_function,
