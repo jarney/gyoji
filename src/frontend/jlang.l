@@ -91,6 +91,8 @@ void move_array(
 
 // \&\& { PROCESS_NODE(AND_OP);}
 //|"0b"|"0")
+//radix               ("0x"|"0b"|"0o")
+//opt_radix           ({radix}?)
 %}
  
 %option reentrant interactive noyywrap nodefault
@@ -98,19 +100,30 @@ void move_array(
 %x COMMENT
 
 opt_sign            (\-?)
-radix               ("0x"|"0b"|"0o")
-opt_radix           ({radix}?)
-dseq                (([[:digit:]]|[aAbBcCdDeEfF]|\_)+)
-dseq_opt            ({dseq}?)
-frac                (({dseq_opt}"."{dseq})|{dseq}".")
-exp                 ([eE][+-]?{dseq})
+
+bin_digit           [01]
+oct_digit           ({bin_digit}|[234567])
+dec_digit           ({oct_digit}|[89])
+hex_digit           ({dec_digit}|[aAbBcCdDeEfF])
+
+bin_dseq            ("0b"{bin_digit}({dec_digit}|\_)*)
+oct_dseq            ("0o"{oct_digit}({dec_digit}|\_)*)
+dec_dseq            ({dec_digit}({dec_digit}|\_)*)
+hex_dseq            ("0x"{hex_digit}({hex_digit}|\_)*)
+
+int_dseq            ({bin_dseq}|{oct_dseq}|{dec_dseq}|{hex_dseq})
+
+opt_dec_dseq        ({dec_dseq}?)
+
+frac                (({opt_dec_dseq}"."{dec_dseq})|{dec_dseq}".")
+exp                 ([eE][+-]?{dec_dseq})
 exp_opt             ({exp}?)
 
-integer             ({opt_sign}{opt_radix})({dseq})({opt_integer_size})
+integer             ({opt_sign}{int_dseq}{opt_integer_size})
 integer_size        ("u64"|"u32"|"u16"|"u8"|"i64"|"i32"|"i16"|"i8")
 opt_integer_size    ({integer_size}?)
 
-float               ((({frac}{exp_opt})|({dseq}{exp}))({opt_float_size}))
+float               ((({frac}{exp_opt})|({dec_dseq}{exp}))({opt_float_size}))
 float_size          ("f32"|"f64")
 opt_float_size      ({float_size}?)
 

@@ -29,6 +29,7 @@ u32 main(u32 argc, u8** argv)
 	if (vu16 != 0xffffu16) {
             return 1;
 	}
+	vu16 = 0b01101u16;
 	print_u16(vu16);
 
 	u32 vu32;
