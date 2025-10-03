@@ -314,6 +314,30 @@ namespace JLang::mir {
 	     *
 	     */
 	    OP_LITERAL_FLOAT,
+	    /**
+	     * @brief Loads a boolean literal value.
+	     *
+	     * @details
+	     * This loads 'true' or 'false' into
+	     * a literal constant.
+	     * @code{.unparsed}
+	     * _0: bool = literal_bool( true )
+	     * @endcode
+	     */
+	    OP_LITERAL_BOOL,
+
+	    /**
+	     * @brief Loads a null pointer literal constant.
+	     *
+	     * @details
+	     * This loads a literal 'null' pointer value
+	     * for use in pointer comparison and assingments.
+	     *
+	     * @code{.unparsed}
+	     * _0: bool = literal_null( )
+	     * @endcode
+	     */
+	    OP_LITERAL_NULL,
 	    
             // Unary operations
 	    /**
@@ -1403,7 +1427,68 @@ namespace JLang::mir {
 	double literal_float_f64;
 	
     };
-    
+
+    /**
+     * @brief Literal bool
+     * @details
+     * This operation loads a literal boolean (true or false)
+     * value into the return-value.
+     * See OP_LITERAL_BOOL
+     */
+    class OperationLiteralBool : public Operation {
+    public:
+	/**
+	 * Create an operation to load the given constant
+	 * literal float into the return-value.
+	 */
+	OperationLiteralBool(
+	    const JLang::context::SourceReference & _src_ref,
+	    size_t _result,
+	    bool _literal_bool
+	    );
+	/**
+	 * @brief Move along, nothing to see here.
+	 *
+	 * @details
+	 * Move along, nothing to see here.
+	 */
+	virtual ~OperationLiteralBool();
+	bool get_literal_bool() const;
+    protected:
+	virtual std::string get_description() const;
+    private:
+	bool literal_bool;
+    };
+
+    /**
+     * @brief Literal null
+     * @details
+     * This operation loads a literal null pointer
+     * value into the return-value.
+     * See OP_LITERAL_NULL
+     */
+    class OperationLiteralNull : public Operation {
+    public:
+	/**
+	 * Create an operation to load the given constant
+	 * literal float into the return-value.
+	 */
+	OperationLiteralNull(
+	    const JLang::context::SourceReference & _src_ref,
+	    size_t _result
+	    );
+	/**
+	 * @brief Move along, nothing to see here.
+	 *
+	 * @details
+	 * Move along, nothing to see here.
+	 */
+	virtual ~OperationLiteralNull();
+    protected:
+	virtual std::string get_description() const;
+    private:
+    };
+
     class OperationSizeofType : public Operation {
     public:
 	OperationSizeofType(

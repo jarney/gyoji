@@ -136,6 +136,16 @@ namespace JLang::codegen {
 	    const JLang::mir::Function & mir_function,
 	    const JLang::mir::OperationLiteralFloat & operation
 	    );
+	void generate_operation_literal_bool(
+	    std::map<size_t, llvm::Value *> & tmp_values,
+	    const JLang::mir::Function & mir_function,
+	    const JLang::mir::OperationLiteralBool & operation
+	    );
+	void generate_operation_literal_null(
+	    std::map<size_t, llvm::Value *> & tmp_values,
+	    const JLang::mir::Function & mir_function,
+	    const JLang::mir::OperationLiteralNull & operation
+	    );
 
 	// Unary operations
 	void generate_operation_post_increment(

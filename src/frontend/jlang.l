@@ -210,13 +210,16 @@ unsafe {PROCESS_NODE(UNSAFE);}
 \- {PROCESS_NODE(MINUS);}
 \* {PROCESS_NODE(STAR);}
 \/ {PROCESS_NODE(SLASH);}
-\%     {PROCESS_NODE(PERCENT);}
-\=     { PROCESS_NODE(EQUALS);}
+\%           {PROCESS_NODE(PERCENT);}
+\=           {PROCESS_NODE(EQUALS);}
 
-\"[^\"]*\" { PROCESS_NODE(LITERAL_STRING);}
+\"[^\"]*\"   {PROCESS_NODE(LITERAL_STRING);}
 \'([^'\\\n]|\\[abefnrt\'])\' {
 	     PROCESS_NODE(LITERAL_CHAR);
 }
+(true|false) {PROCESS_NODE(LITERAL_BOOL);}
+null         {PROCESS_NODE(LITERAL_NULL);}
+
 {float} {PROCESS_NODE(LITERAL_FLOAT);}
 {integer} { PROCESS_NODE(LITERAL_INT);}
 (::)*{identifier}({whitespace}*:{whitespace}*:{whitespace}*{identifier})* {

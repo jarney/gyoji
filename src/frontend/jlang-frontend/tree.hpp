@@ -2029,7 +2029,39 @@ namespace JLang::frontend::tree {
 	std::string float_part;
 	std::string type_part;
     };
-    
+
+    class ExpressionPrimaryLiteralBool : public JLang::frontend::ast::SyntaxNode {
+    public:
+	ExpressionPrimaryLiteralBool(
+	    JLang::owned<Terminal> _literal_token
+	    );
+	/**
+	 * Destructor, nothing special.
+	 */
+	~ExpressionPrimaryLiteralBool();
+	
+	/**
+	 * For bool literals, this is just
+	 * the truth value of the literal.
+	 */
+	bool get_value() const;
+    private:
+	JLang::owned<Terminal> literal_token;
+	bool value;
+    };
+    class ExpressionPrimaryLiteralNull : public JLang::frontend::ast::SyntaxNode {
+    public:
+	ExpressionPrimaryLiteralNull(
+	    JLang::owned<Terminal> _literal_token
+	    );
+	/**
+	 * Destructor, nothing special.
+	 */
+	~ExpressionPrimaryLiteralNull();
+    private:
+	JLang::owned<Terminal> literal_token;
+    };
+
     class ExpressionPostfixArrayIndex : public JLang::frontend::ast::SyntaxNode {
     public:
 	ExpressionPostfixArrayIndex(
@@ -2341,6 +2373,8 @@ namespace JLang::frontend::tree {
 			     JLang::owned<ExpressionPrimaryLiteralString>,
 			     JLang::owned<ExpressionPrimaryLiteralInt>,
 			     JLang::owned<ExpressionPrimaryLiteralFloat>,
+			     JLang::owned<ExpressionPrimaryLiteralBool>,
+			     JLang::owned<ExpressionPrimaryLiteralNull>,
 			     JLang::owned<ExpressionPostfixArrayIndex>,
 			     JLang::owned<ExpressionPostfixFunctionCall>,
 			     JLang::owned<ExpressionPostfixDot>,

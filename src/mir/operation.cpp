@@ -38,6 +38,8 @@ void JLang::mir::operation_static_init()
     op_type_names.insert(std::pair(Operation::OP_LITERAL_STRING, "literal-string"));
     op_type_names.insert(std::pair(Operation::OP_LITERAL_INT, "literal-int"));
     op_type_names.insert(std::pair(Operation::OP_LITERAL_FLOAT, "literal-float"));
+    op_type_names.insert(std::pair(Operation::OP_LITERAL_BOOL, "literal-bool"));
+    op_type_names.insert(std::pair(Operation::OP_LITERAL_NULL, "literal-null"));
     
     // Unary operations
     op_type_names.insert(std::pair(Operation::OP_POST_INCREMENT, "post-increment"));
@@ -786,6 +788,53 @@ OperationLiteralFloat::get_description() const
     desc = desc + std::string(" )");
     return desc;
 }
+
+//////////////////////////////////////////////
+// OperationLiteralBool
+//////////////////////////////////////////////
+OperationLiteralBool::OperationLiteralBool(
+	    const JLang::context::SourceReference & _src_ref,
+	    size_t _result,
+	    bool _literal_bool
+	    )
+    : Operation(OP_LITERAL_BOOL, _src_ref, _result)
+    , literal_bool(_literal_bool)
+{}
+OperationLiteralBool::~OperationLiteralBool()
+{}
+bool
+OperationLiteralBool::get_literal_bool() const
+{ return literal_bool; }
+std::string
+OperationLiteralBool::get_description() const
+{
+    const auto & it = op_type_names.find(type);
+    const std::string & op_name = it->second;
+    std::string desc = std::string("_") + std::to_string(result) + std::string(" = ") + op_name + std::string(" (");
+    desc = desc + std::string(" ") + (literal_bool ? std::string("true") : std::string("false"));
+    desc = desc + std::string(" )");
+    return desc;
+}
+//////////////////////////////////////////////
+// OperationLiteralNull
+//////////////////////////////////////////////
+OperationLiteralNull::OperationLiteralNull(
+	    const JLang::context::SourceReference & _src_ref,
+	    size_t _result
+	    )
+    : Operation(OP_LITERAL_NULL, _src_ref, _result)
+{}
+OperationLiteralNull::~OperationLiteralNull()
+{}
+std::string
+OperationLiteralNull::get_description() const
+{
+    const auto & it = op_type_names.find(type);
+    const std::string & op_name = it->second;
+    std::string desc = std::string("_") + std::to_string(result) + std::string(" = ") + op_name + std::string(" ( )");
+    return desc;
+}
+
 
 //////////////////////////////////////////////
 // OperationJumpIfEqual

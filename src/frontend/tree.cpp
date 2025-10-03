@@ -1712,6 +1712,34 @@ ExpressionPrimaryLiteralFloat::get_value_source_ref() const
 { return literal_token->get_source_ref(); }
 
 ///////////////////////////////////////////////////
+ExpressionPrimaryLiteralBool::ExpressionPrimaryLiteralBool(
+    JLang::owned<Terminal> _literal_token
+    )
+    : SyntaxNode("expression_primary_literal_bool", this, _literal_token->get_source_ref())
+    , literal_token(std::move(_literal_token))
+{
+    add_child(*literal_token);
+    value = (literal_token->get_value() == std::string("true"));
+}
+ExpressionPrimaryLiteralBool::~ExpressionPrimaryLiteralBool()
+{}
+bool
+ExpressionPrimaryLiteralBool::get_value() const
+{ return value; }
+///////////////////////////////////////////////////
+
+ExpressionPrimaryLiteralNull::ExpressionPrimaryLiteralNull(
+    JLang::owned<Terminal> _literal_token
+    )
+    : SyntaxNode("expression_primary_literal_null", this, _literal_token->get_source_ref())
+    , literal_token(std::move(_literal_token))      
+{
+    add_child(*literal_token);
+}
+ExpressionPrimaryLiteralNull::~ExpressionPrimaryLiteralNull()
+{}
+
+///////////////////////////////////////////////////
 ExpressionPostfixArrayIndex::ExpressionPostfixArrayIndex(
     JLang::owned<Expression> _array_expression,
     JLang::owned<Terminal> _bracket_l_token,

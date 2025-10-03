@@ -8,9 +8,6 @@
   Probably defer this until we have more 'examples' of what goes wrong
   frequently and how to recover better.
 
-* Need boolean literals and nullptr literals also as special-cases
-  of literal values to initialize other pointer types.
-
 * Support const-ness of variables and protect them
   from assignments.
 

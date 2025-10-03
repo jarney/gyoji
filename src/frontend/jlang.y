@@ -110,6 +110,8 @@ int visibility_from_modifier(JLang::frontend::tree::AccessModifier::AccessModifi
 %token <JLang::owned<JLang::frontend::tree::Terminal>>  LITERAL_FLOAT
 %token <JLang::owned<JLang::frontend::tree::Terminal>>  LITERAL_INT
 %token <JLang::owned<JLang::frontend::tree::Terminal>>  LITERAL_STRING
+%token <JLang::owned<JLang::frontend::tree::Terminal>>  LITERAL_BOOL
+%token <JLang::owned<JLang::frontend::tree::Terminal>>  LITERAL_NULL
 
 %token NST_COMMENT_MULTILINE
 %token NST_COMMENT_SINGLE_LINE
@@ -219,6 +221,8 @@ int visibility_from_modifier(JLang::frontend::tree::AccessModifier::AccessModifi
 %nterm <JLang::owned<JLang::frontend::tree::ExpressionPrimaryLiteralChar>> expression_primary_literal_char;
 %nterm <JLang::owned<JLang::frontend::tree::ExpressionPrimaryLiteralString>> expression_primary_literal_string;
 %nterm <JLang::owned<JLang::frontend::tree::ExpressionPrimaryLiteralFloat>> expression_primary_literal_float;
+%nterm <JLang::owned<JLang::frontend::tree::ExpressionPrimaryLiteralBool>> expression_primary_literal_bool;
+%nterm <JLang::owned<JLang::frontend::tree::ExpressionPrimaryLiteralNull>> expression_primary_literal_null;
 
 %nterm <JLang::owned<JLang::frontend::tree::Expression>> expression_postfix;
 %nterm <JLang::owned<JLang::frontend::tree::Expression>> expression_postfix_primary;
@@ -1279,6 +1283,16 @@ expression_primary
                 $$ = std::make_unique<JLang::frontend::tree::Expression>(std::move($1), sn);
                 PRINT_NONTERMINALS($$);
         }
+        | expression_primary_literal_bool {
+                const JLang::frontend::ast::SyntaxNode &sn = *($1);
+                $$ = std::make_unique<JLang::frontend::tree::Expression>(std::move($1), sn);
+                PRINT_NONTERMINALS($$);
+        }
+        | expression_primary_literal_null {
+                const JLang::frontend::ast::SyntaxNode &sn = *($1);
+                $$ = std::make_unique<JLang::frontend::tree::Expression>(std::move($1), sn);
+                PRINT_NONTERMINALS($$);
+        }
         ;
 
 expression_primary_identifier
@@ -1325,6 +1339,20 @@ expression_primary_literal_string
 expression_primary_literal_float
         : LITERAL_FLOAT {
                 $$ = std::make_unique<JLang::frontend::tree::ExpressionPrimaryLiteralFloat>(std::move($1));
+                PRINT_NONTERMINALS($$);
+        }
+        ;
+
+expression_primary_literal_bool
+        : LITERAL_BOOL {
+                $$ = std::make_unique<JLang::frontend::tree::ExpressionPrimaryLiteralBool>(std::move($1));
+                PRINT_NONTERMINALS($$);
+        }
+        ;
+
+expression_primary_literal_null
+        : LITERAL_NULL {
+                $$ = std::make_unique<JLang::frontend::tree::ExpressionPrimaryLiteralNull>(std::move($1));
                 PRINT_NONTERMINALS($$);
         }
         ;

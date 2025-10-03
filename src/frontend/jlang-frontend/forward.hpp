@@ -74,6 +74,8 @@ namespace JLang::frontend::tree {
       class ExpressionPrimaryLiteralString;
       class ExpressionPrimaryLiteralInt;
       class ExpressionPrimaryLiteralFloat;
+      class ExpressionPrimaryLiteralBool;
+      class ExpressionPrimaryLiteralNull;
   
     class ExpressionPostfixArrayIndex;
     class ExpressionPostfixFunctionCall;
@@ -165,6 +167,8 @@ namespace JLang::frontend::tree {
         JLang::frontend::tree::    ExpressionPrimaryLiteralString*,         \
         JLang::frontend::tree::    ExpressionPrimaryLiteralInt*,            \
         JLang::frontend::tree::    ExpressionPrimaryLiteralFloat*,          \
+        JLang::frontend::tree::    ExpressionPrimaryLiteralBool*,           \
+        JLang::frontend::tree::    ExpressionPrimaryLiteralNull*,           \
         JLang::frontend::tree::  ExpressionPostfixArrayIndex*,              \
         JLang::frontend::tree::  ExpressionPostfixFunctionCall*,            \
         JLang::frontend::tree::      ArgumentExpressionList*,               \

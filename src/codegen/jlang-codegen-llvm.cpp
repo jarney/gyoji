@@ -667,6 +667,33 @@ CodeGeneratorLLVMContext::generate_operation_literal_float(
     }
 }
 
+void
+CodeGeneratorLLVMContext::generate_operation_literal_bool(
+    std::map<size_t, llvm::Value *> & tmp_values,
+    const JLang::mir::Function & mir_function,
+    const JLang::mir::OperationLiteralBool & operation
+    )
+{
+    llvm::Value * result = llvm::ConstantInt::get(llvm::Type::getInt32Ty(*TheContext), operation.get_literal_bool() ? 1 : 0);
+    tmp_values.insert(std::pair(operation.get_result(), result));
+}
+void
+CodeGeneratorLLVMContext::generate_operation_literal_null(
+    std::map<size_t, llvm::Value *> & tmp_values,
+    const JLang::mir::Function & mir_function,
+    const JLang::mir::OperationLiteralNull & operation
+    )
+{
+    llvm::Type * llvm_void_type = create_type(mir.get_types().get_type("u8"));
+    llvm::PointerType * llvm_voidstar_type =
+	llvm::PointerType::get(llvm_void_type,
+			       0 // Address space (default to 0?  This seems unclean, llvm!)
+	    );
+    llvm::Value *result = llvm::ConstantPointerNull::get(llvm_voidstar_type);
+    tmp_values.insert(std::pair(operation.get_result(), result));
+}
+
+
 // Unary operations
 void
 CodeGeneratorLLVMContext::generate_operation_post_increment(
@@ -1496,6 +1523,12 @@ CodeGeneratorLLVMContext::generate_basic_block(
 	    break;
 	case Operation::OP_LITERAL_FLOAT:
 	    generate_operation_literal_float(tmp_values, mir_function, (const OperationLiteralFloat &)operation);
+	    break;
+	case Operation::OP_LITERAL_BOOL:
+	    generate_operation_literal_bool(tmp_values, mir_function, (const OperationLiteralBool &)operation);
+	    break;
+	case Operation::OP_LITERAL_NULL:
+	    generate_operation_literal_null(tmp_values, mir_function, (const OperationLiteralNull &)operation);
 	    break;
 	    
         // Unary operations	    
