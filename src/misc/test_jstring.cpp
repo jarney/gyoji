@@ -26,12 +26,24 @@ int main(int argc, char **argv)
     std::string int_string("178u64");
     ASSERT_TRUE(endswith(int_string, "u64"), "Expect that we end with the u64 suffix");
 
-    std::string c_string("abc\\n\\r\\tx");
-    std::string raw_string;
-    ASSERT_TRUE(string_c_unescape(raw_string, c_string), "Correctly escape this string");
-    std::string c_string_result;
-    ASSERT_TRUE(string_c_escape(c_string_result, raw_string), "Correctly unescape this string");
-    ASSERT(c_string, c_string_result, "Escape and unescape should yield the same result\n");
+    // Processing C string literal escapes.
+    {
+	std::string c_string("abc\\n\\r\\tx");
+	std::string raw_string;
+	ASSERT_TRUE(string_c_unescape(raw_string, c_string), "Correctly escape this string");
+	std::string c_string_result;
+	ASSERT_TRUE(string_c_escape(c_string_result, raw_string), "Correctly unescape this string");
+	ASSERT(c_string, c_string_result, "Escape and unescape should yield the same result\n");
+    }
     
+    {
+	std::string c_string("Chanko: ちゃんこ鍋");
+	std::string raw_string;
+	ASSERT_TRUE(string_c_unescape(raw_string, c_string), "Correctly escape this string");
+	std::string c_string_result;
+	ASSERT_TRUE(string_c_escape(c_string_result, raw_string), "Correctly unescape this string");
+	ASSERT(c_string, c_string_result, "Escape and unescape should yield the same result\n");
+    }
+
     printf("    PASSED\n");
 }

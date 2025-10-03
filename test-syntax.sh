@@ -18,14 +18,23 @@ syntax-function-declaration.j
 syntax-function-definition.j
 syntax-function-unsafe-block.j
 syntax-class.j
+
 llvm-decl-var.j
 type-resolution.j
+
 valid-syntax-expression-primary.j
 valid-syntax-function-simple-return.j
 valid-syntax-identifiers.j
 valid-syntax-ifelse.j
 valid-syntax-typedefs.j
 valid-syntax-variable-declaration.j
+
+semantics-literal-string.j
+semantics-literal-int.j
+semantics-sizeof.j
+semantics-types.j
+semantics-if-else.j
+semantics-function-call.j
 "
 echo "Checking token stream output."
 let failed=0

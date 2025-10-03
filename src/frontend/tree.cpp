@@ -1629,9 +1629,10 @@ ExpressionPrimaryLiteralString::ExpressionPrimaryLiteralString(
     }
     std::string nextpart = token_value.substr(1, size-2);
     
-    bool escape_error = JLang::misc::string_c_unescape(just_the_string, nextpart);
-    if (escape_error) {
+    bool escape_success = JLang::misc::string_c_unescape(just_the_string, nextpart);
+    if (!escape_success) {
 	fprintf(stderr, "Compiler Bug: Invalid escape sequence.  Find a better place to handle this error.  Preferably not in the parser\n");
+	fprintf(stderr, "(first) String is %s\n", nextpart.c_str());
 	exit(0);
     }
 }
@@ -1656,9 +1657,10 @@ ExpressionPrimaryLiteralString::add_string(JLang::owned<Terminal> _added)
     }
     std::string nextpart = token_value.substr(1, size-2);
     std::string unescaped_literal;
-    bool escape_error = JLang::misc::string_c_unescape(unescaped_literal, nextpart);
-    if (escape_error) {
+    bool escape_success = JLang::misc::string_c_unescape(unescaped_literal, nextpart);
+    if (!escape_success) {
 	fprintf(stderr, "Compiler Bug: Invalid escape sequence.  Find a better place to handle this error.  Preferably not in the parser\n");
+	fprintf(stderr, "(second) String is %s\n", nextpart.c_str());
 	exit(0);
     }
     just_the_string += unescaped_literal;
