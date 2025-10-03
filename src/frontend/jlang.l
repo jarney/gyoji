@@ -28,7 +28,7 @@ std::vector<JLang::owned<TerminalNonSyntax>> non_syntax_data;
 #endif
 
 #define YY_INPUT(buf,result,max_size)                                          \
-    ((LexContext*)yyget_extra(yyscanner))->input_source.yy_input(buf, result, max_size)
+    ((LexContext*)yyget_extra(yyscanner))->input_source.read(buf, result, max_size)
 
 
 void move_array(

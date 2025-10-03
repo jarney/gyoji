@@ -1988,13 +1988,12 @@ namespace JLang::frontend::tree {
 	 * Destructor, nothing special.
 	 */
 	~ExpressionPrimaryLiteralString();
-	const std::string & get_value() const;
+	std::string get_value() const;
 	const JLang::context::SourceReference & get_value_source_ref() const;
 	void add_string(JLang::owned<Terminal> _added);
     private:
 	JLang::owned<Terminal> literal_token;
 	std::vector<JLang::owned<Terminal>> additional_strings;
-	std::string just_the_string;
     };
     class ExpressionPrimaryLiteralFloat : public JLang::frontend::ast::SyntaxNode {
     public:

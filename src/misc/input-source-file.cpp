@@ -10,7 +10,7 @@ InputSourceFile::InputSourceFile(int _fd)
 InputSourceFile::~InputSourceFile()
 {}
 
-void InputSourceFile::yy_input(char *buf, int &result, int max_size)
+void InputSourceFile::read(char *buf, int &result, int max_size)
 {
     errno = 0;
     result = (int) read(fd, buf, (size_t) max_size);

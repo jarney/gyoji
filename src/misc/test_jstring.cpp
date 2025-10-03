@@ -28,9 +28,10 @@ int main(int argc, char **argv)
 
     // Processing C string literal escapes.
     {
-	std::string c_string("abc\\n\\r\\tx");
+	std::string c_string("abc \\\\ \\a \\b \\e \\f \\' \\\" \\n \\r \\t x");
 	std::string raw_string;
-	ASSERT_TRUE(string_c_unescape(raw_string, c_string), "Correctly escape this string");
+	size_t location;
+	ASSERT_TRUE(string_c_unescape(raw_string, location, c_string), "Correctly escape this string");
 	std::string c_string_result;
 	ASSERT_TRUE(string_c_escape(c_string_result, raw_string), "Correctly unescape this string");
 	ASSERT(c_string, c_string_result, "Escape and unescape should yield the same result\n");
@@ -39,11 +40,20 @@ int main(int argc, char **argv)
     {
 	std::string c_string("Chanko: ちゃんこ鍋");
 	std::string raw_string;
-	ASSERT_TRUE(string_c_unescape(raw_string, c_string), "Correctly escape this string");
+	size_t location;
+	ASSERT_TRUE(string_c_unescape(raw_string, location, c_string), "Correctly escape this string");
 	std::string c_string_result;
 	ASSERT_TRUE(string_c_escape(c_string_result, raw_string), "Correctly unescape this string");
 	ASSERT(c_string, c_string_result, "Escape and unescape should yield the same result\n");
     }
 
+    {
+	std::string c_string("bad escape sequence here \\x");
+	std::string raw_string;
+	size_t location = 0;
+	ASSERT_FALSE(string_c_unescape(raw_string, location, c_string), "This string had a bad escape sequence and should not unescape correctly.");
+	ASSERT_INT_EQUAL(26, location, "This is the location where the bad escape happened");
+    }
+    
     printf("    PASSED\n");
 }

@@ -35,23 +35,6 @@ JLang::misc::join_nonempty(const std::string &a, const std::string & b, const st
     }
 }
 
-std::string JLang::misc::join_nonempty(const std::vector<std::string> & list, std::string delimiter)
-{
-    std::string ret;
-
-    bool first = true;
-    for (const auto & s : list) {
-	if (s.size() == 0) continue;
-	if (!first) {
-	    ret = ret + delimiter;
-	}
-	first = false;
-	ret = ret + s;
-    }
-    
-    return ret;
-}
-
 std::string JLang::misc::join(const std::vector<std::string> & list, std::string delimiter)
 {
     std::string ret;
@@ -66,22 +49,6 @@ std::string JLang::misc::join(const std::vector<std::string> & list, std::string
     }
     
     return ret;
-}
-
-std::string JLang::misc::string_remove_nonidentifier(const std::string & str)
-{
-    std::string newStr;
-    newStr.assign(str);  
-    
-    for(size_t i = 0; i < str.length(); i++){
-	char c = str.at(i);
-	if (isalnum(c) || c == ':' || c == '_') {
-	    continue;
-	}
-	newStr.erase(std::remove(newStr.begin(), newStr.end(), c), newStr.end());
-    }
-    
-    return newStr; 
 }
 
 bool JLang::misc::startswith(const std::string & s, const std::string & prefix)
@@ -99,14 +66,6 @@ bool JLang::misc::endswith(const std::string & s, const std::string & suffix)
 	return true;
     }
     return false;
-}
-bool JLang::misc::contains(const std::string & s, const std::string &v)
-{
-    size_t found_pos = s.find(v);
-    if (found_pos == std::string::npos) {
-	return false;
-    }
-    return true;
 }
 
 std::string
@@ -208,13 +167,15 @@ bool JLang::misc::string_c_escape(std::string & escaped_string, const std::strin
 }
 
 bool
-JLang::misc::string_c_unescape(std::string & unescaped_string, const std::string & escaped_string)
+JLang::misc::string_c_unescape(std::string & unescaped_string, size_t & location, const std::string & escaped_string)
 {
     // Take the 'traditional' C escape sequences
     // and turn them into their 'traditional' counterparts.
 #define NORMAL 0
 #define IN_ESCAPE 1
 
+    location = 0;
+    
     int state = NORMAL;
     for (char c : escaped_string) {
 	switch (state) {
@@ -274,6 +235,7 @@ JLang::misc::string_c_unescape(std::string & unescaped_string, const std::string
 		
 	    }
 	}
+	location++;
     }
 	
     return true;

@@ -21,7 +21,10 @@ TEST_CFG_DIR=${CMAKE_BINARY_DIR}/test-cfg-dir
 
 JCC=${CMAKE_BINARY_DIR}/src/cmdline/jcc
 
-TEST_FILES="semantics-if-else"
+TEST_FILES="
+semantics-if-else
+semantics-types
+"
 
 echo "Checking token stream output."
 let failed=0

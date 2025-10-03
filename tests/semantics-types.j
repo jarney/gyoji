@@ -3,6 +3,8 @@
 u32 a;
 
 typedef u8* string;
+typedef string* stringptr;
+typedef string* anotherone;
 
 class SomeClass {
     public u32 number;
@@ -11,5 +13,5 @@ class SomeClass {
 
 u32 doit(string s)
 {
-    return 32;
+    return 32u32;
 }

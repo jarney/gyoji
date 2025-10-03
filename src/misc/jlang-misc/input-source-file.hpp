@@ -32,7 +32,7 @@ namespace JLang::misc {
 	 * provide data directly to the buffer.  The 'result'
 	 * represents the number of bytes actually read.
 	 */
-	void yy_input(char *buf, int &result, int max_size);
+	void read(char *buf, int &result, int max_size);
 
     private:
 	int fd;

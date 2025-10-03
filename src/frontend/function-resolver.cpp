@@ -291,11 +291,36 @@ FunctionDefinitionResolver::extract_from_expression_primary_literal_string(
     size_t & returned_tmpvar,
     const JLang::frontend::tree::ExpressionPrimaryLiteralString & expression)
 {
+    // The hardest part here is that we need to extract the escape sequences from
+    // the source representation and place the raw data into the operation
+    // so that it is working with the actual literal value that will be
+    // placed into the machine code during the code-generation stage.
+
+    std::string string_unescaped;
+    size_t location;
+    bool escape_success = JLang::misc::string_c_unescape(string_unescaped, location, expression.get_value());
+    if (!escape_success) {
+	compiler_context
+	    .get_errors()
+	    .add_simple_error(
+		expression.get_source_ref(),
+		"Invalid String Literal",
+		std::string("Unknown escape sequence found at character offset ") + std::to_string(location) + std::string(" in string")
+		);
+	// We can actually continue processing
+	// the file so we can extract more errors later.
+	// We've already found an error, so there's no danger
+	// or producing an invalid file because the code-generator
+	// won't run if there's an error.
+    }
+
+    
+    
     returned_tmpvar = function.tmpvar_define(mir.get_types().get_type("u8*"));
     auto operation = std::make_unique<OperationLiteralString>(
 	expression.get_source_ref(),
 	returned_tmpvar,
-	expression.get_value()
+	string_unescaped
 	);
     function
 	.get_basic_block(current_block)

@@ -6,7 +6,7 @@ if [ $# -ne 0 ] ; then
     CMAKE_BINARY_DIR=$1
     CMAKE_SOURCE_DIR=$2
 fi
-TEST_JCC_DIR=${CMAKE_BINARY_DIR}/test-jcc-dir
+TEST_JCC_DIR=${CMAKE_BINARY_DIR}/test-operator-semantics-dir
 mkdir -p ${TEST_JCC_DIR}
 
 TEST_FILES="semantics-simple-values"

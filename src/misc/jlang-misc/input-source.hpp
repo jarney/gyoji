@@ -30,7 +30,7 @@ namespace JLang::misc {
 	 *                 always be less than or equal to max_size in order
 	 *                 to ensure that the buffer is not overflowed.
 	 */
-	virtual void yy_input(char *buf, int &result, int max_size) = 0;
+	virtual void read(char *buf, int &result, int max_size) = 0;
     };
   
 };

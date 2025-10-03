@@ -1620,27 +1620,39 @@ ExpressionPrimaryLiteralString::ExpressionPrimaryLiteralString(
     , literal_token(std::move(_literal_token))
 {
     add_child(*literal_token);
-    const std::string & token_value = literal_token->get_value();
-    size_t size = token_value.size();
-    if (size < 2) {
-	fprintf(stderr, "Compiler Bug: String literal must have at least two characters, one for start, one for end\n");
-	fprintf(stderr, "String literal was :%s:\n", token_value.c_str());
-	exit(1);
-    }
-    std::string nextpart = token_value.substr(1, size-2);
-    
-    bool escape_success = JLang::misc::string_c_unescape(just_the_string, nextpart);
-    if (!escape_success) {
-	fprintf(stderr, "Compiler Bug: Invalid escape sequence.  Find a better place to handle this error.  Preferably not in the parser\n");
-	fprintf(stderr, "(first) String is %s\n", nextpart.c_str());
-	exit(0);
-    }
 }
 ExpressionPrimaryLiteralString::~ExpressionPrimaryLiteralString()
 {}
-const std::string &
+// Instead of just returning a reference, we will
+// concatenate the strings together and return the
+// resulting string literal still escaped as it was
+// in the source file.  The unescape of the string
+// is delegated to the FunctionResolver because it
+// is in a position to return errors whereas this
+// class is mainly intended to be just a fairly
+// transparent data container with no "real" logic.
+std::string
 ExpressionPrimaryLiteralString::get_value() const
-{ return just_the_string; }
+{
+    std::string retstring;
+    // Strip the leading and trailing " from the string
+    const std::string & token_value = literal_token->get_value();
+    size_t size = token_value.size();
+    std::string firstpart = token_value.substr(1, size-2);
+
+    retstring = firstpart;
+
+    // Do the same thing with the remaining
+    // strings and append them to the literal.
+    for (const auto & next_token : additional_strings) {
+	const std::string & next_token_value = next_token->get_value();
+	size = next_token_value.size();
+	std::string nextpart = next_token_value.substr(1, size-2);
+	retstring += nextpart;
+    }
+    
+    return retstring;
+}
 const SourceReference &
 ExpressionPrimaryLiteralString::get_value_source_ref() const
 { return literal_token->get_source_ref(); }
@@ -1648,22 +1660,6 @@ void
 ExpressionPrimaryLiteralString::add_string(JLang::owned<Terminal> _added)
 {
     add_child(*_added);
-    const std::string & token_value = _added->get_value();
-    size_t size = token_value.size();
-    if (size < 2) {
-	fprintf(stderr, "Compiler Bug: String literal must have at least two characters, one for start, one for end\n");
-	fprintf(stderr, "String literal was :%s:\n", token_value.c_str());
-	exit(1);
-    }
-    std::string nextpart = token_value.substr(1, size-2);
-    std::string unescaped_literal;
-    bool escape_success = JLang::misc::string_c_unescape(unescaped_literal, nextpart);
-    if (!escape_success) {
-	fprintf(stderr, "Compiler Bug: Invalid escape sequence.  Find a better place to handle this error.  Preferably not in the parser\n");
-	fprintf(stderr, "(second) String is %s\n", nextpart.c_str());
-	exit(0);
-    }
-    just_the_string += unescaped_literal;
     additional_strings.push_back(std::move(_added));
 }
 ///////////////////////////////////////////////////
