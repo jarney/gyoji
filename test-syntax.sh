@@ -64,6 +64,19 @@ for test_file in ${TEST_FILES} ; do
     fi
 done
 
+echo "Checking that we can extract namespaces"
+let failed=0
+for test_file in ${TEST_FILES} ; do
+    echo -n "    ${test_file}"
+    ${CMAKE_BINARY_DIR}/src/cmdline/jns ${CMAKE_SOURCE_DIR}/tests/${test_file} >${CMAKE_BINARY_DIR}/test-syntax-dir/${test_file}.namespaces
+    if [ $? -ne 0 ] ; then
+        echo " : FAILED"
+        failed=1
+    else
+        echo " : PASSED"
+    fi
+done
+
 let test_memory_scale=0
 if [ $test_memory_scale -ne 0 ] ; then
     rm -f ${CMAKE_BINARY_DIR}/test-syntax-dir/memory_usage.csv.tmp

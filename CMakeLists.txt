@@ -17,7 +17,7 @@ set(CMAKE_CXX_OUTPUT_EXTENSION_REPLACE ON)
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
 message("Doing a debug build, so we're including gcov and lots of stuff.")
-set(CMAKE_CXX_FLAGS "-g -O0 -Wall -Wno-unused-function -fprofile-arcs -ftest-coverage")
+set(CMAKE_CXX_FLAGS "-g -O0 -Wall -Wno-unused-function -fno-exceptions -fprofile-arcs -ftest-coverage")
 endif()
 
 option(BUILD_DOC "Build documentation" ON)

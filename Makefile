@@ -15,6 +15,9 @@ clean: build/Makefile
 	cd build; $(MAKE) clean
 	find . -name "*~" -exec rm -f {} \; -print
 
+realclean: clean
+	rm -rf build/*
+
 install: build/Makefile
 	cd build; $(MAKE) install
 
