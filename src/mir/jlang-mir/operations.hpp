@@ -1213,7 +1213,7 @@ namespace JLang::mir {
 	OperationLiteralChar(
 	    const JLang::context::SourceReference & _src_ref,
 	    size_t _result,
-	    std::string _literal_char
+	    char _literal_char
 	    );
 	/**
 	 * @brief Move along, nothing to see here.
@@ -1222,11 +1222,11 @@ namespace JLang::mir {
 	 * Move along, nothing to see here.
 	 */
 	virtual ~OperationLiteralChar();
-	const std::string & get_literal_char() const;
+	char get_literal_char() const;
     protected:
 	virtual std::string get_description() const;
     private:
-	const std::string literal_char;
+	const char literal_char;
     };
     /**
      * @brief Literal string
@@ -1307,6 +1307,10 @@ namespace JLang::mir {
      */
     class OperationLiteralFloat : public Operation {
     public:
+	typedef enum {
+	    FLOAT_F32,
+	    FLOAT_F64
+	} FloatType;
 	/**
 	 * Create an operation to load the given constant
 	 * literal float into the return-value.
@@ -1314,7 +1318,12 @@ namespace JLang::mir {
 	OperationLiteralFloat(
 	    const JLang::context::SourceReference & _src_ref,
 	    size_t _result,
-	    std::string _literal_float
+	    float _literal_float
+	    );
+	OperationLiteralFloat(
+	    const JLang::context::SourceReference & _src_ref,
+	    size_t _result,
+	    double _literal_float
 	    );
 	/**
 	 * @brief Move along, nothing to see here.
@@ -1323,11 +1332,16 @@ namespace JLang::mir {
 	 * Move along, nothing to see here.
 	 */
 	virtual ~OperationLiteralFloat();
-	const std::string & get_literal_float() const;
+	float get_literal_float() const;
+	double get_literal_double() const;
+	FloatType get_float_type() const;
     protected:
 	virtual std::string get_description() const;
     private:
-	const std::string literal_float;
+	FloatType float_type;
+	float literal_float_f32;
+	double literal_float_f64;
+	
     };
     
     class OperationSizeofType : public Operation {

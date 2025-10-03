@@ -22,7 +22,7 @@ int main(int argc, char **argv)
 	exit(1);
     }
     
-    CompilerContext context;
+    CompilerContext context(argv[1]);
     
     JLang::misc::InputSourceFile input_source(input);
     

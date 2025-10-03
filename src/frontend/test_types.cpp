@@ -23,10 +23,11 @@ int main(int argc, char **argv)
     printf("Testing types\n");
     
     std::string path(argv[1]);
+
+    const char *filename = "tests/type-resolution.j";
+    CompilerContext context(filename);
     
-    CompilerContext context;
-    
-    auto mir = parse_to_mir(path, context, "tests/type-resolution.j");
+    auto mir = parse_to_mir(path, context, filename);
     
     mir->get_types().dump(stderr);
     

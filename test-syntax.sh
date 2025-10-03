@@ -30,6 +30,7 @@ valid-syntax-typedefs.j
 valid-syntax-variable-declaration.j
 
 semantics-literal-string.j
+semantics-literal-char.j
 semantics-literal-int.j
 semantics-sizeof.j
 semantics-types.j
@@ -56,6 +57,21 @@ for test_file in ${TEST_FILES} ; do
     echo -n "    ${test_file}"
     ${CMAKE_BINARY_DIR}/src/cmdline/jformat-identity ${CMAKE_SOURCE_DIR}/tests/${test_file} >${CMAKE_BINARY_DIR}/test-syntax-dir/${test_file}
     diff ${CMAKE_SOURCE_DIR}/tests/${test_file} ${CMAKE_BINARY_DIR}/test-syntax-dir/${test_file}
+    if [ $? -ne 0 ] ; then
+        echo " : FAILED"
+        failed=1
+    else
+        echo " : PASSED"
+    fi
+done
+
+# Note that in this test, we only verify that
+# it runs, we don't verify the content.
+echo "Checking that we can output the 'tree' form of the file."
+let failed=0
+for test_file in ${TEST_FILES} ; do
+    echo -n "    ${test_file}"
+    ${CMAKE_BINARY_DIR}/src/cmdline/jformat-tree ${CMAKE_SOURCE_DIR}/tests/${test_file} >${CMAKE_BINARY_DIR}/test-syntax-dir/${test_file}.xml
     if [ $? -ne 0 ] ; then
         echo " : FAILED"
         failed=1

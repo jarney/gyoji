@@ -32,7 +32,6 @@ Terminal::get_column() const
 const SourceReference &
 Terminal::get_terminal_source_ref() const
 { return token.get_source_ref(); }
-
 const std::string &
 Terminal::get_fully_qualified_name() const
 { return fully_qualified_name; }
@@ -1606,9 +1605,16 @@ ExpressionPrimaryLiteralChar::ExpressionPrimaryLiteralChar(
 }
 ExpressionPrimaryLiteralChar::~ExpressionPrimaryLiteralChar()
 {}
-const std::string &
+std::string
 ExpressionPrimaryLiteralChar::get_value() const
-{ return literal_token->get_value(); }
+{
+    // Remove the leading and trailing single quote (')
+    // before passing it down to the semantics
+    // layer.
+    const std::string & token_value = literal_token->get_value();
+    size_t size = token_value.size();
+    return token_value.substr(1, size-2);
+}
 const SourceReference &
 ExpressionPrimaryLiteralChar::get_value_source_ref() const
 { return literal_token->get_source_ref(); }

@@ -16,7 +16,7 @@ namespace JLang::misc {
     
     std::string string_replace_start(std::string str, const std::string from, const std::string to);
 
-    bool string_c_escape(std::string & escaped_string, const std::string & unescaped_string);
+    bool string_c_escape(std::string & escaped_string, const std::string & unescaped_string, bool is_char);
 
     /**
      * This function decodes the C escape sequences
@@ -25,7 +25,7 @@ namespace JLang::misc {
      * function returns false and the 'location' is updated
      * with the location of the failed or unknown escape sequence.
      */
-    bool string_c_unescape(std::string & unescaped_string, size_t & location, const std::string & escaped_string);
+    bool string_c_unescape(std::string & unescaped_string, size_t & location, const std::string & escaped_string, bool is_char);
     
     
 };

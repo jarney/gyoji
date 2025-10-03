@@ -109,7 +109,7 @@ JLang::misc::string_replace_start(std::string str, const std::string from, const
 // must guarantee that they are reversible
 // in all cases.
 
-bool JLang::misc::string_c_escape(std::string & escaped_string, const std::string & unescaped_string)
+bool JLang::misc::string_c_escape(std::string & escaped_string, const std::string & unescaped_string, bool is_char)
 {
     // Take an un-escaped string and insert the \n, \r, \e
     // escapes exactly as if it were a string literal expressed
@@ -147,12 +147,22 @@ bool JLang::misc::string_c_escape(std::string & escaped_string, const std::strin
 	    escaped_string.push_back('t');
 	    break;
 	case 0x27:
-	    escaped_string.push_back('\\');
-	    escaped_string.push_back('\'');
+	    if (is_char) {
+		escaped_string.push_back('\\');
+		escaped_string.push_back('\'');
+	    }
+	    else {
+		escaped_string.push_back('\'');
+	    }
 	    break;
 	case 0x22:
-	    escaped_string.push_back('\\');
-	    escaped_string.push_back('\"');
+	    if (is_char) {
+		escaped_string.push_back('\"');
+	    }
+	    else {
+		escaped_string.push_back('\\');
+		escaped_string.push_back('\"');
+	    }
 	    break;
 	case 0x5c:
 	    escaped_string.push_back('\\');
@@ -167,7 +177,7 @@ bool JLang::misc::string_c_escape(std::string & escaped_string, const std::strin
 }
 
 bool
-JLang::misc::string_c_unescape(std::string & unescaped_string, size_t & location, const std::string & escaped_string)
+JLang::misc::string_c_unescape(std::string & unescaped_string, size_t & location, const std::string & escaped_string, bool is_char)
 {
     // Take the 'traditional' C escape sequences
     // and turn them into their 'traditional' counterparts.
@@ -222,12 +232,22 @@ JLang::misc::string_c_unescape(std::string & unescaped_string, size_t & location
 		state = NORMAL;
 		break;
 	    case '\'':
-		unescaped_string.push_back(0x27);
-		state = NORMAL;
+		if (is_char) {
+		    unescaped_string.push_back(0x27);
+		    state = NORMAL;
+		}
+		else {
+		    return false;
+		}
 		break;
 	    case '\"':
-		unescaped_string.push_back(0x22);
-		state = NORMAL;
+		if (is_char) {
+		    return false;
+		}
+		else {
+		    unescaped_string.push_back(0x22);
+		    state = NORMAL;
+		}
 		break;
 	    default:
 		// This is not a valid escape sequence.

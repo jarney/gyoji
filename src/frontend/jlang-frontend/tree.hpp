@@ -1974,7 +1974,7 @@ namespace JLang::frontend::tree {
 	 * Destructor, nothing special.
 	 */
 	~ExpressionPrimaryLiteralChar();
-	const std::string & get_value() const;
+	std::string get_value() const;
 	const JLang::context::SourceReference & get_value_source_ref() const;
     private:
 	JLang::owned<Terminal> literal_token;

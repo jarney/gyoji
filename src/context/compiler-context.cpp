@@ -2,10 +2,6 @@
 
 using namespace JLang::context;
 
-CompilerContext::CompilerContext()
-    : CompilerContext("unknown-file")
-{}
-
 CompilerContext::CompilerContext(const std::string & _filename)
     : filename(_filename)
 {

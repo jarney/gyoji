@@ -471,6 +471,9 @@ CodeGeneratorLLVMContext::generate_operation_literal_char(
     const JLang::mir::OperationLiteralChar & operation
     )
 {
+    char c = operation.get_literal_char();
+    llvm::Value * result = llvm::ConstantInt::get(llvm::Type::getInt8Ty(*TheContext), c);
+    tmp_values.insert(std::pair(operation.get_result(), result));
 }
 void
 CodeGeneratorLLVMContext::generate_operation_literal_string(
@@ -584,7 +587,33 @@ CodeGeneratorLLVMContext::generate_operation_literal_float(
     const JLang::mir::Function & mir_function,
     const JLang::mir::OperationLiteralFloat & operation
     )
-{}
+{
+    switch (operation.get_float_type()) {
+    case OperationLiteralFloat::FLOAT_F32:
+    {
+	llvm::Type* llvm_type = llvm::Type::getFloatTy(*TheContext);
+	llvm::Value * result = llvm::ConstantFP::get(llvm_type, operation.get_literal_float());
+	tmp_values.insert(std::pair(operation.get_result(), result));
+    }
+	break;
+    case OperationLiteralFloat::FLOAT_F64:
+    {
+	llvm::Type *llvm_type = llvm::Type::getDoubleTy(*TheContext);
+	llvm::Value * result = llvm::ConstantFP::get(llvm_type, operation.get_literal_double());
+	tmp_values.insert(std::pair(operation.get_result(), result));
+    }
+	break;
+    default:
+	compiler_context
+	    .get_errors()
+	    .add_simple_error(
+		operation.get_source_ref(),
+		"Compiler bug! Invalid operand for literal float.",
+		std::string("Literal float has unknown type") + std::to_string(operation.get_float_type())
+		);
+	return;
+    }
+}
 
 // Unary operations
 void

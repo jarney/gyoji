@@ -52,7 +52,7 @@ int main(int argc, char **argv)
     
     std::string path(argv[1]);
     
-    CompilerContext context;
+    CompilerContext context(path);
     
     JLang::owned<ParseResult> result = parse(path, context);
     

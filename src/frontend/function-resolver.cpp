@@ -271,11 +271,45 @@ FunctionDefinitionResolver::extract_from_expression_primary_literal_char(
     size_t & returned_tmpvar,
     const JLang::frontend::tree::ExpressionPrimaryLiteralChar & expression)
 {
+    std::string string_unescaped;
+    size_t location;
+    bool escape_success = JLang::misc::string_c_unescape(string_unescaped, location, expression.get_value(), true);
+    char c;
+    if (!escape_success) {
+	compiler_context
+	    .get_errors()
+	    .add_simple_error(
+		expression.get_source_ref(),
+		"Invalid Character Literal",
+		std::string("Unknown escape sequence found at character offset ") + std::to_string(location) + std::string(" in character literal")
+		);
+	c = '!';
+    }
+    else {
+	if (string_unescaped.size() != 1) {
+	    compiler_context
+		.get_errors()
+		.add_simple_error(
+		    expression.get_source_ref(),
+		    "Invalid Character Literal",
+		    std::string("Character literal must consist of a single byte.")
+		    );
+	    c = '%';
+	}
+	else {
+	    // Finally, we're sure it's valid and
+	    // has one element, we can pass it down
+	    // to the operation.
+	    c = string_unescaped[0];
+	}
+    }
+
+    
     returned_tmpvar = function.tmpvar_define(mir.get_types().get_type("u8"));
     auto operation = std::make_unique<OperationLiteralChar>(
 	expression.get_source_ref(),
 	returned_tmpvar,
-	expression.get_value()
+	c
 	);
 
     function
@@ -298,7 +332,7 @@ FunctionDefinitionResolver::extract_from_expression_primary_literal_string(
 
     std::string string_unescaped;
     size_t location;
-    bool escape_success = JLang::misc::string_c_unescape(string_unescaped, location, expression.get_value());
+    bool escape_success = JLang::misc::string_c_unescape(string_unescaped, location, expression.get_value(), false);
     if (!escape_success) {
 	compiler_context
 	    .get_errors()
@@ -477,12 +511,68 @@ FunctionDefinitionResolver::extract_from_expression_primary_literal_float(
     size_t & returned_tmpvar,
     const JLang::frontend::tree::ExpressionPrimaryLiteralFloat & expression)
 {
-    returned_tmpvar = function.tmpvar_define(mir.get_types().get_type(expression.get_type()));
-    auto operation = std::make_unique<OperationLiteralFloat>(
-	expression.get_source_ref(),
-	returned_tmpvar,
-	expression.get_value()
-	);
+    std::string literal_type_name = expression.get_type();
+    returned_tmpvar = function.tmpvar_define(mir.get_types().get_type(literal_type_name));
+    JLang::owned<OperationLiteralFloat> operation;
+    char *endptr;
+    const char *source_cstring = expression.get_value().c_str();
+    if (literal_type_name == "f32") {
+
+	float converted_value = strtof(source_cstring, &endptr);
+	if (endptr == source_cstring) {
+	    compiler_context
+		.get_errors()
+		.add_simple_error(
+		    expression.get_source_ref(),
+		    "Invalid floating-point literal",
+		    std::string("Could not correctly parse the literal value.")
+		    );
+	    return false;
+	}
+	if (errno == ERANGE) {
+	    compiler_context
+		.get_errors()
+		.add_simple_error(
+		    expression.get_source_ref(),
+		    "Invalid floating-point literal",
+		    std::string("Floating-point literal does not fit in the range of an f32.")
+		    );
+	    return false;
+	}
+	operation = std::make_unique<OperationLiteralFloat>(
+	    expression.get_source_ref(),
+	    returned_tmpvar,
+	    (float)converted_value
+	    );
+    }
+    else {
+	double converted_value = strtod(source_cstring, &endptr);
+	if (endptr == source_cstring) {
+	    compiler_context
+		.get_errors()
+		.add_simple_error(
+		    expression.get_source_ref(),
+		    "Invalid floating-point literal",
+		    std::string("Could not correctly parse the literal value.")
+		    );
+	    return false;
+	}
+	if (errno == ERANGE) {
+	    compiler_context
+		.get_errors()
+		.add_simple_error(
+		    expression.get_source_ref(),
+		    "Invalid floating-point literal",
+		    std::string("Floating-point literal does not fit in the range of an f64.")
+		    );
+	    return false;
+	}
+	operation = std::make_unique<OperationLiteralFloat>(
+	    expression.get_source_ref(),
+	    returned_tmpvar,
+	    converted_value
+	    );
+    }
     function
 	.get_basic_block(current_block)
 	.add_operation(std::move(operation));

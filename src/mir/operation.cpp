@@ -430,7 +430,7 @@ OperationLocalVariable::get_description() const
 OperationLiteralChar::OperationLiteralChar(
     const JLang::context::SourceReference & _src_ref,
     size_t _result,
-    std::string _literal_char
+    char _literal_char
     )
     : Operation(OP_LITERAL_CHAR, _src_ref, _result)
     , literal_char(_literal_char)
@@ -438,7 +438,7 @@ OperationLiteralChar::OperationLiteralChar(
 OperationLiteralChar::~OperationLiteralChar()
 {}
 
-const std::string &
+char
 OperationLiteralChar::get_literal_char() const
 { return literal_char; }
 
@@ -447,7 +447,11 @@ OperationLiteralChar::get_description() const
 {
     const auto & it = op_type_names.find(type);
     const std::string & op_name = it->second;
-
+    std::string char_unescaped;
+    char_unescaped.push_back(literal_char);
+    std::string char_escaped;
+    JLang::misc::string_c_escape(char_escaped, char_unescaped, true);
+    
     std::string desc = std::string("_") + std::to_string(result) + std::string(" = ") + op_name + std::string(" (");
     desc = desc + std::string(" ") + literal_char;
     desc = desc + std::string(" )");
@@ -479,7 +483,7 @@ OperationLiteralString::get_description() const
     const std::string & op_name = it->second;
 
     std::string literal_escaped;
-    JLang::misc::string_c_escape(literal_escaped, literal_string);
+    JLang::misc::string_c_escape(literal_escaped, literal_string, false);
 
     std::string desc = std::string("_") + std::to_string(result) + std::string(" = ") + op_name + std::string(" (");
     desc = desc + std::string(" \"") + literal_escaped;
@@ -557,24 +561,56 @@ OperationLiteralInt::get_description() const
 OperationLiteralFloat::OperationLiteralFloat(
     const JLang::context::SourceReference & _src_ref,
     size_t _result,
-    std::string _literal_float
+    float _literal_float
     )
     : Operation(OP_LITERAL_FLOAT, _src_ref, _result)
-    , literal_float(_literal_float)
+    , float_type(FLOAT_F32)
+    , literal_float_f32(_literal_float)
+    , literal_float_f64(0.0)
+{}
+OperationLiteralFloat::OperationLiteralFloat(
+    const JLang::context::SourceReference & _src_ref,
+    size_t _result,
+    double _literal_float
+    )
+    : Operation(OP_LITERAL_FLOAT, _src_ref, _result)
+    , float_type(FLOAT_F64)
+    , literal_float_f32(0.0)
+    , literal_float_f64(_literal_float)
 {}
 OperationLiteralFloat::~OperationLiteralFloat()
 {}
 
-const std::string &
+float
 OperationLiteralFloat::get_literal_float() const
-{ return literal_float; }
+{ return literal_float_f32; }
 
+double
+OperationLiteralFloat::get_literal_double() const
+{ return literal_float_f64; }
+
+OperationLiteralFloat::FloatType
+OperationLiteralFloat::get_float_type() const
+{ return float_type; }
 std::string
 OperationLiteralFloat::get_description() const
 {
     const auto & it = op_type_names.find(type);
     const std::string & op_name = it->second;
 
+    std::string literal_float;
+    switch (float_type) {
+    case FLOAT_F32:
+	literal_float = std::to_string(literal_float_f32);
+	break;
+    case FLOAT_F64:
+	literal_float = std::to_string(literal_float_f64);
+	break;
+    default:
+	fprintf(stderr, "Compiler Bug! Unknown literal float type\n");
+	exit(1);
+    }
+    
     std::string desc = std::string("_") + std::to_string(result) + std::string(" = ") + op_name + std::string(" (");
     desc = desc + std::string(" ") + literal_float;
     desc = desc + std::string(" )");

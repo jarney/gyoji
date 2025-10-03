@@ -7,7 +7,6 @@
 namespace JLang::context {
     class CompilerContext {
     public:
-	CompilerContext();
 	CompilerContext(const std::string & _filename);
 	~CompilerContext();
 	
