@@ -159,6 +159,13 @@ namespace JLang::mir {
 	 * for this basic block to the given file handle.
 	 */
 	void dump(FILE *out) const;
+
+	/**
+	 * This method returns true if the block
+	 * already returns a 'terminating' instruction
+	 * such as a branch, goto, or return.
+	 */
+	bool contains_terminator() const;
     private:
 	std::vector<JLang::owned<Operation>> operations;
     };

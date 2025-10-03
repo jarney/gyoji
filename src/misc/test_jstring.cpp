@@ -25,6 +25,12 @@ int main(int argc, char **argv)
 
     std::string int_string("178u64");
     ASSERT_TRUE(endswith(int_string, "u64"), "Expect that we end with the u64 suffix");
+    std::string zero_string("0");
+    ASSERT_FALSE(endswith(zero_string, "u8"), "Expect that we do not end with u8");
+    std::string other_string("0u8");
+    ASSERT_TRUE(endswith(other_string, "u8"), "Expect that we do not end with u8");
+    std::string start_string("0u8is");
+    ASSERT_FALSE(endswith(start_string, "u8"), "Expect that we do not end with u8");
 
     // Processing C string literal escapes (we don't escape ' but we do escape ")
     {
@@ -64,6 +70,6 @@ int main(int argc, char **argv)
 	ASSERT_TRUE(string_c_escape(c_string_result, raw_string, true), "Correctly unescape this string");
 	ASSERT(c_string, c_string_result, "Escape and unescape should yield the same result\n");
     }
-    
+
     printf("    PASSED\n");
 }

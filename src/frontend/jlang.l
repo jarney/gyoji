@@ -52,7 +52,6 @@ void move_array(
 
 #define TOKEN_ADD(nodetype)                                          \
     LexContext *lc = (LexContext*)yyget_extra(yyscanner);            \
-    lc->column += strlen(yytext);                                    \
     const Token &tok =                                               \
         lc->compiler_context.get_token_stream()                      \
             .add_token(                                              \
@@ -62,6 +61,7 @@ void move_array(
                 lc->line,                                            \
                 lc->column-1                                         \
             );                                                       \
+    lc->column += strlen(yytext);                                    \
 
 #define START_NODE(nodetype)                                         \
     TOKEN_ADD(nodetype);                                             \
@@ -123,7 +123,7 @@ integer             ({opt_sign}{int_dseq}{opt_integer_size})
 integer_size        ("u64"|"u32"|"u16"|"u8"|"i64"|"i32"|"i16"|"i8")
 opt_integer_size    ({integer_size}?)
 
-float               ((({frac}{exp_opt})|({dec_dseq}{exp}))({opt_float_size}))
+float               ({opt_sign}(({frac}{exp_opt})|({dec_dseq}{exp}))({opt_float_size}))
 float_size          ("f32"|"f64")
 opt_float_size      ({float_size}?)
 

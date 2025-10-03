@@ -24,6 +24,10 @@ JCC=${CMAKE_BINARY_DIR}/src/cmdline/jcc
 TEST_FILES="
 semantics-if-else
 semantics-types
+semantics-literal-int
+semantics-literal-float
+semantics-literal-char
+semantics-literal-string
 "
 
 echo "Checking token stream output."

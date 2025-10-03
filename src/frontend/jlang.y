@@ -1321,6 +1321,7 @@ expression_primary_literal_string
                 PRINT_NONTERMINALS($$);
         }
         ;
+
 expression_primary_literal_float
         : LITERAL_FLOAT {
                 $$ = std::make_unique<JLang::frontend::tree::ExpressionPrimaryLiteralFloat>(std::move($1));

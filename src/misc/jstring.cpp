@@ -62,7 +62,7 @@ bool JLang::misc::startswith(const std::string & s, const std::string & prefix)
 bool JLang::misc::endswith(const std::string & s, const std::string & suffix)
 {
     size_t found_pos = s.find(suffix);
-    if (found_pos == s.size() - suffix.size()) {
+    if (found_pos != std::string::npos && found_pos == s.size() - suffix.size()) {
 	return true;
     }
     return false;

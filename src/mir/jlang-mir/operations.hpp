@@ -845,6 +845,16 @@ namespace JLang::mir {
 	size_t get_result() const;
 
 	/**
+	 * @brief Returns true if this is a terminating operation for a block.
+	 *
+	 * @details
+	 * This function returns true if the operation would terminate
+	 * a basic block.  This happens if the operation is a jump,
+	 * conditional branch, or return statement.
+	 */
+	bool is_terminating() const;
+	
+	/**
 	 * @brief Get the reference to the source which originated this operation.
 	 *
 	 * @details
@@ -1275,10 +1285,50 @@ namespace JLang::mir {
 	OperationLiteralInt(
 	    const JLang::context::SourceReference & _src_ref,
 	    size_t _result,
-	    std::string _literal_int,
-	    const Type *_type,
-	    bool _sign_positive,
-	    size_t _radix
+	    Type::TypeType _literal_type,
+	    unsigned char _literal_u8
+	    );
+	OperationLiteralInt(
+	    const JLang::context::SourceReference & _src_ref,
+	    size_t _result,
+	    Type::TypeType _literal_type,
+	    unsigned short _literal_u16
+	    );
+	OperationLiteralInt(
+	    const JLang::context::SourceReference & _src_ref,
+	    size_t _result,
+	    Type::TypeType _literal_type,
+	    unsigned int _literal_u32
+	    );
+	OperationLiteralInt(
+	    const JLang::context::SourceReference & _src_ref,
+	    size_t _result,
+	    Type::TypeType _literal_type,
+	    unsigned long _literal_u64
+	    );
+	OperationLiteralInt(
+	    const JLang::context::SourceReference & _src_ref,
+	    size_t _result,
+	    Type::TypeType _literal_type,
+	    char _literal_i8
+	    );
+	OperationLiteralInt(
+	    const JLang::context::SourceReference & _src_ref,
+	    size_t _result,
+	    Type::TypeType _literal_type,
+	    short _literal_i16
+	    );
+	OperationLiteralInt(
+	    const JLang::context::SourceReference & _src_ref,
+	    size_t _result,
+	    Type::TypeType _literal_type,
+	    int _literal_i32
+	    );
+	OperationLiteralInt(
+	    const JLang::context::SourceReference & _src_ref,
+	    size_t _result,
+	    Type::TypeType _literal_type,
+	    long _literal_i64
 	    );
 	/**
 	 * @brief Move along, nothing to see here.
@@ -1287,17 +1337,31 @@ namespace JLang::mir {
 	 * Move along, nothing to see here.
 	 */
 	virtual ~OperationLiteralInt();
-	const std::string & get_literal_int() const;
-	const Type *get_literal_type() const;
-	bool get_sign_positive() const;
-	size_t get_radix() const;
+	Type::TypeType get_literal_type() const;
+	unsigned char get_literal_u8() const;
+	unsigned short get_literal_u16() const;
+	unsigned int get_literal_u32() const;
+	unsigned long get_literal_u64() const;
+
+	char get_literal_i8() const;
+	short get_literal_i16() const;
+	int get_literal_i32() const;
+	long get_literal_i64() const;
+
     protected:
 	virtual std::string get_description() const;
     private:
-	const std::string literal_int;
-	const Type *literal_type;
-	bool sign_positive;
-	size_t radix;
+	Type::TypeType literal_type;
+
+	// Should these be a union?
+	unsigned char literal_u8;
+	unsigned short literal_u16;
+	unsigned int literal_u32;
+	unsigned long literal_u64;
+	char literal_i8;
+	short literal_i16;
+	int literal_i32;
+	long literal_i64;
     };
     /**
      * @brief Literal float
@@ -1307,10 +1371,6 @@ namespace JLang::mir {
      */
     class OperationLiteralFloat : public Operation {
     public:
-	typedef enum {
-	    FLOAT_F32,
-	    FLOAT_F64
-	} FloatType;
 	/**
 	 * Create an operation to load the given constant
 	 * literal float into the return-value.
@@ -1334,11 +1394,11 @@ namespace JLang::mir {
 	virtual ~OperationLiteralFloat();
 	float get_literal_float() const;
 	double get_literal_double() const;
-	FloatType get_float_type() const;
+	Type::TypeType get_literal_type() const;
     protected:
 	virtual std::string get_description() const;
     private:
-	FloatType float_type;
+	Type::TypeType literal_type;
 	float literal_float_f32;
 	double literal_float_f64;
 	

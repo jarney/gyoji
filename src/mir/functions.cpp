@@ -217,6 +217,15 @@ const std::vector<JLang::owned<Operation>> &
 BasicBlock::get_operations() const
 { return operations; }
 
+bool
+BasicBlock::contains_terminator() const
+{
+    for (const auto & op : operations) {
+	if (op->is_terminating()) return true;
+    }
+    return false;
+}
+
 /////////////////////////////////////
 // FunctionArgument
 /////////////////////////////////////

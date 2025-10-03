@@ -6,10 +6,19 @@ docs: build/Makefile
 	echo "Checking?"
 	cd build; $(MAKE) docs
 
+# Run the tests and report
+# code-coverage.  Note that we only
+# cover our source, not generated code
+# or tests.
 test: build/Makefile
 	cd build; $(MAKE) all; $(MAKE) test
 	mkdir -p build/gcov
-	gcovr  --html build/gcov/report.html --html-details
+	gcovr --exclude build/jlang.y.cpp \
+		--exclude build/jlang.y.hpp \
+		--exclude build/jlang.l.cpp \
+		--exclude 'src/.*/test_.*.cpp' \
+		--html build/gcov/report.html \
+		--html-details
 
 clean: build/Makefile
 	cd build; $(MAKE) clean

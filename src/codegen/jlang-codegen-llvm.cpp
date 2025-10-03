@@ -501,6 +501,58 @@ CodeGeneratorLLVMContext::generate_operation_literal_int(
     )
 {
     llvm::Value *value;
+    switch (operation.get_literal_type()) {
+    case Type::TYPE_PRIMITIVE_u8:
+        {
+	    value = Builder->getInt8(operation.get_literal_u8());
+	}
+	break;
+    case Type::TYPE_PRIMITIVE_u16:
+        {
+	    value = Builder->getInt16(operation.get_literal_u16());
+	}
+	break;
+    case Type::TYPE_PRIMITIVE_u32:
+        {
+	    value = Builder->getInt32(operation.get_literal_u32());
+	}
+	break;
+    case Type::TYPE_PRIMITIVE_u64:
+        {
+	    value = Builder->getInt64(operation.get_literal_u64());
+	}
+	break;
+    case Type::TYPE_PRIMITIVE_i8:
+        {
+	    value = Builder->getInt8(operation.get_literal_i8());
+	}
+	break;
+    case Type::TYPE_PRIMITIVE_i16:
+        {
+	    value = Builder->getInt16(operation.get_literal_i16());
+	}
+	break;
+    case Type::TYPE_PRIMITIVE_i32:
+        {
+	    value = Builder->getInt32(operation.get_literal_i32());
+	}
+	break;
+    case Type::TYPE_PRIMITIVE_i64:
+        {
+	    value = Builder->getInt64(operation.get_literal_i64());
+	}
+	break;
+    default:
+	compiler_context
+	    .get_errors()
+	    .add_simple_error(
+		operation.get_source_ref(),
+		"Compiler bug! Invalid operand for literal int.",
+		std::string("Literal int has unknown type") + std::to_string(operation.get_literal_type())
+		);
+	return;
+    }
+#if 0
     const char *valptr = operation.get_literal_int().c_str();
     Type::TypeType type = operation.get_literal_type()->get_type();
     bool sign_positive = operation.get_sign_positive();
@@ -578,7 +630,7 @@ CodeGeneratorLLVMContext::generate_operation_literal_int(
 	return;
 	
     }
-    
+#endif    
     tmp_values.insert(std::pair(operation.get_result(), value));
 }
 void
@@ -588,15 +640,15 @@ CodeGeneratorLLVMContext::generate_operation_literal_float(
     const JLang::mir::OperationLiteralFloat & operation
     )
 {
-    switch (operation.get_float_type()) {
-    case OperationLiteralFloat::FLOAT_F32:
+    switch (operation.get_literal_type()) {
+    case Type::TYPE_PRIMITIVE_f32:
     {
 	llvm::Type* llvm_type = llvm::Type::getFloatTy(*TheContext);
 	llvm::Value * result = llvm::ConstantFP::get(llvm_type, operation.get_literal_float());
 	tmp_values.insert(std::pair(operation.get_result(), result));
     }
 	break;
-    case OperationLiteralFloat::FLOAT_F64:
+    case Type::TYPE_PRIMITIVE_f64:
     {
 	llvm::Type *llvm_type = llvm::Type::getDoubleTy(*TheContext);
 	llvm::Value * result = llvm::ConstantFP::get(llvm_type, operation.get_literal_double());
@@ -609,7 +661,7 @@ CodeGeneratorLLVMContext::generate_operation_literal_float(
 	    .add_simple_error(
 		operation.get_source_ref(),
 		"Compiler bug! Invalid operand for literal float.",
-		std::string("Literal float has unknown type") + std::to_string(operation.get_float_type())
+		std::string("Literal float has unknown type") + std::to_string(operation.get_literal_type())
 		);
 	return;
     }

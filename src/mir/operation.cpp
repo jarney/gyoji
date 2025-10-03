@@ -160,6 +160,15 @@ Operation::get_description() const
     
     return desc;
 }
+bool
+Operation::is_terminating() const
+{
+    // Identify any instructions that
+    // would terminate a basic block.
+    return (type == OP_JUMP) ||
+	(type == OP_JUMP_IF_EQUAL) ||
+	(type == OP_RETURN);
+}
 
 Operation::OperationType
 Operation::get_type() const
@@ -497,34 +506,171 @@ OperationLiteralString::get_description() const
 OperationLiteralInt::OperationLiteralInt(
     const JLang::context::SourceReference & _src_ref,
     size_t _result,
-    std::string _literal_int,
-    const Type *_type,
-    bool _sign_positive,
-    size_t _radix
+    Type::TypeType _literal_type,
+    unsigned char _literal_u8
     )
     : Operation(OP_LITERAL_INT, _src_ref, _result)
-    , literal_int(_literal_int)
-    , literal_type(_type)
-    , sign_positive(_sign_positive)
-    , radix(_radix)
+    , literal_type(_literal_type)
+    , literal_u8(_literal_u8)
+    , literal_u16(0)
+    , literal_u32(0)
+    , literal_u64(0L)
+    , literal_i8(0)
+    , literal_i16(0)
+    , literal_i32(0)
+    , literal_i64(0)
 {}
+OperationLiteralInt::OperationLiteralInt(
+    const JLang::context::SourceReference & _src_ref,
+    size_t _result,
+    Type::TypeType _literal_type,
+    unsigned short _literal_u16
+    )
+    : Operation(OP_LITERAL_INT, _src_ref, _result)
+    , literal_type(_literal_type)
+    , literal_u8(0)
+    , literal_u16(_literal_u16)
+    , literal_u32(0)
+    , literal_u64(0L)
+    , literal_i8(0)
+    , literal_i16(0)
+    , literal_i32(0)
+    , literal_i64(0)
+{}
+OperationLiteralInt::OperationLiteralInt(
+    const JLang::context::SourceReference & _src_ref,
+    size_t _result,
+    Type::TypeType _literal_type,
+    unsigned int _literal_u32
+    )
+    : Operation(OP_LITERAL_INT, _src_ref, _result)
+    , literal_type(_literal_type)
+    , literal_u8(0)
+    , literal_u16(0)
+    , literal_u32(_literal_u32)
+    , literal_u64(0L)
+    , literal_i8(0)
+    , literal_i16(0)
+    , literal_i32(0)
+    , literal_i64(0)
+{}
+OperationLiteralInt::OperationLiteralInt(
+    const JLang::context::SourceReference & _src_ref,
+    size_t _result,
+    Type::TypeType _literal_type,
+    unsigned long _literal_u64
+    )
+    : Operation(OP_LITERAL_INT, _src_ref, _result)
+    , literal_type(_literal_type)
+    , literal_u8(0)
+    , literal_u16(0)
+    , literal_u32(0)
+    , literal_u64(_literal_u64)
+    , literal_i8(0)
+    , literal_i16(0)
+    , literal_i32(0)
+    , literal_i64(0)
+{}
+/////
+OperationLiteralInt::OperationLiteralInt(
+    const JLang::context::SourceReference & _src_ref,
+    size_t _result,
+    Type::TypeType _literal_type,
+    char _literal_i8
+    )
+    : Operation(OP_LITERAL_INT, _src_ref, _result)
+    , literal_type(_literal_type)
+    , literal_u8(0)
+    , literal_u16(0)
+    , literal_u32(0)
+    , literal_u64(0L)
+    , literal_i8(_literal_i8)
+    , literal_i16(0)
+    , literal_i32(0)
+    , literal_i64(0)
+{}
+OperationLiteralInt::OperationLiteralInt(
+    const JLang::context::SourceReference & _src_ref,
+    size_t _result,
+    Type::TypeType _literal_type,
+    short _literal_i16
+    )
+    : Operation(OP_LITERAL_INT, _src_ref, _result)
+    , literal_type(_literal_type)
+    , literal_u8(0)
+    , literal_u16(0)
+    , literal_u32(0)
+    , literal_u64(0L)
+    , literal_i8(0)
+    , literal_i16(_literal_i16)
+    , literal_i32(0)
+    , literal_i64(0)
+{}
+OperationLiteralInt::OperationLiteralInt(
+    const JLang::context::SourceReference & _src_ref,
+    size_t _result,
+    Type::TypeType _literal_type,
+    int _literal_i32
+    )
+    : Operation(OP_LITERAL_INT, _src_ref, _result)
+    , literal_type(_literal_type)
+    , literal_u8(0)
+    , literal_u16(0)
+    , literal_u32(0)
+    , literal_u64(0L)
+    , literal_i8(0)
+    , literal_i16(0)
+    , literal_i32(_literal_i32)
+    , literal_i64(0)
+{}
+OperationLiteralInt::OperationLiteralInt(
+    const JLang::context::SourceReference & _src_ref,
+    size_t _result,
+    Type::TypeType _literal_type,
+    long _literal_i64
+    )
+    : Operation(OP_LITERAL_INT, _src_ref, _result)
+    , literal_type(_literal_type)
+    , literal_u8(0)
+    , literal_u16(0)
+    , literal_u32(0)
+    , literal_u64(0)
+    , literal_i8(0)
+    , literal_i16(0)
+    , literal_i32(0)
+    , literal_i64(_literal_i64)
+{}
+
 OperationLiteralInt::~OperationLiteralInt()
 {}
 
-const std::string &
-OperationLiteralInt::get_literal_int() const
-{ return literal_int; }
-const Type *
+Type::TypeType
 OperationLiteralInt::get_literal_type() const
 { return literal_type; }
-
-bool
-OperationLiteralInt::get_sign_positive() const
-{ return sign_positive; }
-
-size_t
-OperationLiteralInt::get_radix() const
-{ return radix; }
+unsigned char
+OperationLiteralInt::get_literal_u8() const
+{ return literal_u8; }
+unsigned short
+OperationLiteralInt::get_literal_u16() const
+{ return literal_u16; }
+unsigned int
+OperationLiteralInt::get_literal_u32() const
+{ return literal_u32; }
+unsigned long
+OperationLiteralInt::get_literal_u64() const
+{ return literal_u64; }
+char
+OperationLiteralInt::get_literal_i8() const
+{ return literal_i8; }
+short
+OperationLiteralInt::get_literal_i16() const
+{ return literal_i16; }
+int
+OperationLiteralInt::get_literal_i32() const
+{ return literal_i32; }
+long
+OperationLiteralInt::get_literal_i64() const
+{ return literal_i64; }
 
 std::string
 OperationLiteralInt::get_description() const
@@ -532,25 +678,48 @@ OperationLiteralInt::get_description() const
     const auto & it = op_type_names.find(type);
     const std::string & op_name = it->second;
 
-    std::string radixstr;
-    if (radix == 16) {
-	radixstr = "0x";
+    std::string literalstr;
+    std::string literaltype;
+    
+    switch (literal_type) {
+    case Type::TYPE_PRIMITIVE_u8:
+	literalstr = std::to_string(literal_u8);
+	literaltype = "u8";
+	break;
+    case Type::TYPE_PRIMITIVE_u16:
+	literalstr = std::to_string(literal_u16);
+	literaltype = "u16";
+	break;
+    case Type::TYPE_PRIMITIVE_u32:
+	literalstr = std::to_string(literal_u32);
+	literaltype = "u32";
+	break;
+    case Type::TYPE_PRIMITIVE_u64:
+	literalstr = std::to_string(literal_u64);
+	literaltype = "u64";
+	break;
+    case Type::TYPE_PRIMITIVE_i8:
+	literalstr = std::to_string(literal_i8);
+	literaltype = "i8";
+	break;
+    case Type::TYPE_PRIMITIVE_i16:
+	literalstr = std::to_string(literal_i16);
+	literaltype = "i16";
+	break;
+    case Type::TYPE_PRIMITIVE_i32:
+	literalstr = std::to_string(literal_i32);
+	literaltype = "i32";
+	break;
+    case Type::TYPE_PRIMITIVE_i64:
+	literalstr = std::to_string(literal_i64);
+	literaltype = "i64";
+	break;
+    default:
+	literalstr = "Error: Unsupported literal int type";
+	break;
     }
-    else if (radix == 10) {
-	radixstr = "";
-    }
-    else if (radix == 8) {
-	radixstr = "0o";
-    }
-    else if (radix == 2) {
-	radixstr = "0b";
-    }
-    else {
-	radixstr = "Error: Unsupported radix";
-    }
-    std::string signstr(sign_positive ? "" : "-");
     std::string desc = std::string("_") + std::to_string(result) + std::string(" = ") + op_name + std::string(" (");
-    desc = desc + std::string(" ") + signstr + radixstr + literal_int + std::string(" : ") + literal_type->get_name();
+    desc = desc + std::string(" ") + literalstr + literaltype;
     desc = desc + std::string(" )");
     return desc;
 }
@@ -558,13 +727,14 @@ OperationLiteralInt::get_description() const
 //////////////////////////////////////////////
 // OperationLiteralFloat
 //////////////////////////////////////////////
+	    
 OperationLiteralFloat::OperationLiteralFloat(
     const JLang::context::SourceReference & _src_ref,
     size_t _result,
     float _literal_float
     )
     : Operation(OP_LITERAL_FLOAT, _src_ref, _result)
-    , float_type(FLOAT_F32)
+    , literal_type(Type::TYPE_PRIMITIVE_f32)
     , literal_float_f32(_literal_float)
     , literal_float_f64(0.0)
 {}
@@ -574,7 +744,7 @@ OperationLiteralFloat::OperationLiteralFloat(
     double _literal_float
     )
     : Operation(OP_LITERAL_FLOAT, _src_ref, _result)
-    , float_type(FLOAT_F64)
+    , literal_type(Type::TYPE_PRIMITIVE_f64)
     , literal_float_f32(0.0)
     , literal_float_f64(_literal_float)
 {}
@@ -589,9 +759,9 @@ double
 OperationLiteralFloat::get_literal_double() const
 { return literal_float_f64; }
 
-OperationLiteralFloat::FloatType
-OperationLiteralFloat::get_float_type() const
-{ return float_type; }
+Type::TypeType
+OperationLiteralFloat::get_literal_type() const
+{ return literal_type; }
 std::string
 OperationLiteralFloat::get_description() const
 {
@@ -599,12 +769,12 @@ OperationLiteralFloat::get_description() const
     const std::string & op_name = it->second;
 
     std::string literal_float;
-    switch (float_type) {
-    case FLOAT_F32:
-	literal_float = std::to_string(literal_float_f32);
+    switch (literal_type) {
+    case Type::TYPE_PRIMITIVE_f32:
+	literal_float = std::to_string(literal_float_f32) + std::string(" f32");
 	break;
-    case FLOAT_F64:
-	literal_float = std::to_string(literal_float_f64);
+    case Type::TYPE_PRIMITIVE_f64:
+	literal_float = std::to_string(literal_float_f64) + std::string(" f64");
 	break;
     default:
 	fprintf(stderr, "Compiler Bug! Unknown literal float type\n");
