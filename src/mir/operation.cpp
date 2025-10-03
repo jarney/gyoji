@@ -478,8 +478,11 @@ OperationLiteralString::get_description() const
     const auto & it = op_type_names.find(type);
     const std::string & op_name = it->second;
 
+    std::string literal_escaped;
+    JLang::misc::string_c_escape(literal_escaped, literal_string);
+
     std::string desc = std::string("_") + std::to_string(result) + std::string(" = ") + op_name + std::string(" (");
-    desc = desc + std::string(" \"") + JLang::misc::string_c_escape(literal_string);
+    desc = desc + std::string(" \"") + literal_escaped;
     desc = desc + std::string(" \")");
     return desc;
 }

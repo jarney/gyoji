@@ -1628,7 +1628,12 @@ ExpressionPrimaryLiteralString::ExpressionPrimaryLiteralString(
 	exit(1);
     }
     std::string nextpart = token_value.substr(1, size-2);
-    just_the_string = JLang::misc::string_c_unescape(nextpart);
+    
+    bool escape_error = JLang::misc::string_c_unescape(just_the_string, nextpart);
+    if (escape_error) {
+	fprintf(stderr, "Compiler Bug: Invalid escape sequence.  Find a better place to handle this error.  Preferably not in the parser\n");
+	exit(0);
+    }
 }
 ExpressionPrimaryLiteralString::~ExpressionPrimaryLiteralString()
 {}
@@ -1650,7 +1655,13 @@ ExpressionPrimaryLiteralString::add_string(JLang::owned<Terminal> _added)
 	exit(1);
     }
     std::string nextpart = token_value.substr(1, size-2);
-    just_the_string += JLang::misc::string_c_unescape(nextpart);
+    std::string unescaped_literal;
+    bool escape_error = JLang::misc::string_c_unescape(unescaped_literal, nextpart);
+    if (escape_error) {
+	fprintf(stderr, "Compiler Bug: Invalid escape sequence.  Find a better place to handle this error.  Preferably not in the parser\n");
+	exit(0);
+    }
+    just_the_string += unescaped_literal;
     additional_strings.push_back(std::move(_added));
 }
 ///////////////////////////////////////////////////
