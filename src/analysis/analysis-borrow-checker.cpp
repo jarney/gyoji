@@ -66,7 +66,7 @@ CFGEdge::~CFGEdge()
 // AnalysisPassBorrowChecker
 ///////////////////////////////
 AnalysisPassBorrowChecker::AnalysisPassBorrowChecker(CompilerContext & _compiler_context)
-    : AnalysisPass(_compiler_context)
+    : AnalysisPass(_compiler_context, "borrow checker")
 {}
 AnalysisPassBorrowChecker::~AnalysisPassBorrowChecker()
 {}

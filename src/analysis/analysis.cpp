@@ -5,8 +5,9 @@ using namespace JLang::mir;
 using namespace JLang::context;
 using namespace JLang::analysis;
 
-AnalysisPass::AnalysisPass(CompilerContext & _compiler_context)
+AnalysisPass::AnalysisPass(CompilerContext & _compiler_context, std::string _name)
     : compiler_context(_compiler_context)
+    , name(_name)
 {}
 
 AnalysisPass::~AnalysisPass()
@@ -16,3 +17,6 @@ JLang::context::CompilerContext &
 AnalysisPass::get_compiler_context() const
 { return compiler_context; }
 
+const std::string &
+AnalysisPass::get_name() const
+{ return name; }

@@ -6,7 +6,7 @@ using namespace JLang::context;
 using namespace JLang::analysis;
 
 AnalysisPassUnreachable::AnalysisPassUnreachable(CompilerContext & _compiler_context)
-    : AnalysisPass(_compiler_context)
+    : AnalysisPass(_compiler_context, "unreachable analysis")
 {}
 AnalysisPassUnreachable::~AnalysisPassUnreachable()
 {}
@@ -30,7 +30,6 @@ void AnalysisPassUnreachable::check(const Function & function) const
 	for (const auto & operation_it : operations) {
 	    const Operation & operation = *operation_it;
 	    // We found an operation after we found a terminator.
-	    fprintf(stderr, "Found terminating operator %s\n", operation.get_description().c_str());
 	    if (terminated) {
 		get_compiler_context()
 		    .get_errors()
@@ -42,7 +41,6 @@ void AnalysisPassUnreachable::check(const Function & function) const
 	    }
 	    // We found a terminating operation.
 	    if (operation.is_terminating()) {
-		fprintf(stderr, "Terminating\n");
 		terminated = true;
 		continue;
 	    }

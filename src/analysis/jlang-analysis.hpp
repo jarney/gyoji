@@ -6,13 +6,15 @@ namespace JLang::analysis {
 
     class AnalysisPass {
     public:
-	AnalysisPass(JLang::context::CompilerContext & _compiler_context);
+	AnalysisPass(JLang::context::CompilerContext & _compiler_context, std::string _name);
 	~AnalysisPass();
 	virtual void check(const JLang::mir::MIR & mir) const = 0;
 	
 	JLang::context::CompilerContext & get_compiler_context() const;
+	const std::string & get_name() const;
     private:
 	JLang::context::CompilerContext & compiler_context;
+	std::string name;
     };
     
     class AnalysisPassTypeResolution : public AnalysisPass {

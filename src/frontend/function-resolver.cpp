@@ -961,7 +961,6 @@ FunctionDefinitionResolver::extract_from_expression_postfix_function_call(
     // will return.
     returned_tmpvar = function.tmpvar_define(function_pointer_type->get_return_type());
     
-    fprintf(stderr, "Extracting function, adding to bb\n");
     auto operation = std::make_unique<OperationFunctionCall>(
 	expression.get_source_ref(),
 	returned_tmpvar,
@@ -2736,7 +2735,7 @@ FunctionDefinitionResolver::extract_from_function_definition(const FileStatement
     std::string fully_qualified_function_name = 
 	function_definition.get_name().get_fully_qualified_name();
     
-    fprintf(stderr, "Extracting function %s\n",
+    fprintf(stderr, " - Extracting function %s\n",
 	    fully_qualified_function_name.c_str());
     
     const TypeSpecifier & type_specifier = function_definition.get_return_type();
@@ -2766,8 +2765,6 @@ FunctionDefinitionResolver::extract_from_function_definition(const FileStatement
     
     // Create a new basic block for the start
     
-    fprintf(stderr, "START BBlocks\n");
-    fprintf(stderr, "BB0:\n");
     size_t start_block = fn->add_block();
     
     if (!extract_from_statement_list(*fn, start_block, function_definition.get_scope_body().get_statements())) {

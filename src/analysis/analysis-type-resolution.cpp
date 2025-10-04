@@ -6,7 +6,7 @@ using namespace JLang::context;
 using namespace JLang::analysis;
 
 AnalysisPassTypeResolution::AnalysisPassTypeResolution(CompilerContext & _compiler_context)
-    : AnalysisPass(_compiler_context)
+    : AnalysisPass(_compiler_context, "type resolution")
 {}
 AnalysisPassTypeResolution::~AnalysisPassTypeResolution()
 {}

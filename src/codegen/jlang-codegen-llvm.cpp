@@ -306,7 +306,7 @@ CodeGeneratorLLVMContext::generate()
     
     const Functions & functions = mir.get_functions();
     for (auto const & function : functions.get_functions()) {
-	fprintf(stderr, "Generating for function %s\n", function->get_name().c_str());
+	fprintf(stderr, " - Generating function %s\n", function->get_name().c_str());
 	generate_function(*function);
     }
 }
@@ -1681,13 +1681,14 @@ CodeGeneratorLLVMContext::generate_function(const JLang::mir::Function & functio
 	}
     }
 
+    // This should not be required.  We should
+    // enforce this through the analysis layer
+    // and reject programs that may return without
+    // defining a return value.
     if (return_value == nullptr) {
 	Builder->CreateRet(
 	    Builder->getInt32(0x1000)
 	    );
-    }
-    else {
-	fprintf(stderr, "Return already happened\n");
     }
     
     // Validate the generated code, checking for consistency.

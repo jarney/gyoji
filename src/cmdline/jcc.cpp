@@ -57,6 +57,9 @@ int main(int argc, char **argv)
 
     
     for (const auto & analysis_pass : analysis_passes) {
+	fprintf(stderr, "============================\n");
+	fprintf(stderr, "Analysis pass %s\n", analysis_pass->get_name().c_str());
+	fprintf(stderr, "============================\n");
 	analysis_pass->check(*mir);
     }
 
@@ -65,6 +68,9 @@ int main(int argc, char **argv)
 	return -1;
     }
 
+    fprintf(stderr, "============================\n");
+    fprintf(stderr, "Code Generation Pass\n");
+    fprintf(stderr, "============================\n");
     // This leaks memory. The code-generation
     // stage is a bit problematic
     // because we're not really cleaning up the

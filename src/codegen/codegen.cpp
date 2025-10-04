@@ -10,7 +10,6 @@ void JLang::codegen::generate_code(
     const std::string & _filename
     )
 {
-    fprintf(stderr, "Generating code\n");
     CodeGeneratorLLVM generator(_compiler_context, _mir);
     generator.initialize();  
     generator.generate();
