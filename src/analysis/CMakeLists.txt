@@ -5,6 +5,7 @@ set(ANALYSIS_PUBLIC_HEADERS
 set(ANALYSIS_SOURCES
     analysis.cpp
     analysis-type-resolution.cpp
+    analysis-unreachable.cpp
     analysis-borrow-checker.cpp
     ${ANALYSIS_PUBLIC_HEADERS}
 )

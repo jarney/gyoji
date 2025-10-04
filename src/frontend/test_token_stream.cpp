@@ -36,7 +36,6 @@ parse(std::string & filename, CompilerContext & context)
     close(input);
     if (parse_result->has_errors()) {
 	parse_result->get_errors().print();
-	return nullptr;
     }
     
     return parse_result;
@@ -55,6 +54,9 @@ int main(int argc, char **argv)
     CompilerContext context(path);
     
     JLang::owned<ParseResult> result = parse(path, context);
+    if (!result) {
+	return 1;
+    }
     
     for (const JLang::owned<Token> & token : result->get_token_stream().get_tokens()) {
 	printf("%s", token->get_value().c_str());

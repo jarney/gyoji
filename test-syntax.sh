@@ -37,6 +37,32 @@ semantics-types.j
 semantics-if-else.j
 semantics-function-call.j
 "
+echo "Checking that we can extract raw tokens"
+
+let failed=0
+for test_file in ${TEST_FILES} ; do
+    echo -n "    ${test_file}"
+    ${CMAKE_BINARY_DIR}/src/cmdline/jtokenize ${CMAKE_SOURCE_DIR}/tests/${test_file} >${CMAKE_BINARY_DIR}/test-syntax-dir/${test_file}.tokens
+    if [ $? -ne 0 ] ; then
+        echo " : FAILED"
+        failed=1
+    else
+        echo " : PASSED"
+    fi
+done
+
+echo "Checking that we can extract namespaces"
+for test_file in ${TEST_FILES} ; do
+    echo -n "    ${test_file}"
+    ${CMAKE_BINARY_DIR}/src/cmdline/jns ${CMAKE_SOURCE_DIR}/tests/${test_file} >${CMAKE_BINARY_DIR}/test-syntax-dir/${test_file}.namespaces
+    if [ $? -ne 0 ] ; then
+        echo " : FAILED"
+        failed=1
+    else
+        echo " : PASSED"
+    fi
+done
+
 echo "Checking token stream output."
 let failed=0
 for test_file in ${TEST_FILES} ; do
@@ -72,19 +98,6 @@ let failed=0
 for test_file in ${TEST_FILES} ; do
     echo -n "    ${test_file}"
     ${CMAKE_BINARY_DIR}/src/cmdline/jformat-tree ${CMAKE_SOURCE_DIR}/tests/${test_file} >${CMAKE_BINARY_DIR}/test-syntax-dir/${test_file}.xml
-    if [ $? -ne 0 ] ; then
-        echo " : FAILED"
-        failed=1
-    else
-        echo " : PASSED"
-    fi
-done
-
-echo "Checking that we can extract namespaces"
-let failed=0
-for test_file in ${TEST_FILES} ; do
-    echo -n "    ${test_file}"
-    ${CMAKE_BINARY_DIR}/src/cmdline/jns ${CMAKE_SOURCE_DIR}/tests/${test_file} >${CMAKE_BINARY_DIR}/test-syntax-dir/${test_file}.namespaces
     if [ $? -ne 0 ] ; then
         echo " : FAILED"
         failed=1

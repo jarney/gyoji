@@ -2,11 +2,11 @@
 
 using namespace JLang::context;
 
-CompilerContext::CompilerContext(const std::string & _filename)
-    : filename(_filename)
+CompilerContext::CompilerContext(std::string _filename)
 {
     token_stream = std::make_unique<TokenStream>();
     errors = std::make_unique<Errors>(*token_stream);
+    filenames.push_back(_filename);
 }
 CompilerContext::~CompilerContext()
 {}
@@ -25,4 +25,10 @@ CompilerContext::get_token_stream() const
 
 const std::string &
 CompilerContext::get_filename() const
-{ return filename; }
+{ return filenames.back(); }
+
+void
+CompilerContext::add_filename(const std::string & _filename)
+{
+    filenames.push_back(_filename);
+}

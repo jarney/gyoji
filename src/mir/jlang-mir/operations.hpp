@@ -889,12 +889,6 @@ namespace JLang::mir {
 	 */
 	const JLang::context::SourceReference & get_source_ref() const;
 	
-    protected:
-	OperationType type;
-	const JLang::context::SourceReference & src_ref;
-	std::vector<size_t> operands;
-	size_t result;
-
 	/**
 	 * @brief Produce a description of the operation.
 	 *
@@ -907,6 +901,12 @@ namespace JLang::mir {
 	 * method to provide debuginng information.
 	 */
 	virtual std::string get_description() const;
+    protected:
+	OperationType type;
+	const JLang::context::SourceReference & src_ref;
+	std::vector<size_t> operands;
+	size_t result;
+
 	/**
 	 * @brief Add an operand
 	 *

@@ -23,12 +23,6 @@ Terminal::get_type() const
 const std::string &
 Terminal::get_value() const
 { return token.get_value(); }
-const size_t
-Terminal::get_line() const
-{ return token.get_line(); }
-const size_t
-Terminal::get_column() const
-{ return token.get_column(); }
 const SourceReference &
 Terminal::get_terminal_source_ref() const
 { return token.get_source_ref(); }

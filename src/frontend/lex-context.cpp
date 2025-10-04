@@ -1,6 +1,6 @@
 #include <jlang-frontend.hpp>
 #define _JLANG_INTERNAL
-#include <lex-context.hpp>
+#include <jlang-frontend/lex-context.hpp>
 #undef _JLANG_INTERNAL
 #include <jlang.l.hpp>
 #include <jlang.y.hpp>

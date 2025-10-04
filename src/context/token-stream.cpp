@@ -71,7 +71,7 @@ const Token &
 TokenStream::add_token(
     std::string _typestr,
     std::string _value,
-    std::string _filename,
+    const std::string & _filename,
     size_t _line,
     size_t _column
     )
@@ -120,16 +120,6 @@ Token::append(std::string & _value)
 {
     value += _value;
 }
-
-const size_t
-Token::get_line() const
-{ return src_ref.get_line(); }
-
-const size_t
-Token::get_column() const
-{ return src_ref.get_column(); }
-
 const SourceReference &
 Token::get_source_ref() const
 { return src_ref; }
-

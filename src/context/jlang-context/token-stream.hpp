@@ -55,17 +55,7 @@ namespace JLang::context {
 	 * one of the lexical rules.
 	 */
 	const std::string & get_value() const;
-	/**
-	 * This is the line number where the token
-	 * was found in the input.
-	 */
-	const size_t get_line() const;
-	/**
-	 * This is the column number where the
-	 * token was found.
-	 */
-	const size_t get_column() const;
-	
+
 	const SourceReference & get_source_ref() const;
 	
 	friend TokenStream;
@@ -131,7 +121,7 @@ namespace JLang::context {
 	const Token & add_token(
 	    std::string _typestr,
 	    std::string _value,
-	    std::string _filename,
+	    const std::string & _filename,
 	    size_t _line,
 	    size_t _column
 	    );

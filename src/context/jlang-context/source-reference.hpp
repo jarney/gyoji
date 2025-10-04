@@ -13,7 +13,7 @@ namespace JLang::context {
     class SourceReference {
     public:
 	SourceReference(
-	    std::string _filename,
+	    const std::string & _filename,
 	    size_t _line,
 	    size_t _column,
 	    size_t _length
@@ -25,7 +25,7 @@ namespace JLang::context {
 	size_t get_column() const;
 	size_t get_length() const;
     private:
-	std::string filename;
+	const std::string & filename;
 	size_t line;
 	size_t column;
 	size_t length;

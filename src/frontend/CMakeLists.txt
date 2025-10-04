@@ -18,6 +18,7 @@ set(FRONTEND_PUBLIC_HEADERS_BOTTOM
     jlang-frontend/parser.hpp
     jlang-frontend/type-resolver.hpp
     jlang-frontend/function-resolver.hpp
+    jlang-frontend/lex-context.hpp
 )
 
 set(FRONTEND_SOURCES
@@ -27,7 +28,6 @@ set(FRONTEND_SOURCES
     syntax-node.cpp
     namespace.cpp
     parse-result.cpp
-    lex-context.hpp
     lex-context.cpp
     parser.cpp
     type-resolver.cpp

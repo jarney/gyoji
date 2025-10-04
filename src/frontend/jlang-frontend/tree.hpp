@@ -144,16 +144,6 @@ namespace JLang::frontend::tree {
 	 * that matched the token.
 	 */
 	const std::string & get_value() const;
-	/**
-	 * Returns the source line number where the
-	 * input token was found.
-	 */
-	const size_t get_line() const;
-	/**
-	 * Returns the source column number where
-	 * the input token was found.
-	 */
-	const size_t get_column() const;
 	
 	/**
 	 * Returns a reference to the place in the source-file

@@ -79,8 +79,8 @@ int JFormatTree::process(const SyntaxNode & node)
     printf("<node type='%s'", xml_escape_attribute(node.get_type()).c_str());
     if (node.has_data<Terminal>()) {
 	const Terminal & terminal = node.get_data<Terminal>();
-	if (terminal.get_line() > 0) {
-	    printf(" line='%ld' column='%ld'", terminal.get_line(), terminal.get_column());
+	if (terminal.get_source_ref().get_line() > 0) {
+	    printf(" line='%ld' column='%ld'", terminal.get_source_ref().get_line(), terminal.get_source_ref().get_column());
 	}
 	if (terminal.get_value().length() != 0) {
 	    if (terminal.get_type() == std::string("IDENTIFIER") ||

@@ -2694,6 +2694,7 @@ FunctionDefinitionResolver::extract_from_statement_list(
 	}
 	else if (std::holds_alternative<JLang::owned<StatementReturn>>(statement_type)) {
 	    const auto & statement = std::get<JLang::owned<StatementReturn>>(statement_type);
+	    // XXX: TODO: Should trigger destructors here at the return.
 	    if (!extract_from_statement_return(function, current_block, *statement)) {
 		return false;
 	    }

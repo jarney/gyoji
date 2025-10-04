@@ -3,9 +3,6 @@
 #include <memory>
 #include <jlang-frontend.hpp>
 #include <jlang.y.hpp>
-#define _JLANG_INTERNAL
-#include <lex-context.hpp>
-#undef _JLANG_INTERNAL
 
 using namespace JLang::context;
 using namespace JLang::frontend;
@@ -59,7 +56,7 @@ void move_array(
                 std::string(yytext),                                 \
                 lc->compiler_context.get_filename(),                 \
                 lc->line,                                            \
-                lc->column-1                                         \
+                lc->column                                           \
             );                                                       \
     lc->column += strlen(yytext);                                    \
 

@@ -49,12 +49,20 @@ int main(int argc, char **argv)
 
     // Make sure that all types that are used in functions
     // actually have 'complete' definitions.
-    AnalysisPassTypeResolution type_resolution(context);
-    type_resolution.check(*mir);
-
-    AnalysisPassBorrowChecker borrow_checker(context);
-    borrow_checker.check(*mir);
+    std::vector<JLang::owned<AnalysisPass>> analysis_passes;
     
+    analysis_passes.push_back(std::make_unique<AnalysisPassTypeResolution>(context));
+    // XXX This has uncovered that
+    // return operations MUST trigger the undeclare
+    // so that they happen first.
+    //analysis_passes.push_back(std::make_unique<AnalysisPassUnreachable>(context));
+    analysis_passes.push_back(std::make_unique<AnalysisPassBorrowChecker>(context));
+
+    
+    for (const auto & analysis_pass : analysis_passes) {
+	analysis_pass->check(*mir);
+    }
+
     if (context.has_errors()) {
 	context.get_errors().print();
 	return -1;

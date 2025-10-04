@@ -213,6 +213,7 @@ ErrorMessage::print()
     size_t line = src_ref.get_line();
     size_t column = src_ref.get_column();
     size_t length = src_ref.get_length();
+    fprintf(stderr, "Error at source ref %ld %ld %ld\n", src_ref.get_line(), src_ref.get_column(), src_ref.get_length());
     for (const std::pair<size_t, std::string> & linepair : context) {
 	fprintf(stderr, "%4ld: %s", linepair.first, linepair.second.c_str());
 	if (linepair.second.size() > 0) {
@@ -221,15 +222,15 @@ ErrorMessage::print()
 	    }
 	}
 	if (line == linepair.first) {
-	    draw_arrow(column+5, length);
+	    draw_arrow(column+6, length);
 	    if (column < 40) {
 		std::string wrapped = wrap_text(80-column, errormsg);
-		std::string indented = indent_text(column+5, wrapped);
+		std::string indented = indent_text(column+6, wrapped);
 		printf("%s\n", indented.c_str());
 	    }
 	    else {
 		std::string wrapped = wrap_text(column, errormsg);
-		std::string indented = indent_text(5, wrapped);
+		std::string indented = indent_text(6, wrapped);
 		printf("%s\n", indented.c_str());
 	    }
 	}

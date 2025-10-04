@@ -6,7 +6,7 @@ using namespace JLang::context;
 
 
 SourceReference::SourceReference(
-    std::string _filename,
+    const std::string & _filename,
     size_t _line,
     size_t _column,
     size_t _length

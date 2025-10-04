@@ -6,9 +6,6 @@
 #include <jlang.l.hpp>
 #include <jlang-frontend.hpp>
 #include <jlang-misc/jstring.hpp>
-#define _JLANG_INTERNAL
-#include <lex-context.hpp>
-#undef _JLANG_INTERNAL
   
   using namespace JLang::context;
   using namespace JLang::frontend::namespaces;
