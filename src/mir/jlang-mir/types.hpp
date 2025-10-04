@@ -127,6 +127,7 @@ namespace JLang::mir {
 	 */
 	TypeMember(
 	    std::string _member_name,
+	    size_t _index,
 	    const Type *_member_type,
 	    const JLang::context::SourceReference & _source_ref
 	    );
@@ -155,6 +156,25 @@ namespace JLang::mir {
 	 * Returns the name of the member.
 	 */
 	const std::string & get_name() const;
+
+	/**
+	 * Returns the index into the underlying
+	 * structure representing the composite
+	 * type.  Indices start at 0 and run
+	 * through the number of elements in the
+	 * composite data type.  This is technically
+	 * redundant with the name, but it is
+	 * convenient in the code-generation layer
+	 * to have direct access to the index
+	 * at a small cost of storing one index
+	 * per memeber.
+	 *
+	 * Specifically for LLVM, this makes it
+	 * easy to use 'CreateGEP' and pass the
+	 * correct index.
+	 */
+	size_t get_index() const;
+	
 	/**
 	 * Returns the type fo the member.
 	 */
@@ -166,6 +186,7 @@ namespace JLang::mir {
 	const JLang::context::SourceReference & get_source_ref() const;
     private:
 	std::string member_name;
+	size_t index;
 	const Type *member_type;
 	const JLang::context::SourceReference *source_ref;
     };
@@ -546,7 +567,12 @@ namespace JLang::mir {
 	/**
 	 * This returns an immutable reference to the
 	 * array of members of a class.  This is ONLY valid
-	 * for types that are 'is_composite()'
+	 * for types that are 'is_composite()'.
+	 *
+	 * Note that the ORDER of the elements in the
+	 * vector here are important because they represent
+	 * indices used when the MIR accesses the
+	 * members of the container.
 	 */
 	const std::vector<TypeMember> & get_members() const;
 

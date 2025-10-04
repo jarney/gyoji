@@ -1,20 +1,22 @@
-
-class TestClass;
-
-// We can define a class without
-// a forward-declaration.
-class TestClass {
+class Foo {
     u32 a;
     u8 b;
     u8* s;
 };
 
+u32 print_value(u32 number);
+
 u32 main(u32 argc, u8**argv)
 {
-	TestClass cl;
-
+	Foo cl;
+	u32 b;
 	cl.a = 10u32;
-//
-//	cl.s = "abc\n";
-    return 0u32;
+	b = cl.a;
+	b = b + 192;
+
+	cl.a = b;
+	cl.a += 100;
+	
+	print_value(cl.a);
+	return 0u32;
 }

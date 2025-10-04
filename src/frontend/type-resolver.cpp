@@ -142,6 +142,7 @@ TypeResolver::extract_from_class_members(Type & type, const ClassDefinition & de
     std::vector<TypeMember> members;
     
     const auto & class_members = definition.get_members();
+    size_t member_id = 0;
     for (const auto & class_member : class_members) {
 	const auto & class_member_type = class_member->get_member();
 	if (std::holds_alternative<JLang::owned<ClassMemberDeclarationVariable>>(class_member_type)) {
@@ -157,8 +158,12 @@ TypeResolver::extract_from_class_members(Type & type, const ClassDefinition & de
 			);
 	    }
 	    else {
-		TypeMember add_member(member_variable->get_name(), member_type, class_member->get_source_ref());
+		// TODO: There must be a good way to ensure
+		// that the names are unique.  This would allow two
+		// fields with the same name which is clearly bad.
+		TypeMember add_member(member_variable->get_name(), member_id, member_type, class_member->get_source_ref());
 		members.push_back(add_member);
+		member_id++;
 	    }
 	}
     }

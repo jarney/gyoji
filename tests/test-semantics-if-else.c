@@ -3,6 +3,12 @@
 #define u32 unsigned int
 #define u8 unsigned char
 
+u32 print_value(u32 number)
+{
+    fprintf(stderr, "Output is %u\n", number);
+    return 0;
+}
+
 //u32 preamble_function_call()
 //{
 //    fprintf(stderr, "preamble_function_call\n");

@@ -110,6 +110,11 @@ llvm::Type *
 CodeGeneratorLLVMContext::create_type_composite(const JLang::mir::Type *compositetype)
 {
     std::vector<llvm::Type*> members;
+
+    // Note that this relies on the fact that
+    // the members are in order and equal to the
+    // 'index' of the member.  Yes, this is a bit
+    // of a hacky way to do that.
     for (const auto & member : compositetype->get_members()) {
 	members.push_back(create_type(member.get_type()));
     }
@@ -419,7 +424,24 @@ CodeGeneratorLLVMContext::generate_operation_dot(
     const JLang::mir::Function & mir_function,
     const JLang::mir::OperationDot & operation
     )
-{}
+{
+    size_t a = operation.get_a();
+
+    // The type is a class
+    const JLang::mir::Type *mir_class_type = mir_function.tmpvar_get(a);
+    llvm::Type *llvm_class_type = types[mir_class_type->get_name()];
+
+    const std::string & member_name = operation.get_member_name();
+    const TypeMember *member = mir_class_type->member_get(member_name);
+    size_t member_index = member->get_index();
+    
+    llvm::Value *value_a = tmp_lvalues[a];
+    llvm::Value *result = Builder->CreateConstInBoundsGEP2_64(llvm_class_type, value_a, 0, member_index);
+    llvm::Value *value = Builder->CreateLoad(types[member->get_type()->get_name()], result);
+    
+    tmp_lvalues.insert(std::pair(operation.get_result(), result));
+    tmp_values.insert(std::pair(operation.get_result(), value));
+}
 void
 CodeGeneratorLLVMContext::generate_operation_arrow(
     std::map<size_t, llvm::Value *> & tmp_values,
@@ -427,7 +449,10 @@ CodeGeneratorLLVMContext::generate_operation_arrow(
     const JLang::mir::Function & mir_function,
     const JLang::mir::OperationArrow & operation
     )
-{}
+{
+//    llvm::Value *sum = Builder->CreateFPCast(value_a, llvm_cast_type);
+//    tmp_values.insert(std::pair(operation.get_result(), sum));
+}
 
 // Variable access
 void
@@ -552,85 +577,6 @@ CodeGeneratorLLVMContext::generate_operation_literal_int(
 		);
 	return;
     }
-#if 0
-    const char *valptr = operation.get_literal_int().c_str();
-    Type::TypeType type = operation.get_literal_type()->get_type();
-    bool sign_positive = operation.get_sign_positive();
-    size_t radix = operation.get_radix();
-    
-    switch (type) {
-    case Type::TYPE_PRIMITIVE_u8:
-        {
-	unsigned long long val = strtoul(valptr, nullptr, radix);
-	value = Builder->getInt8((unsigned char)val);
-        }
-	break;
-    case Type::TYPE_PRIMITIVE_u16:
-        {
-	unsigned long long val = strtoul(valptr, nullptr, radix);
-	value = Builder->getInt16((unsigned short)val);
-        }
-        break;
-    case Type::TYPE_PRIMITIVE_u32:
-        {
-	unsigned long long val = strtoul(valptr, nullptr, radix);
-	value = Builder->getInt32(val);
-        }
-	break;
-    case Type::TYPE_PRIMITIVE_u64:
-        {
-	unsigned long long val = strtoull(valptr, nullptr, radix);
-	value = Builder->getInt64(val);
-        }
-	break;
-    case Type::TYPE_PRIMITIVE_i8:
-        {
-	long val = strtoull(valptr, nullptr, radix);
-	if (!sign_positive) {
-	    val = -val;
-	}
-	value = Builder->getInt8(val);
-        }
-        break;
-    case Type::TYPE_PRIMITIVE_i16:
-        {
-	long val = strtol(valptr, nullptr, radix);
-	if (!sign_positive) {
-	    val = -val;
-	}
-	value = Builder->getInt16(val);
-        }
-        break;
-    case Type::TYPE_PRIMITIVE_i32:
-        {
-	long val = strtol(valptr, nullptr, radix);
-	if (!sign_positive) {
-	    val = -val;
-	}
-	value = Builder->getInt32(val);
-        }
-	break;
-    case Type::TYPE_PRIMITIVE_i64:
-        {
-	long long val = strtoll(valptr, nullptr, radix);
-	if (!sign_positive) {
-	    val = -val;
-	}
-	value = Builder->getInt64(val);
-        }
-	break;
-    default:
-	compiler_context
-	    .get_errors()
-	    .add_simple_error(
-		operation.get_source_ref(),
-		"Compiler bug! Invalid operand for literal int.",
-		std::string("Literal int has unknown type") + operation.get_literal_type()->get_name()
-		);
-	return;
-	
-    }
-#endif    
     tmp_values.insert(std::pair(operation.get_result(), value));
 }
 void
@@ -740,7 +686,8 @@ CodeGeneratorLLVMContext::generate_operation_dereference(
     const JLang::mir::Function & mir_function,
     const JLang::mir::OperationUnary & operation
     )
-{}
+{
+}
 
 void
 CodeGeneratorLLVMContext::generate_operation_arithmetic_negate(

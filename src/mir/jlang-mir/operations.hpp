@@ -1276,7 +1276,7 @@ namespace JLang::mir {
      * The returned operation will be an lvalue if the
      * member variable is an lvalue (which is almost certainly will be).
      */
-    class OperationDot : public Operation {
+    class OperationDot : public OperationUnary {
     public:
 	/**
 	 * @brief This class represents class/structure member access operations

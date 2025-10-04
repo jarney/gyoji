@@ -341,7 +341,7 @@ OperationDot::OperationDot(
     size_t _operand,
     std::string _member_name
     )
-    : Operation(OP_DOT, _src_ref, _result, _operand)
+    : OperationUnary(OP_DOT, _src_ref, _result, _operand)
     , member_name(_member_name)
 {}
 
