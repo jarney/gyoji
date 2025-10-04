@@ -3,7 +3,10 @@
 namespace JLang::misc {
 
     /**
-     * This interface is used to provide the parser with a method
+     * @brief Input Source used by lexer
+     *
+     * @details
+     * This interface is used to provide the lexer/parser with a method
      * of reading the input data.  This can be implemented as a
      * file reader to read data from a file and can also be implemented
      * as a string buffer reader to read from memory.
@@ -11,11 +14,19 @@ namespace JLang::misc {
     class InputSource {
     public:
 	/**
-	 * Constructor, just an interface.
+	 * @brief Constructor just provides an interface
+	 *
+	 * @details
+	 * This class has no concrete implementation, but is just an
+	 * interface that other classes may provide implementations for.
 	 */
 	InputSource();
+	
 	/**
-	 * Destructor, nothing fancy.
+	 * @brief Move along, nothing to see here.
+	 *
+	 * @details
+	 * Move along, nothing to see here.
 	 */
 	~InputSource();
 	

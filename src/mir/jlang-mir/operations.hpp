@@ -52,10 +52,28 @@ namespace JLang::mir {
      */
     class Operation {
     public:
+	/**
+	 * @brief Operations of the MIR virtual-machine.
+	 *
+	 * @details
+	 * This type represents the various operations or
+	 * instructions that the virtual machine of the MIR
+	 * can perform.  Each operation performs some basic
+	 * computation on the values of the 'registers' of the
+	 * machine which are given by operands.  The operations
+	 * also produce a result called the 'return-value' of the
+	 * operation.  Most operations take three operands (i.e. three-address-code)
+	 * however, some operations take fewer and a few operations
+	 * take more.  Generally speaking, however, these operations
+	 * are as primitive as it is possible to make them
+	 * and most of the time, they will result in a single
+	 * instruction on the target platform.
+	 */
 	typedef enum {
 	    // Global symbols
 	    /**
 	     * @brief Function call
+	     *
 	     * @details
 	     * Directs the MIR to call a function.  The first
 	     * operand is the function to call and the remaining
@@ -79,6 +97,7 @@ namespace JLang::mir {
 	    OP_FUNCTION_CALL,
 	    /**
 	     * @brief Load a symbol from the symbol-table.
+	     *
 	     * @details
 	     * This opcode directs the MIR to load a symbol
 	     * from the symbol table.  This will be either
@@ -106,6 +125,7 @@ namespace JLang::mir {
 	    // Cast operations
 	    /**
 	     * @brief Widen a signed integer to a larger type.
+	     *
 	     * @details
 	     * This opcode widens a value from a signed integer
 	     * to another signed integer type by "sign-extending" the
@@ -133,6 +153,7 @@ namespace JLang::mir {
 
 	    /**
 	     * @brief Widen an unsigned integer to a larger type.
+	     *
 	     * @details
 	     * This opcode widens a value from an unsigned integer
 	     * to another unsigned integer type by "zero-extending" the
@@ -178,9 +199,87 @@ namespace JLang::mir {
 	     */
 	    OP_WIDEN_FLOAT,     // Widen a floating-point to a larger type.
 
-	    // Indirect access
+	    /**
+	     * @brief Access a value inside an array
+	     *
+	     * @details
+	     * This opcode allows access to values stored inside an array.
+	     * It takes two operands, the first must be an array and the second
+	     * is an index into the array.  The index into the array must
+	     * be an unsigned integer type.
+	     *
+	     * The return-value of the opcode is of the same type as the
+	     * elements of the array.  The returned value is an lvalue
+	     * so it can be accessed or assigned.
+	     *
+	     * Examples:
+	     * @code{.unparsed}
+	     * _0 : local-declare ( u8[] )
+	     * _1 : u32 = literal-int( 2 )
+	     * _3 : u8 = array-index( _0 _1 )
+	     * @endcode
+	     */
 	    OP_ARRAY_INDEX,     // Pointer types -> Pointer Target type
+
+	    /**
+	     * @brief Access a value inside a class
+	     *
+	     * @details
+	     * This opcode is used to access values contained
+	     * in a class structure.  The access may be for
+	     * values (member variables) or functions (methods).
+	     *
+	     * For member variables, returned type is the same as the same as the
+	     * type of the member variable and the value is an lvalue
+	     * so it can be the target of an assignment.  For methods,
+	     * the returned type is a function pointer whose signature
+	     * is the same as the method and the value is not an lvalue
+	     * meaning that it can be read, but not written to.
+	     *
+	     * Examples:
+	     * @code{.unparsed}
+	     * _0 : local-declare ( class { u8 : c } )
+	     * _1 : u8 = member-access ( _0 "c" )
+	     * @endcode
+	     */
 	    OP_DOT,             // class types -> Found member type
+
+	    /**
+	     * @brief Indirect member access
+	     *
+	     * @details
+	     * This opcode is used to access values contained
+	     * in a class structure.  The access may be for
+	     * values (member variables) or functions (methods).
+	     * The only difference between this and the OP_DOT
+	     * operation is that it performs the access indirectly
+	     * through a pointer instead of directly as an lvalue.
+	     * It behaves exactly as if the operation were replaced
+	     * by OP_DEREFERENCE followed by OP_DOT.
+	     *
+	     * The first operand must be a class lvalue type and
+	     * the second operand must be the name of the member
+	     * to access.
+	     *
+	     * Because this has an equivalent with other opcodes, this
+	     * may be dropped entirely.
+	     *
+	     * Example
+	     * @code{.unparsed}
+	     * _0 : local-declare ( class { u8 : c } )
+	     * _1 : (class {u8 : c}* ) = addressof( _0 )
+	     * _2 : u8 = indirect-member-access ( _1 "c" )
+	     * @endcode
+	     *
+	     * The above example is exactly equivalent to
+	     *
+	     * @code{.unparsed}
+	     * _0 : local-declare ( class { u8 : c } )
+	     * _1 : (class {u8 : c}* ) = addressof( _0 )
+	     * _2 : (class {u8 : c} ) = dereference( _1 )
+	     * _3 : u8 : = member-access ( _2 "c" )
+	     * @endcode
+	     */
 	    OP_ARROW,           // Pointer to class types -> Found member type
 
 	    // Variable access
@@ -217,6 +316,7 @@ namespace JLang::mir {
 
 	    /**
 	     * @brief Undeclare local variable
+	     *
 	     * @details
 	     * This de-allocates a local variable on the stack of a given type.  This
 	     * takes no opcodes and returns no value.  Instead, it operates
@@ -236,11 +336,12 @@ namespace JLang::mir {
 	     * @code{.unparsed}
 	     *     local-undeclare (foo)
 	     * @endcode
-	     * @endcode
 	     */
 	    OP_LOCAL_UNDECLARE, // N/A
+	    
 	    /**
 	     * @brief Load value from variable.
+	     *
 	     * @details
 	     * This loads the value of a variable from its storage and places
 	     * the result in the return-value.
@@ -280,7 +381,12 @@ namespace JLang::mir {
 	     * @details
 	     * This loads a pointer to a u8 that points to a
 	     * string literal defined in the static constant
-	     * data area.
+	     * data area.  The data carried here is the exact
+	     * binary data to be placed into the static section.
+	     * Any C-style escape sequences should already have been
+	     * interpreted before this is used.  No assumptions about
+	     * the data are made except that it is a null-terminated
+	     * sequence of bytes.
 	     *
 	     * @code{.unparsed}
 	     * _0: u8* = literal-string( "Hello World" )
@@ -342,6 +448,7 @@ namespace JLang::mir {
             // Unary operations
 	    /**
 	     * @brief Returns a value and then increments the value of the operand.
+	     *
 	     * @details
 	     * This opcode is the equivalent of the C++ increment
 	     * suffix operation "a++" where the value returned is the
@@ -360,6 +467,7 @@ namespace JLang::mir {
 	    
 	    /**
 	     * @brief Returns a value and then decrements the value of the operand.
+	     *
 	     * @details
 	     * This opcode is the equivalent of the C++ increment
 	     * suffix operation "a--" where the value returned is the
@@ -394,6 +502,7 @@ namespace JLang::mir {
 	    OP_PRE_INCREMENT,   // Pointer types, integer types -> Operand type
 	    /**
 	     * @brief Decrements a value and then returns the decremented value.
+	     *
 	     * @details
 	     * This opcode is the equivalent of the C++ decrement
 	     * prefix operation "--a" where the value returned is the
@@ -411,6 +520,7 @@ namespace JLang::mir {
 	    OP_PRE_DECREMENT,   // Pointer types, integer types -> Operand type
 	    /**
 	     * @brief Returns the address of the given variable.
+	     *
 	     * @details
 	     * This opcode is the equivalent of the C++ '&' operation.
 	     * It returns the address of the value stored
@@ -571,7 +681,7 @@ namespace JLang::mir {
 
 	    // Binary operations: logical
 	    /**
-	     * @breif Logical AND
+	     * @brief Logical AND
 	     *
 	     * @details
 	     * This opcode performs a boolean AND on the two opcodes
@@ -580,7 +690,7 @@ namespace JLang::mir {
 	     */
 	    OP_LOGICAL_AND, // Boolean types -> Boolean
 	    /**
-	     * @breif Logical OR
+	     * @brief Logical OR
 	     *
 	     * @details
 	     * This opcode performs a boolean OR on the two opcodes
@@ -591,7 +701,7 @@ namespace JLang::mir {
 
 	    // Binary operations: bitwise
 	    /**
-	     * @breif Bitwise AND
+	     * @brief Bitwise AND
 	     *
 	     * @details
 	     * This opcode performs a bitwise AND on the two opcodes.
@@ -604,7 +714,7 @@ namespace JLang::mir {
 	     */
 	    OP_BITWISE_AND, // Matching integer types -> Integer type
 	    /**
-	     * @breif Bitwise OR
+	     * @brief Bitwise OR
 	     *
 	     * @details
 	     * This opcode performs a bitwise OR on the two opcodes.
@@ -618,7 +728,7 @@ namespace JLang::mir {
 	    OP_BITWISE_OR,  // Matching integer types -> Integer type
 	    
 	    /**
-	     * @breif Bitwise XOR
+	     * @brief Bitwise XOR
 	     *
 	     * @details
 	     * This opcode performs a bitwise XOR on the two opcodes.
@@ -631,7 +741,7 @@ namespace JLang::mir {
 	     */
 	    OP_BITWISE_XOR, // Matching integer types -> Integer type
 	    /**
-	     * @breif Bitwise Shift left
+	     * @brief Bitwise Shift left
 	     *
 	     * @details
 	     * This opcode performs a bitwise shift left of the first
@@ -646,7 +756,7 @@ namespace JLang::mir {
 	     */
 	    OP_SHIFT_LEFT,  // Matching integer types -> Integer type
 	    /**
-	     * @breif Bitwise Shift Right
+	     * @brief Bitwise Shift Right
 	     *
 	     * @details
 	     * This opcode performs a bitwise shift right of the first
@@ -920,6 +1030,13 @@ namespace JLang::mir {
 
     /**
      * @brief This subclass of Operation represents a unary operation.
+     * 
+     * @details
+     * This subclass of Operation is mainly a convenience container for unary operations.
+     * It provides convenient methods to access the 'a' operand
+     * of the operation and is used for most of the ordinary unary operation
+     * opcodes such as OP_NEGATE and OP_LOGICAL_NOT, etc.  See those opcodes
+     * for details of what types of values are supported and returned.
      */
     class OperationUnary : public Operation {
     public:
@@ -950,11 +1067,24 @@ namespace JLang::mir {
     
     /**
      * @brief This subclass of OperationUnary represents a cast operation.
+     *
+     * @details
+     * This class is used to represent opcodes whose first argument
+     * is a value and the second argument is a type.  It is used
+     * for opcodes that in some way manipulate the data to conform
+     * to the given type.  In some cases, the value itself is not
+     * modified and is returned exactly as it was with only new type
+     * information (reinterpret casts), and in some cases, the value itself changes
+     * such as sign extending integers or conversions from integers to
+     * floating-point numbers.  Each individual opcode carries the
+     * rules for these conversions.  This class is merely a container
+     * for instances of those operations.
      */
     class OperationCast : public OperationUnary {
     public:
 	/**
 	 * @brief Construct cast operation with a single operand and a type
+	 *
 	 * @details
 	 * This constructor is used for cast expressions
 	 * which take a single operand and a reference to a type
@@ -976,6 +1106,7 @@ namespace JLang::mir {
 	virtual ~OperationCast();
 	/**
 	 * @brief Get type being cast/converted to.
+	 *
 	 * @details
 	 * This method returns the type of variable being cast or converted to.
 	 */
@@ -988,11 +1119,19 @@ namespace JLang::mir {
 
     /**
      * @brief This subclass of Operation represents a binary operation.
+     *
+     * @details
+     * This subclass of Operation is mainly a convenience container for binary operations.
+     * It provides convenient methods to access the 'a' and 'b' operands
+     * of the operation and is used for most of the ordinary binary operation
+     * opcodes such as OP_ADD and OP_MULTIPLY, etc.  See those opcodes
+     * for details of what types of values are supported and returned.
      */
     class OperationBinary : public Operation {
     public:
 	/**
 	 * @brief Construct binary operation with a two operands operand.
+	 *
 	 * @details
 	 * This constructor is used for binary operations
 	 * which take a two operands and produce a single result.
@@ -1023,6 +1162,7 @@ namespace JLang::mir {
 
     /**
      * @brief Function call (invoke) operation
+     *
      * @details
      * This subclass of Operation represents a function-call
      * taking an operand for the function and a list of operands,
@@ -1032,6 +1172,8 @@ namespace JLang::mir {
     public:
 	/**
 	 * @brief Create a function call operation.
+	 *
+	 * @details
 	 * This constructor takes the function to be called (callee)
 	 * and a list of other operands, one for each argument
 	 * to the function.
@@ -1053,6 +1195,7 @@ namespace JLang::mir {
 
     /**
      * @brief Symbol-table lookup
+     *
      * @details
      * This subclass of Operation represents a lookup
      * of a symbol in the global symbol table for things
@@ -1062,6 +1205,7 @@ namespace JLang::mir {
     public:
 	/**
 	 * @brief Construct symbol-table lookup operation.
+	 *
 	 * @details
 	 * This constructor creates a symbol-table lookup
 	 * operation to look up the symbol given.
@@ -1092,11 +1236,15 @@ namespace JLang::mir {
 
     /**
      * @brief This subclass of OperationBinary represents indexing an array.
+     *
+     * @details
+     * See OP_ARRAY_INDEX for details.
      */
     class OperationArrayIndex : public OperationBinary {
     public:
 	/**
 	 * @brief Create an array index operation
+	 *
 	 * @details
 	 * This constructor creates an array index operation
 	 * from the index variable and the type of data
@@ -1120,6 +1268,7 @@ namespace JLang::mir {
 
     /**
      * @brief This subclass of Operation is used to access member variables of classes and other aggregate types by reference.
+     *
      * @details
      * This class represents accessing a class member
      * using the name of the member and the operand
@@ -1130,6 +1279,9 @@ namespace JLang::mir {
     class OperationDot : public Operation {
     public:
 	/**
+	 * @brief This class represents class/structure member access operations
+	 *
+	 * @details
 	 * Constructs a member-access operation.  The first
 	 * operand is the class or structure to access and
 	 * the member name is the name of the member that
@@ -1162,6 +1314,7 @@ namespace JLang::mir {
 
     /**
      * @brief This subclass of Operation is used to access member variables of classes and other aggregate types by pointer.
+     *
      * @details
      * This class represents accessing a class member
      * using the name of the member and the operand
@@ -1199,6 +1352,7 @@ namespace JLang::mir {
     };
     /**
      * @brief Load a local variable
+     *
      * @details
      * This operation is a load of a local variable
      * into a register (see OP_LOCAL_VARIABLE).
@@ -1234,6 +1388,7 @@ namespace JLang::mir {
 
     /**
      * @brief Literal character
+     *
      * @details
      * This operation loads a constant character (u8)
      * literal into the return-value.  See OP_LITERAL_CHAR.
@@ -1264,6 +1419,7 @@ namespace JLang::mir {
     };
     /**
      * @brief Literal string
+     *
      * @details
      * This operation loads a constant character (u8)
      * literal into the return-value.  See OP_LITERAL_STRING.
@@ -1296,15 +1452,23 @@ namespace JLang::mir {
     };
     /**
      * @brief Literal integer
+     *
      * @details
      * This operation loads a constant integer one of (i8,i16,i32,i64,u8,u16,u32,u64)
-     * into the return-value.  See OP_LITERAL_INT
+     * into the return-value.  See OP_LITERAL_INT.  The type of data
+     * returned depends exactly on the type of data given
+     * and no type conversions are done at this stage.  If type
+     * conversions are needed, they should be performed
+     * ahead of time using the OP_WIDEN_SIGNED or other cast operations
+     * depending on the type of data needed.
      */
     class OperationLiteralInt : public Operation {
     public:
 	/**
 	 * Create an operation to load the given constant
 	 * literal integer into the return-value.
+	 * The type of data given here is an unsigned 8-bit
+	 * value.
 	 */
 	OperationLiteralInt(
 	    const JLang::context::SourceReference & _src_ref,
@@ -1312,42 +1476,84 @@ namespace JLang::mir {
 	    Type::TypeType _literal_type,
 	    unsigned char _literal_u8
 	    );
+	/**
+	 * Create an operation to load the given constant
+	 * literal integer into the return-value.
+	 * The type of data given here is an unsigned 16-bit
+	 * value.
+	 */
 	OperationLiteralInt(
 	    const JLang::context::SourceReference & _src_ref,
 	    size_t _result,
 	    Type::TypeType _literal_type,
 	    unsigned short _literal_u16
 	    );
+	/**
+	 * Create an operation to load the given constant
+	 * literal integer into the return-value.
+	 * The type of data given here is an unsigned 32-bit
+	 * value.
+	 */
 	OperationLiteralInt(
 	    const JLang::context::SourceReference & _src_ref,
 	    size_t _result,
 	    Type::TypeType _literal_type,
 	    unsigned int _literal_u32
 	    );
+	/**
+	 * Create an operation to load the given constant
+	 * literal integer into the return-value.
+	 * The type of data given here is an unsigned 64-bit
+	 * value.
+	 */
 	OperationLiteralInt(
 	    const JLang::context::SourceReference & _src_ref,
 	    size_t _result,
 	    Type::TypeType _literal_type,
 	    unsigned long _literal_u64
 	    );
+	/**
+	 * Create an operation to load the given constant
+	 * literal integer into the return-value.
+	 * The type of data given here is a signed 8-bit
+	 * value.
+	 */
 	OperationLiteralInt(
 	    const JLang::context::SourceReference & _src_ref,
 	    size_t _result,
 	    Type::TypeType _literal_type,
 	    char _literal_i8
 	    );
+	/**
+	 * Create an operation to load the given constant
+	 * literal integer into the return-value.
+	 * The type of data given here is a signed 16-bit
+	 * value.
+	 */
 	OperationLiteralInt(
 	    const JLang::context::SourceReference & _src_ref,
 	    size_t _result,
 	    Type::TypeType _literal_type,
 	    short _literal_i16
 	    );
+	/**
+	 * Create an operation to load the given constant
+	 * literal integer into the return-value.
+	 * The type of data given here is a signed 32-bit
+	 * value.
+	 */
 	OperationLiteralInt(
 	    const JLang::context::SourceReference & _src_ref,
 	    size_t _result,
 	    Type::TypeType _literal_type,
 	    int _literal_i32
 	    );
+	/**
+	 * Create an operation to load the given constant
+	 * literal integer into the return-value.
+	 * The type of data given here is a signed 64-bit
+	 * value.
+	 */
 	OperationLiteralInt(
 	    const JLang::context::SourceReference & _src_ref,
 	    size_t _result,
@@ -1389,6 +1595,7 @@ namespace JLang::mir {
     };
     /**
      * @brief Literal float
+     *
      * @details
      * This operation loads a constant integer one of (f32,f64)
      * into the return-value.  See OP_LITERAL_FLOAT
@@ -1398,12 +1605,18 @@ namespace JLang::mir {
 	/**
 	 * Create an operation to load the given constant
 	 * literal float into the return-value.
+	 * The value is a 32 bit floating-point number.
 	 */
 	OperationLiteralFloat(
 	    const JLang::context::SourceReference & _src_ref,
 	    size_t _result,
 	    float _literal_float
 	    );
+	/**
+	 * Create an operation to load the given constant
+	 * literal float into the return-value.
+	 * The value is a 64 bit floating-point number.
+	 */
 	OperationLiteralFloat(
 	    const JLang::context::SourceReference & _src_ref,
 	    size_t _result,
@@ -1430,6 +1643,7 @@ namespace JLang::mir {
 
     /**
      * @brief Literal bool
+     *
      * @details
      * This operation loads a literal boolean (true or false)
      * value into the return-value.
@@ -1439,7 +1653,7 @@ namespace JLang::mir {
     public:
 	/**
 	 * Create an operation to load the given constant
-	 * literal float into the return-value.
+	 * literal boolean into the return-value.
 	 */
 	OperationLiteralBool(
 	    const JLang::context::SourceReference & _src_ref,
@@ -1453,6 +1667,10 @@ namespace JLang::mir {
 	 * Move along, nothing to see here.
 	 */
 	virtual ~OperationLiteralBool();
+	/**
+	 * This returns the value of the boolean
+	 * constant (true or false).
+	 */
 	bool get_literal_bool() const;
     protected:
 	virtual std::string get_description() const;
@@ -1462,6 +1680,7 @@ namespace JLang::mir {
 
     /**
      * @brief Literal null
+     *
      * @details
      * This operation loads a literal null pointer
      * value into the return-value.
@@ -1489,6 +1708,14 @@ namespace JLang::mir {
     private:
     };
 
+    /**
+     * @brief The operation for obtaining the storage size of a type.
+     *
+     * @details
+     * This operation returns the size of the given type.  It
+     * takes no operands and is only used by the code-generator
+     * to extract the storage size of the given type.
+     */
     class OperationSizeofType : public Operation {
     public:
 	OperationSizeofType(
@@ -1509,6 +1736,26 @@ namespace JLang::mir {
 	const Type* type;
     };
 
+    /**
+     * @brief This operation represents a conditional jump.
+     *
+     * @details
+     * This operation takes three operands.  The first is
+     * a condition which is expected to be a boolean
+     * value.  The second operand is not a value, but
+     * instead is the ID of the basic-block to jump to
+     * if the condition evaluates to 'true'.  The third
+     * operand is the ID of the basic block to jump to
+     * if the condition evaluates to 'false'.
+     *
+     * This operand must be the last opcode
+     * in a basic block because it terminates the
+     * execution of that block and no further
+     * operations will be executed in that block.
+     * Any operations after a jump will be considered
+     * 'unreachable' and may trigger a compile error
+     * or dropped with a warning.
+     */
     class OperationJumpIfEqual : public Operation {
     public:
 	OperationJumpIfEqual(
@@ -1528,7 +1775,23 @@ namespace JLang::mir {
 	virtual std::string get_description() const;
     private:
     };
-    
+
+    /**
+     * @brief Unconditional Jump
+     *
+     * @details
+     * This opcode represents an unconditional jump.
+     * The only operand is the ID of the basic block
+     * to jump to.
+     *
+     * This operand must be the last opcode
+     * in a basic block because it terminates the
+     * execution of that block and no further
+     * operations will be executed in that block.
+     * Any operations after a jump will be considered
+     * 'unreachable' and may trigger a compile error
+     * or dropped with a warning.
+     */
     class OperationJump : public Operation {
     public:
 	OperationJump(
@@ -1546,7 +1809,25 @@ namespace JLang::mir {
 	virtual std::string get_description() const;
     private:
     };
-    
+
+    /**
+     * @brief Return from a function
+     *
+     * @details
+     * This opcode causes the virtual machine
+     * to exit from the current function and
+     * return to the caller, supplying the value
+     * given.  The value given in the return is expected
+     * to be the same type as the function's return-value.
+     *     
+     * This operand must be the last opcode
+     * in a basic block because it terminates the
+     * execution of that block and no further
+     * operations will be executed in that block.
+     * Any operations after a jump will be considered
+     * 'unreachable' and may trigger a compile error
+     * or dropped with a warning.
+     */
     class OperationReturn : public Operation {
     public:
 	OperationReturn(
@@ -1564,12 +1845,24 @@ namespace JLang::mir {
 	virtual std::string get_description() const;
     };
 
+    /**
+     * @brief Declare a local variable in scope.
+     *
+     * @details
+     * This class represents declaring a variable
+     * inside the scope of a function.  This variable
+     * may be in the main scope or may be in a sub-scope.
+     * The name of the variable and the associated type
+     * are given.  The variable is created with that
+     * type so that it can be accessed later with an
+     * access operation such as a 'load'.
+     */
     class OperationLocalDeclare : public Operation {
     public:
 	OperationLocalDeclare(
 	    const JLang::context::SourceReference & _src_ref,
 	    std::string _variable,
-	    std::string _var_type
+	    const Type *_variable_type
 	    );
 	/**
 	 * @brief Move along, nothing to see here.
@@ -1578,14 +1871,30 @@ namespace JLang::mir {
 	 * Move along, nothing to see here.
 	 */
 	virtual ~OperationLocalDeclare();
+	/**
+	 * Name of the variable to declare.
+	 */
 	const std::string & get_variable() const;
-	const std::string & get_var_type() const;
+	/**
+	 * Returns a pointer to the immutable type
+	 * of the variable.
+	 */
+	const Type *get_variable_type() const;
     protected:
 	virtual std::string get_description() const;
     private:
 	std::string variable;
-	std::string var_type;
+	const Type *variable_type;
     };
+    /**
+     * @brief Un-declare a variable (remove it from scope)
+     *
+     * @details
+     * This opcode is used to remove a variable when, for example,
+     * it goes out of scope in a syntactical scope of the
+     * source.  There may be other reasons for a variable to
+     * be un-declared, but this is the most common.
+     */
     class OperationLocalUndeclare : public Operation {
     public:
 	OperationLocalUndeclare(

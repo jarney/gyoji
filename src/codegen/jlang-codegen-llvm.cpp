@@ -451,7 +451,7 @@ CodeGeneratorLLVMContext::generate_operation_local_declare(
     const JLang::mir::OperationLocalDeclare & operation
     )
 {
-    llvm::Type *type = types[operation.get_var_type()];
+    llvm::Type *type = types[operation.get_variable_type()->get_name()];
     llvm::Value *value = Builder->CreateAlloca(type, nullptr, operation.get_variable());
     local_variables[operation.get_variable()] = value;
 }

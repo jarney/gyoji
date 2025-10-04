@@ -29,6 +29,10 @@ Symbols::~Symbols()
 void
 Symbols::define_symbol(std::string name, const Type *symbol_type)
 {
+    const auto & it = symbols.find(name);
+    if (it != symbols.end()) {
+	return;
+    }
     symbols.insert(std::pair(name, std::make_unique<Symbol>(name, symbol_type)));
 }
 

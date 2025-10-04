@@ -919,20 +919,20 @@ OperationReturn::get_description() const
 OperationLocalDeclare::OperationLocalDeclare(
     const JLang::context::SourceReference & _src_ref,
     std::string _variable,
-    std::string _var_type
+    const Type *_variable_type
     )
     : Operation(OP_LOCAL_DECLARE, _src_ref, 0)
     , variable(_variable)
-    , var_type(_var_type)
+    , variable_type(_variable_type)
 {}
 OperationLocalDeclare::~OperationLocalDeclare()
 {}
 const std::string &
 OperationLocalDeclare::get_variable() const
 { return variable; }
-const std::string &
-OperationLocalDeclare::get_var_type() const
-{ return var_type; }
+const Type*
+OperationLocalDeclare::get_variable_type() const
+{ return variable_type; }
 
 std::string
 OperationLocalDeclare::get_description() const
@@ -942,7 +942,7 @@ OperationLocalDeclare::get_description() const
 
     std::string desc = op_name + std::string(" (");
     desc = desc + std::string(" ") + variable;
-    desc = desc + std::string(" ") + var_type;
+    desc = desc + std::string(" ") + variable_type->get_name();
     desc = desc + std::string(" )");
     return desc;
 }

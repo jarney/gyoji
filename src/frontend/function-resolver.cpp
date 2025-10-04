@@ -2663,7 +2663,7 @@ FunctionDefinitionResolver::extract_from_statement_list(
 	    auto operation = std::make_unique<OperationLocalDeclare>(
 		statement->get_source_ref(),
 		statement->get_name(),
-		mir_type->get_name()
+		mir_type
 		);
 	    function.get_basic_block(current_block).add_operation(std::move(operation));
 	    unwind.push_back(statement->get_name());
