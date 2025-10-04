@@ -52,10 +52,7 @@ int main(int argc, char **argv)
     std::vector<JLang::owned<AnalysisPass>> analysis_passes;
     
     analysis_passes.push_back(std::make_unique<AnalysisPassTypeResolution>(context));
-    // XXX This has uncovered that
-    // return operations MUST trigger the undeclare
-    // so that they happen first.
-    //analysis_passes.push_back(std::make_unique<AnalysisPassUnreachable>(context));
+    analysis_passes.push_back(std::make_unique<AnalysisPassUnreachable>(context));
     analysis_passes.push_back(std::make_unique<AnalysisPassBorrowChecker>(context));
 
     

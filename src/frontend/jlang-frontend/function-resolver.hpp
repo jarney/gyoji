@@ -211,6 +211,7 @@ namespace JLang::frontend {
 	bool extract_from_statement_return(
 	    JLang::mir::Function & function,
 	    size_t & current_block,
+	    std::vector<std::string> & unwind,
 	    const JLang::frontend::tree::StatementReturn & statement
 	    );
 	
@@ -219,6 +220,13 @@ namespace JLang::frontend {
 	    size_t & current_block,
 	    const JLang::frontend::tree::StatementIfElse & statement
 	    );
+	
+	void
+	leave_scope(
+	    JLang::mir::Function & function,
+	    size_t & current_block,
+	    const JLang::context::SourceReference & src_ref,
+	    std::vector<std::string> & unwind);
 	
 	bool extract_from_statement_list(
 	    JLang::mir::Function & function,

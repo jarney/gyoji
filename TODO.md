@@ -11,15 +11,15 @@
 * Support const-ness of variables and protect them
   from assignments.
 
+* Error message context doesn't account for 'tabs' when formatting
+  output for error arrows.  This is a bit complicated because we need
+  to decide how big a 'tab' is in order to format it correctly in all cases.
+
 * Support for a pre-processor like CPP so we can build and use
   header files.  Need to allow #line directives to be used to
   update the 'context' so that error messages are attributed to
   the correct source.  This will be slightly tricky in the lexer
   to make sure we don't get offset from the proper location.
-
-* Something is still pretty 'off' in error reporting
-  where the column number is still not being calculated correctly
-  and the little arrow points to the wrong place.
 
 * Allow declarations to come from translation units (current)
   and in future, annotate the .o and .a files with 'extra' ELF

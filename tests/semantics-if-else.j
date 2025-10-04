@@ -53,5 +53,3 @@ u32 main(u32 argc, u8 **argv)
 	return 33u32;
 }
 
-/*
-*/

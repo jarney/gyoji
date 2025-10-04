@@ -2489,6 +2489,7 @@ bool
 FunctionDefinitionResolver::extract_from_statement_return(
     JLang::mir::Function & function,
     size_t & current_block,
+    std::vector<std::string> & unwind,
     const StatementReturn & statement
     )
 {
@@ -2497,6 +2498,8 @@ FunctionDefinitionResolver::extract_from_statement_return(
 	return false;
     }
 
+    leave_scope(function, current_block, statement.get_source_ref(), unwind);
+    
     auto operation = std::make_unique<OperationReturn>(
 	statement.get_source_ref(),
 	expression_tmpvar
@@ -2610,6 +2613,22 @@ FunctionDefinitionResolver::extract_from_statement_ifelse(
     return true;
 }
 
+void
+FunctionDefinitionResolver::leave_scope(
+    JLang::mir::Function & function,
+    size_t & current_block,
+    const SourceReference & src_ref,
+    std::vector<std::string> & unwind)
+{
+    for (const auto & undecl : unwind) {
+	function.remove_local(undecl);
+	auto operation = std::make_unique<OperationLocalUndeclare>(
+	    src_ref,
+	    undecl);
+	function.get_basic_block(current_block).add_operation(std::move(operation));
+    }
+    unwind.clear();
+}
 
 bool
 FunctionDefinitionResolver::extract_from_statement_list(
@@ -2694,8 +2713,9 @@ FunctionDefinitionResolver::extract_from_statement_list(
 	}
 	else if (std::holds_alternative<JLang::owned<StatementReturn>>(statement_type)) {
 	    const auto & statement = std::get<JLang::owned<StatementReturn>>(statement_type);
-	    // XXX: TODO: Should trigger destructors here at the return.
-	    if (!extract_from_statement_return(function, current_block, *statement)) {
+	    // The return may need to unwind local declarations
+	    // and ensure destructors are called.
+	    if (!extract_from_statement_return(function, current_block, unwind, *statement)) {
 		return false;
 	    }
 	}
@@ -2704,13 +2724,7 @@ FunctionDefinitionResolver::extract_from_statement_list(
 	    return false;
 	}
     }
-    for (const auto & undecl : unwind) {
-	function.remove_local(undecl);
-	auto operation = std::make_unique<OperationLocalUndeclare>(
-	    statement_list.get_source_ref(),
-	    undecl);
-	function.get_basic_block(current_block).add_operation(std::move(operation));
-    }
+    leave_scope(function, current_block, statement_list.get_source_ref(), unwind);
     start_block = current_block;
     return true;
 }
