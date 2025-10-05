@@ -1227,7 +1227,7 @@ FunctionDefinitionResolver::extract_from_expression_unary_prefix(
 		    );
 	    return false;
 	}
-	returned_tmpvar = function.tmpvar_define(operand_type);
+	returned_tmpvar = function.tmpvar_define(operand_type->get_pointer_target());
 	auto operation = std::make_unique<OperationUnary>(
 	    Operation::OP_DEREFERENCE,
 	    expression.get_source_ref(),
@@ -1794,7 +1794,7 @@ FunctionDefinitionResolver::handle_binary_operation_assignment(
 	    .get_errors()
 	    .add_simple_error(
 		_src_ref,
-		"Type mismatch in compare operation",
+		"Type mismatch in assignment operation",
 		std::string("The operands of an assignment should be the same type, but were: a= ") + atype->get_name() + std::string(" b=") + btype->get_name()
 		);
 	return false;

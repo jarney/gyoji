@@ -426,7 +426,6 @@ CodeGeneratorLLVMContext::generate_operation_dot(
     )
 {
     size_t a = operation.get_a();
-
     // The type is a class
     const JLang::mir::Type *mir_class_type = mir_function.tmpvar_get(a);
     llvm::Type *llvm_class_type = types[mir_class_type->get_name()];
@@ -677,7 +676,21 @@ CodeGeneratorLLVMContext::generate_operation_addressof(
     const JLang::mir::Function & mir_function,
     const JLang::mir::OperationUnary & operation
     )
-{}
+{
+    // The type is a class
+    const auto & found = tmp_lvalues.find(operation.get_a());
+    if (found == tmp_lvalues.end()) {
+	fprintf(stderr, "This is not an lvalue\n");
+	exit(2);
+    }
+    fprintf(stderr, "Ready to return the address\n");
+    fprintf(stderr, "Returning address %ld %p\n", operation.get_result(), found->second);
+
+    // Addressof returns a value (a pointer value)
+    // but itself is not an lvalue because it cannot
+    // be assigned to.
+    tmp_values.insert(std::pair(operation.get_result(), found->second));
+}
 
 void
 CodeGeneratorLLVMContext::generate_operation_dereference(
@@ -687,6 +700,22 @@ CodeGeneratorLLVMContext::generate_operation_dereference(
     const JLang::mir::OperationUnary & operation
     )
 {
+
+    size_t a = operation.get_a();
+    // The type is a class
+    const JLang::mir::Type *mir_pointer_type = mir_function.tmpvar_get(a);
+    if (!mir_pointer_type->is_pointer()) {
+	fprintf(stderr, "Address of thing being referenced is not a pointer\n");
+	exit(1);
+    }
+    const JLang::mir::Type *mir_pointer_target = mir_pointer_type->get_pointer_target();
+    llvm::Type *llvm_pointer_target = types[mir_pointer_target->get_name()];
+
+    llvm::Value *value_a = tmp_values[a];
+    llvm::Value *result = Builder->CreateLoad(llvm_pointer_target, value_a);
+
+    tmp_lvalues.insert(std::pair(operation.get_result(), value_a));
+    tmp_values.insert(std::pair(operation.get_result(), result));
 }
 
 void
@@ -1373,8 +1402,15 @@ CodeGeneratorLLVMContext::generate_operation_assign(
 {
     llvm::Value *lvalue = tmp_lvalues[operation.get_a()];
     llvm::Value *value_b = tmp_values[operation.get_b()];
-    llvm::Value *value = Builder->CreateStore(value_b, lvalue);
-    tmp_values.insert(std::pair(operation.get_result(), value));
+    llvm::Value *b_value = Builder->CreateStore(value_b, lvalue);
+
+    // TODO: Assigning an lvalue results in an lvalue.
+    const auto & b_lvalue = tmp_lvalues.find(operation.get_b());
+    if (b_lvalue != tmp_lvalues.end()) {
+	tmp_lvalues.insert(std::pair(operation.get_result(), b_lvalue->second));
+    }
+    
+    tmp_values.insert(std::pair(operation.get_result(), b_value));
 }
 
 // Branch and flow control
