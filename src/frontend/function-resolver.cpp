@@ -6,7 +6,6 @@
 // Operator changes:
 // TODO:  These operators could be non-atomic:
 // OperationArrow = OperationDereference + OperationDot
-// OperationArrayIndex, probably just another CreateGEP
 // OperationUndeclare: (how do we even do this?)
 // Operation(Pre/Post)(Inc/Dec) : Add(1), Sub(1) + store in various combinations.
 // Re-name JumpIfEqual to JumpConditional.
@@ -906,14 +905,15 @@ FunctionDefinitionResolver::extract_from_expression_postfix_array_index(
 		);
 	return false;
     }
-    
-    if (!function.tmpvar_get(index_tmpvar)->is_unsigned()) {
+
+    const Type *index_type = function.tmpvar_get(index_tmpvar);
+    if (index_type->get_type() != Type::TYPE_PRIMITIVE_u32) {
 	compiler_context
 	    .get_errors()
 	    .add_simple_error(
 		expression.get_index().get_source_ref(),
-		"Array index must be an integer type",
-		std::string("Type of index is not an index")
+		"Array index must be an unsigned 32-bit (u32) type",
+		std::string("Type of index is not a u32 index")
 		);
 	return false;
     }

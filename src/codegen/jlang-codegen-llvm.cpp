@@ -446,17 +446,17 @@ CodeGeneratorLLVMContext::generate_operation_array_index(
     llvm::Type *llvm_array_type = types[mir_array_type->get_name()];
     llvm::Type *llvm_array_element_type = types[mir_array_element_type->get_name()];
 
-    llvm::Value *array_value = tmp_values[array_tmpvar];
+    llvm::Value *array_lvalue = tmp_lvalues[array_tmpvar];
     llvm::Value *index_value = tmp_values[index_tmpvar];
 
     std::vector<llvm::Value *> indices;
-    indices.push_back(llvm::ConstantInt::get(llvm::Type::getInt64Ty(*TheContext), 0));
+    indices.push_back(llvm::ConstantInt::get(llvm::Type::getInt32Ty(*TheContext), 0L));
     indices.push_back(index_value);
-    llvm::Value *addressofelement = Builder->CreateGEP(llvm_array_element_type, array_value, indices);
-//    llvm::Value *value = Builder->CreateLoad(llvm_array_element_type, addressofelement);
+    llvm::Value *addressofelement = Builder->CreateInBoundsGEP(llvm_array_type, array_lvalue, indices);
+    llvm::Value *value = Builder->CreateLoad(llvm_array_element_type, addressofelement);
     
     tmp_lvalues.insert(std::pair(operation.get_result(), addressofelement));
-//    tmp_values.insert(std::pair(operation.get_result(), value));
+    tmp_values.insert(std::pair(operation.get_result(), value));
 }
 void
 CodeGeneratorLLVMContext::generate_operation_dot(
@@ -476,7 +476,7 @@ CodeGeneratorLLVMContext::generate_operation_dot(
     size_t member_index = member->get_index();
     
     llvm::Value *value_a = tmp_lvalues[a];
-    llvm::Value *result = Builder->CreateConstInBoundsGEP2_64(llvm_class_type, value_a, 0, member_index);
+    llvm::Value *result = Builder->CreateConstInBoundsGEP2_32(llvm_class_type, value_a, 0, member_index);
     llvm::Value *value = Builder->CreateLoad(types[member->get_type()->get_name()], result);
     
     tmp_lvalues.insert(std::pair(operation.get_result(), result));

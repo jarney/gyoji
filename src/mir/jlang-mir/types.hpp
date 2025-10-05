@@ -149,13 +149,6 @@ namespace JLang::mir {
 	 */
 	TypeMember(const TypeMember & other);
 	/**
-	 * This makes a copy of the member.  It is provided
-	 * so that the type class may use a map or array to
-	 * store the members rather than storing them by pointer,
-	 * so a copy and assignment is required.
-	 */
-	TypeMember & operator=(const TypeMember & other);
-	/**
 	 * @brief Move along, nothing to see here.
 	 *
 	 * @details

@@ -28,6 +28,11 @@ semantics-literal-int
 semantics-literal-float
 semantics-literal-char
 semantics-literal-string
+semantics-arrays
+semantics-class
+semantics-function-call
+semantics-pointers
+semantics-sizeof
 "
 
 echo "Checking token stream output."

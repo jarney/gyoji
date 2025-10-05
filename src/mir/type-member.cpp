@@ -23,16 +23,6 @@ TypeMember::TypeMember(const TypeMember & other)
     , source_ref(other.source_ref)
 {}
 
-TypeMember &
-TypeMember::operator=(const TypeMember & other)
-{
-    member_name = other.member_name;
-    index = other.index;
-    member_type = other.member_type;
-    source_ref = other.source_ref;
-    return *this;
-}
-
 TypeMember::~TypeMember()
 {}
 
