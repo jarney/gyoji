@@ -735,6 +735,12 @@ namespace JLang::frontend::tree {
 	 * Returns the type that is accessed behind this pointer.
 	 */
 	const TypeSpecifier & get_type_specifier() const;
+
+	/**
+	 * Returns the literal integer used to specify the size
+	 * of the array.
+	 */
+	const Terminal & get_literal_int_token() const;
     private:
 	JLang::owned<TypeSpecifier> type_specifier;
 	JLang::owned<Terminal> bracket_l_token;
@@ -1974,6 +1980,7 @@ namespace JLang::frontend::tree {
 	 * Returns the string literal exactly as it appeared in the source-file.
 	 */
 	const std::string & get_value() const;
+	const Terminal & get_literal_int_token() const;
 	const JLang::context::SourceReference & get_value_source_ref() const;
     private:
 	JLang::owned<Terminal> literal_token;

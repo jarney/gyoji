@@ -135,16 +135,37 @@ const Type*
 TypeResolver::extract_from_type_specifier_array(const TypeSpecifierArray & type_specifier)
 {
     const Type *pointer_target = extract_from_type_specifier(type_specifier.get_type_specifier());
+    if (pointer_target == nullptr) {
+	compiler_context
+	    .get_errors()
+	    .add_simple_error(type_specifier.get_literal_int_token().get_source_ref(),
+			      "Could not parse type of array elements.",
+			      "Array element type could not be parsed."
+		);	
+	return nullptr;
+    }
     
-#if 0
-    compiler_context
-	.get_errors()
-	.add_simple_error(type_specifier.get_source_ref(),
-			  "Could not find type",
-			  "Array types are not supported yet."
-	    );
-#endif
-    const Type *array_type = mir.get_types().get_array_of(pointer_target, 42, type_specifier.get_source_ref());
+    JLang::frontend::integers::ParseLiteralIntResult parse_result;
+    bool parsed = parse_literal_int(compiler_context, mir.get_types(), type_specifier.get_literal_int_token(), parse_result);
+    if (!parsed || parse_result.parsed_type == nullptr) {
+	compiler_context
+	    .get_errors()
+	    .add_simple_error(type_specifier.get_literal_int_token().get_source_ref(),
+			      "Array size invalid",
+			      "Could not parse array size."
+		);
+	return nullptr;
+    }
+    if (parse_result.parsed_type->get_type() != Type::TYPE_PRIMITIVE_u32) {
+	compiler_context
+	    .get_errors()
+	    .add_simple_error(type_specifier.get_literal_int_token().get_source_ref(),
+			      "Array size invalid",
+			      "Array size must be an unsigned 32-bit integer (u32) constant.  Sizes may not be computed at runtime."
+		);
+    }
+    
+    const Type *array_type = mir.get_types().get_array_of(pointer_target, parse_result.u32_value, type_specifier.get_source_ref());
     return array_type;
 }
 

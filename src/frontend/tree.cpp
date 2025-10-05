@@ -381,6 +381,10 @@ const TypeSpecifier &
 TypeSpecifierArray::get_type_specifier() const
 { return *type_specifier; }
 
+const Terminal &
+TypeSpecifierArray::get_literal_int_token() const
+{ return *literal_int_token; }
+
 ///////////////////////////////////////////////////
 TypeSpecifier::TypeSpecifier(TypeSpecifier::TypeSpecifierType _type, const SyntaxNode & _sn)
     : SyntaxNode("type_specifier", this, _sn.get_source_ref())
@@ -1591,6 +1595,10 @@ ExpressionPrimaryLiteralInt::~ExpressionPrimaryLiteralInt()
 const std::string &
 ExpressionPrimaryLiteralInt::get_value() const
 { return literal_token->get_value(); }
+
+const Terminal &
+ExpressionPrimaryLiteralInt::get_literal_int_token() const
+{ return *literal_token; }
 
 const SourceReference &
 ExpressionPrimaryLiteralInt::get_value_source_ref() const

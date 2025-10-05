@@ -12,6 +12,7 @@ set(FRONTEND_PUBLIC_HEADERS_TOP
 set(FRONTEND_PUBLIC_HEADERS_BOTTOM
     jlang-frontend/tree.hpp
     jlang-frontend/syntax-node.hpp
+    jlang-frontend/parse-literal-int.hpp
     jlang-frontend/namespace.hpp
     jlang-frontend/parse-result.hpp
     jlang-frontend/forward.hpp
@@ -32,6 +33,7 @@ set(FRONTEND_SOURCES
     parser.cpp
     type-resolver.cpp
     function-resolver.cpp
+    parse-literal-int.cpp
     ${FRONTEND_PUBLIC_HEADERS_TOP}
     ${FRONTEND_PUBLIC_HEADERS_BOTTOM}
 )
