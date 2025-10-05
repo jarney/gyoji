@@ -82,6 +82,16 @@ namespace JLang::mir {
 	const Type * get_reference_to(const Type *_type, const JLang::context::SourceReference & src_ref);
 	
 	/**
+	 * This returns a type that is an array of _length
+	 * instances of the given type.  The type
+	 * returned may be a new type and if so, it is inserted
+	 * into the table of types.  If the pointer type already
+	 * exists, then a pointer to the already existing immutable
+	 * type will be returned.
+	 */
+	const Type * get_array_of(const Type *_type, size_t _length, const JLang::context::SourceReference & src_ref);
+	
+	/**
 	 * This is used to define a fully-qualified type
 	 * from the definition.  Note that some types
 	 * may be incompletely specified when they are
@@ -428,7 +438,12 @@ namespace JLang::mir {
 	     * This is an enum constant type that resolves to a u32 primitive
 	     * but may contain names specifying the values they map to.
 	     */
-	    TYPE_ENUM
+	    TYPE_ENUM,
+
+	    /**
+	     * This is an array of primitive elements.
+	     */
+	    TYPE_ARRAY
 	} TypeType;
 
 	/**
@@ -552,6 +567,12 @@ namespace JLang::mir {
 	bool is_function_pointer() const;
 
 	/**
+	 * This returns true if the type is
+	 * an array of data of a specific type.
+	 */
+	bool is_array() const;
+	
+	/**
 	 * This returns the size in bytes of the primitive.
 	 * This is ONLY valid for primitive number types
 	 * and it is a bug to call this for any type
@@ -592,6 +613,14 @@ namespace JLang::mir {
 	const Type * get_pointer_target() const;
 
 	/**
+	 * This returns the number of elements the array can store.
+	 * For non-array types, this is always '1'.
+	 * This makes sense in a way because
+	 * you can interpret a u32 as an array of exactly one u32.
+	 */
+	size_t get_array_length() const;
+
+	/**
 	 * This returns a pointer to the type returned by
 	 * the function for function pointer types.  This is ONLY
 	 * valid for types that are 'is_function_pointer()'.
@@ -615,6 +644,11 @@ namespace JLang::mir {
 	 */
 	void complete_pointer_definition(const Type *_type, const JLang::context::SourceReference & _source_ref);
 
+	/**
+	 * Completes the definition of an array type.
+	 */
+	void complete_array_definition(const Type *_type, size_t _array_size, const JLang::context::SourceReference & _source_ref);
+	
 	/**
 	 * Completes the definition of a function pointer
 	 * by passing the return-value type and the types
@@ -659,6 +693,7 @@ namespace JLang::mir {
 
 	// Used only for pointer and reference types.
 	const Type *pointer_or_ref;
+	size_t array_length;
 
 	// Used only for function pointer types.
 	const Type *return_type;

@@ -161,6 +161,24 @@ CodeGeneratorLLVMContext::create_type_reference(const JLang::mir::Type *referenc
 }
 
 llvm::Type *
+CodeGeneratorLLVMContext::create_type_array(const JLang::mir::Type *array_type)
+{
+    const JLang::mir::Type * element_type = array_type->get_pointer_target();
+    llvm::Type * llvm_element_type =
+	llvm::PointerType::get(create_type(element_type),
+			       0 // Address space (default to 0?  This seems unclean, llvm!)
+	    );
+    llvm::Type *llvm_array_type = llvm::ArrayType::get(llvm_element_type, array_type->get_array_length());
+
+    types.insert(std::pair<std::string, llvm::Type*>(
+		     array_type->get_name(),
+		     llvm_array_type
+		     )
+	);
+    return llvm_array_type;
+}
+
+llvm::Type *
 CodeGeneratorLLVMContext::create_type_function_pointer(const JLang::mir::Type *fptr_type)
 {
     const JLang::mir::Type *mir_return_type = fptr_type->get_return_type();
@@ -279,6 +297,9 @@ CodeGeneratorLLVMContext::create_type(const Type * type)
     }
     else if (type->is_function_pointer()) {
 	return create_type_function_pointer(type);
+    }
+    else if (type->is_array()) {
+	return create_type_array(type);
     }
     fprintf(stderr, "Compiler BUG!  Unknown type type passed to code generator %s\n", type->get_name().c_str());
     exit(1);
@@ -416,7 +437,27 @@ CodeGeneratorLLVMContext::generate_operation_array_index(
     const JLang::mir::Function & mir_function,
     const JLang::mir::OperationArrayIndex & operation
     )
-{}
+{
+    size_t array_tmpvar = operation.get_a();
+    size_t index_tmpvar = operation.get_b();
+    
+    const JLang::mir::Type *mir_array_type = mir_function.tmpvar_get(array_tmpvar);
+    const JLang::mir::Type *mir_array_element_type = mir_array_type->get_pointer_target();
+    llvm::Type *llvm_array_type = types[mir_array_type->get_name()];
+    llvm::Type *llvm_array_element_type = types[mir_array_element_type->get_name()];
+
+    llvm::Value *array_value = tmp_values[array_tmpvar];
+    llvm::Value *index_value = tmp_values[index_tmpvar];
+
+    std::vector<llvm::Value *> indices;
+    indices.push_back(llvm::ConstantInt::get(llvm::Type::getInt64Ty(*TheContext), 0));
+    indices.push_back(index_value);
+    llvm::Value *addressofelement = Builder->CreateGEP(llvm_array_element_type, array_value, indices);
+//    llvm::Value *value = Builder->CreateLoad(llvm_array_element_type, addressofelement);
+    
+    tmp_lvalues.insert(std::pair(operation.get_result(), addressofelement));
+//    tmp_values.insert(std::pair(operation.get_result(), value));
+}
 void
 CodeGeneratorLLVMContext::generate_operation_dot(
     std::map<size_t, llvm::Value *> & tmp_values,

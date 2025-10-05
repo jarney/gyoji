@@ -39,6 +39,13 @@ namespace JLang::frontend {
 	JLang::context::CompilerContext & compiler_context;
 	const JLang::frontend::tree::TranslationUnit & translation_unit;
 	
+	const JLang::mir::Type* extract_from_type_specifier_simple(const JLang::frontend::tree::TypeSpecifierSimple & type_specifier);
+	const JLang::mir::Type* extract_from_type_specifier_template(const JLang::frontend::tree::TypeSpecifierTemplate & type_specifier);
+	const JLang::mir::Type* extract_from_type_specifier_function_pointer(const JLang::frontend::tree::TypeSpecifierFunctionPointer & type_specifier);
+	const JLang::mir::Type* extract_from_type_specifier_pointer_to(const JLang::frontend::tree::TypeSpecifierPointerTo & type_specifier);
+	const JLang::mir::Type* extract_from_type_specifier_reference_to(const JLang::frontend::tree::TypeSpecifierReferenceTo & type_specifier);
+	const JLang::mir::Type* extract_from_type_specifier_array(const JLang::frontend::tree::TypeSpecifierArray & type_specifier);
+	
 	void extract_from_class_declaration(const JLang::frontend::tree::ClassDeclaration & declaration);
 	void extract_from_class_members(JLang::mir::Type & type, const JLang::frontend::tree::ClassDefinition & definition);
 	void extract_from_class_definition(const JLang::frontend::tree::ClassDefinition & definition);

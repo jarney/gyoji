@@ -1,6 +1,6 @@
-public volatile i32 *p[32];
+public volatile i32*[32] p;
 
-private const f64 q[19];
+//private const f64[19] q;
 
 typedef u8 my_type_t;
 
@@ -13,7 +13,7 @@ enum u8 Choice {
 public class q {
     typedef u8 my_inner_type_t;
 
-    my_type_t x[32];
+    //my_type_t[32] x;
     private my_inner_type_t zzz;
     public void foo(i32 a, i32 b);
     public q(i32 a, i32 b);
@@ -47,5 +47,5 @@ using namespace q;
 i32 do_something(u8 a)
 {
       my_inner_type_t qqqq;
-        u8 d[32];
+//        u8[32] d;
 }

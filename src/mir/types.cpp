@@ -77,6 +77,22 @@ Types::get_reference_to(const Type *_type, const SourceReference & src_ref)
     return pointer_type;
 }
 
+const Type *
+Types::get_array_of(const Type *_type, size_t _length, const SourceReference & src_ref)
+{
+    std::string array_type_name = _type->get_name() + std::string("[") + std::to_string(_length) + std::string("]");
+
+    const Type* array_type = get_type(array_type_name);
+    if (array_type != nullptr) {
+	return array_type;
+    }
+    JLang::owned<Type> array_owned = std::make_unique<Type>(array_type_name, Type::TYPE_ARRAY, false, src_ref);
+    array_type = array_owned.get();
+    array_owned->complete_array_definition(_type, _length, src_ref);
+    define_type(std::move(array_owned));
+    return array_type;
+}
+
 void
 Types::define_type(JLang::owned<Type> type)
 {

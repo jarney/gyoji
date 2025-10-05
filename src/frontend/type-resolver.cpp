@@ -49,81 +49,134 @@ TypeResolver::get_or_create(std::string pointer_name, Type::TypeType type_type, 
     }
 }
 
+const Type*
+TypeResolver::extract_from_type_specifier_simple(const TypeSpecifierSimple & type_specifier)
+{
+    const auto & type_name = type_specifier.get_type_name();
+    if (type_name.is_expression()) {
+	auto error = std::make_unique<JLang::context::Error>("Could not resolve type");
+	error->add_message(type_name.get_name_source_ref(), "Specifying types from expressions is not yet supported.");
+	compiler_context.get_errors().add_error(std::move(error));
+	return nullptr;
+    }
+    std::string name = type_name.get_name();
+    const Type *type = mir.get_types().get_type(name);
+    if (type == nullptr) {
+	compiler_context
+	    .get_errors()
+	    .add_simple_error(type_name.get_name_source_ref(),
+			      "Could not find type",
+			      std::string("Could not resolve type ") + name
+		);
+	return nullptr;
+    }
+    return type;
+}
+
+const Type*
+TypeResolver::extract_from_type_specifier_template(const TypeSpecifierTemplate & type_specifier)
+{
+    compiler_context
+	.get_errors()
+	.add_simple_error(type_specifier.get_source_ref(),
+			  "Could not find type",
+			  "Template types are not supported yet."
+	    );
+    return nullptr;
+}
+
+const Type*
+TypeResolver::extract_from_type_specifier_function_pointer(const TypeSpecifierFunctionPointer & type_specifier)
+{
+    compiler_context
+	.get_errors()
+	.add_simple_error(type_specifier.get_source_ref(),
+			  "Could not find type",
+			  "Function pointer types are not supported yet."
+	    );
+    return nullptr;
+}
+
+const Type*
+TypeResolver::extract_from_type_specifier_pointer_to(const TypeSpecifierPointerTo & type_specifier)
+{
+    const Type *pointer_target = extract_from_type_specifier(type_specifier.get_type_specifier());
+    if (pointer_target == nullptr) {
+	compiler_context
+	    .get_errors()
+	    .add_simple_error(type_specifier.get_source_ref(),
+			      "Could not find type",
+			      "Could not resolve target of pointer"
+		);
+	return nullptr;
+    }
+    const Type *pointer_type = mir.get_types().get_pointer_to(pointer_target, type_specifier.get_source_ref());
+    return pointer_type;
+}
+
+const Type*
+TypeResolver::extract_from_type_specifier_reference_to(const TypeSpecifierReferenceTo & type_specifier)
+{
+    const Type *pointer_target = extract_from_type_specifier(type_specifier.get_type_specifier());
+    if (pointer_target == nullptr) {
+	compiler_context
+	    .get_errors()
+	    .add_simple_error(type_specifier.get_source_ref(),
+			      "Could not find type",
+			      "Could not resolve target of reference"
+		);
+	return nullptr;
+    }
+    const Type *pointer_type = mir.get_types().get_reference_to(pointer_target, type_specifier.get_source_ref());
+    return pointer_type;
+}
+
+const Type*
+TypeResolver::extract_from_type_specifier_array(const TypeSpecifierArray & type_specifier)
+{
+    const Type *pointer_target = extract_from_type_specifier(type_specifier.get_type_specifier());
+    
+#if 0
+    compiler_context
+	.get_errors()
+	.add_simple_error(type_specifier.get_source_ref(),
+			  "Could not find type",
+			  "Array types are not supported yet."
+	    );
+#endif
+    const Type *array_type = mir.get_types().get_array_of(pointer_target, 42, type_specifier.get_source_ref());
+    return array_type;
+}
+
 const Type *
-TypeResolver::extract_from_type_specifier(const TypeSpecifier & type_specifier) 
+TypeResolver::extract_from_type_specifier(const TypeSpecifier & type_specifier)
 {
     const auto & type_specifier_type = type_specifier.get_type();
     if (std::holds_alternative<JLang::owned<TypeSpecifierSimple>>(type_specifier_type)) {
-	const JLang::owned<TypeSpecifierSimple> & simple = std::get<JLang::owned<TypeSpecifierSimple>>(type_specifier_type);
-	const auto & type_name = simple->get_type_name();
-	if (type_name.is_expression()) {
-	    auto error = std::make_unique<JLang::context::Error>("Could not resolve type");
-	    error->add_message(type_name.get_name_source_ref(), "Specifying types from expressions is not yet supported.");
-	    compiler_context.get_errors().add_error(std::move(error));
-	    return nullptr;
-	}
-	std::string name = type_name.get_name();
-	const Type *type = mir.get_types().get_type(name);
-	if (type == nullptr) {
-	    compiler_context
-		.get_errors()
-		.add_simple_error(type_name.get_name_source_ref(),
-				  "Could not find type",
-				  std::string("Could not resolve type ") + name
-		    );
-	    return nullptr;
-	}
-	return type;
+	const auto & type_specifier = std::get<JLang::owned<TypeSpecifierSimple>>(type_specifier_type);
+	return extract_from_type_specifier_simple(*type_specifier);
     }
     else if (std::holds_alternative<JLang::owned<TypeSpecifierTemplate>>(type_specifier_type)) {
-	const auto & template_type = std::get<JLang::owned<TypeSpecifierTemplate>>(type_specifier_type);
-	compiler_context
-	    .get_errors()
-	    .add_simple_error(template_type->get_source_ref(),
-			      "Could not find type",
-			      "Template types are not supported yet."
-		);
-	return nullptr;
+	const auto & type_specifier = std::get<JLang::owned<TypeSpecifierTemplate>>(type_specifier_type);
+	return extract_from_type_specifier_template(*type_specifier);
     }
     else if (std::holds_alternative<JLang::owned<TypeSpecifierFunctionPointer>>(type_specifier_type)) {
-	const auto & fptr_type = std::get<JLang::owned<TypeSpecifierFunctionPointer>>(type_specifier_type);
-	compiler_context
-	    .get_errors()
-	    .add_simple_error(fptr_type->get_source_ref(),
-			      "Could not find type",
-			      "Function pointer types are not supported yet."
-		);
-	return nullptr;
+	const auto & type_specifier = std::get<JLang::owned<TypeSpecifierFunctionPointer>>(type_specifier_type);
+	return extract_from_type_specifier_function_pointer(*type_specifier);
     }
     else if (std::holds_alternative<JLang::owned<TypeSpecifierPointerTo>>(type_specifier_type)) {
-	const auto & type_specifier_pointer_to = std::get<JLang::owned<TypeSpecifierPointerTo>>(type_specifier_type);
-	const Type *pointer_target = extract_from_type_specifier(type_specifier_pointer_to->get_type_specifier());
-	if (pointer_target == nullptr) {
-	    compiler_context
-		.get_errors()
-		.add_simple_error(type_specifier_pointer_to->get_source_ref(),
-				  "Could not find type",
-				  "Could not resolve target of pointer"
-		    );
-	    return nullptr;
-	}
-	const Type *pointer_type = mir.get_types().get_pointer_to(pointer_target, type_specifier_pointer_to->get_source_ref());
-	return pointer_type;
+	const auto & type_specifier = std::get<JLang::owned<TypeSpecifierPointerTo>>(type_specifier_type);
+	return extract_from_type_specifier_pointer_to(*type_specifier);
     }
     else if (std::holds_alternative<JLang::owned<TypeSpecifierReferenceTo>>(type_specifier_type)) {
-	const auto & type_specifier_reference_to = std::get<JLang::owned<TypeSpecifierReferenceTo>>(type_specifier_type);
-	const Type *pointer_target = extract_from_type_specifier(type_specifier_reference_to->get_type_specifier());
-	if (pointer_target == nullptr) {
-	    compiler_context
-		.get_errors()
-		.add_simple_error(type_specifier_reference_to->get_source_ref(),
-				  "Could not find type",
-				  "Could not resolve target of reference"
-		    );
-	    return nullptr;
-	}
-	const Type *pointer_type = mir.get_types().get_reference_to(pointer_target, type_specifier_reference_to->get_source_ref());
-	return pointer_type;
+	const auto & type_specifier = std::get<JLang::owned<TypeSpecifierReferenceTo>>(type_specifier_type);
+	return extract_from_type_specifier_reference_to(*type_specifier);
+	
+    }
+    else if (std::holds_alternative<JLang::owned<TypeSpecifierArray>>(type_specifier_type)) {
+	const auto & type_specifier = std::get<JLang::owned<TypeSpecifierArray>>(type_specifier_type);
+	return extract_from_type_specifier_array(*type_specifier);
+	
     }
     
     compiler_context

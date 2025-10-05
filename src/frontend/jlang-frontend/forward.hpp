@@ -45,6 +45,7 @@ namespace JLang::frontend::tree {
     class TypeSpecifierFunctionPointer;
     class TypeSpecifierPointerTo;
     class TypeSpecifierReferenceTo;
+    class TypeSpecifierArray;
   
   class FunctionDefinitionArgList;
     class FunctionDefinitionArg;
@@ -143,6 +144,7 @@ namespace JLang::frontend::tree {
         JLang::frontend::tree::  TypeSpecifierFunctionPointer*,             \
         JLang::frontend::tree::  TypeSpecifierPointerTo*,                   \
         JLang::frontend::tree::  TypeSpecifierReferenceTo*,                 \
+        JLang::frontend::tree::  TypeSpecifierArray*,                       \
         JLang::frontend::tree::FunctionDefinitionArgList*,                  \
         JLang::frontend::tree::  FunctionDefinitionArg*,                    \
         JLang::frontend::tree::  ClassDeclStart*,                           \

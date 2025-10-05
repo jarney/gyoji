@@ -352,6 +352,36 @@ const AccessQualifier &
 TypeSpecifierReferenceTo::get_access_qualifier() const
 { return *access_qualifier; }
 ///////////////////////////////////////////////////
+TypeSpecifierArray::TypeSpecifierArray(
+    JLang::owned<TypeSpecifier> _type_specifier,
+    JLang::owned<Terminal> _bracket_l_token,
+    JLang::owned<Terminal> _literal_int_token,
+    JLang::owned<Terminal> _bracket_r_token
+    )
+    : SyntaxNode("type_specifier_array", this, _type_specifier->get_source_ref())
+    , type_specifier(std::move(_type_specifier))
+    , bracket_l_token(std::move(_bracket_l_token))
+    , literal_int_token(std::move(_literal_int_token))
+    , bracket_r_token(std::move(_bracket_r_token))
+{
+    add_child(*type_specifier);
+    add_child(*bracket_l_token);
+    add_child(*literal_int_token);
+    add_child(*bracket_r_token);
+}
+/**
+ * Destructor, nothing special.
+ */
+TypeSpecifierArray::~TypeSpecifierArray()
+{}
+/**
+ * Returns the type that is accessed behind this pointer.
+ */
+const TypeSpecifier &
+TypeSpecifierArray::get_type_specifier() const
+{ return *type_specifier; }
+
+///////////////////////////////////////////////////
 TypeSpecifier::TypeSpecifier(TypeSpecifier::TypeSpecifierType _type, const SyntaxNode & _sn)
     : SyntaxNode("type_specifier", this, _sn.get_source_ref())
     , type(std::move(_type))
@@ -465,21 +495,18 @@ FileStatementFunctionDeclaration::get_arguments() const
 StatementVariableDeclaration::StatementVariableDeclaration(
     JLang::owned<TypeSpecifier> _type_specifier,
     JLang::owned<Terminal> _identifier_token,
-    JLang::owned<ArrayLength> _array_length,
     JLang::owned<GlobalInitializer> _global_initializer,
     JLang::owned<Terminal> _semicolon_token
     )
     : SyntaxNode("statement_variable_declaration", this, _type_specifier->get_source_ref())
     , type_specifier(std::move(_type_specifier))
     , identifier_token(std::move(_identifier_token))
-    , array_length(std::move(_array_length))
     , global_initializer(std::move(_global_initializer))
     , semicolon_token(std::move(_semicolon_token))
 {
     identifier_token->set_fully_qualified_name("");
     add_child(*type_specifier);
     add_child(*identifier_token);
-    add_child(*array_length);
     add_child(*global_initializer);
     add_child(*semicolon_token);
 }
@@ -494,9 +521,6 @@ StatementVariableDeclaration::get_name() const
 const SourceReference &
 StatementVariableDeclaration::get_name_source_ref() const
 { return identifier_token->get_source_ref(); }
-const ArrayLength &
-StatementVariableDeclaration::get_array_length() const
-{ return *array_length; }
 const GlobalInitializer &
 StatementVariableDeclaration::get_initializer() const
 { return *global_initializer;}
@@ -1128,20 +1152,17 @@ ClassMemberDeclarationVariable::ClassMemberDeclarationVariable(
     JLang::owned<AccessModifier> _access_modifier,
     JLang::owned<TypeSpecifier> _type_specifier,
     JLang::owned<Terminal> _identifier_token,
-    JLang::owned<ArrayLength> _array_length,
     JLang::owned<Terminal> _semicolon_token
     )
     : SyntaxNode("class_member_declaration_variable", this, _access_modifier->get_source_ref())
     , access_modifier(std::move(_access_modifier))
     , type_specifier(std::move(_type_specifier))
     , identifier_token(std::move(_identifier_token))
-    , array_length(std::move(_array_length))
     , semicolon_token(std::move(_semicolon_token))
 {
     add_child(*access_modifier);
     add_child(*type_specifier);
     add_child(*identifier_token);
-    add_child(*array_length);
     add_child(*semicolon_token);
 }
 ClassMemberDeclarationVariable::~ClassMemberDeclarationVariable()
@@ -1158,9 +1179,6 @@ ClassMemberDeclarationVariable::get_name() const
 const SourceReference &
 ClassMemberDeclarationVariable::get_name_source_ref() const
 { return identifier_token->get_source_ref(); }
-const ArrayLength &
-ClassMemberDeclarationVariable::get_array_length() const
-{ return *array_length; }
 ///////////////////////////////////////////////////
 ClassMemberDeclarationMethod::ClassMemberDeclarationMethod(
     JLang::owned<AccessModifier> _access_modifier,
@@ -2182,7 +2200,6 @@ FileStatementGlobalDefinition::FileStatementGlobalDefinition(
     JLang::owned<UnsafeModifier> _unsafe_modifier,
     JLang::owned<TypeSpecifier> _type_specifier,
     JLang::owned<Terminal> _name,
-    JLang::owned<ArrayLength> _array_length,
     JLang::owned<GlobalInitializer> _global_initializer,
     JLang::owned<Terminal> _semicolon
     )
@@ -2191,7 +2208,6 @@ FileStatementGlobalDefinition::FileStatementGlobalDefinition(
     , unsafe_modifier(std::move(_unsafe_modifier))
     , type_specifier(std::move(_type_specifier))
     , name(std::move(_name))
-    , array_length(std::move(_array_length))
     , global_initializer(std::move(_global_initializer))
     , semicolon(std::move(_semicolon))
 {
@@ -2199,7 +2215,6 @@ FileStatementGlobalDefinition::FileStatementGlobalDefinition(
     add_child(*unsafe_modifier);
     add_child(*type_specifier);
     add_child(*name);
-    add_child(*array_length);
     add_child(*global_initializer);
     add_child(*semicolon);
 }
@@ -2222,9 +2237,6 @@ FileStatementGlobalDefinition::get_name() const
 const SourceReference &
 FileStatementGlobalDefinition::get_name_source_ref() const
 { return name->get_source_ref(); }
-const ArrayLength &
-FileStatementGlobalDefinition::get_array_length() const
-{ return *array_length; }
 const GlobalInitializer &
 FileStatementGlobalDefinition::get_global_initializer() const
 { return *global_initializer; }

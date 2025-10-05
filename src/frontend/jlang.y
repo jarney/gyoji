@@ -277,7 +277,6 @@ int visibility_from_modifier(JLang::frontend::tree::AccessModifier::AccessModifi
 %nterm <JLang::owned<JLang::frontend::tree::TypeSpecifierCallArgs>> type_specifier_call_args;
 %nterm <JLang::owned<JLang::frontend::tree::TypeName>> type_name;
 %nterm <JLang::owned<JLang::frontend::tree::AccessQualifier>> type_access_qualifier;
-%nterm <JLang::owned<JLang::frontend::tree::ArrayLength>> opt_array_length;
 
 %nterm <JLang::owned<JLang::frontend::tree::ClassMemberDeclarationList>> opt_class_member_declaration_list;
 %nterm <JLang::owned<JLang::frontend::tree::ClassMemberDeclarationList>> class_member_declaration_list;
@@ -418,7 +417,7 @@ file_statement
         ;
 
 file_statement_global_definition
-        : opt_access_modifier opt_unsafe type_specifier IDENTIFIER opt_array_length opt_global_initializer SEMICOLON {
+        : opt_access_modifier opt_unsafe type_specifier IDENTIFIER opt_global_initializer SEMICOLON {
 	        // This is the point at which we need to fully-qualify our symbol name
 	        // because it may be in a namespace and we need to find it unambiguously
 	        // in a possibly large namespace.  We don't want the MIR or code-gen layers
@@ -432,8 +431,7 @@ file_statement_global_definition
                                                                                       std::move($3),
                                                                                       std::move($4),
                                                                                       std::move($5),
-                                                                                      std::move($6),
-                                                                                      std::move($7)
+                                                                                      std::move($6)
                                                                                       );
           PRINT_NONTERMINALS($$);
         }
@@ -1023,30 +1021,14 @@ statement
         }
         ;
 
-opt_array_length
-        : /**/ {
-                $$ = std::make_unique<JLang::frontend::tree::ArrayLength>(return_data.compiler_context.get_token_stream().get_current_source_ref());
-                PRINT_NONTERMINALS($$);
-        }
-        | BRACKET_L LITERAL_INT BRACKET_R {
-                $$ = std::make_unique<JLang::frontend::tree::ArrayLength>(
-		    std::move($1),
-		    std::move($2),
-		    std::move($3)
-                                                                             );
-                PRINT_NONTERMINALS($$);
-        }
-        ;
-
 statement_variable_declaration
-        : type_specifier IDENTIFIER opt_array_length opt_global_initializer SEMICOLON {
+        : type_specifier IDENTIFIER opt_global_initializer SEMICOLON {
 	        $2->set_identifier_type(JLang::frontend::tree::Terminal::IDENTIFIER_LOCAL_SCOPE);
                 $$ = std::make_unique<JLang::frontend::tree::StatementVariableDeclaration>(
 		    std::move($1),
 		    std::move($2),
 		    std::move($3),
-		    std::move($4),
-		    std::move($5)
+		    std::move($4)
 		    );
                 PRINT_NONTERMINALS($$);
         }
@@ -2171,15 +2153,14 @@ class_member_declaration_list
         ;
 
 class_member_declaration
-        : opt_access_modifier type_specifier IDENTIFIER opt_array_length SEMICOLON {
+        : opt_access_modifier type_specifier IDENTIFIER SEMICOLON {
                 // Member Variable
 	        $3->set_identifier_type(JLang::frontend::tree::Terminal::IDENTIFIER_LOCAL_SCOPE);
                 auto expr = std::make_unique<JLang::frontend::tree::ClassMemberDeclarationVariable>(
                                                                                                        std::move($1),
                                                                                                        std::move($2),
                                                                                                        std::move($3),
-                                                                                                       std::move($4),
-                                                                                                       std::move($5)
+                                                                                                       std::move($4)
                                                                                                        );
                 const JLang::frontend::ast::SyntaxNode &sn = *(expr);
                 $$ = std::make_unique<JLang::frontend::tree::ClassMemberDeclaration>(std::move(expr), sn);
@@ -2291,6 +2272,17 @@ type_specifier
                                                                                       std::move($1),
                                                                                       std::move($2)
                                                                                       );
+                const JLang::frontend::ast::SyntaxNode &sn = *(expr);
+                $$ = std::make_unique<JLang::frontend::tree::TypeSpecifier>(std::move(expr), sn);
+                PRINT_NONTERMINALS($$);
+        }
+        | type_specifier BRACKET_L LITERAL_INT BRACKET_R {
+                auto expr = std::make_unique<JLang::frontend::tree::TypeSpecifierArray>(
+	                std::move($1),
+			std::move($2),
+			std::move($3),
+			std::move($4)
+		);
                 const JLang::frontend::ast::SyntaxNode &sn = *(expr);
                 $$ = std::make_unique<JLang::frontend::tree::TypeSpecifier>(std::move(expr), sn);
                 PRINT_NONTERMINALS($$);

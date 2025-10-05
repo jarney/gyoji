@@ -658,8 +658,9 @@ namespace JLang::frontend::tree {
 	JLang::owned<Terminal> paren_r2_token;
     };
     
-    //! Represents an unsafe poniter to a specific type.
     /**
+     * @brief Represents an unsafe poniter to a specific type.
+     *
      * This type represents a pointer to another type in the style
      * of C.  For example, to declare a pointer to a u32 type,
      * the following would specify that the type of 'f' should
@@ -712,9 +713,39 @@ namespace JLang::frontend::tree {
 	JLang::owned<Terminal> star_token;
 	JLang::owned<AccessQualifier> access_qualifier;
     };
-    
-    //! Represents a safe reference to a specific type.
+
+    class TypeSpecifierArray : public JLang::frontend::ast::SyntaxNode {
+    public:
+	/**
+	 * Specifies a pointer to the given type and
+	 * marked with access as 'const', 'volatile', or 'unspecified'.
+	 */
+	TypeSpecifierArray(
+	    JLang::owned<TypeSpecifier> _type_specifier,
+	    JLang::owned<Terminal> _bracket_l_token,
+	    JLang::owned<Terminal> _literal_int_token,
+	    JLang::owned<Terminal> _bracket_r_token
+	    );
+	/**
+	 * Destructor, nothing special.
+	 */
+	~TypeSpecifierArray();
+	
+	/**
+	 * Returns the type that is accessed behind this pointer.
+	 */
+	const TypeSpecifier & get_type_specifier() const;
+    private:
+	JLang::owned<TypeSpecifier> type_specifier;
+	JLang::owned<Terminal> bracket_l_token;
+	JLang::owned<Terminal> literal_int_token;
+	JLang::owned<Terminal> bracket_r_token;
+    };
+
     /**
+     * @brief Represents a safe reference to a specific type.
+     *
+     * @details
      * This represents a reference to the given type.  Similar to pointers,
      * references allow indirect access to the underlying values.  Unlike
      * pointers, however, references carry safety semantics used by the
@@ -807,7 +838,8 @@ namespace JLang::frontend::tree {
 	    JLang::owned<TypeSpecifierTemplate>,
 	    JLang::owned<TypeSpecifierFunctionPointer>,
 	    JLang::owned<TypeSpecifierPointerTo>,
-	    JLang::owned<TypeSpecifierReferenceTo>
+            JLang::owned<TypeSpecifierReferenceTo>,
+	    JLang::owned<TypeSpecifierArray>
 	> TypeSpecifierType;
 	TypeSpecifier(TypeSpecifier::TypeSpecifierType _type, const JLang::frontend::ast::SyntaxNode & _sn);
 	/**
@@ -968,7 +1000,6 @@ namespace JLang::frontend::tree {
 	StatementVariableDeclaration(
 	    JLang::owned<TypeSpecifier> _type_specifier,
 	    JLang::owned<Terminal> _identifier_token,
-	    JLang::owned<ArrayLength> _array_length,
 	    JLang::owned<GlobalInitializer> _global_initializer,
 	    JLang::owned<Terminal> _semicolon_token
 	    );
@@ -985,11 +1016,6 @@ namespace JLang::frontend::tree {
 	 */
 	const std::string & get_name() const;
 	const JLang::context::SourceReference & get_name_source_ref() const;
-	/**
-	 * If the variable is an array, this gives the length
-	 * of the array being declared.
-	 */
-	const ArrayLength & get_array_length() const;
 	/**
 	 * Returns the initializer expression, usually a literal,
 	 * that is used to populate the variable with known values.
@@ -1621,7 +1647,6 @@ namespace JLang::frontend::tree {
 	    JLang::owned<AccessModifier> _access_modifier,
 	    JLang::owned<TypeSpecifier> _type_specifier,
 	    JLang::owned<Terminal> _identifier_token,
-	    JLang::owned<ArrayLength> _array_length,
 	    JLang::owned<Terminal> _semicolon_token
 	    );
 	/**
@@ -1632,12 +1657,10 @@ namespace JLang::frontend::tree {
 	const TypeSpecifier & get_type_specifier() const;
 	const std::string & get_name() const;
 	const JLang::context::SourceReference & get_name_source_ref() const;
-	const ArrayLength & get_array_length() const;
     private:
 	JLang::owned<AccessModifier> access_modifier;
 	JLang::owned<TypeSpecifier> type_specifier;
 	JLang::owned<Terminal> identifier_token;
-	JLang::owned<ArrayLength> array_length;
 	JLang::owned<Terminal> semicolon_token;
     };    
     class ClassMemberDeclarationMethod : public JLang::frontend::ast::SyntaxNode {
@@ -2499,7 +2522,6 @@ namespace JLang::frontend::tree {
 	    JLang::owned<UnsafeModifier> _unsafe_modifier,
 	    JLang::owned<TypeSpecifier> _type_specifier,
 	    JLang::owned<Terminal> _name,
-	    JLang::owned<ArrayLength> _array_length,
 	    JLang::owned<GlobalInitializer> _global_initializer,
 	    JLang::owned<Terminal> _semicolon
 	    );
@@ -2512,14 +2534,12 @@ namespace JLang::frontend::tree {
 	const TypeSpecifier & get_type_specifier() const;
 	const std::string & get_name() const;
 	const JLang::context::SourceReference & get_name_source_ref() const;
-	const ArrayLength & get_array_length() const;
 	const GlobalInitializer & get_global_initializer() const;
     private:
 	JLang::owned<AccessModifier> access_modifier;
 	JLang::owned<UnsafeModifier> unsafe_modifier;
 	JLang::owned<TypeSpecifier> type_specifier;
 	JLang::owned<Terminal> name; // function name (IDENTIFIER)
-	JLang::owned<ArrayLength> array_length;
 	JLang::owned<GlobalInitializer> global_initializer;
 	JLang::owned<Terminal> semicolon;
     };

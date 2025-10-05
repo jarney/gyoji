@@ -896,7 +896,7 @@ FunctionDefinitionResolver::extract_from_expression_postfix_array_index(
     }
 
     const Type *array_type = function.tmpvar_get(array_tmpvar);
-    if (array_type->get_type() != Type::TYPE_POINTER) {
+    if (!array_type->is_array()) {
 	compiler_context
 	    .get_errors()
 	    .add_simple_error(

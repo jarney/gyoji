@@ -56,6 +56,7 @@ namespace JLang::codegen {
         llvm::Type *create_type_pointer(const JLang::mir::Type *pointertype);
         llvm::Type *create_type_reference(const JLang::mir::Type *referencetype);
 	llvm::Type *create_type_function_pointer(const JLang::mir::Type *fptr_type);
+	llvm::Type *create_type_array(const JLang::mir::Type *array_type);
 	
 
 	// Global symbols
