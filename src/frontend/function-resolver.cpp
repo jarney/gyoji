@@ -3,6 +3,18 @@
 #include <variant>
 #include <stdio.h>
 
+// Operator changes:
+// TODO:  These operators could be non-atomic:
+// OperationArrow = OperationDereference + OperationDot
+// OperationArrayIndex, probably just another CreateGEP
+// OperationUndeclare: (how do we even do this?)
+// Operation(Pre/Post)(Inc/Dec) : Add(1), Sub(1) + store in various combinations.
+// Re-name JumpIfEqual to JumpConditional.
+// After that, the set of primitive operations should be complete (as far as it goes)
+//
+// Then we can finally start implementing some of the 'while/for/goto/label' stuff
+// that still has no implementation but we have all the pieces for.
+
 using namespace JLang::mir;
 using namespace JLang::context;
 using namespace JLang::frontend;
@@ -889,8 +901,8 @@ FunctionDefinitionResolver::extract_from_expression_postfix_array_index(
 	    .get_errors()
 	    .add_simple_error(
 		expression.get_array().get_source_ref(),
-		"Array type must be a pointer to another type",
-		std::string("Type of array is not a pointer type.")
+		"Array type must be an array type",
+		std::string("Type of array is not an array type.")
 		);
 	return false;
     }
@@ -2628,6 +2640,44 @@ FunctionDefinitionResolver::leave_scope(
     }
     unwind.clear();
 }
+	    
+bool
+FunctionDefinitionResolver::extract_from_statement_variable_declaration(
+    JLang::mir::Function & function,
+    size_t & current_block,
+    std::vector<std::string> & unwind,
+    const StatementVariableDeclaration & statement
+    )
+{
+    const JLang::mir::Type * mir_type = type_resolver.extract_from_type_specifier(statement.get_type_specifier());
+    // TODO:
+    // For arrays, it is at this point that we define a type
+    // for the 'array' so we can make it the correct size based on the literal given
+    // for the 'opt_array' stuff.
+    
+    LocalVariable local(statement.get_name(), mir_type, statement.get_type_specifier().get_source_ref());
+    
+    if (!function.add_local(local)) {
+	compiler_context
+	    .get_errors()
+	    .add_simple_error(
+		statement.get_name_source_ref(),
+		"Duplicate Local Variable.",
+		std::string("Variable with name ") + local.get_name() + std::string(" is already in scope and cannot be duplicated in this function.")
+		);
+	return false;
+    }
+    
+    auto operation = std::make_unique<OperationLocalDeclare>(
+	statement.get_source_ref(),
+	statement.get_name(),
+	mir_type
+	);
+    function.get_basic_block(current_block).add_operation(std::move(operation));
+    unwind.push_back(statement.get_name());
+    
+    return true;
+}
 
 bool
 FunctionDefinitionResolver::extract_from_statement_list(
@@ -2643,29 +2693,9 @@ FunctionDefinitionResolver::extract_from_statement_list(
 	const auto & statement_type = statement_el->get_statement();
 	if (std::holds_alternative<JLang::owned<StatementVariableDeclaration>>(statement_type)) {
 	    const auto & statement = std::get<JLang::owned<StatementVariableDeclaration>>(statement_type);
-	    
-	    const JLang::mir::Type * mir_type = type_resolver.extract_from_type_specifier(statement->get_type_specifier());
-
-	    LocalVariable local(statement->get_name(), mir_type, statement->get_type_specifier().get_source_ref());
-	    
-	    if (!function.add_local(local)) {
-		compiler_context
-		    .get_errors()
-		    .add_simple_error(
-			statement->get_name_source_ref(),
-			"Duplicate Local Variable.",
-			std::string("Variable with name ") + local.get_name() + std::string(" is already in scope and cannot be duplicated in this function.")
-			);
+	    if (!extract_from_statement_variable_declaration(function, current_block, unwind, *statement)) {
 		return false;
 	    }
-
-	    auto operation = std::make_unique<OperationLocalDeclare>(
-		statement->get_source_ref(),
-		statement->get_name(),
-		mir_type
-		);
-	    function.get_basic_block(current_block).add_operation(std::move(operation));
-	    unwind.push_back(statement->get_name());
 	}
 	else if (std::holds_alternative<JLang::owned<StatementBlock>>(statement_type)) {
 	    const auto & statement = std::get<JLang::owned<StatementBlock>>(statement_type);

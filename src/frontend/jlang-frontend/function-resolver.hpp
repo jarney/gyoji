@@ -208,6 +208,13 @@ namespace JLang::frontend {
 	    const JLang::frontend::tree::Expression & expression
 	    );
 	
+	bool extract_from_statement_variable_declaration(
+	    JLang::mir::Function & function,
+	    size_t & current_block,
+	    std::vector<std::string> & unwind,
+	    const JLang::frontend::tree::StatementVariableDeclaration & statement
+	    );
+	
 	bool extract_from_statement_return(
 	    JLang::mir::Function & function,
 	    size_t & current_block,

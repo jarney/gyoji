@@ -1030,9 +1030,9 @@ opt_array_length
         }
         | BRACKET_L LITERAL_INT BRACKET_R {
                 $$ = std::make_unique<JLang::frontend::tree::ArrayLength>(
-                                                                             std::move($1),
-                                                                             std::move($2),
-                                                                             std::move($3)
+		    std::move($1),
+		    std::move($2),
+		    std::move($3)
                                                                              );
                 PRINT_NONTERMINALS($$);
         }
@@ -1042,12 +1042,12 @@ statement_variable_declaration
         : type_specifier IDENTIFIER opt_array_length opt_global_initializer SEMICOLON {
 	        $2->set_identifier_type(JLang::frontend::tree::Terminal::IDENTIFIER_LOCAL_SCOPE);
                 $$ = std::make_unique<JLang::frontend::tree::StatementVariableDeclaration>(
-                                                                                              std::move($1),
-                                                                                              std::move($2),
-                                                                                              std::move($3),
-                                                                                              std::move($4),
-                                                                                              std::move($5)
-                                                                                              );
+		    std::move($1),
+		    std::move($2),
+		    std::move($3),
+		    std::move($4),
+		    std::move($5)
+		    );
                 PRINT_NONTERMINALS($$);
         }
         ;
