@@ -230,11 +230,12 @@ BasicBlock::contains_terminator() const
 // FunctionLabel
 /////////////////////////////////////
 FunctionLabel::FunctionLabel(
-    std::string _name
+    std::string _name,
+    size_t _block_id
     )
     : name(_name)
     , resolved(false)
-    , block_id(0)
+    , block_id(_block_id)
     , variables_in_scope()
 {}
 FunctionLabel::FunctionLabel(const FunctionLabel & _other)
@@ -247,10 +248,9 @@ FunctionLabel::~FunctionLabel()
 {}
 
 void
-FunctionLabel::set_label(size_t _block_id, std::vector<std::string> _variables)
+FunctionLabel::set_label(std::vector<std::string> _variables)
 {
     resolved = true;
-    block_id = _block_id;
     variables_in_scope = _variables;
 }
 

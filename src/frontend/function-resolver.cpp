@@ -2365,21 +2365,14 @@ FunctionDefinitionResolver::extract_from_statement_label(
     // We're starting a new label, so this is, by definition,
     // a new basic block.  This means we need to create a new
     // block and issue a 'jump' to it.
-    size_t label_block = function.add_block();
-    auto operation = std::make_unique<OperationJump>(
-	statement.get_source_ref(),
-	label_block
-	);
-    function.get_basic_block(current_block).add_operation(std::move(operation));
 
-    // Then whatever we add next will be in this new block.
-    current_block = label_block;
-    
     const std::string & label_name = statement.get_name();
     const auto & it = labels.find(label_name);
+    size_t label_block;
     if (it == labels.end()) {
-	FunctionLabel label_desc(label_name);
-	label_desc.set_label(label_block, unwind);
+	label_block = function.add_block();
+	FunctionLabel label_desc(label_name, label_block);
+	label_desc.set_label(unwind);
 	labels.insert(std::pair(label_name, label_desc));
     }
     // There's a label record.  It may be a 'goto', but
@@ -2393,8 +2386,17 @@ FunctionDefinitionResolver::extract_from_statement_label(
     // be a goto statement that hasn't seen its target
     // label yet, so we just complete it.
     else {
-	it->second.set_label(label_block, unwind);
+	it->second.set_label(unwind);
+	label_block = it->second.get_block();
     }
+    
+    auto operation = std::make_unique<OperationJump>(
+	statement.get_source_ref(),
+	label_block
+	);
+    function.get_basic_block(current_block).add_operation(std::move(operation));
+    // Then whatever we add next will be in this new block.
+    current_block = label_block;
     
     return true;
 }
@@ -2415,30 +2417,20 @@ FunctionDefinitionResolver::extract_from_statement_goto(
     // but we can't resolve it yet because we don't
     // yet know the ID of the target.
     if (it == labels.end()) {
-	FunctionLabel label_desc(label_name);
+	size_t label_block = function.add_block();
+	FunctionLabel label_desc(label_name, label_block);
 	labels.insert(std::pair(label_name, label_desc));
-
-	// XXX We don't know what block to jump to yet!!!!
-	// so how will we issue our jump operation?
     }
     else {
-	if (it->second.is_resolved()) {
-	    auto operation = std::make_unique<OperationJump>(
-		statement.get_source_ref(),
-		it->second.get_block()
-		);
-	    function.get_basic_block(current_block).add_operation(std::move(operation));
-	    // This jump ends the basic block, so we start a new one.
-	    size_t next_block = function.add_block();
-	    current_block = next_block;
-	}
-	else {
-	    fprintf(stderr, "XXX Could not issue jump because we don't have a block id yet\n");
-	    // Do we have to insert this and fix it up later?
-	}
+	auto operation = std::make_unique<OperationJump>(
+	    statement.get_source_ref(),
+	    it->second.get_block()
+	    );
+	function.get_basic_block(current_block).add_operation(std::move(operation));
+	// This jump ends the basic block, so we start a new one.
+	size_t next_block = function.add_block();
+	current_block = next_block;
     }
-    
-    fprintf(stderr, "Goto label %s\n", statement.get_label().c_str());
     return true;
 }
 	

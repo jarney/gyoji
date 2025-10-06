@@ -340,11 +340,12 @@ namespace JLang::mir {
     class FunctionLabel {
     public:
         FunctionLabel(
-	    std::string _name
+	    std::string _name,
+	    size_t _block_id
 	    );
         FunctionLabel(const FunctionLabel & _other);
         ~FunctionLabel();
-	void set_label(size_t _block_id, std::vector<std::string> _variables);
+	void set_label(std::vector<std::string> _variables);
 	size_t get_block() const;
 	bool is_resolved() const;
     private:
