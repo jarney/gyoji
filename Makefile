@@ -11,14 +11,7 @@ docs: build/Makefile
 # cover our source, not generated code
 # or tests.
 test: build/Makefile
-	cd build; $(MAKE) all; $(MAKE) test
-	mkdir -p build/gcov
-	gcovr --exclude build/jlang.y.cpp \
-		--exclude build/jlang.y.hpp \
-		--exclude build/jlang.l.cpp \
-		--exclude 'src/.*/test_.*.cpp' \
-		--html build/gcov/report.html \
-		--html-details
+	cd build; $(MAKE) all; $(MAKE) test; $(MAKE) gcov-report
 
 clean: build/Makefile
 	cd build; $(MAKE) clean
@@ -26,8 +19,11 @@ clean: build/Makefile
 
 realclean: clean
 	rm -rf build/*
+	rm -rf install/*
 
-install: build/Makefile
+.PHONY: .force
+
+install: .force all test docs build/Makefile
 	cd build; $(MAKE) install
 
 build/Makefile: CMakeLists.txt

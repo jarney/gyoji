@@ -41,6 +41,10 @@ else (DOXYGEN_FOUND)
   message("Doxygen need to be installed to generate the doxygen documentation")
 endif (DOXYGEN_FOUND)
 
+add_custom_target(gcov-report
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/gcov-report.sh ${CMAKE_CURRENT_BINARY_DIR}
+    )
 
 # 
 # We need bison to build the grammar/yacc file.
@@ -65,4 +69,4 @@ endif (FLEX_FOUND)
 enable_testing()
 
 add_subdirectory(src)
-
+add_subdirectory(website)
