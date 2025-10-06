@@ -269,8 +269,6 @@ int main(int argc, char **argv)
 	{
 	    const auto & statement_type = parse_result->get_translation_unit().get_statements().at(0)->get_statement();
 	    ASSERT_TRUE(std::holds_alternative<JLang::owned<FileStatementFunctionDefinition>>(statement_type), "This should be a function definition");
-	    
-	    const auto & function_definition = std::get<JLang::owned<FileStatementFunctionDefinition>>(statement_type);
 	}
     }
     

@@ -2462,6 +2462,56 @@ FunctionDefinitionResolver::extract_from_statement_ifelse(
 }
 
 bool
+FunctionDefinitionResolver::extract_from_statement_while(
+    JLang::mir::Function & function,
+    size_t & current_block,
+    std::map<std::string, JLang::mir::FunctionLabel> & labels,
+    const JLang::frontend::tree::StatementWhile & statement
+    )
+{
+    size_t condition_tmpvar;
+
+    size_t blockid_evaluate_expression = function.add_block();
+    size_t blockid_if = function.add_block();
+    size_t blockid_done = function.add_block();
+
+    auto operation_jump_initial = std::make_unique<OperationJump>(
+	statement.get_source_ref(),
+	blockid_evaluate_expression
+	);
+    function.get_basic_block(current_block).add_operation(std::move(operation_jump_initial));
+    
+    if (!extract_from_expression(function, blockid_evaluate_expression, condition_tmpvar, statement.get_expression())) {
+	return false;
+    }
+
+    auto operation_jump_conditional = std::make_unique<OperationJumpConditional>(
+	statement.get_source_ref(),
+	condition_tmpvar,
+	blockid_if,
+	blockid_done
+	);
+    function.get_basic_block(blockid_evaluate_expression).add_operation(std::move(operation_jump_conditional));
+    
+    extract_from_statement_list(
+	function,
+	blockid_if,
+	labels,
+	statement.get_scope_body().get_statements()
+	);
+    
+    auto operation_jump_to_evaluate = std::make_unique<OperationJump>(
+	statement.get_source_ref(),
+	blockid_evaluate_expression
+	);
+    function.get_basic_block(blockid_if).add_operation(std::move(operation_jump_to_evaluate));
+    
+    current_block = blockid_done;
+    
+    return true;
+}
+	
+bool
 FunctionDefinitionResolver::extract_from_statement_label(
     JLang::mir::Function & function,
     size_t & current_block,
@@ -2630,7 +2680,9 @@ FunctionDefinitionResolver::extract_from_statement_list(
 	}
 	else if (std::holds_alternative<JLang::owned<StatementWhile>>(statement_type)) {
 	    const auto & statement = std::get<JLang::owned<StatementWhile>>(statement_type);
-	    fprintf(stderr, "while\n");
+	    if (!extract_from_statement_while(function, current_block, labels, *statement)) {
+		return false;
+	    }
 	}
 	else if (std::holds_alternative<JLang::owned<StatementFor>>(statement_type)) {
 	    const auto & statement = std::get<JLang::owned<StatementFor>>(statement_type);

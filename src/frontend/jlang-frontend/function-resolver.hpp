@@ -250,6 +250,13 @@ namespace JLang::frontend {
 	    const JLang::frontend::tree::StatementIfElse & statement
 	    );
 	
+	bool extract_from_statement_while(
+	    JLang::mir::Function & function,
+	    size_t & current_block,
+	    std::map<std::string, JLang::mir::FunctionLabel> & labels,
+	    const JLang::frontend::tree::StatementWhile & statement
+	    );
+	
 	bool extract_from_statement_label(
 	    JLang::mir::Function & function,
 	    size_t & current_block,

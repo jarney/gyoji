@@ -515,7 +515,7 @@ CodeGeneratorLLVMContext::generate_operation_local_undeclare(
     const JLang::mir::Function & mir_function,
     const JLang::mir::OperationLocalUndeclare & operation
     )
-{}
+{ /* There's nothing to implement here, this is just an MIR thing. */ }
 
 // Literals
 void
@@ -684,9 +684,6 @@ CodeGeneratorLLVMContext::generate_operation_addressof(
 	fprintf(stderr, "This is not an lvalue\n");
 	exit(2);
     }
-    fprintf(stderr, "Ready to return the address\n");
-    fprintf(stderr, "Returning address %ld %p\n", operation.get_result(), found->second);
-
     // Addressof returns a value (a pointer value)
     // but itself is not an lvalue because it cannot
     // be assigned to.
