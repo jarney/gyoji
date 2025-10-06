@@ -275,10 +275,10 @@ namespace JLang::codegen {
 	    );
 
         // Branch and flow control
-	void generate_operation_jump_if_equal(
+	void generate_operation_jump_conditional(
 	    std::map<size_t, llvm::Value *> & tmp_values,
 	    const JLang::mir::Function & mir_function,
-	    const JLang::mir::OperationJumpIfEqual & operation
+	    const JLang::mir::OperationJumpConditional & operation
 	    );
 	void generate_operation_jump(
 	    std::map<size_t, llvm::Value *> & tmp_values,

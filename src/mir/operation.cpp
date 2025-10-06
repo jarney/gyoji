@@ -83,7 +83,7 @@ void JLang::mir::operation_static_init()
     op_type_names.insert(std::pair(Operation::OP_ASSIGN, "store"));
 	    
     // Branch and flow control
-    op_type_names.insert(std::pair(Operation::OP_JUMP_IF_EQUAL, "jump-if"));
+    op_type_names.insert(std::pair(Operation::OP_JUMP_CONDITIONAL, "jump-conditional"));
     op_type_names.insert(std::pair(Operation::OP_JUMP, "jump"));
     op_type_names.insert(std::pair(Operation::OP_RETURN, "return"));
 }
@@ -168,7 +168,7 @@ Operation::is_terminating() const
     // Identify any instructions that
     // would terminate a basic block.
     return (type == OP_JUMP) ||
-	(type == OP_JUMP_IF_EQUAL) ||
+	(type == OP_JUMP_CONDITIONAL) ||
 	(type == OP_RETURN);
 }
 
@@ -837,22 +837,22 @@ OperationLiteralNull::get_description() const
 
 
 //////////////////////////////////////////////
-// OperationJumpIfEqual
+// OperationJumpConditional
 //////////////////////////////////////////////
-OperationJumpIfEqual::OperationJumpIfEqual(
+OperationJumpConditional::OperationJumpConditional(
     const JLang::context::SourceReference & _src_ref,
     size_t _operand,
     size_t _if_block,
     size_t _else_block
     )
-    : Operation(OP_JUMP_IF_EQUAL, _src_ref, 0, _operand, _if_block, _else_block)
+    : Operation(OP_JUMP_CONDITIONAL, _src_ref, 0, _operand, _if_block, _else_block)
 {}
 
-OperationJumpIfEqual::~OperationJumpIfEqual()
+OperationJumpConditional::~OperationJumpConditional()
 {}
     
 std::string
-OperationJumpIfEqual::get_description() const
+OperationJumpConditional::get_description() const
 {
     const auto & it = op_type_names.find(type);
     const std::string & op_name = it->second;

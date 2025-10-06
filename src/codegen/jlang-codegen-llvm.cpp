@@ -1456,10 +1456,10 @@ CodeGeneratorLLVMContext::generate_operation_assign(
 
 // Branch and flow control
 void
-CodeGeneratorLLVMContext::generate_operation_jump_if_equal(
+CodeGeneratorLLVMContext::generate_operation_jump_conditional(
     std::map<size_t, llvm::Value *> & tmp_values,
     const JLang::mir::Function & mir_function,
-    const JLang::mir::OperationJumpIfEqual & operation
+    const JLang::mir::OperationJumpConditional & operation
     )
 {
     llvm::Value *condition = tmp_values[operation.get_operands().at(0)];
@@ -1633,8 +1633,8 @@ CodeGeneratorLLVMContext::generate_basic_block(
 	case Operation::OP_SIZEOF_TYPE:
 	    generate_operation_sizeof_type(tmp_values, tmp_lvalues, mir_function, (const OperationSizeofType &)operation);
 	    break;
-	case Operation::OP_JUMP_IF_EQUAL:
-	    generate_operation_jump_if_equal(tmp_values, mir_function, (const OperationJumpIfEqual &)operation);
+	case Operation::OP_JUMP_CONDITIONAL:
+	    generate_operation_jump_conditional(tmp_values, mir_function, (const OperationJumpConditional &)operation);
 	    break;
 	case Operation::OP_JUMP:
 	    generate_operation_jump(tmp_values, mir_function, (const OperationJump &)operation);

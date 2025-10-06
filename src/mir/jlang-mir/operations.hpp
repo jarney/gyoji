@@ -866,7 +866,7 @@ namespace JLang::mir {
 	     * third operand is the location to jump to if the
 	     * condition if false.
 	     */
-	    OP_JUMP_IF_EQUAL, // Boolean types
+	    OP_JUMP_CONDITIONAL, // Boolean types
 	    /**
 	     * @brief Jump (Unconditional)
 	     *
@@ -1756,9 +1756,9 @@ namespace JLang::mir {
      * 'unreachable' and may trigger a compile error
      * or dropped with a warning.
      */
-    class OperationJumpIfEqual : public Operation {
+    class OperationJumpConditional : public Operation {
     public:
-	OperationJumpIfEqual(
+	OperationJumpConditional(
 	    const JLang::context::SourceReference & _src_ref,
 	    size_t _operand,
 	    size_t _if_block,
@@ -1770,7 +1770,7 @@ namespace JLang::mir {
 	 * @details
 	 * Move along, nothing to see here.
 	 */
-	virtual ~OperationJumpIfEqual();
+	virtual ~OperationJumpConditional();
     protected:
 	virtual std::string get_description() const;
     private:

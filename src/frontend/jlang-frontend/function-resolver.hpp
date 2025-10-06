@@ -31,6 +31,24 @@ namespace JLang::frontend {
 	    const JLang::mir::Type *widen_to
 	    );
 
+	
+	bool create_constant_integer(
+	    JLang::mir::Function & function,
+	    size_t & current_block,
+	    const JLang::frontend::integers::ParseLiteralIntResult & parse_result,
+	    size_t & returned_tmpvar,
+	    const JLang::context::SourceReference & _src_ref
+	    );
+	
+	bool create_constant_integer_one(
+	    JLang::mir::Function & function,
+	    size_t & current_block,
+	    const JLang::mir::Type *type,
+	    size_t & returned_tmpvar,
+	    const JLang::context::SourceReference & _src_ref
+	    );
+	
+
 	// Widen the shorter
 	// of the two operands to be the
 	// larger one.

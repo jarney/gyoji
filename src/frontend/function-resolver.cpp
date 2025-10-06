@@ -8,8 +8,6 @@
 // OperationArrow = OperationDereference + OperationDot
 // OperationUndeclare: (how do we even do this?)
 // Operation(Pre/Post)(Inc/Dec) : Add(1), Sub(1) + store in various combinations.
-// Re-name JumpIfEqual to JumpConditional.
-// After that, the set of primitive operations should be complete (as far as it goes)
 //
 // Then we can finally start implementing some of the 'while/for/goto/label' stuff
 // that still has no implementation but we have all the pieces for.
@@ -373,6 +371,168 @@ FunctionDefinitionResolver::extract_from_expression_primary_literal_string(
     return true;
 }
 
+bool
+FunctionDefinitionResolver::create_constant_integer_one(
+    JLang::mir::Function & function,
+    size_t & current_block,
+    const JLang::mir::Type *type,
+    size_t & returned_tmpvar,
+    const JLang::context::SourceReference & _src_ref
+)
+{
+    JLang::frontend::integers::ParseLiteralIntResult parse_result;
+    parse_result.parsed_type = type;
+
+    switch (type->get_type()) {
+    case Type::TYPE_PRIMITIVE_u8:
+	parse_result.u8_value = (unsigned char)1;
+	break;
+    case Type::TYPE_PRIMITIVE_u16:
+	parse_result.u16_value = (unsigned short)1;
+	break;
+    case Type::TYPE_PRIMITIVE_u32:
+	parse_result.u32_value = (unsigned int)1;
+	break;
+    case Type::TYPE_PRIMITIVE_u64:
+	parse_result.u64_value = (unsigned long)1;
+	break;
+    case Type::TYPE_PRIMITIVE_i8:
+	parse_result.i8_value = (char)1;
+	break;
+    case Type::TYPE_PRIMITIVE_i16:
+	parse_result.i16_value = (short)1;
+	break;
+    case Type::TYPE_PRIMITIVE_i32:
+	parse_result.i32_value = (int)1;
+	break;
+    case Type::TYPE_PRIMITIVE_i64:
+	parse_result.i64_value = (long)1;
+	break;
+    default:
+	compiler_context
+	    .get_errors()
+	    .add_simple_error(
+		_src_ref,
+		"Compiler Bug! Invalid integer literal",
+		std::string("Unsupported primitive literal type creating literal one value") + type->get_name()
+		);
+	return false;
+    }
+    return create_constant_integer(function, current_block, parse_result, returned_tmpvar, _src_ref);
+}
+
+bool
+FunctionDefinitionResolver::create_constant_integer(
+    JLang::mir::Function & function,
+    size_t & current_block,
+    const JLang::frontend::integers::ParseLiteralIntResult & parse_result,
+    size_t & returned_tmpvar,
+    const JLang::context::SourceReference & _src_ref
+    )
+{
+    const Type *type_part = parse_result.parsed_type;
+    returned_tmpvar = function.tmpvar_define(type_part);
+    
+    JLang::owned<JLang::mir::Operation> operation;
+    switch (type_part->get_type()) {
+    case Type::TYPE_PRIMITIVE_u8:
+    {
+	operation = std::make_unique<OperationLiteralInt>(
+	    _src_ref,
+	    returned_tmpvar,
+	    type_part->get_type(),
+	    parse_result.u8_value
+	    );
+    }
+    case Type::TYPE_PRIMITIVE_u16:
+    {
+	operation = std::make_unique<OperationLiteralInt>(
+	    _src_ref,
+	    returned_tmpvar,
+	    type_part->get_type(),
+	    parse_result.u16_value
+	    );
+    }
+	break;
+    case Type::TYPE_PRIMITIVE_u32:
+    {
+	operation = std::make_unique<OperationLiteralInt>(
+	    _src_ref,
+	    returned_tmpvar,
+	    type_part->get_type(),
+	    parse_result.u32_value
+	    );
+    }
+	break;
+    case Type::TYPE_PRIMITIVE_u64:
+    {
+	operation = std::make_unique<OperationLiteralInt>(
+	    _src_ref,
+	    returned_tmpvar,
+	    type_part->get_type(),
+	    parse_result.u64_value
+	    );
+    }
+	break;
+
+    // Signed
+    case Type::TYPE_PRIMITIVE_i8:
+    {
+	operation = std::make_unique<OperationLiteralInt>(
+	    _src_ref,
+	    returned_tmpvar,
+	    type_part->get_type(),
+	    parse_result.i8_value
+	    );
+    }
+    case Type::TYPE_PRIMITIVE_i16:
+    {
+	operation = std::make_unique<OperationLiteralInt>(
+	    _src_ref,
+	    returned_tmpvar,
+	    type_part->get_type(),
+	    parse_result.i16_value
+	    );
+    }
+	break;
+    case Type::TYPE_PRIMITIVE_i32:
+    {
+	operation = std::make_unique<OperationLiteralInt>(
+	    _src_ref,
+	    returned_tmpvar,
+	    type_part->get_type(),
+	    parse_result.i32_value
+	    );
+    }
+	break;
+    case Type::TYPE_PRIMITIVE_i64:
+    {
+	operation = std::make_unique<OperationLiteralInt>(
+	    _src_ref,
+	    returned_tmpvar,
+	    type_part->get_type(),
+	    parse_result.i64_value
+	    );
+    }
+	break;
+
+    default:
+	compiler_context
+	    .get_errors()
+	    .add_simple_error(
+		_src_ref,
+		"Compiler Bug! Invalid integer literal",
+		std::string("Unsupported primitive literal type ") + type_part->get_name()
+		);
+	return false;
+    }
+    function
+	.get_basic_block(current_block)
+	.add_operation(std::move(operation));
+
+    return true;
+}
+
 // There is a LOT of logic here for handling various
 // kinds of integer literals that might be specified here.
 // Of course, the simplest is something like
@@ -402,7 +562,6 @@ FunctionDefinitionResolver::extract_from_expression_primary_literal_int(
     size_t & returned_tmpvar,
     const JLang::frontend::tree::ExpressionPrimaryLiteralInt & expression)
 {
-    JLang::owned<OperationLiteralInt> operation = nullptr;
     JLang::frontend::integers::ParseLiteralIntResult parse_result;
     const Terminal & literal_int_token = expression.get_literal_int_token();
     bool parsed = parse_literal_int(compiler_context, mir.get_types(), literal_int_token, parse_result);
@@ -410,106 +569,12 @@ FunctionDefinitionResolver::extract_from_expression_primary_literal_int(
 	return false;
     }
 
-    const Type *type_part = parse_result.parsed_type;
-    returned_tmpvar = function.tmpvar_define(type_part);
-    
-    switch (type_part->get_type()) {
-    case Type::TYPE_PRIMITIVE_u8:
-    {
-	operation = std::make_unique<OperationLiteralInt>(
-	    expression.get_source_ref(),
+    return create_constant_integer(
+	    function,
+	    current_block,
+	    parse_result,
 	    returned_tmpvar,
-	    type_part->get_type(),
-	    parse_result.u8_value
-	    );
-    }
-    case Type::TYPE_PRIMITIVE_u16:
-    {
-	operation = std::make_unique<OperationLiteralInt>(
-	    expression.get_source_ref(),
-	    returned_tmpvar,
-	    type_part->get_type(),
-	    parse_result.u16_value
-	    );
-    }
-	break;
-    case Type::TYPE_PRIMITIVE_u32:
-    {
-	operation = std::make_unique<OperationLiteralInt>(
-	    expression.get_source_ref(),
-	    returned_tmpvar,
-	    type_part->get_type(),
-	    parse_result.u32_value
-	    );
-    }
-	break;
-    case Type::TYPE_PRIMITIVE_u64:
-    {
-	operation = std::make_unique<OperationLiteralInt>(
-	    expression.get_source_ref(),
-	    returned_tmpvar,
-	    type_part->get_type(),
-	    parse_result.u64_value
-	    );
-    }
-	break;
-
-    // Signed
-    case Type::TYPE_PRIMITIVE_i8:
-    {
-	operation = std::make_unique<OperationLiteralInt>(
-	    expression.get_source_ref(),
-	    returned_tmpvar,
-	    type_part->get_type(),
-	    parse_result.i8_value
-	    );
-    }
-    case Type::TYPE_PRIMITIVE_i16:
-    {
-	operation = std::make_unique<OperationLiteralInt>(
-	    expression.get_source_ref(),
-	    returned_tmpvar,
-	    type_part->get_type(),
-	    parse_result.i16_value
-	    );
-    }
-	break;
-    case Type::TYPE_PRIMITIVE_i32:
-    {
-	operation = std::make_unique<OperationLiteralInt>(
-	    expression.get_source_ref(),
-	    returned_tmpvar,
-	    type_part->get_type(),
-	    parse_result.i32_value
-	    );
-    }
-	break;
-    case Type::TYPE_PRIMITIVE_i64:
-    {
-	operation = std::make_unique<OperationLiteralInt>(
-	    expression.get_source_ref(),
-	    returned_tmpvar,
-	    type_part->get_type(),
-	    parse_result.i64_value
-	    );
-    }
-	break;
-
-    default:
-	compiler_context
-	    .get_errors()
-	    .add_simple_error(
-		expression.get_source_ref(),
-		"Compiler Bug! Invalid integer literal",
-		std::string("Unsupported primitive literal type ") + type_part->get_name()
-		);
-	return false;
-    }
-
-    function
-	.get_basic_block(current_block)
-	.add_operation(std::move(operation));
-    return true;
+	    literal_int_token.get_source_ref());
 }
 
 bool
@@ -822,25 +887,47 @@ FunctionDefinitionResolver::extract_from_expression_postfix_incdec(
 	return false;
     }
 
-    returned_tmpvar = function.tmpvar_duplicate(operand_tmpvar);
+    // This should be implemented as:
+    //         _1 = load(variable)
+    //         _2 = constant(1) // Depends on the type of variable.
+    //         _3 = add/sub _1 _2
+    //              store(_3, variable)
+    //         _1 = <==== This is the result (the result before incrementing)
+    //
     
+    const Type *operand_type = function.tmpvar_get(operand_tmpvar);
+    size_t constant_one_tmpvar;
+    if (!create_constant_integer_one(
+	    function,
+	    current_block,
+	    operand_type,
+	    constant_one_tmpvar,
+	    expression.get_expression().get_source_ref()
+	    )) {
+	return false;
+    }
+    
+    
+    size_t addresult_tmpvar = function.tmpvar_duplicate(operand_tmpvar);
     if (expression.get_type() == ExpressionPostfixIncDec::INCREMENT) {
-	auto operation = std::make_unique<OperationUnary>(
-	    Operation::OP_POST_INCREMENT,
+	auto operation = std::make_unique<OperationBinary>(
+	    Operation::OP_ADD,
 	    expression.get_source_ref(),
-	    returned_tmpvar,
-	    operand_tmpvar
+	    addresult_tmpvar,
+	    operand_tmpvar,
+	    constant_one_tmpvar
 	    );
 	function
 	    .get_basic_block(current_block)
 	    .add_operation(std::move(operation));
     }
     else if (expression.get_type() == ExpressionPostfixIncDec::DECREMENT) {
-	auto operation = std::make_unique<OperationUnary>(
-	    Operation::OP_POST_DECREMENT,
+	auto operation = std::make_unique<OperationBinary>(
+	    Operation::OP_SUBTRACT,
 	    expression.get_source_ref(),
-	    returned_tmpvar,
-	    operand_tmpvar
+	    addresult_tmpvar,
+	    operand_tmpvar,
+	    constant_one_tmpvar
 	    );
 	function
 	    .get_basic_block(current_block)
@@ -855,10 +942,27 @@ FunctionDefinitionResolver::extract_from_expression_postfix_incdec(
 		);
 	return false;
     }
+
+    // We perform a 'store' to store
+    // the value back into the variable.
+    size_t ignore_tmpvar = function.tmpvar_duplicate(operand_tmpvar);
+    auto operation_store = std::make_unique<OperationBinary>(
+	Operation::OP_ASSIGN,
+	expression.get_source_ref(),
+	ignore_tmpvar,
+	operand_tmpvar,
+	addresult_tmpvar
+	);
+    function
+	.get_basic_block(current_block)
+	.add_operation(std::move(operation_store));
+    
+    // This is a post-decrement, so we return
+    // the value as it was before we incremented
+    // it.
+    returned_tmpvar = operand_tmpvar;
     return true;
 }
-
-
 
 bool
 FunctionDefinitionResolver::extract_from_expression_unary_prefix(
@@ -2276,7 +2380,7 @@ FunctionDefinitionResolver::extract_from_statement_ifelse(
 	// If we have an 'else', then
 	// dump to it based on the condition.
 	blockid_else = function.add_block();
-	auto operation = std::make_unique<OperationJumpIfEqual>(
+	auto operation = std::make_unique<OperationJumpConditional>(
 	    statement.get_source_ref(),
 	    condition_tmpvar,
 	    blockid_if,
@@ -2287,7 +2391,7 @@ FunctionDefinitionResolver::extract_from_statement_ifelse(
     else {
 	// Otherwise, jump to done
 	// based on condition.
-	auto operation = std::make_unique<OperationJumpIfEqual>(
+	auto operation = std::make_unique<OperationJumpConditional>(
 	    statement.get_source_ref(),
 	    condition_tmpvar,
 	    blockid_if,
