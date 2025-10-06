@@ -15,6 +15,12 @@ label top:
 	    goto top;
 	}
 	print_value(a);
-
+{
+	u32 b;
+	u32 c;
+}
+{
+	u32 c;
+}
 	return 0;
 }

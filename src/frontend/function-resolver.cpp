@@ -3,11 +3,6 @@
 #include <variant>
 #include <stdio.h>
 
-// TODO: OperationUndeclare: (how do we even do this?)
-//
-// Then we can finally start implementing some of the 'while/for/goto/label' stuff
-// that still has no implementation but we have all the pieces for.
-
 using namespace JLang::mir;
 using namespace JLang::context;
 using namespace JLang::frontend;
@@ -30,12 +25,6 @@ FunctionResolver::~FunctionResolver()
 
 bool FunctionResolver::resolve()
 {
-  // To resolve the functions, we need only iterate the
-  // input parse tree and pull out any type declarations,
-  // resolving them down to their primitive types.
-
-  // TODO: Split the type extraction
-  // out away from the function extraction(?).
     return extract_functions(parse_result.get_translation_unit().get_statements());
 }
 bool
@@ -870,30 +859,6 @@ FunctionDefinitionResolver::extract_from_expression_postfix_arrow(
     function
 	.get_basic_block(current_block)
 	.add_operation(std::move(dot_operation));
-#if 0
-
-    if (member == nullptr) {
-	compiler_context
-	    .get_errors()
-	    .add_simple_error(
-		expression.get_expression().get_source_ref(),
-		"Class does not have this member.",
-		std::string("Class does not have member '") + member_name + std::string("'.")
-		);
-	return false;
-    }
-
-    returned_tmpvar = function.tmpvar_define(member->get_type());
-    auto operation = std::make_unique<OperationArrow>(
-	expression.get_source_ref(),
-	returned_tmpvar,
-	classptr_tmpvar,
-	member_name
-	);
-    function
-	.get_basic_block(current_block)
-	.add_operation(std::move(operation));
-#endif
     return true;
 
 }
@@ -934,10 +899,10 @@ FunctionDefinitionResolver::create_incdec_operation(
 {
     // This should be implemented as:
     //         _1 = load(variable)
-    //         _2 = constant(1) // Depends on the type of variable.
-    //         _3 = add/sub _1 _2
+    //         _2 = constant(1)
+    //         _3 = add/sub _1 _2 <==== Add or subtract depending on is_increment
     //              store(_3, variable)
-    //         _1 = <==== This is the result (the result before incrementing)
+    //         _4 = <==== This will be either _1 or _3 depending on is_postfix.
     //
     
     const Type *operand_type = function.tmpvar_get(operand_tmpvar);
@@ -2360,17 +2325,22 @@ FunctionDefinitionResolver::extract_from_statement_variable_declaration(
     // for the 'opt_array' stuff.
     
     LocalVariable local(statement.get_name(), mir_type, statement.get_type_specifier().get_source_ref());
+
+    const LocalVariable *maybe_existing = function.get_local(statement.get_name());
     
-    if (!function.add_local(local)) {
+    if (maybe_existing != nullptr) {
+	std::unique_ptr<JLang::context::Error> error = std::make_unique<JLang::context::Error>("Duplicate Local Variable.");
+	error->add_message(statement.get_name_source_ref(),
+			   std::string("Variable with name ") + local.get_name() + " is already in scope and cannot be duplicated.");
+	error->add_message(maybe_existing->get_source_ref(),
+			   "First declared here.");
+	
 	compiler_context
 	    .get_errors()
-	    .add_simple_error(
-		statement.get_name_source_ref(),
-		"Duplicate Local Variable.",
-		std::string("Variable with name ") + local.get_name() + std::string(" is already in scope and cannot be duplicated in this function.")
-		);
-	return false;
+	    .add_error(std::move(error));
+	return true; // This doesn't return anything, so we're allowed to continue extracting.
     }
+    function.add_local(local);
     
     auto operation = std::make_unique<OperationLocalDeclare>(
 	statement.get_source_ref(),
@@ -2510,21 +2480,28 @@ FunctionDefinitionResolver::extract_from_statement_label(
     if (it == labels.end()) {
 	label_block = function.add_block();
 	FunctionLabel label_desc(label_name, label_block);
-	label_desc.set_label(unwind);
+	label_desc.set_label(statement.get_name_source_ref());
 	labels.insert(std::pair(label_name, label_desc));
     }
     // There's a label record.  It may be a 'goto', but
     // if it is an already completed label, then issue an error
     // because it's a duplicate.
     else if (it->second.is_resolved()) { 
-	fprintf(stderr, "Duplicate label\n");
-	exit(1);
+		std::unique_ptr<JLang::context::Error> error = std::make_unique<JLang::context::Error>("Labels in functions must be unique");
+		error->add_message(statement.get_name_source_ref(),
+				   std::string("Duplicate label ") + label_name);
+		error->add_message(it->second.get_source_ref(),
+				   "First declared here.");
+	compiler_context
+	    .get_errors()
+	    .add_error(std::move(error));
+	return true;
     }
     // There's a label and it's not complete, so it must
     // be a goto statement that hasn't seen its target
     // label yet, so we just complete it.
     else {
-	it->second.set_label(unwind);
+	it->second.set_label(statement.get_name_source_ref());
 	label_block = it->second.get_block();
     }
     

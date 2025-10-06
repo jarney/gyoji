@@ -236,23 +236,27 @@ FunctionLabel::FunctionLabel(
     : name(_name)
     , resolved(false)
     , block_id(_block_id)
-    , variables_in_scope()
+    , src_ref(nullptr)
 {}
 FunctionLabel::FunctionLabel(const FunctionLabel & _other)
     : name(_other.name)
     , resolved(_other.resolved)
     , block_id(_other.block_id)
-    , variables_in_scope(_other.variables_in_scope)
+    , src_ref(_other.src_ref)
 {}
 FunctionLabel::~FunctionLabel()
 {}
 
 void
-FunctionLabel::set_label(std::vector<std::string> _variables)
+FunctionLabel::set_label(const JLang::context::SourceReference & _src_ref)
 {
     resolved = true;
-    variables_in_scope = _variables;
+    src_ref = &_src_ref;
 }
+
+const JLang::context::SourceReference &
+FunctionLabel::get_source_ref() const
+{ return *src_ref; }
 
 size_t
 FunctionLabel::get_block() const

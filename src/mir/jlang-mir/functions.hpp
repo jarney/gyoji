@@ -345,14 +345,15 @@ namespace JLang::mir {
 	    );
         FunctionLabel(const FunctionLabel & _other);
         ~FunctionLabel();
-	void set_label(std::vector<std::string> _variables);
+	void set_label(const JLang::context::SourceReference & _src_ref);
 	size_t get_block() const;
 	bool is_resolved() const;
+	const JLang::context::SourceReference & get_source_ref() const;
     private:
 	std::string name;
 	bool resolved;
 	size_t block_id;
-	std::vector<std::string> variables_in_scope;
+	const JLang::context::SourceReference * src_ref;
     };
 
     /**
