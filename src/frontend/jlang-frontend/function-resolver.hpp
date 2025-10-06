@@ -215,17 +215,34 @@ namespace JLang::frontend {
 	    const JLang::frontend::tree::StatementVariableDeclaration & statement
 	    );
 	
+	bool extract_from_statement_ifelse(
+	    JLang::mir::Function & function,
+	    size_t & current_block,
+	    std::map<std::string, JLang::mir::FunctionLabel> & labels,
+	    const JLang::frontend::tree::StatementIfElse & statement
+	    );
+	
+	bool extract_from_statement_label(
+	    JLang::mir::Function & function,
+	    size_t & current_block,
+	    std::map<std::string, JLang::mir::FunctionLabel> & labels,
+	    std::vector<std::string> & unwind,
+	    const JLang::frontend::tree::StatementLabel & statement
+	    );
+	
+	bool extract_from_statement_goto(
+	    JLang::mir::Function & function,
+	    size_t & current_block,
+	    std::map<std::string, JLang::mir::FunctionLabel> & labels,
+	    std::vector<std::string> & unwind,
+	    const JLang::frontend::tree::StatementGoto & statement
+	    );
+	
 	bool extract_from_statement_return(
 	    JLang::mir::Function & function,
 	    size_t & current_block,
 	    std::vector<std::string> & unwind,
 	    const JLang::frontend::tree::StatementReturn & statement
-	    );
-	
-	bool extract_from_statement_ifelse(
-	    JLang::mir::Function & function,
-	    size_t & current_block,
-	    const JLang::frontend::tree::StatementIfElse & statement
 	    );
 	
 	void
@@ -238,6 +255,7 @@ namespace JLang::frontend {
 	bool extract_from_statement_list(
 	    JLang::mir::Function & function,
 	    size_t & current_block,
+	    std::map<std::string, JLang::mir::FunctionLabel> & labels,
 	    const JLang::frontend::tree::StatementList & statement_list
 	    );
 	

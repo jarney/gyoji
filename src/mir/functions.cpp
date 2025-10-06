@@ -227,6 +227,42 @@ BasicBlock::contains_terminator() const
 }
 
 /////////////////////////////////////
+// FunctionLabel
+/////////////////////////////////////
+FunctionLabel::FunctionLabel(
+    std::string _name
+    )
+    : name(_name)
+    , resolved(false)
+    , block_id(0)
+    , variables_in_scope()
+{}
+FunctionLabel::FunctionLabel(const FunctionLabel & _other)
+    : name(_other.name)
+    , resolved(_other.resolved)
+    , block_id(_other.block_id)
+    , variables_in_scope(_other.variables_in_scope)
+{}
+FunctionLabel::~FunctionLabel()
+{}
+
+void
+FunctionLabel::set_label(size_t _block_id, std::vector<std::string> _variables)
+{
+    resolved = true;
+    block_id = _block_id;
+    variables_in_scope = _variables;
+}
+
+size_t
+FunctionLabel::get_block() const
+{ return block_id; }
+
+bool
+FunctionLabel::is_resolved() const
+{ return resolved; }
+
+/////////////////////////////////////
 // FunctionArgument
 /////////////////////////////////////
 FunctionArgument::FunctionArgument(

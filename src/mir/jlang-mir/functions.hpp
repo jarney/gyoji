@@ -317,6 +317,44 @@ namespace JLang::mir {
     };
 
     /**
+     * @brief A named label inside a scope.
+     *
+     * @details
+     * A label represents a location in a scope
+     * that can be the target of a 'goto' statement.
+     * Labels also have associated with them a set of
+     * local variables that are currently in scope.
+     * The rule for a 'goto' statement is that
+     * you can only 'goto' a label that is in the
+     * same scope and has the same local variables
+     * defined in it.  Jumping to other scopes
+     * would bring complicated behavior involving
+     * dynamically de-allocating and re-allocating
+     * variables in the scope that we would rather
+     * avoid.
+     *
+     * By definition, a label is the start of a
+     * basic block and a 'goto' is the end of a
+     * basic block almost by definition of basic blocks.
+     */
+    class FunctionLabel {
+    public:
+        FunctionLabel(
+	    std::string _name
+	    );
+        FunctionLabel(const FunctionLabel & _other);
+        ~FunctionLabel();
+	void set_label(size_t _block_id, std::vector<std::string> _variables);
+	size_t get_block() const;
+	bool is_resolved() const;
+    private:
+	std::string name;
+	bool resolved;
+	size_t block_id;
+	std::vector<std::string> variables_in_scope;
+    };
+
+    /**
      * @brief Function inside a translation unit.
      *
      * @details

@@ -2208,33 +2208,48 @@ FunctionDefinitionResolver::extract_from_expression(
 }
 
 bool
-FunctionDefinitionResolver::extract_from_statement_return(
+FunctionDefinitionResolver::extract_from_statement_variable_declaration(
     JLang::mir::Function & function,
     size_t & current_block,
     std::vector<std::string> & unwind,
-    const StatementReturn & statement
+    const StatementVariableDeclaration & statement
     )
 {
-    size_t expression_tmpvar;
-    if (!extract_from_expression(function, current_block, expression_tmpvar, statement.get_expression())) {
+    const JLang::mir::Type * mir_type = type_resolver.extract_from_type_specifier(statement.get_type_specifier());
+    // TODO:
+    // For arrays, it is at this point that we define a type
+    // for the 'array' so we can make it the correct size based on the literal given
+    // for the 'opt_array' stuff.
+    
+    LocalVariable local(statement.get_name(), mir_type, statement.get_type_specifier().get_source_ref());
+    
+    if (!function.add_local(local)) {
+	compiler_context
+	    .get_errors()
+	    .add_simple_error(
+		statement.get_name_source_ref(),
+		"Duplicate Local Variable.",
+		std::string("Variable with name ") + local.get_name() + std::string(" is already in scope and cannot be duplicated in this function.")
+		);
 	return false;
     }
-
-    leave_scope(function, current_block, statement.get_source_ref(), unwind);
     
-    auto operation = std::make_unique<OperationReturn>(
+    auto operation = std::make_unique<OperationLocalDeclare>(
 	statement.get_source_ref(),
-	expression_tmpvar
+	statement.get_name(),
+	mir_type
 	);
     function.get_basic_block(current_block).add_operation(std::move(operation));
+    unwind.push_back(statement.get_name());
+    
     return true;
 }
-
 
 bool
 FunctionDefinitionResolver::extract_from_statement_ifelse(
     JLang::mir::Function & function,
     size_t & current_block,
+    std::map<std::string, FunctionLabel> & labels,
     const StatementIfElse & statement
     )
 {
@@ -2287,6 +2302,7 @@ FunctionDefinitionResolver::extract_from_statement_ifelse(
     if (!extract_from_statement_list(
 	function,
 	current_block,
+	labels,
 	statement.get_if_scope_body().get_statements()
 	    )) {
 	return false;
@@ -2308,6 +2324,7 @@ FunctionDefinitionResolver::extract_from_statement_ifelse(
 	if (!extract_from_statement_list(
 	    function,
 	    blockid_else,
+	    labels,
 	    statement.get_else_scope_body().get_statements()
 		)) {
 	    return false;
@@ -2326,6 +2343,7 @@ FunctionDefinitionResolver::extract_from_statement_ifelse(
 	if (!extract_from_statement_ifelse(
 	    function,
 	    current_block,
+	    labels,
 	    statement.get_else_if()
 		)) {
 	    return false;
@@ -2334,6 +2352,119 @@ FunctionDefinitionResolver::extract_from_statement_ifelse(
     current_block = blockid_done;
     return true;
 }
+
+bool
+FunctionDefinitionResolver::extract_from_statement_label(
+    JLang::mir::Function & function,
+    size_t & current_block,
+    std::map<std::string, FunctionLabel> & labels,
+    std::vector<std::string> & unwind,
+    const JLang::frontend::tree::StatementLabel & statement
+    )
+{
+    // We're starting a new label, so this is, by definition,
+    // a new basic block.  This means we need to create a new
+    // block and issue a 'jump' to it.
+    size_t label_block = function.add_block();
+    auto operation = std::make_unique<OperationJump>(
+	statement.get_source_ref(),
+	label_block
+	);
+    function.get_basic_block(current_block).add_operation(std::move(operation));
+
+    // Then whatever we add next will be in this new block.
+    current_block = label_block;
+    
+    const std::string & label_name = statement.get_name();
+    const auto & it = labels.find(label_name);
+    if (it == labels.end()) {
+	FunctionLabel label_desc(label_name);
+	label_desc.set_label(label_block, unwind);
+	labels.insert(std::pair(label_name, label_desc));
+    }
+    // There's a label record.  It may be a 'goto', but
+    // if it is an already completed label, then issue an error
+    // because it's a duplicate.
+    else if (it->second.is_resolved()) { 
+	fprintf(stderr, "Duplicate label\n");
+	exit(1);
+    }
+    // There's a label and it's not complete, so it must
+    // be a goto statement that hasn't seen its target
+    // label yet, so we just complete it.
+    else {
+	it->second.set_label(label_block, unwind);
+    }
+    
+    return true;
+}
+
+bool
+FunctionDefinitionResolver::extract_from_statement_goto(
+    JLang::mir::Function & function,
+    size_t & current_block,
+    std::map<std::string, FunctionLabel> & labels,
+    std::vector<std::string> & unwind,
+    const JLang::frontend::tree::StatementGoto & statement
+    )
+{
+    const std::string & label_name = statement.get_label();
+    const auto & it = labels.find(label_name);
+
+    // Label is not yet found, we need to create it.
+    // but we can't resolve it yet because we don't
+    // yet know the ID of the target.
+    if (it == labels.end()) {
+	FunctionLabel label_desc(label_name);
+	labels.insert(std::pair(label_name, label_desc));
+
+	// XXX We don't know what block to jump to yet!!!!
+	// so how will we issue our jump operation?
+    }
+    else {
+	if (it->second.is_resolved()) {
+	    auto operation = std::make_unique<OperationJump>(
+		statement.get_source_ref(),
+		it->second.get_block()
+		);
+	    function.get_basic_block(current_block).add_operation(std::move(operation));
+	    // This jump ends the basic block, so we start a new one.
+	    size_t next_block = function.add_block();
+	    current_block = next_block;
+	}
+	else {
+	    fprintf(stderr, "XXX Could not issue jump because we don't have a block id yet\n");
+	    // Do we have to insert this and fix it up later?
+	}
+    }
+    
+    fprintf(stderr, "Goto label %s\n", statement.get_label().c_str());
+    return true;
+}
+	
+bool
+FunctionDefinitionResolver::extract_from_statement_return(
+    JLang::mir::Function & function,
+    size_t & current_block,
+    std::vector<std::string> & unwind,
+    const StatementReturn & statement
+    )
+{
+    size_t expression_tmpvar;
+    if (!extract_from_expression(function, current_block, expression_tmpvar, statement.get_expression())) {
+	return false;
+    }
+
+    leave_scope(function, current_block, statement.get_source_ref(), unwind);
+    
+    auto operation = std::make_unique<OperationReturn>(
+	statement.get_source_ref(),
+	expression_tmpvar
+	);
+    function.get_basic_block(current_block).add_operation(std::move(operation));
+    return true;
+}
+
 
 void
 FunctionDefinitionResolver::leave_scope(
@@ -2353,53 +2484,16 @@ FunctionDefinitionResolver::leave_scope(
 }
 	    
 bool
-FunctionDefinitionResolver::extract_from_statement_variable_declaration(
-    JLang::mir::Function & function,
-    size_t & current_block,
-    std::vector<std::string> & unwind,
-    const StatementVariableDeclaration & statement
-    )
-{
-    const JLang::mir::Type * mir_type = type_resolver.extract_from_type_specifier(statement.get_type_specifier());
-    // TODO:
-    // For arrays, it is at this point that we define a type
-    // for the 'array' so we can make it the correct size based on the literal given
-    // for the 'opt_array' stuff.
-    
-    LocalVariable local(statement.get_name(), mir_type, statement.get_type_specifier().get_source_ref());
-    
-    if (!function.add_local(local)) {
-	compiler_context
-	    .get_errors()
-	    .add_simple_error(
-		statement.get_name_source_ref(),
-		"Duplicate Local Variable.",
-		std::string("Variable with name ") + local.get_name() + std::string(" is already in scope and cannot be duplicated in this function.")
-		);
-	return false;
-    }
-    
-    auto operation = std::make_unique<OperationLocalDeclare>(
-	statement.get_source_ref(),
-	statement.get_name(),
-	mir_type
-	);
-    function.get_basic_block(current_block).add_operation(std::move(operation));
-    unwind.push_back(statement.get_name());
-    
-    return true;
-}
-
-bool
 FunctionDefinitionResolver::extract_from_statement_list(
-                                              JLang::mir::Function & function,
-                                              size_t & start_block,
-                                              const StatementList & statement_list)
+    JLang::mir::Function & function,
+    size_t & start_block,
+    std::map<std::string, FunctionLabel> & labels,
+    const StatementList & statement_list)
 {
     std::vector<std::string> unwind;
     
     size_t current_block = start_block;
-    
+
     for (const auto & statement_el : statement_list.get_statements()) {
 	const auto & statement_type = statement_el->get_statement();
 	if (std::holds_alternative<JLang::owned<StatementVariableDeclaration>>(statement_type)) {
@@ -2410,7 +2504,7 @@ FunctionDefinitionResolver::extract_from_statement_list(
 	}
 	else if (std::holds_alternative<JLang::owned<StatementBlock>>(statement_type)) {
 	    const auto & statement = std::get<JLang::owned<StatementBlock>>(statement_type);
-	    if (!extract_from_statement_list(function, current_block, statement->get_scope_body().get_statements())) {
+	    if (!extract_from_statement_list(function, current_block, labels, statement->get_scope_body().get_statements())) {
 		return false;
 	    }
 	}
@@ -2423,7 +2517,7 @@ FunctionDefinitionResolver::extract_from_statement_list(
 	}
 	else if (std::holds_alternative<JLang::owned<StatementIfElse>>(statement_type)) {
 	    const auto & statement = std::get<JLang::owned<StatementIfElse>>(statement_type);
-	    if (!extract_from_statement_ifelse(function, current_block, *statement)) {
+	    if (!extract_from_statement_ifelse(function, current_block, labels, *statement)) {
 		return false;
 	    }
 	}
@@ -2437,11 +2531,15 @@ FunctionDefinitionResolver::extract_from_statement_list(
 	}
 	else if (std::holds_alternative<JLang::owned<StatementLabel>>(statement_type)) {
 	    const auto & statement = std::get<JLang::owned<StatementLabel>>(statement_type);
-	    fprintf(stderr, "label\n");
+	    if (!extract_from_statement_label(function, current_block, labels, unwind, *statement)) {
+		return false;
+	    }
 	}
 	else if (std::holds_alternative<JLang::owned<StatementGoto>>(statement_type)) {
 	    const auto & statement = std::get<JLang::owned<StatementGoto>>(statement_type);
-	    fprintf(stderr, "goto\n");
+	    if (!extract_from_statement_goto(function, current_block, labels, unwind, *statement)) {
+		return false;
+	    }
 	}
 	else if (std::holds_alternative<JLang::owned<StatementBreak>>(statement_type)) {
 	    const auto & statement = std::get<JLang::owned<StatementBreak>>(statement_type);
@@ -2508,7 +2606,9 @@ FunctionDefinitionResolver::extract_from_function_definition(const FileStatement
     
     size_t start_block = fn->add_block();
     
-    if (!extract_from_statement_list(*fn, start_block, function_definition.get_scope_body().get_statements())) {
+    std::map<std::string, FunctionLabel> labels;
+    
+    if (!extract_from_statement_list(*fn, start_block, labels, function_definition.get_scope_body().get_statements())) {
 	return false;
     }
     
