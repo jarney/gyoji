@@ -69,7 +69,7 @@ TokenStream::context(size_t line_start, size_t line_end) const
 
 const Token &
 TokenStream::add_token(
-    std::string _typestr,
+    TokenID _typestr,
     std::string _value,
     const std::string & _filename,
     size_t _line,
@@ -92,7 +92,7 @@ TokenStream::append_token(std::string _value)
 }
 
 Token::Token(
-    std::string _typestr,
+    TokenID _typestr,
     std::string _value,
     const std::string & _filename,
     size_t _line,
@@ -107,7 +107,9 @@ Token::Token(
 Token::~Token()
 {}
 
-const std::string &
+static std::string no_type_string("No-type");
+
+const TokenID &
 Token::get_type() const
 { return typestr; }
 

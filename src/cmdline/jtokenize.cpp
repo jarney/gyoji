@@ -43,10 +43,10 @@ int main(int argc, char **argv)
 	    break;
 	}
 	const JLang::owned<JLang::frontend::tree::Terminal> & token = lvalue.as<JLang::owned<JLang::frontend::tree::Terminal>>();
-	printf("%ld %ld : %s %s\n",
+	printf("%ld %ld : %d %s\n",
 	       token->get_source_ref().get_line(),
 	       token->get_source_ref().get_column(),
-	       token->get_type().c_str(),
+	       token->get_type(),
 	       token->get_value().c_str());
     }
     

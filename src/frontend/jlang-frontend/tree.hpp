@@ -138,7 +138,7 @@ namespace JLang::frontend::tree {
 	 * Returns the type of the correspinding
 	 * lexer token.
 	 */
-	const std::string & get_type() const;
+	const JLang::context::TokenID & get_type() const;
 	/**
 	 * Returns the matched data from the input
 	 * that matched the token.

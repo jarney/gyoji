@@ -9,6 +9,8 @@
 namespace JLang::context {
     class Token;
     class TokenStream;
+
+    typedef unsigned int TokenID;
     
     /**
      * A token represents the result of the lexical
@@ -28,7 +30,7 @@ namespace JLang::context {
 	 * stream.
 	 */
 	Token(
-	    std::string _typestr,
+	    TokenID _typestr,
 	    std::string _value,
 	    const std::string & _filename,
 	    size_t _line,
@@ -48,7 +50,8 @@ namespace JLang::context {
 	 * the input and bypassing the grammar
 	 * entirely.
 	 */
-	const std::string & get_type() const;
+//	const std::string & get_type() const;
+	const TokenID & get_type() const;
 	/**
 	 * This is the literal value that was
 	 * found in the input stream and matched
@@ -65,7 +68,7 @@ namespace JLang::context {
 	 * to append data to a token.
 	 */
 	void append(std::string & value);
-	std::string typestr;
+	TokenID typestr;
 	std::string value;
 	SourceReference src_ref;
     };
@@ -119,7 +122,7 @@ namespace JLang::context {
 	 * line number and column where the token was found.
 	 */
 	const Token & add_token(
-	    std::string _typestr,
+	    TokenID _typestr,
 	    std::string _value,
 	    const std::string & _filename,
 	    size_t _line,

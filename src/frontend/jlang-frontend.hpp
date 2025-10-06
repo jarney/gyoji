@@ -14,6 +14,7 @@
 
 #define _JLANG_INTERNAL
 #include <jlang-frontend/forward.hpp>
+#include <jlang-frontend/tokens.hpp>
 #include <jlang-frontend/parse-literal-int.hpp>
 #include <jlang-frontend/namespace.hpp>
 #include <jlang-frontend/syntax-node.hpp>

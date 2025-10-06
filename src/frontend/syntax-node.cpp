@@ -1,13 +1,14 @@
 #include <jlang-frontend.hpp>
 
+using namespace JLang::context;
 using namespace JLang::frontend;
 using namespace JLang::frontend::ast;
 
 ///////////////////////////////////////////////////
 SyntaxNode::SyntaxNode(
-    std::string _type,
+    TokenID _type,
     SyntaxNode::specific_type_t _data,
-    const JLang::context::SourceReference & _source_ref
+    const SourceReference & _source_ref
     )
     : source_ref(_source_ref)
     , type(_type)
@@ -30,7 +31,7 @@ SyntaxNode::get_children() const
 {
     return children;
 }
-const std::string & SyntaxNode::get_type() const
+const TokenID & SyntaxNode::get_type() const
 {
     return type;
 }
@@ -38,6 +39,6 @@ const SyntaxNode &
 SyntaxNode::get_syntax_node() const
 { return *this; }
 
-const JLang::context::SourceReference &
+const SourceReference &
 SyntaxNode::get_source_ref() const
 { return source_ref; }

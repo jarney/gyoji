@@ -58,7 +58,7 @@ namespace JLang::frontend::ast {
 	 * @param _type Type of node this represents.
 	 * @param _data The specific data associated with this node.
 	 */
-	SyntaxNode(std::string _type, specific_type_t _data, const JLang::context::SourceReference & _source_ref);
+	SyntaxNode(JLang::context::TokenID _type, specific_type_t _data, const JLang::context::SourceReference & _source_ref);
 	~SyntaxNode();
 	
 	
@@ -72,7 +72,7 @@ namespace JLang::frontend::ast {
 	 * This method returns an immutable reference to
 	 * the type of the node.
 	 */
-	const std::string & get_type() const;
+	const JLang::context::TokenID & get_type() const;
 	
 	/**
 	 * This interrogates the node to determine if it
@@ -124,7 +124,7 @@ namespace JLang::frontend::ast {
 	void add_child(const SyntaxNode & node);
 	void prepend_child(const SyntaxNode & node);
 	
-	std::string type;
+	JLang::context::TokenID type;
 	specific_type_t data;
 	
     };

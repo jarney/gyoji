@@ -52,7 +52,7 @@ void move_array(
     const Token &tok =                                               \
         lc->compiler_context.get_token_stream()                      \
             .add_token(                                              \
-                std::string(#nodetype),                              \
+                JLang::frontend::tree::TERMINAL_ ##nodetype,         \
                 std::string(yytext),                                 \
                 lc->compiler_context.get_filename(),                 \
                 lc->line,                                            \
