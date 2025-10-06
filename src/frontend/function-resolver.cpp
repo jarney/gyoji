@@ -7,7 +7,6 @@
 // TODO:  These operators could be non-atomic:
 // OperationArrow = OperationDereference + OperationDot
 // OperationUndeclare: (how do we even do this?)
-// Operation(Pre/Post)(Inc/Dec) : Add(1), Sub(1) + store in various combinations.
 //
 // Then we can finally start implementing some of the 'while/for/goto/label' stuff
 // that still has no implementation but we have all the pieces for.
@@ -887,6 +886,28 @@ FunctionDefinitionResolver::extract_from_expression_postfix_incdec(
 	return false;
     }
 
+    return create_incdec_operation(
+	function,
+	current_block,
+	expression.get_source_ref(),
+	returned_tmpvar,
+	operand_tmpvar,
+	(expression.get_type() == ExpressionPostfixIncDec::INCREMENT), // is_increment
+	true // is_postfix
+	);
+}
+
+bool
+FunctionDefinitionResolver::create_incdec_operation(
+    JLang::mir::Function & function,
+    size_t & current_block,
+    const JLang::context::SourceReference & src_ref,
+    size_t & returned_tmpvar,
+    const size_t & operand_tmpvar,
+    bool is_increment,
+    bool is_postfix
+    )
+{
     // This should be implemented as:
     //         _1 = load(variable)
     //         _2 = constant(1) // Depends on the type of variable.
@@ -902,29 +923,17 @@ FunctionDefinitionResolver::extract_from_expression_postfix_incdec(
 	    current_block,
 	    operand_type,
 	    constant_one_tmpvar,
-	    expression.get_expression().get_source_ref()
+	    src_ref
 	    )) {
 	return false;
     }
     
     
     size_t addresult_tmpvar = function.tmpvar_duplicate(operand_tmpvar);
-    if (expression.get_type() == ExpressionPostfixIncDec::INCREMENT) {
+    if (is_increment) {
 	auto operation = std::make_unique<OperationBinary>(
 	    Operation::OP_ADD,
-	    expression.get_source_ref(),
-	    addresult_tmpvar,
-	    operand_tmpvar,
-	    constant_one_tmpvar
-	    );
-	function
-	    .get_basic_block(current_block)
-	    .add_operation(std::move(operation));
-    }
-    else if (expression.get_type() == ExpressionPostfixIncDec::DECREMENT) {
-	auto operation = std::make_unique<OperationBinary>(
-	    Operation::OP_SUBTRACT,
-	    expression.get_source_ref(),
+	    src_ref,
 	    addresult_tmpvar,
 	    operand_tmpvar,
 	    constant_one_tmpvar
@@ -934,13 +943,16 @@ FunctionDefinitionResolver::extract_from_expression_postfix_incdec(
 	    .add_operation(std::move(operation));
     }
     else {
-	compiler_context
-	    .get_errors()
-	    .add_simple_error(expression.get_source_ref(),
-			      "Compiler bug!  Please report this message",
-			      "Unknown postfix operator encountered"
-		);
-	return false;
+	auto operation = std::make_unique<OperationBinary>(
+	    Operation::OP_SUBTRACT,
+	    src_ref,
+	    addresult_tmpvar,
+	    operand_tmpvar,
+	    constant_one_tmpvar
+	    );
+	function
+	    .get_basic_block(current_block)
+	    .add_operation(std::move(operation));
     }
 
     // We perform a 'store' to store
@@ -948,7 +960,7 @@ FunctionDefinitionResolver::extract_from_expression_postfix_incdec(
     size_t ignore_tmpvar = function.tmpvar_duplicate(operand_tmpvar);
     auto operation_store = std::make_unique<OperationBinary>(
 	Operation::OP_ASSIGN,
-	expression.get_source_ref(),
+	src_ref,
 	ignore_tmpvar,
 	operand_tmpvar,
 	addresult_tmpvar
@@ -960,7 +972,7 @@ FunctionDefinitionResolver::extract_from_expression_postfix_incdec(
     // This is a post-decrement, so we return
     // the value as it was before we incremented
     // it.
-    returned_tmpvar = operand_tmpvar;
+    returned_tmpvar = is_postfix ? operand_tmpvar : addresult_tmpvar;
     return true;
 }
 
@@ -1001,30 +1013,28 @@ FunctionDefinitionResolver::extract_from_expression_unary_prefix(
     switch (op_type) {    
     case ExpressionUnaryPrefix::INCREMENT:
         {
-	returned_tmpvar = function.tmpvar_duplicate(operand_tmpvar);
-	auto operation = std::make_unique<OperationUnary>(
-	    Operation::OP_PRE_INCREMENT,
-	    expression.get_source_ref(),
-	    returned_tmpvar,
-	    operand_tmpvar
-	    );
-	function
-	    .get_basic_block(current_block)
-	    .add_operation(std::move(operation));
+	    return create_incdec_operation(
+		function,
+		current_block,
+		expression.get_source_ref(),
+		returned_tmpvar,
+		operand_tmpvar,
+		true, // is_increment
+		false // is_postfix
+		);
         }
         break;
     case ExpressionUnaryPrefix::DECREMENT:
         {
-	returned_tmpvar = function.tmpvar_duplicate(operand_tmpvar);
-	auto operation = std::make_unique<OperationUnary>(
-	    Operation::OP_PRE_DECREMENT,
-	    expression.get_source_ref(),
-	    returned_tmpvar,
-	    operand_tmpvar
-	    );
-	function
-	    .get_basic_block(current_block)
-	    .add_operation(std::move(operation));
+	    return create_incdec_operation(
+		function,
+		current_block,
+		expression.get_source_ref(),
+		returned_tmpvar,
+		operand_tmpvar,
+		false, // is_increment
+		false // is_postfix
+		);
         }
         break;
     case ExpressionUnaryPrefix::ADDRESSOF:

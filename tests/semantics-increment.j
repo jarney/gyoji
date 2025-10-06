@@ -8,6 +8,9 @@ u32 main(u32 argc, u8**argv)
 	print_value(a);
 	print_value(a++);
 	print_value(a--);
+//	print_value(a);
+//	print_value(++a);
+//	print_value(--a);
 	print_value(a);
 
 	return 0;

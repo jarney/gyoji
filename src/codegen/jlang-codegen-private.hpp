@@ -149,26 +149,6 @@ namespace JLang::codegen {
 	    );
 
 	// Unary operations
-	void generate_operation_post_increment(
-	    std::map<size_t, llvm::Value *> & tmp_values,
-	    const JLang::mir::Function & mir_function,
-	    const JLang::mir::OperationUnary & operation
-	    );
-	void generate_operation_post_decrement(
-	    std::map<size_t, llvm::Value *> & tmp_values,
-	    const JLang::mir::Function & mir_function,
-	    const JLang::mir::OperationUnary & operation
-	    );
-	void generate_operation_pre_increment(
-	    std::map<size_t, llvm::Value *> & tmp_values,
-	    const JLang::mir::Function & mir_function,
-	    const JLang::mir::OperationUnary & operation
-	    );
-	void generate_operation_pre_decrement(
-	    std::map<size_t, llvm::Value *> & tmp_values,
-	    const JLang::mir::Function & mir_function,
-	    const JLang::mir::OperationUnary & operation
-	    );
 	void generate_operation_addressof(
 	    std::map<size_t, llvm::Value *> & tmp_values,
 	    std::map<size_t, llvm::Value *> & tmp_lvalues,

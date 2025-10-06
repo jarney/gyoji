@@ -48,6 +48,16 @@ namespace JLang::frontend {
 	    const JLang::context::SourceReference & _src_ref
 	    );
 	
+	bool create_incdec_operation(
+	    JLang::mir::Function & function,
+	    size_t & current_block,
+	    const JLang::context::SourceReference & src_ref,
+	    size_t & returned_tmpvar,
+	    const size_t & operand_tmpvar,
+	    bool is_increment,
+	    bool is_postfix
+	    );
+	
 
 	// Widen the shorter
 	// of the two operands to be the

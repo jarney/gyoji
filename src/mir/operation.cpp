@@ -42,10 +42,6 @@ void JLang::mir::operation_static_init()
     op_type_names.insert(std::pair(Operation::OP_LITERAL_NULL, "literal-null"));
     
     // Unary operations
-    op_type_names.insert(std::pair(Operation::OP_POST_INCREMENT, "post-increment"));
-    op_type_names.insert(std::pair(Operation::OP_POST_DECREMENT, "post-decrement"));
-    op_type_names.insert(std::pair(Operation::OP_PRE_INCREMENT, "pre-increment"));
-    op_type_names.insert(std::pair(Operation::OP_PRE_INCREMENT, "pre-decrement"));
     op_type_names.insert(std::pair(Operation::OP_ADDRESSOF, "addressof"));
     op_type_names.insert(std::pair(Operation::OP_DEREFERENCE, "dereference"));
     op_type_names.insert(std::pair(Operation::OP_NEGATE, "negate"));

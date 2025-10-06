@@ -682,35 +682,6 @@ CodeGeneratorLLVMContext::generate_operation_literal_null(
 
 // Unary operations
 void
-CodeGeneratorLLVMContext::generate_operation_post_increment(
-    std::map<size_t, llvm::Value *> & tmp_values,
-    const JLang::mir::Function & mir_function,
-    const JLang::mir::OperationUnary & operation
-    )
-{}
-void
-CodeGeneratorLLVMContext::generate_operation_post_decrement(
-    std::map<size_t, llvm::Value *> & tmp_values,
-    const JLang::mir::Function & mir_function,
-    const JLang::mir::OperationUnary & operation
-    )
-{}
-void
-CodeGeneratorLLVMContext::generate_operation_pre_increment(
-    std::map<size_t, llvm::Value *> & tmp_values,
-    const JLang::mir::Function & mir_function,
-    const JLang::mir::OperationUnary & operation
-    )
-{}
-void
-CodeGeneratorLLVMContext::generate_operation_pre_decrement(
-    std::map<size_t, llvm::Value *> & tmp_values,
-    const JLang::mir::Function & mir_function,
-    const JLang::mir::OperationUnary & operation
-    )
-{}
-
-void
 CodeGeneratorLLVMContext::generate_operation_addressof(
     std::map<size_t, llvm::Value *> & tmp_values,
     std::map<size_t, llvm::Value *> & tmp_lvalues,
@@ -1556,18 +1527,6 @@ CodeGeneratorLLVMContext::generate_basic_block(
 	    break;
 	    
         // Unary operations	    
-	case Operation::OP_POST_INCREMENT:
-	    generate_operation_post_increment(tmp_values, mir_function, (const OperationUnary &)operation);
-	    break;
-	case Operation::OP_POST_DECREMENT:
-	    generate_operation_post_decrement(tmp_values, mir_function, (const OperationUnary &)operation);
-	    break;
-	case Operation::OP_PRE_INCREMENT:
-	    generate_operation_pre_increment(tmp_values, mir_function, (const OperationUnary &)operation);
-	    break;
-	case Operation::OP_PRE_DECREMENT:
-	    generate_operation_pre_decrement(tmp_values, mir_function, (const OperationUnary &)operation);
-	    break;
 	case Operation::OP_ADDRESSOF:
 	    generate_operation_addressof(tmp_values, tmp_lvalues, mir_function, (const OperationUnary &)operation);
 	    break;
