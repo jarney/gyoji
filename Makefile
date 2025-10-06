@@ -2,7 +2,7 @@
 all: build/Makefile
 	cd build; $(MAKE)
 
-docs: build/Makefile
+docs: build/Makefile all
 	echo "Checking?"
 	cd build; $(MAKE) docs
 
@@ -10,8 +10,8 @@ docs: build/Makefile
 # code-coverage.  Note that we only
 # cover our source, not generated code
 # or tests.
-test: build/Makefile
-	cd build; $(MAKE) all; $(MAKE) test; $(MAKE) gcov-report
+test: build/Makefile all
+	cd build; $(MAKE) test; $(MAKE) gcov-report
 
 clean: build/Makefile
 	cd build; $(MAKE) clean
@@ -23,7 +23,7 @@ realclean: clean
 
 .PHONY: .force
 
-install: .force all test docs build/Makefile
+install: .force build/Makefile test docs
 	cd build; $(MAKE) install
 
 build/Makefile: CMakeLists.txt
