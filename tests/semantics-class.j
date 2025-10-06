@@ -9,6 +9,9 @@ u32 print_value(u32 number);
 u32 main(u32 argc, u8**argv)
 {
 	Foo cl;
+	Foo* pcl;
+	pcl = &cl;
+	
 	u32 b;
 	cl.a = 10u32;
 	b = cl.a;
@@ -18,5 +21,6 @@ u32 main(u32 argc, u8**argv)
 	cl.a += 100;
 	
 	print_value(cl.a);
+	print_value(pcl->a);
 	return 0u32;
 }

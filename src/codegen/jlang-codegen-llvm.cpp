@@ -482,17 +482,6 @@ CodeGeneratorLLVMContext::generate_operation_dot(
     tmp_lvalues.insert(std::pair(operation.get_result(), result));
     tmp_values.insert(std::pair(operation.get_result(), value));
 }
-void
-CodeGeneratorLLVMContext::generate_operation_arrow(
-    std::map<size_t, llvm::Value *> & tmp_values,
-    std::map<size_t, llvm::Value *> & tmp_lvalues,
-    const JLang::mir::Function & mir_function,
-    const JLang::mir::OperationArrow & operation
-    )
-{
-//    llvm::Value *sum = Builder->CreateFPCast(value_a, llvm_cast_type);
-//    tmp_values.insert(std::pair(operation.get_result(), sum));
-}
 
 // Variable access
 void
@@ -1494,9 +1483,6 @@ CodeGeneratorLLVMContext::generate_basic_block(
 	    break;
 	case Operation::OP_DOT:
 	    generate_operation_dot(tmp_values, tmp_lvalues, mir_function, (const OperationDot &)operation);
-	    break;
-	case Operation::OP_ARROW:
-	    generate_operation_arrow(tmp_values, tmp_lvalues, mir_function, (const OperationArrow &)operation);
 	    break;
 	case Operation::OP_LOCAL_VARIABLE:
 	    generate_operation_local_variable(tmp_values, tmp_lvalues, mir_function, (const OperationLocalVariable &)operation);

@@ -244,44 +244,6 @@ namespace JLang::mir {
 	     */
 	    OP_DOT,             // class types -> Found member type
 
-	    /**
-	     * @brief Indirect member access
-	     *
-	     * @details
-	     * This opcode is used to access values contained
-	     * in a class structure.  The access may be for
-	     * values (member variables) or functions (methods).
-	     * The only difference between this and the OP_DOT
-	     * operation is that it performs the access indirectly
-	     * through a pointer instead of directly as an lvalue.
-	     * It behaves exactly as if the operation were replaced
-	     * by OP_DEREFERENCE followed by OP_DOT.
-	     *
-	     * The first operand must be a class lvalue type and
-	     * the second operand must be the name of the member
-	     * to access.
-	     *
-	     * Because this has an equivalent with other opcodes, this
-	     * may be dropped entirely.
-	     *
-	     * Example
-	     * @code{.unparsed}
-	     * _0 : local-declare ( class { u8 : c } )
-	     * _1 : (class {u8 : c}* ) = addressof( _0 )
-	     * _2 : u8 = indirect-member-access ( _1 "c" )
-	     * @endcode
-	     *
-	     * The above example is exactly equivalent to
-	     *
-	     * @code{.unparsed}
-	     * _0 : local-declare ( class { u8 : c } )
-	     * _1 : (class {u8 : c}* ) = addressof( _0 )
-	     * _2 : (class {u8 : c} ) = dereference( _1 )
-	     * _3 : u8 : = member-access ( _2 "c" )
-	     * @endcode
-	     */
-	    OP_ARROW,           // Pointer to class types -> Found member type
-
 	    // Variable access
 	    /**
 	     * @brief Declare local variable
@@ -1239,44 +1201,6 @@ namespace JLang::mir {
 	const std::string member_name;
     };
 
-    /**
-     * @brief This subclass of Operation is used to access member variables of classes and other aggregate types by pointer.
-     *
-     * @details
-     * This class represents accessing a class member
-     * using the name of the member and the operand
-     * which is a pointer to the class itself.
-     * The returned operation will be an lvalue if the
-     * member variable is an lvalue (which is almost certainly will be).
-     */
-    class OperationArrow : public Operation {
-    public:
-	/**
-	 * Constructs an accessor for a class or structure
-	 * by providing the pointer to the class as the operand
-	 * and the name of the member variable to be accessed
-	 * is specified also.
-	 */
-	OperationArrow(
-	    const JLang::context::SourceReference & _src_ref,
-	    size_t _result,
-	    size_t _operand,
-	    std::string _member_name
-	    );
-	/**
-	 * @brief Move along, nothing to see here.
-	 *
-	 * @details
-	 * Move along, nothing to see here.
-	 */
-	virtual ~OperationArrow();
-	const std::string & get_member_name() const;
-	
-    protected:
-	virtual std::string get_description() const;
-    private:
-	const std::string member_name;
-    };
     /**
      * @brief Load a local variable
      *

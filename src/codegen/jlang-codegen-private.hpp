@@ -91,12 +91,6 @@ namespace JLang::codegen {
 	    const JLang::mir::Function & mir_function,
 	    const JLang::mir::OperationDot & operation
 	    );
-	void generate_operation_arrow(
-	    std::map<size_t, llvm::Value *> & tmp_values,
-	    std::map<size_t, llvm::Value *> & tmp_lvalues,
-	    const JLang::mir::Function & mir_function,
-	    const JLang::mir::OperationArrow & operation
-	    );
 	
 	// Variable access
 	void generate_operation_local_variable(

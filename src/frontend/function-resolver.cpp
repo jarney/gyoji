@@ -3,10 +3,7 @@
 #include <variant>
 #include <stdio.h>
 
-// Operator changes:
-// TODO:  These operators could be non-atomic:
-// OperationArrow = OperationDereference + OperationDot
-// OperationUndeclare: (how do we even do this?)
+// TODO: OperationUndeclare: (how do we even do this?)
 //
 // Then we can finally start implementing some of the 'while/for/goto/label' stuff
 // that still has no implementation but we have all the pieces for.
@@ -846,9 +843,35 @@ FunctionDefinitionResolver::extract_from_expression_postfix_arrow(
 		);
 	return false;
     }
-    const std::string & member_name = expression.get_identifier();
 
+    // First takes 'operand' as a pointer
+    // and de-references it into an lvalue.
+    size_t class_reference_tmpvar = function.tmpvar_define(class_type);
+    auto dereference_operation = std::make_unique<OperationUnary>(
+	    Operation::OP_DEREFERENCE,
+	    expression.get_source_ref(),
+	    class_reference_tmpvar,
+	    classptr_tmpvar
+	    );
+	function
+	    .get_basic_block(current_block)
+	    .add_operation(std::move(dereference_operation));
+    
+    const std::string & member_name = expression.get_identifier();
     const TypeMember *member = class_type->member_get(member_name);
+    
+    returned_tmpvar = function.tmpvar_define(member->get_type());
+    auto dot_operation = std::make_unique<OperationDot>(
+	expression.get_source_ref(),
+	returned_tmpvar,
+	class_reference_tmpvar,
+	member_name
+	);
+    function
+	.get_basic_block(current_block)
+	.add_operation(std::move(dot_operation));
+#if 0
+
     if (member == nullptr) {
 	compiler_context
 	    .get_errors()
@@ -870,6 +893,7 @@ FunctionDefinitionResolver::extract_from_expression_postfix_arrow(
     function
 	.get_basic_block(current_block)
 	.add_operation(std::move(operation));
+#endif
     return true;
 
 }

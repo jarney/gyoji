@@ -25,7 +25,6 @@ void JLang::mir::operation_static_init()
     // Indirect access
     op_type_names.insert(std::pair(Operation::OP_ARRAY_INDEX, "array-index"));
     op_type_names.insert(std::pair(Operation::OP_DOT, "dot"));
-    op_type_names.insert(std::pair(Operation::OP_ARROW, "arrow"));
 
     // Variable access
 	    
@@ -350,39 +349,6 @@ OperationDot::get_member_name() const
 
 std::string
 OperationDot::get_description() const
-{
-    const auto & it = op_type_names.find(type);
-    const std::string & op_name = it->second;
-
-    std::string desc = std::string("_") + std::to_string(result) + std::string(" = ") + op_name + std::string(" (");
-    desc = desc + std::string(" _") + std::to_string(operands.at(0));
-    desc = desc + std::string(" ") + member_name;
-    desc = desc + std::string(" )");
-    return desc;
-}
-
-//////////////////////////////////////////////
-// OperationArrow
-//////////////////////////////////////////////
-OperationArrow::OperationArrow(
-    const JLang::context::SourceReference & _src_ref,
-    size_t _result,
-    size_t _operand,
-    std::string _member_name
-    )
-    : Operation(OP_ARROW, _src_ref, _result)
-    , member_name(_member_name)
-{}
-
-OperationArrow::~OperationArrow()
-{}
-
-const std::string &
-OperationArrow::get_member_name() const
-{ return member_name; }
-
-std::string
-OperationArrow::get_description() const
 {
     const auto & it = op_type_names.find(type);
     const std::string & op_name = it->second;
