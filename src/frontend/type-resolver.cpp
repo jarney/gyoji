@@ -289,6 +289,16 @@ TypeResolver::extract_from_enum_definition(const EnumDefinition & enum_definitio
 	// No definition exists, create it.
 	JLang::owned<Type> type = std::make_unique<Type>(enum_definition.get_name(), Type::TYPE_ENUM, true, enum_definition.get_name_source_ref());
 	mir.get_types().define_type(std::move(type));
+
+	for (const auto & ev : enum_definition.get_value_list().get_values()) {
+	    fprintf(stderr, "Value is %s\n", ev->get_name().c_str());
+	}
+	
+	
+//	mir.get_symbols().define_symbol(
+//	    fully_qualified_function_name,
+//	    pointer_type
+//	    );
     }
     else {
 	// This is a duplicate, reference the original definition.

@@ -641,6 +641,8 @@ namespace JLang::mir {
 	 * Completes the definition of an array type.
 	 */
 	void complete_array_definition(const Type *_type, size_t _array_size, const JLang::context::SourceReference & _source_ref);
+
+	void complete_enum_definition(const Type *_type, const JLang::context::SourceReference & _source_ref);
 	
 	/**
 	 * Completes the definition of a function pointer

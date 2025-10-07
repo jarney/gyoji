@@ -2583,7 +2583,84 @@ FunctionDefinitionResolver::extract_from_statement_while(
     
     return true;
 }
+
+bool
+FunctionDefinitionResolver::extract_from_statement_for(
+    JLang::mir::Function & function,
+    size_t & current_block,
+    bool & in_loop,
+    size_t & loop_break_blockid,
+    size_t & loop_continue_blockid,
+    std::map<std::string, JLang::mir::FunctionLabel> & labels,
+    const JLang::frontend::tree::StatementFor & statement
+    )
+{
+    size_t condition_tmpvar;
+
+    size_t blockid_evaluate_expression_termination = function.add_block();
+    size_t blockid_if = function.add_block();
+    size_t blockid_done = function.add_block();
+
+    // Evaluate the initialization expression
+    if (!extract_from_expression(function, current_block, condition_tmpvar, statement.get_expression_initial())) {
+	return false;
+    }
+    
+    auto operation_jump_initial = std::make_unique<OperationJump>(
+	statement.get_source_ref(),
+	blockid_evaluate_expression_termination
+	);
+    function.get_basic_block(current_block).add_operation(std::move(operation_jump_initial));
+
+    // Evaluate the termination condition.
+    if (!extract_from_expression(function, blockid_evaluate_expression_termination, condition_tmpvar, statement.get_expression_termination())) {
+	return false;
+    }
+
+    auto operation_jump_conditional = std::make_unique<OperationJumpConditional>(
+	statement.get_source_ref(),
+	condition_tmpvar,
+	blockid_if,
+	blockid_done
+	);
+    function.get_basic_block(blockid_evaluate_expression_termination).add_operation(std::move(operation_jump_conditional));
+
+    in_loop = true;
+    loop_break_blockid = blockid_done;
+    loop_continue_blockid = blockid_evaluate_expression_termination;
+    
+    extract_from_statement_list(
+	function,
+	blockid_if,
+	in_loop,
+	loop_break_blockid,
+	loop_continue_blockid,
+	labels,
+	statement.get_scope_body().get_statements()
+	);
+
+    // Evaluate the 'increment' expression
+    if (!extract_from_expression(function, blockid_if, condition_tmpvar, statement.get_expression_increment())) {
+	return false;
+    }
+    
+    in_loop = false;
+    loop_break_blockid = 0;
+    loop_continue_blockid = 0;
+    
+    auto operation_jump_to_evaluate = std::make_unique<OperationJump>(
+	statement.get_source_ref(),
+	blockid_evaluate_expression_termination
+	);
+    function.get_basic_block(blockid_if).add_operation(std::move(operation_jump_to_evaluate));
+    
+    current_block = blockid_done;
+    
+    return true;
+}
 	
+
+
 bool
 FunctionDefinitionResolver::extract_from_statement_break(
     JLang::mir::Function & function,
@@ -2848,7 +2925,16 @@ FunctionDefinitionResolver::extract_from_statement_list(
 	}
 	else if (std::holds_alternative<JLang::owned<StatementFor>>(statement_type)) {
 	    const auto & statement = std::get<JLang::owned<StatementFor>>(statement_type);
-	    fprintf(stderr, "for\n");
+	    if (!extract_from_statement_for(
+		    function,
+		    current_block,
+		    in_loop,
+		    loop_break_blockid,
+		    loop_continue_blockid,
+		    labels,
+		    *statement)) {
+		return false;
+	    }
 	}
 	else if (std::holds_alternative<JLang::owned<StatementLabel>>(statement_type)) {
 	    const auto & statement = std::get<JLang::owned<StatementLabel>>(statement_type);

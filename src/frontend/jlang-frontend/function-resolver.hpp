@@ -263,6 +263,16 @@ namespace JLang::frontend {
 	    const JLang::frontend::tree::StatementWhile & statement
 	    );
 	
+	bool extract_from_statement_for(
+	    JLang::mir::Function & function,
+	    size_t & current_block,
+	    bool & in_loop,
+	    size_t & loop_break_blockid,
+	    size_t & loop_continue_blockid,
+	    std::map<std::string, JLang::mir::FunctionLabel> & labels,
+	    const JLang::frontend::tree::StatementFor & statement
+	    );
+	
 	bool extract_from_statement_label(
 	    JLang::mir::Function & function,
 	    size_t & current_block,
