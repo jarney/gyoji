@@ -160,6 +160,7 @@ static TokenName token_names[] = {
     {NONTERMINAL_global_initializer_addressof_expression_primary, "global_initializer_addressof_expression_primary"},
     {NONTERMINAL_global_initializer_expression_primary, "global_initializer_expression_primary"},
     {NONTERMINAL_global_initializer_struct_initializer_list, "global_initializer_struct_initializer_list"},
+    {NONTERMINAL_initializer_expression, "initializer_expression"},
     {NONTERMINAL_namespace_declaration, "namespace_declaration"},
     {NONTERMINAL_scope_body, "scope_body"},
     {NONTERMINAL_statement, "statement"},

@@ -92,6 +92,7 @@ namespace JLang::frontend::tree {
 
   class StatementList;
     class Statement;
+        class InitializerExpression;
       class StatementVariableDeclaration;
       class StatementBlock;
       class StatementExpression;
@@ -184,6 +185,7 @@ namespace JLang::frontend::tree {
         JLang::frontend::tree::  ExpressionTrinary*,                        \
         JLang::frontend::tree::StatementList*,                              \
         JLang::frontend::tree::  Statement*,                                \
+        JLang::frontend::tree::      InitializerExpression*,                \
         JLang::frontend::tree::    StatementVariableDeclaration*,           \
         JLang::frontend::tree::    StatementBlock*,                         \
         JLang::frontend::tree::    StatementExpression*,                    \

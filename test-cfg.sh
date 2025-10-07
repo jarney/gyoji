@@ -33,6 +33,8 @@ semantics-class
 semantics-function-call
 semantics-pointers
 semantics-sizeof
+semantics-while
+semantics-goto
 "
 
 echo "Checking token stream output."

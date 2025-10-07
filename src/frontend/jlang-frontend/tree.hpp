@@ -982,6 +982,23 @@ namespace JLang::frontend::tree {
 	JLang::owned<Terminal> semicolon; // argument list delimiter SEMICOLON
     };
     
+    class InitializerExpression : public JLang::frontend::ast::SyntaxNode {
+    public:
+	InitializerExpression(
+	    const JLang::context::SourceReference & _src_ref
+	    );
+	InitializerExpression(
+	    JLang::owned<Terminal> _equals_token,
+	    JLang::owned<Expression> _expression
+	    );
+	~InitializerExpression();
+	bool has_expression() const;
+	const Expression & get_expression() const;
+    private:
+	JLang::owned<Terminal> equals_token;
+	JLang::owned<Expression> expression;
+    };
+    
     //! Represents the declaration of a variable inside the scope of a function or block.
     /**
      * This specifies the declaration of a variable inside the body of a function
@@ -1006,7 +1023,7 @@ namespace JLang::frontend::tree {
 	StatementVariableDeclaration(
 	    JLang::owned<TypeSpecifier> _type_specifier,
 	    JLang::owned<Terminal> _identifier_token,
-	    JLang::owned<GlobalInitializer> _global_initializer,
+	    JLang::owned<InitializerExpression> _initializer,
 	    JLang::owned<Terminal> _semicolon_token
 	    );
 	/**
@@ -1026,12 +1043,12 @@ namespace JLang::frontend::tree {
 	 * Returns the initializer expression, usually a literal,
 	 * that is used to populate the variable with known values.
 	 */
-	const GlobalInitializer & get_initializer() const;
+	const InitializerExpression & get_initializer_expression() const;
     private:
 	JLang::owned<TypeSpecifier> type_specifier;
 	JLang::owned<Terminal> identifier_token;
 	JLang::owned<ArrayLength> array_length;
-	JLang::owned<GlobalInitializer> global_initializer;
+	JLang::owned<InitializerExpression> initializer;
 	JLang::owned<Terminal> semicolon_token;
     };
     

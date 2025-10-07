@@ -273,6 +273,8 @@ int visibility_from_modifier(JLang::frontend::tree::AccessModifier::AccessModifi
 %nterm <JLang::owned<JLang::frontend::tree::Expression>> expression_conditional;
 %nterm <JLang::owned<JLang::frontend::tree::Expression>> expression_assignment;
 
+%nterm <JLang::owned<JLang::frontend::tree::InitializerExpression>> initializer_expression;
+
 %nterm <JLang::owned<JLang::frontend::tree::TypeSpecifier>> type_specifier;
 %nterm <JLang::owned<JLang::frontend::tree::TypeSpecifierCallArgs>> type_specifier_call_args;
 %nterm <JLang::owned<JLang::frontend::tree::TypeName>> type_name;
@@ -1021,8 +1023,22 @@ statement
         }
         ;
 
+initializer_expression
+: /**/ {
+    $$ = std::make_unique<JLang::frontend::tree::InitializerExpression>(return_data.compiler_context.get_token_stream().get_current_source_ref());
+    PRINT_NONTERMINALS($$);
+}
+| EQUALS expression {
+    $$ = std::make_unique<JLang::frontend::tree::InitializerExpression>(
+	std::move($1),
+	std::move($2)
+	);
+    PRINT_NONTERMINALS($$);
+}
+;
+
 statement_variable_declaration
-        : type_specifier IDENTIFIER opt_global_initializer SEMICOLON {
+        : type_specifier IDENTIFIER initializer_expression SEMICOLON {
 	        $2->set_identifier_type(JLang::frontend::tree::Terminal::IDENTIFIER_LOCAL_SCOPE);
                 $$ = std::make_unique<JLang::frontend::tree::StatementVariableDeclaration>(
 		    std::move($1),

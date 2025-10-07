@@ -184,6 +184,7 @@ namespace JLang::frontend::tree {
     const JLang::context::TokenID NONTERMINAL_type_specifier_template = 277;
     const JLang::context::TokenID NONTERMINAL_unsafe_modifier = 278;
     const JLang::context::TokenID NONTERMINAL_using_as = 279;
+    const JLang::context::TokenID NONTERMINAL_initializer_expression = 280;
     
     const JLang::context::TokenID END_OF_TOKENS = 9999;
 

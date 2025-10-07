@@ -2349,6 +2349,53 @@ FunctionDefinitionResolver::extract_from_statement_variable_declaration(
 	);
     function.get_basic_block(current_block).add_operation(std::move(operation));
     unwind.push_back(statement.get_name());
+
+    // Once the variable exists, we can start performing the initialization
+    // and assigning the value to something.
+
+    const auto & initializer_expression = statement.get_initializer_expression();
+    if (initializer_expression.has_expression()) {
+	// From here, we need to:
+	// 1) call LocalVariable
+	// 2) Evaluate the expression
+	// 3) Perform an assignment.
+	size_t variable_tmpvar = function.tmpvar_define(mir_type);
+	auto operation = std::make_unique<OperationLocalVariable>(
+	    statement.get_source_ref(),
+	    variable_tmpvar,
+	    statement.get_name(),
+	    mir_type
+	    );
+	function.get_basic_block(current_block).add_operation(std::move(operation));
+
+	size_t initial_value_tmpvar;
+	if (!extract_from_expression(function, current_block, initial_value_tmpvar, initializer_expression.get_expression())) {
+	    return false;
+	}
+
+	size_t returned_tmpvar; // We don't save the returned val because nobody wants it.
+	if (!handle_binary_operation_assignment(
+		function,
+		initializer_expression.get_source_ref(),
+		Operation::OP_ASSIGN,
+		current_block,
+		returned_tmpvar,
+		variable_tmpvar,
+		initial_value_tmpvar
+		)) {
+	    return false;
+	}
+    }
+    else {
+	// TODO: In order to avoid undefined behavior, we should
+	// always make sure that the variable has an initial default
+	// value even if there isn't one provided.  We should look
+	// at the type system and ask it for a 'default' value
+	// for the type.
+	// In many cases, this would be the constructor if it
+	// is available for that type.
+    }
+
     
     return true;
 }

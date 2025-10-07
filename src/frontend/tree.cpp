@@ -496,22 +496,53 @@ FileStatementFunctionDeclaration::get_arguments() const
 
 
 ///////////////////////////////////////////////////
+InitializerExpression::InitializerExpression(
+    const SourceReference & _src_ref
+    )
+    : SyntaxNode(NONTERMINAL_initializer_expression, this, _src_ref)
+    , equals_token(nullptr)
+    , expression(nullptr)
+{}
+
+InitializerExpression::InitializerExpression(
+    JLang::owned<Terminal> _equals_token,
+    JLang::owned<Expression> _expression
+    )
+    : SyntaxNode(NONTERMINAL_initializer_expression, this, _expression->get_source_ref())
+    , equals_token(std::move(_equals_token))
+    , expression(std::move(_expression))
+{
+    add_child(*equals_token);
+    add_child(*expression);
+}
+InitializerExpression::~InitializerExpression()
+{}
+
+bool
+InitializerExpression::has_expression() const
+{ return expression != nullptr; }
+
+const Expression &
+InitializerExpression::get_expression() const
+{ return *expression; }
+
+///////////////////////////////////////////////////
 StatementVariableDeclaration::StatementVariableDeclaration(
     JLang::owned<TypeSpecifier> _type_specifier,
     JLang::owned<Terminal> _identifier_token,
-    JLang::owned<GlobalInitializer> _global_initializer,
+    JLang::owned<InitializerExpression> _initializer,
     JLang::owned<Terminal> _semicolon_token
     )
     : SyntaxNode(NONTERMINAL_statement_variable_declaration, this, _type_specifier->get_source_ref())
     , type_specifier(std::move(_type_specifier))
     , identifier_token(std::move(_identifier_token))
-    , global_initializer(std::move(_global_initializer))
+    , initializer(std::move(_initializer))
     , semicolon_token(std::move(_semicolon_token))
 {
     identifier_token->set_fully_qualified_name("");
     add_child(*type_specifier);
     add_child(*identifier_token);
-    add_child(*global_initializer);
+    add_child(*initializer);
     add_child(*semicolon_token);
 }
 StatementVariableDeclaration::~StatementVariableDeclaration()
@@ -525,9 +556,9 @@ StatementVariableDeclaration::get_name() const
 const SourceReference &
 StatementVariableDeclaration::get_name_source_ref() const
 { return identifier_token->get_source_ref(); }
-const GlobalInitializer &
-StatementVariableDeclaration::get_initializer() const
-{ return *global_initializer;}
+const InitializerExpression &
+StatementVariableDeclaration::get_initializer_expression() const
+{ return *initializer;}
 ///////////////////////////////////////////////////
 StatementBlock::StatementBlock(
     JLang::owned<UnsafeModifier> _unsafe_modifier,
