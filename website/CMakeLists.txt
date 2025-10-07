@@ -14,6 +14,7 @@ html_process(help-wanted.html)
 html_process(goals.html)
 html_process(doxygen.html)
 html_process(code-coverage.html)
+html_process(support.html)
 
 add_custom_target(website
 	DEPENDS
@@ -25,6 +26,7 @@ add_custom_target(website
 	    ${CMAKE_BINARY_DIR}/website/goals.html
 	    ${CMAKE_BINARY_DIR}/website/doxygen.html
 	    ${CMAKE_BINARY_DIR}/website/code-coverage.html
+	    ${CMAKE_BINARY_DIR}/website/support.html
 )
 
 set(WEBSITE_ROOT_FILES
