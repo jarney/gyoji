@@ -2,9 +2,8 @@
 all: build/Makefile
 	cd build; $(MAKE)
 
-docs: build/Makefile all
-	echo "Checking?"
-	cd build; $(MAKE) docs
+website: build/Makefile all
+	cd build; $(MAKE) website
 
 # Run the tests and report
 # code-coverage.  Note that we only
@@ -23,7 +22,7 @@ realclean: clean
 
 .PHONY: .force
 
-install: .force build/Makefile test docs
+install: .force build/Makefile test website
 	cd build; $(MAKE) install
 
 build/Makefile: CMakeLists.txt

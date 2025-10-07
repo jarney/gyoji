@@ -1,4 +1,4 @@
-# The Gyoji programming language
+# [The Gyoji programming language](https://jarney.github.io/)
 
 ## What
 

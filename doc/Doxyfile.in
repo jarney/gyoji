@@ -945,8 +945,6 @@ WARN_LOGFILE           =
 # Note: If this tag is empty the current directory is searched.
 
 INPUT                  = @CMAKE_CURRENT_SOURCE_DIR@/src \
-		         @CMAKE_CURRENT_SOURCE_DIR@/ARCHITECTURE.md \
-			 @CMAKE_CURRENT_SOURCE_DIR@/HELP-WANTED.md \
 			 @CMAKE_CURRENT_SOURCE_DIR@/INSTALL.md \
 			 @CMAKE_CURRENT_SOURCE_DIR@/README.md \
 			 @CMAKE_CURRENT_SOURCE_DIR@/TODO.md \
