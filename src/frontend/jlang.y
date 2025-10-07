@@ -115,12 +115,12 @@ int visibility_from_modifier(JLang::frontend::tree::AccessModifier::AccessModifi
 %token NST_WHITESPACE
 %token NST_FILE_METADATA
 
-%token <JLang::owned<JLang::frontend::tree::Terminal>> LT_OP
-%token <JLang::owned<JLang::frontend::tree::Terminal>> GT_OP
-%token <JLang::owned<JLang::frontend::tree::Terminal>> LE_OP
-%token <JLang::owned<JLang::frontend::tree::Terminal>> GE_OP
-%token <JLang::owned<JLang::frontend::tree::Terminal>> NE_OP
-%token <JLang::owned<JLang::frontend::tree::Terminal>> EQ_OP
+%token <JLang::owned<JLang::frontend::tree::Terminal>> COMPARE_LESS
+%token <JLang::owned<JLang::frontend::tree::Terminal>> COMPARE_GREATER
+%token <JLang::owned<JLang::frontend::tree::Terminal>> COMPARE_LESS_EQUAL
+%token <JLang::owned<JLang::frontend::tree::Terminal>> COMPARE_GREATER_EQUAL
+%token <JLang::owned<JLang::frontend::tree::Terminal>> COMPARE_NOT_EQUAL
+%token <JLang::owned<JLang::frontend::tree::Terminal>> COMPARE_EQUAL
 
 %token <JLang::owned<JLang::frontend::tree::Terminal>> XOR_OP
 %token <JLang::owned<JLang::frontend::tree::Terminal>> AND_OP
@@ -1829,12 +1829,12 @@ expression_relational_shift
         }
         ;
 expression_relational_lt
-        : expression_relational LT_OP expression_shift {
+        : expression_relational COMPARE_LESS expression_shift {
                 auto expr = std::make_unique<JLang::frontend::tree::ExpressionBinary>(
                                                                                          std::move($1),
                                                                                          std::move($2),
                                                                                          std::move($3),
-                                                                                         JLang::frontend::tree::ExpressionBinary::COMPARE_LT
+                                                                                         JLang::frontend::tree::ExpressionBinary::COMPARE_LESS
                                                                                          );
                 const JLang::frontend::ast::SyntaxNode &sn = *(expr);
                 $$ = std::make_unique<JLang::frontend::tree::Expression>(std::move(expr), sn);
@@ -1842,12 +1842,12 @@ expression_relational_lt
         }
         ;
 expression_relational_gt
-        : expression_relational GT_OP expression_shift {
+        : expression_relational COMPARE_GREATER expression_shift {
                 auto expr = std::make_unique<JLang::frontend::tree::ExpressionBinary>(
                                                                                          std::move($1),
                                                                                          std::move($2),
                                                                                          std::move($3),
-                                                                                         JLang::frontend::tree::ExpressionBinary::COMPARE_GT
+                                                                                         JLang::frontend::tree::ExpressionBinary::COMPARE_GREATER
                                                                                          );
                 const JLang::frontend::ast::SyntaxNode &sn = *(expr);
                 $$ = std::make_unique<JLang::frontend::tree::Expression>(std::move(expr), sn);
@@ -1855,12 +1855,12 @@ expression_relational_gt
         }
         ;
 expression_relational_le
-        : expression_relational LE_OP expression_shift {
+        : expression_relational COMPARE_LESS_EQUAL expression_shift {
                 auto expr = std::make_unique<JLang::frontend::tree::ExpressionBinary>(
                                                                                          std::move($1),
                                                                                          std::move($2),
                                                                                          std::move($3),
-                                                                                         JLang::frontend::tree::ExpressionBinary::COMPARE_LE
+                                                                                         JLang::frontend::tree::ExpressionBinary::COMPARE_LESS_EQUAL
                                                                                          );
                 const JLang::frontend::ast::SyntaxNode &sn = *(expr);
                 $$ = std::make_unique<JLang::frontend::tree::Expression>(std::move(expr), sn);
@@ -1868,12 +1868,12 @@ expression_relational_le
         }
         ;
 expression_relational_ge
-        : expression_relational GE_OP expression_shift {
+        : expression_relational COMPARE_GREATER_EQUAL expression_shift {
                 auto expr = std::make_unique<JLang::frontend::tree::ExpressionBinary>(
                                                                                          std::move($1),
                                                                                          std::move($2),
                                                                                          std::move($3),
-                                                                                         JLang::frontend::tree::ExpressionBinary::COMPARE_GE
+                                                                                         JLang::frontend::tree::ExpressionBinary::COMPARE_GREATER_EQUAL
                                                                                          );
                 const JLang::frontend::ast::SyntaxNode &sn = *(expr);
                 $$ = std::make_unique<JLang::frontend::tree::Expression>(std::move(expr), sn);
@@ -1886,23 +1886,23 @@ expression_equality
           $$ = std::move($1);
           PRINT_NONTERMINALS($$);
         }
-        | expression_equality EQ_OP expression_relational {
+        | expression_equality COMPARE_EQUAL expression_relational {
                 auto expr = std::make_unique<JLang::frontend::tree::ExpressionBinary>(
                                                                                          std::move($1),
                                                                                          std::move($2),
                                                                                          std::move($3),
-                                                                                         JLang::frontend::tree::ExpressionBinary::COMPARE_EQ
+                                                                                         JLang::frontend::tree::ExpressionBinary::COMPARE_EQUAL
                                                                                          );
                 const JLang::frontend::ast::SyntaxNode &sn = *(expr);
                 $$ = std::make_unique<JLang::frontend::tree::Expression>(std::move(expr), sn);
                 PRINT_NONTERMINALS($$);
         }
-        | expression_equality NE_OP expression_relational {
+        | expression_equality COMPARE_NOT_EQUAL expression_relational {
                 auto expr = std::make_unique<JLang::frontend::tree::ExpressionBinary>(
                                                                                          std::move($1),
                                                                                          std::move($2),
                                                                                          std::move($3),
-                                                                                         JLang::frontend::tree::ExpressionBinary::COMPARE_NE
+                                                                                         JLang::frontend::tree::ExpressionBinary::COMPARE_NOT_EQUAL
                                                                                          );
                 const JLang::frontend::ast::SyntaxNode &sn = *(expr);
                 $$ = std::make_unique<JLang::frontend::tree::Expression>(std::move(expr), sn);

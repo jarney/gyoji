@@ -1297,8 +1297,8 @@ CodeGeneratorLLVMContext::generate_operation_comparison(
     if (
 	(atype->is_pointer() || atype->is_reference())
 	&&
-	!(type == Operation::OP_COMPARE_EQ ||
-	  type == Operation::OP_COMPARE_NE)
+	!(type == Operation::OP_COMPARE_EQUAL ||
+	  type == Operation::OP_COMPARE_NOT_EQUAL)
 	) {
 	compiler_context
 	    .get_errors()
@@ -1317,7 +1317,7 @@ CodeGeneratorLLVMContext::generate_operation_comparison(
     llvm::Value * result = nullptr;
 
     switch (type) {
-    case Operation::OP_COMPARE_LT:
+    case Operation::OP_COMPARE_LESS:
 	if (atype->is_float()) {
 	    result = Builder->CreateFCmpULT(value_a, value_b);
 	}
@@ -1328,7 +1328,7 @@ CodeGeneratorLLVMContext::generate_operation_comparison(
 	    result = Builder->CreateICmpULT(value_a, value_b);
 	}
 	break;
-    case Operation::OP_COMPARE_GT:
+    case Operation::OP_COMPARE_GREATER:
 	if (atype->is_float()) {
 	    result = Builder->CreateFCmpUGT(value_a, value_b);
 	}
@@ -1339,7 +1339,7 @@ CodeGeneratorLLVMContext::generate_operation_comparison(
 	    result = Builder->CreateICmpUGT(value_a, value_b);
 	}
 	break;
-    case Operation::OP_COMPARE_LE:
+    case Operation::OP_COMPARE_LESS_EQUAL:
 	if (atype->is_float()) {
 	    result = Builder->CreateFCmpULE(value_a, value_b);
 	}
@@ -1350,7 +1350,7 @@ CodeGeneratorLLVMContext::generate_operation_comparison(
 	    result = Builder->CreateICmpULE(value_a, value_b);
 	}
 	break;
-    case Operation::OP_COMPARE_GE:
+    case Operation::OP_COMPARE_GREATER_EQUAL:
 	if (atype->is_float()) {
 	    result = Builder->CreateFCmpUGE(value_a, value_b);
 	}
@@ -1361,7 +1361,7 @@ CodeGeneratorLLVMContext::generate_operation_comparison(
 	    result = Builder->CreateICmpUGE(value_a, value_b);
 	}
 	break;
-    case Operation::OP_COMPARE_EQ:
+    case Operation::OP_COMPARE_EQUAL:
 	if (atype->is_float()) {
 	    result = Builder->CreateFCmpUEQ(value_a, value_b);
 	}
@@ -1369,7 +1369,7 @@ CodeGeneratorLLVMContext::generate_operation_comparison(
 	    result = Builder->CreateICmpEQ(value_a, value_b);
 	}
 	break;
-    case Operation::OP_COMPARE_NE:
+    case Operation::OP_COMPARE_NOT_EQUAL:
 	if (atype->is_float()) {
 	    result = Builder->CreateFCmpUNE(value_a, value_b);
 	}
@@ -1561,12 +1561,12 @@ CodeGeneratorLLVMContext::generate_basic_block(
 	    generate_operation_shift(tmp_values, mir_function, (const OperationBinary &)operation);
 	    break;
         // Binary operations: comparisons
-	case Operation::OP_COMPARE_LT:
-	case Operation::OP_COMPARE_GT:
-	case Operation::OP_COMPARE_LE:
-	case Operation::OP_COMPARE_GE:
-	case Operation::OP_COMPARE_EQ:
-	case Operation::OP_COMPARE_NE:
+	case Operation::OP_COMPARE_LESS:
+	case Operation::OP_COMPARE_GREATER:
+	case Operation::OP_COMPARE_LESS_EQUAL:
+	case Operation::OP_COMPARE_GREATER_EQUAL:
+	case Operation::OP_COMPARE_EQUAL:
+	case Operation::OP_COMPARE_NOT_EQUAL:
 	    generate_operation_comparison(tmp_values, mir_function, (const OperationBinary &)operation);
 	    break;
 	case Operation::OP_ASSIGN:

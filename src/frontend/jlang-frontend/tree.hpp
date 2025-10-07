@@ -2315,12 +2315,12 @@ namespace JLang::frontend::tree {
 	    SHIFT_RIGHT,
 	    
 	    // Relational
-	    COMPARE_LT,
-	    COMPARE_GT,
-	    COMPARE_LE,
-	    COMPARE_GE,
-	    COMPARE_EQ,
-	    COMPARE_NE,
+	    COMPARE_LESS,
+	    COMPARE_GREATER,
+	    COMPARE_LESS_EQUAL,
+	    COMPARE_GREATER_EQUAL,
+	    COMPARE_EQUAL,
+	    COMPARE_NOT_EQUAL,
 	    
 	    // Assignment
 	    ASSIGNMENT,

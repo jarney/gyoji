@@ -44,12 +44,12 @@ namespace JLang::frontend::tree {
     const JLang::context::TokenID TERMINAL_INC_OP = 32;
     const JLang::context::TokenID TERMINAL_DEC_OP = 33;
     const JLang::context::TokenID TERMINAL_LEFT_OP = 34;
-    const JLang::context::TokenID TERMINAL_LT_OP = 35;
-    const JLang::context::TokenID TERMINAL_GT_OP = 36;
-    const JLang::context::TokenID TERMINAL_LE_OP = 37;
-    const JLang::context::TokenID TERMINAL_GE_OP = 38;
-    const JLang::context::TokenID TERMINAL_EQ_OP = 39;
-    const JLang::context::TokenID TERMINAL_NE_OP = 40;
+    const JLang::context::TokenID TERMINAL_COMPARE_LESS = 35;
+    const JLang::context::TokenID TERMINAL_COMPARE_GREATER = 36;
+    const JLang::context::TokenID TERMINAL_COMPARE_LESS_EQUAL = 37;
+    const JLang::context::TokenID TERMINAL_COMPARE_GREATER_EQUAL = 38;
+    const JLang::context::TokenID TERMINAL_COMPARE_EQUAL = 39;
+    const JLang::context::TokenID TERMINAL_COMPARE_NOT_EQUAL = 40;
     
     const JLang::context::TokenID TERMINAL_XOR_OP = 41;
     const JLang::context::TokenID TERMINAL_OR_OP = 42;

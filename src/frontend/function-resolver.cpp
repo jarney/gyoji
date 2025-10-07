@@ -1559,8 +1559,8 @@ FunctionDefinitionResolver::handle_binary_operation_compare(
     if (
 	(atype->is_pointer() || atype->is_reference())
 	&&
-	!(type == Operation::OP_COMPARE_EQ ||
-	  type == Operation::OP_COMPARE_NE)
+	!(type == Operation::OP_COMPARE_EQUAL ||
+	  type == Operation::OP_COMPARE_NOT_EQUAL)
 	) {
 	compiler_context
 	    .get_errors()
@@ -1842,11 +1842,11 @@ FunctionDefinitionResolver::extract_from_expression_binary(
 	    return false;
 	}
     }
-    else if (op_type == ExpressionBinary::COMPARE_LT) {
+    else if (op_type == ExpressionBinary::COMPARE_LESS) {
 	if (!handle_binary_operation_compare(
 		function,
 		expression.get_source_ref(),
-		Operation::OP_COMPARE_LT,
+		Operation::OP_COMPARE_LESS,
 		current_block,
 		returned_tmpvar,
 		a_tmpvar,
@@ -1855,11 +1855,11 @@ FunctionDefinitionResolver::extract_from_expression_binary(
 	    return false;
 	}
     }
-    else if (op_type == ExpressionBinary::COMPARE_GT) {
+    else if (op_type == ExpressionBinary::COMPARE_GREATER) {
 	if (!handle_binary_operation_compare(
 		function,
 		expression.get_source_ref(),
-		Operation::OP_COMPARE_GT,
+		Operation::OP_COMPARE_GREATER,
 		current_block,
 		returned_tmpvar,
 		a_tmpvar,
@@ -1868,11 +1868,11 @@ FunctionDefinitionResolver::extract_from_expression_binary(
 	    return false;
 	}
     }
-    else if (op_type == ExpressionBinary::COMPARE_LE) {
+    else if (op_type == ExpressionBinary::COMPARE_LESS_EQUAL) {
 	if (!handle_binary_operation_compare(
 		function,
 		expression.get_source_ref(),
-		Operation::OP_COMPARE_LE,
+		Operation::OP_COMPARE_LESS_EQUAL,
 		current_block,
 		returned_tmpvar,
 		a_tmpvar,
@@ -1881,11 +1881,11 @@ FunctionDefinitionResolver::extract_from_expression_binary(
 	    return false;
 	}
     }
-    else if (op_type == ExpressionBinary::COMPARE_GE) {
+    else if (op_type == ExpressionBinary::COMPARE_GREATER_EQUAL) {
 	if (!handle_binary_operation_compare(
 		function,
 		expression.get_source_ref(),
-		Operation::OP_COMPARE_GE,
+		Operation::OP_COMPARE_GREATER_EQUAL,
 		current_block,
 		returned_tmpvar,
 		a_tmpvar,
@@ -1894,11 +1894,11 @@ FunctionDefinitionResolver::extract_from_expression_binary(
 	    return false;
 	}
     }
-    else if (op_type == ExpressionBinary::COMPARE_EQ) {
+    else if (op_type == ExpressionBinary::COMPARE_EQUAL) {
 	if (!handle_binary_operation_compare(
 		function,
 		expression.get_source_ref(),
-		Operation::OP_COMPARE_EQ,
+		Operation::OP_COMPARE_EQUAL,
 		current_block,
 		returned_tmpvar,
 		a_tmpvar,
@@ -1907,11 +1907,11 @@ FunctionDefinitionResolver::extract_from_expression_binary(
 	    return false;
 	}
     }
-    else if (op_type == ExpressionBinary::COMPARE_NE) {
+    else if (op_type == ExpressionBinary::COMPARE_NOT_EQUAL) {
 	if (!handle_binary_operation_compare(
 		function,
 		expression.get_source_ref(),
-		Operation::OP_COMPARE_NE,
+		Operation::OP_COMPARE_NOT_EQUAL,
 		current_block,
 		returned_tmpvar,
 		a_tmpvar,

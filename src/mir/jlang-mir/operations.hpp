@@ -671,7 +671,7 @@ namespace JLang::mir {
 	     * must be numeric types of the same and must be both
 	     * signed, unsigned, or floating-point numbers.
 	     */
-	    OP_COMPARE_LT,  // Primitive types -> Boolean
+	    OP_COMPARE_LESS,  // Primitive types -> Boolean
 	    /**
 	     * @brief Compare numbers for greater-than.
 	     *
@@ -682,7 +682,7 @@ namespace JLang::mir {
 	     * must be numeric types of the same and must be both
 	     * signed, unsigned, or floating-point numbers.
 	     */
-	    OP_COMPARE_GT,  // Primitive types -> Boolean
+	    OP_COMPARE_GREATER,  // Primitive types -> Boolean
 	    /**
 	     * @brief Compare numbers for less-than or equal to.
 	     *
@@ -693,7 +693,7 @@ namespace JLang::mir {
 	     * must be numeric types of the same and must be both
 	     * signed, unsigned, or floating-point numbers.
 	     */
-	    OP_COMPARE_LE,  // Primitive types -> Boolean
+	    OP_COMPARE_LESS_EQUAL,  // Primitive types -> Boolean
 	    /**
 	     * @brief Compare numbers for greater-than or equal to.
 	     *
@@ -704,7 +704,7 @@ namespace JLang::mir {
 	     * must be numeric types of the same and must be both
 	     * signed, unsigned, or floating-point numbers.
 	     */
-	    OP_COMPARE_GE,  // Primitive types -> Boolean
+	    OP_COMPARE_GREATER_EQUAL,  // Primitive types -> Boolean
 	    /**
 	     * @brief Compare numbers for not equal-to.
 	     *
@@ -715,7 +715,7 @@ namespace JLang::mir {
 	     * must be numeric types of the same and must be both
 	     * signed, unsigned, or floating-point numbers.
 	     */
-	    OP_COMPARE_NE,  // Pointer types, Primitive types, recursive for class types.
+	    OP_COMPARE_NOT_EQUAL,  // Pointer types, Primitive types, recursive for class types.
 	    /**
 	     * @brief Compare numbers for equality
 	     *
@@ -726,7 +726,7 @@ namespace JLang::mir {
 	     * must be numeric types of the same and must be both
 	     * signed, unsigned, or floating-point numbers.
 	     */
-	    OP_COMPARE_EQ,  // Pointer types, Primitive types, recursive for class types.
+	    OP_COMPARE_EQUAL,  // Pointer types, Primitive types, recursive for class types.
 	    
 	    // Binary operations: assignments
 	    /**

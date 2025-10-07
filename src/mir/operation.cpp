@@ -67,12 +67,12 @@ void JLang::mir::operation_static_init()
     op_type_names.insert(std::pair(Operation::OP_SHIFT_RIGHT, "bitwise-shift-right"));
 
     // Binary operations: comparisons
-    op_type_names.insert(std::pair(Operation::OP_COMPARE_LT, "compare-lt"));
-    op_type_names.insert(std::pair(Operation::OP_COMPARE_GT, "compare-gt"));
-    op_type_names.insert(std::pair(Operation::OP_COMPARE_LE, "compare-le"));
-    op_type_names.insert(std::pair(Operation::OP_COMPARE_GE, "compare-ge"));
-    op_type_names.insert(std::pair(Operation::OP_COMPARE_NE, "compare-ne"));
-    op_type_names.insert(std::pair(Operation::OP_COMPARE_EQ, "compare-eq"));
+    op_type_names.insert(std::pair(Operation::OP_COMPARE_LESS, "compare-less"));
+    op_type_names.insert(std::pair(Operation::OP_COMPARE_GREATER, "compare-greater"));
+    op_type_names.insert(std::pair(Operation::OP_COMPARE_LESS_EQUAL, "compare-less-equal"));
+    op_type_names.insert(std::pair(Operation::OP_COMPARE_GREATER_EQUAL, "compare-greater-equal"));
+    op_type_names.insert(std::pair(Operation::OP_COMPARE_NOT_EQUAL, "compare-not-equal"));
+    op_type_names.insert(std::pair(Operation::OP_COMPARE_EQUAL, "compare-equal"));
 
     // Binary operations: assignment
     op_type_names.insert(std::pair(Operation::OP_ASSIGN, "store"));
