@@ -740,8 +740,12 @@ StatementFor::StatementFor(
     JLang::owned<ScopeBody> _scope_body
     )
     : SyntaxNode(NONTERMINAL_statement_for, this, _for_token->get_source_ref())
+    , is_declaration_initializer(false)
     , for_token(std::move(_for_token))
     , paren_l_token(std::move(_paren_l_token))
+    , type_specifier(nullptr)
+    , identifier_token(nullptr)
+    , assignment_token(nullptr)
     , expression_initial(std::move(_expression_initial))
     , semicolon_initial(std::move(_semicolon_initial))
     , expression_termination(std::move(_expression_termination))
@@ -760,8 +764,62 @@ StatementFor::StatementFor(
     add_child(*paren_r_token);
     add_child(*scope_body);
 }
+StatementFor::StatementFor(
+    JLang::owned<Terminal> _for_token,
+    JLang::owned<Terminal> _paren_l_token,
+    JLang::owned<TypeSpecifier> _type_specifier,
+    JLang::owned<Terminal> _identifier_token,
+    JLang::owned<Terminal> _assignment_token,
+    JLang::owned<Expression> _expression_initial,
+    JLang::owned<Terminal> _semicolon_initial,
+    JLang::owned<Expression> _expression_termination,
+    JLang::owned<Terminal> _semicolon_termination,
+    JLang::owned<Expression> _expression_increment,
+    JLang::owned<Terminal> _paren_r_token,
+    JLang::owned<ScopeBody> _scope_body
+    )
+    : SyntaxNode(NONTERMINAL_statement_for, this, _for_token->get_source_ref())
+    , is_declaration_initializer(true)
+    , for_token(std::move(_for_token))
+    , paren_l_token(std::move(_paren_l_token))
+    , type_specifier(std::move(_type_specifier))
+    , identifier_token(std::move(_identifier_token))
+    , assignment_token(std::move(_assignment_token))
+    , expression_initial(std::move(_expression_initial))
+    , semicolon_initial(std::move(_semicolon_initial))
+    , expression_termination(std::move(_expression_termination))
+    , semicolon_termination(std::move(_semicolon_termination))
+    , expression_increment(std::move(_expression_increment))
+    , paren_r_token(std::move(_paren_r_token))
+    , scope_body(std::move(_scope_body))
+{
+    add_child(*for_token);
+    add_child(*paren_l_token);
+    add_child(*type_specifier);
+    add_child(*identifier_token);
+    add_child(*assignment_token);
+    add_child(*expression_initial);
+    add_child(*semicolon_initial);
+    add_child(*expression_termination);
+    add_child(*semicolon_termination);
+    add_child(*expression_increment);
+    add_child(*paren_r_token);
+    add_child(*scope_body);
+}
 StatementFor::~StatementFor()
 {}
+bool
+StatementFor::is_declaration() const
+{ return is_declaration_initializer; }
+const TypeSpecifier &
+StatementFor::get_type_specifier() const
+{ return *type_specifier; }
+const std::string &
+StatementFor::get_identifier() const
+{ return identifier_token->get_value(); }
+const JLang::context::SourceReference &
+StatementFor::get_identifier_source_ref() const
+{ return identifier_token->get_source_ref(); }
 const Expression &
 StatementFor::get_expression_initial() const
 { return *expression_initial; }

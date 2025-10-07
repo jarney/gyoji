@@ -35,6 +35,7 @@ semantics-pointers
 semantics-sizeof
 semantics-while
 semantics-goto
+semantics-for
 "
 
 echo "Checking token stream output."

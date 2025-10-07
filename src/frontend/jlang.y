@@ -1173,6 +1173,7 @@ statement_while
 
 statement_for
         : FOR PAREN_L expression SEMICOLON expression SEMICOLON expression PAREN_R scope_body {
+                // This variation is just a plain expression.
                 $$ = std::make_unique<JLang::frontend::tree::StatementFor>(
                                                                                 std::move($1),
                                                                                 std::move($2),
@@ -1183,6 +1184,24 @@ statement_for
                                                                                 std::move($7),
                                                                                 std::move($8),
                                                                                 std::move($9)
+                                                                                );
+                PRINT_NONTERMINALS($$);
+        }
+        | FOR PAREN_L type_specifier IDENTIFIER ASSIGNMENT expression SEMICOLON expression SEMICOLON expression PAREN_R scope_body {
+                // This variation is a declaration and assignment
+                $$ = std::make_unique<JLang::frontend::tree::StatementFor>(
+                                                                                std::move($1),
+                                                                                std::move($2),
+                                                                                std::move($3),
+                                                                                std::move($4),
+                                                                                std::move($5),
+                                                                                std::move($6),
+                                                                                std::move($7),
+                                                                                std::move($8),
+                                                                                std::move($9),
+                                                                                std::move($10),
+                                                                                std::move($11),
+                                                                                std::move($12)
                                                                                 );
                 PRINT_NONTERMINALS($$);
         }

@@ -2311,26 +2311,21 @@ FunctionDefinitionResolver::extract_from_expression(
 }
 
 bool
-FunctionDefinitionResolver::extract_from_statement_variable_declaration(
+FunctionDefinitionResolver::local_declare_or_error(
     JLang::mir::Function & function,
     size_t & current_block,
     std::vector<std::string> & unwind,
-    const StatementVariableDeclaration & statement
+    const JLang::mir::Type *mir_type,
+    const std::string & name,
+    const SourceReference & source_ref
     )
 {
-    const JLang::mir::Type * mir_type = type_resolver.extract_from_type_specifier(statement.get_type_specifier());
-    // TODO:
-    // For arrays, it is at this point that we define a type
-    // for the 'array' so we can make it the correct size based on the literal given
-    // for the 'opt_array' stuff.
-    
-    LocalVariable local(statement.get_name(), mir_type, statement.get_type_specifier().get_source_ref());
-
-    const LocalVariable *maybe_existing = function.get_local(statement.get_name());
+    LocalVariable local(name, mir_type, source_ref);
+    const LocalVariable *maybe_existing = function.get_local(name);
     
     if (maybe_existing != nullptr) {
 	std::unique_ptr<JLang::context::Error> error = std::make_unique<JLang::context::Error>("Duplicate Local Variable.");
-	error->add_message(statement.get_name_source_ref(),
+	error->add_message(source_ref,
 			   std::string("Variable with name ") + local.get_name() + " is already in scope and cannot be duplicated.");
 	error->add_message(maybe_existing->get_source_ref(),
 			   "First declared here.");
@@ -2338,21 +2333,49 @@ FunctionDefinitionResolver::extract_from_statement_variable_declaration(
 	compiler_context
 	    .get_errors()
 	    .add_error(std::move(error));
-	return true; // This doesn't return anything, so we're allowed to continue extracting.
+	return false;
     }
     function.add_local(local);
     
     auto operation = std::make_unique<OperationLocalDeclare>(
-	statement.get_source_ref(),
-	statement.get_name(),
+	source_ref,
+	name,
 	mir_type
 	);
     function.get_basic_block(current_block).add_operation(std::move(operation));
-    unwind.push_back(statement.get_name());
+    unwind.push_back(name);
 
+    return true;
+}
+
+bool
+FunctionDefinitionResolver::extract_from_statement_variable_declaration(
+    JLang::mir::Function & function,
+    size_t & current_block,
+    std::vector<std::string> & unwind,
+    const StatementVariableDeclaration & statement
+    )
+{
+    // TODO:
+    // For arrays, it is at this point that we define a type
+    // for the 'array' so we can make it the correct size based on the literal given
+    // for the 'opt_array' stuff.
+    
     // Once the variable exists, we can start performing the initialization
     // and assigning the value to something.
-
+    const JLang::mir::Type * mir_type = type_resolver.extract_from_type_specifier(statement.get_type_specifier());
+    
+    if (!local_declare_or_error(
+	    function,
+	    current_block,
+	    unwind,
+	    mir_type,
+	    statement.get_name(),
+	    statement.get_name_source_ref()
+	    )) {
+	return false;
+    }
+    
     const auto & initializer_expression = statement.get_initializer_expression();
     if (initializer_expression.has_expression()) {
 	// From here, we need to:
@@ -2601,6 +2624,23 @@ FunctionDefinitionResolver::extract_from_statement_for(
     size_t blockid_if = function.add_block();
     size_t blockid_done = function.add_block();
 
+    std::vector<std::string> unwind;
+    
+    if (statement.is_declaration()) {
+	const JLang::mir::Type * mir_type = type_resolver.extract_from_type_specifier(statement.get_type_specifier());
+	
+	if (!local_declare_or_error(
+		function,
+		current_block,
+		unwind,
+		mir_type,
+		statement.get_identifier(),
+		statement.get_identifier_source_ref()
+		)) {
+	    return false;
+	}
+    }
+    
     // Evaluate the initialization expression
     if (!extract_from_expression(function, current_block, condition_tmpvar, statement.get_expression_initial())) {
 	return false;
@@ -2655,6 +2695,9 @@ FunctionDefinitionResolver::extract_from_statement_for(
     function.get_basic_block(blockid_if).add_operation(std::move(operation_jump_to_evaluate));
     
     current_block = blockid_done;
+
+    // Un-declare the variable we declared.
+    leave_scope(function, current_block, statement.get_source_ref(), unwind);
     
     return true;
 }

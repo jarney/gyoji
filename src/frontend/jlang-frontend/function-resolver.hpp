@@ -58,6 +58,14 @@ namespace JLang::frontend {
 	    bool is_postfix
 	    );
 	
+	bool local_declare_or_error(
+	    JLang::mir::Function & function,
+	    size_t & current_block,
+	    std::vector<std::string> & unwind,
+	    const JLang::mir::Type *mir_type,
+	    const std::string & name,
+	    const JLang::context::SourceReference & source_ref
+	    );
 
 	// Widen the shorter
 	// of the two operands to be the

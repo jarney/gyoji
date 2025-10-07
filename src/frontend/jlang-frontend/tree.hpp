@@ -1334,17 +1334,48 @@ namespace JLang::frontend::tree {
 	    JLang::owned<Terminal> _paren_r_token,
 	    JLang::owned<ScopeBody> _scope_body
 	    );
+	StatementFor(
+	    JLang::owned<Terminal> _for_token,
+	    JLang::owned<Terminal> _paren_l_token,
+	    JLang::owned<TypeSpecifier> _type_specifier,
+	    JLang::owned<Terminal> _identifier_token,
+	    JLang::owned<Terminal> _assignment_token,
+	    JLang::owned<Expression> _expression_initial,
+	    JLang::owned<Terminal> _semicolon_initial,
+	    JLang::owned<Expression> _expression_termination,
+	    JLang::owned<Terminal> _semicolon_termination,
+	    JLang::owned<Expression> _expression_increment,
+	    JLang::owned<Terminal> _paren_r_token,
+	    JLang::owned<ScopeBody> _scope_body
+	    );
 	/**
 	 * Destructor, nothing special.
 	 */
 	~StatementFor();
+	bool is_declaration() const;
+
+	/**
+	 * Only valid if is_declaration() returns true.
+	 */
+	const TypeSpecifier & get_type_specifier() const;
+
+	/**
+	 * Only valid if is_declaration() returns true.
+	 */
+	const std::string & get_identifier() const;
+	const JLang::context::SourceReference & get_identifier_source_ref() const;
+	
 	const Expression & get_expression_initial() const;
 	const Expression & get_expression_termination() const;
 	const Expression & get_expression_increment() const;
 	const ScopeBody & get_scope_body() const;
     private:
+	bool is_declaration_initializer;
 	JLang::owned<Terminal> for_token;
 	JLang::owned<Terminal> paren_l_token;
+	JLang::owned<TypeSpecifier> type_specifier;
+	JLang::owned<Terminal> identifier_token;
+	JLang::owned<Terminal> assignment_token;
 	JLang::owned<Expression> expression_initial;
 	JLang::owned<Terminal> semicolon_initial;
 	JLang::owned<Expression> expression_termination;
