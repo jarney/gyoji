@@ -2323,17 +2323,17 @@ namespace JLang::frontend::tree {
 	    COMPARE_NE,
 	    
 	    // Assignment
-	    EQUALS,
-	    MUL_ASSIGN,
-	    DIV_ASSIGN,
-	    MOD_ASSIGN,
-	    ADD_ASSIGN,
-	    SUB_ASSIGN,
-	    LEFT_ASSIGN,
-	    RIGHT_ASSIGN,
-	    AND_ASSIGN,
-	    XOR_ASSIGN,
-	    OR_ASSIGN        
+	    ASSIGNMENT,
+	    MUL_ASSIGNMENT,
+	    DIV_ASSIGNMENT,
+	    MOD_ASSIGNMENT,
+	    ADD_ASSIGNMENT,
+	    SUB_ASSIGNMENT,
+	    LEFT_ASSIGNMENT,
+	    RIGHT_ASSIGNMENT,
+	    AND_ASSIGNMENT,
+	    XOR_ASSIGNMENT,
+	    OR_ASSIGNMENT
 	} OperationType;
 	ExpressionBinary(
 	    JLang::owned<Expression> _expression_a,

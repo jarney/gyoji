@@ -53,16 +53,16 @@ namespace JLang::frontend::tree {
     
     const JLang::context::TokenID TERMINAL_XOR_OP = 41;
     const JLang::context::TokenID TERMINAL_OR_OP = 42;
-    const JLang::context::TokenID TERMINAL_MUL_ASSIGN = 43;
-    const JLang::context::TokenID TERMINAL_DIV_ASSIGN = 44;
-    const JLang::context::TokenID TERMINAL_ADD_ASSIGN = 45;
-    const JLang::context::TokenID TERMINAL_SUB_ASSIGN = 46;
-    const JLang::context::TokenID TERMINAL_LEFT_ASSIGN = 47;
-    const JLang::context::TokenID TERMINAL_RIGHT_ASSIGN = 48;
-    const JLang::context::TokenID TERMINAL_AND_ASSIGN = 49;
-    const JLang::context::TokenID TERMINAL_XOR_ASSIGN = 50;
+    const JLang::context::TokenID TERMINAL_MUL_ASSIGNMENT = 43;
+    const JLang::context::TokenID TERMINAL_DIV_ASSIGNMENT = 44;
+    const JLang::context::TokenID TERMINAL_ADD_ASSIGNMENT = 45;
+    const JLang::context::TokenID TERMINAL_SUB_ASSIGNMENT = 46;
+    const JLang::context::TokenID TERMINAL_LEFT_ASSIGNMENT = 47;
+    const JLang::context::TokenID TERMINAL_RIGHT_ASSIGNMENT = 48;
+    const JLang::context::TokenID TERMINAL_AND_ASSIGNMENT = 49;
+    const JLang::context::TokenID TERMINAL_XOR_ASSIGNMENT = 50;
     
-    const JLang::context::TokenID TERMINAL_OR_ASSIGN = 51;
+    const JLang::context::TokenID TERMINAL_OR_ASSIGNMENT = 51;
     const JLang::context::TokenID TERMINAL_PAREN_L = 52;
     const JLang::context::TokenID TERMINAL_PAREN_R = 53;
     const JLang::context::TokenID TERMINAL_BRACKET_L = 54;
@@ -84,7 +84,7 @@ namespace JLang::frontend::tree {
     const JLang::context::TokenID TERMINAL_SLASH = 69;
     const JLang::context::TokenID TERMINAL_PERCENT = 70;
     
-    const JLang::context::TokenID TERMINAL_EQUALS = 71;
+    const JLang::context::TokenID TERMINAL_ASSIGNMENT = 71;
     const JLang::context::TokenID TERMINAL_NAMESPACE_NAME = 72;
     const JLang::context::TokenID TERMINAL_TYPE_NAME = 73;
     const JLang::context::TokenID TERMINAL_BOOL = 74;

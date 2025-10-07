@@ -88,20 +88,20 @@ int visibility_from_modifier(JLang::frontend::tree::AccessModifier::AccessModifi
 %token <JLang::owned<JLang::frontend::tree::Terminal>> SLASH
 %token <JLang::owned<JLang::frontend::tree::Terminal>> PERCENT
 %token <JLang::owned<JLang::frontend::tree::Terminal>> STAR
-%token <JLang::owned<JLang::frontend::tree::Terminal>> EQUALS
+%token <JLang::owned<JLang::frontend::tree::Terminal>> ASSIGNMENT
 %token <JLang::owned<JLang::frontend::tree::Terminal>> BANG
 %token <JLang::owned<JLang::frontend::tree::Terminal>> TILDE
 %token <JLang::owned<JLang::frontend::tree::Terminal>> ANDPERSAND
-%token <JLang::owned<JLang::frontend::tree::Terminal>> MUL_ASSIGN
-%token <JLang::owned<JLang::frontend::tree::Terminal>> DIV_ASSIGN
-%token <JLang::owned<JLang::frontend::tree::Terminal>> MOD_ASSIGN
-%token <JLang::owned<JLang::frontend::tree::Terminal>> ADD_ASSIGN
-%token <JLang::owned<JLang::frontend::tree::Terminal>> SUB_ASSIGN
-%token <JLang::owned<JLang::frontend::tree::Terminal>> LEFT_ASSIGN
-%token <JLang::owned<JLang::frontend::tree::Terminal>> RIGHT_ASSIGN
-%token <JLang::owned<JLang::frontend::tree::Terminal>> AND_ASSIGN
-%token <JLang::owned<JLang::frontend::tree::Terminal>> XOR_ASSIGN
-%token <JLang::owned<JLang::frontend::tree::Terminal>> OR_ASSIGN
+%token <JLang::owned<JLang::frontend::tree::Terminal>> MUL_ASSIGNMENT
+%token <JLang::owned<JLang::frontend::tree::Terminal>> DIV_ASSIGNMENT
+%token <JLang::owned<JLang::frontend::tree::Terminal>> MOD_ASSIGNMENT
+%token <JLang::owned<JLang::frontend::tree::Terminal>> ADD_ASSIGNMENT
+%token <JLang::owned<JLang::frontend::tree::Terminal>> SUB_ASSIGNMENT
+%token <JLang::owned<JLang::frontend::tree::Terminal>> LEFT_ASSIGNMENT
+%token <JLang::owned<JLang::frontend::tree::Terminal>> RIGHT_ASSIGNMENT
+%token <JLang::owned<JLang::frontend::tree::Terminal>> AND_ASSIGNMENT
+%token <JLang::owned<JLang::frontend::tree::Terminal>> XOR_ASSIGNMENT
+%token <JLang::owned<JLang::frontend::tree::Terminal>> OR_ASSIGNMENT
 
 %token <JLang::owned<JLang::frontend::tree::Terminal>>  LITERAL_CHAR
 %token <JLang::owned<JLang::frontend::tree::Terminal>>  LITERAL_FLOAT
@@ -466,7 +466,7 @@ global_initializer
         ;
 
 global_initializer_expression_primary
-        : EQUALS expression_primary {
+        : ASSIGNMENT expression_primary {
           $$ = std::make_unique<JLang::frontend::tree::GlobalInitializerExpressionPrimary>(std::move($1),
                                                                                               std::move($2));
           PRINT_NONTERMINALS($$);
@@ -474,7 +474,7 @@ global_initializer_expression_primary
         ;
 
 global_initializer_addressof_expression_primary
-        : EQUALS ANDPERSAND expression_primary {
+        : ASSIGNMENT ANDPERSAND expression_primary {
           $$ = std::make_unique<JLang::frontend::tree::GlobalInitializerAddressofExpressionPrimary>(std::move($1),
                                                                                                        std::move($2),
                                                                                                        std::move($3)
@@ -484,7 +484,7 @@ global_initializer_addressof_expression_primary
         ;
 
 global_initializer_struct_initializer_list
-        : EQUALS BRACE_L opt_struct_initializer_list BRACE_R {
+        : ASSIGNMENT BRACE_L opt_struct_initializer_list BRACE_R {
           $$ = std::make_unique<JLang::frontend::tree::GlobalInitializerStructInitializerList>(std::move($1),
                                                                                                   std::move($2),
                                                                                                   std::move($3),
@@ -826,7 +826,7 @@ enum_value_list
         ;
 
 enum_value
-        : IDENTIFIER EQUALS expression_primary SEMICOLON {
+        : IDENTIFIER ASSIGNMENT expression_primary SEMICOLON {
 	        $1->set_identifier_type(JLang::frontend::tree::Terminal::IDENTIFIER_LOCAL_SCOPE);
                 $$ = std::make_unique<JLang::frontend::tree::EnumDefinitionValue>(
                                                                                     std::move($1),
@@ -1028,7 +1028,7 @@ initializer_expression
     $$ = std::make_unique<JLang::frontend::tree::InitializerExpression>(return_data.compiler_context.get_token_stream().get_current_source_ref());
     PRINT_NONTERMINALS($$);
 }
-| EQUALS expression {
+| ASSIGNMENT expression {
     $$ = std::make_unique<JLang::frontend::tree::InitializerExpression>(
 	std::move($1),
 	std::move($2)
@@ -2039,79 +2039,79 @@ expression_assignment
 	;
 
 operator_assignment
-        : EQUALS {
+        : ASSIGNMENT {
                 $$ = std::pair(
-                               JLang::frontend::tree::ExpressionBinary::EQUALS,
+                               JLang::frontend::tree::ExpressionBinary::ASSIGNMENT,
                                std::move($1)
                                );
                 PRINT_NONTERMINALS(($$.second));
         }
-	| MUL_ASSIGN {
+	| MUL_ASSIGNMENT {
                 $$ = std::pair(
-                               JLang::frontend::tree::ExpressionBinary::MUL_ASSIGN,
+                               JLang::frontend::tree::ExpressionBinary::MUL_ASSIGNMENT,
                                std::move($1)
                                );
                 PRINT_NONTERMINALS(($$.second));
         }
-	| DIV_ASSIGN {
+	| DIV_ASSIGNMENT {
                 $$ = std::pair(
-                               JLang::frontend::tree::ExpressionBinary::DIV_ASSIGN,
+                               JLang::frontend::tree::ExpressionBinary::DIV_ASSIGNMENT,
                                std::move($1)
                                );
                 PRINT_NONTERMINALS(($$.second));
         }
-	| MOD_ASSIGN {
+	| MOD_ASSIGNMENT {
                 $$ = std::pair(
-                               JLang::frontend::tree::ExpressionBinary::MOD_ASSIGN,
+                               JLang::frontend::tree::ExpressionBinary::MOD_ASSIGNMENT,
                                std::move($1)
                                );
                 PRINT_NONTERMINALS(($$.second));
         }
-	| ADD_ASSIGN {
+	| ADD_ASSIGNMENT {
                 $$ = std::pair(
-                               JLang::frontend::tree::ExpressionBinary::ADD_ASSIGN,
+                               JLang::frontend::tree::ExpressionBinary::ADD_ASSIGNMENT,
                                std::move($1)
                                );
                 PRINT_NONTERMINALS(($$.second));
         }
-	| SUB_ASSIGN {
+	| SUB_ASSIGNMENT {
                 $$ = std::pair(
-                               JLang::frontend::tree::ExpressionBinary::SUB_ASSIGN,
+                               JLang::frontend::tree::ExpressionBinary::SUB_ASSIGNMENT,
                                std::move($1)
                                );
                 PRINT_NONTERMINALS(($$.second));
         }
-	| LEFT_ASSIGN {
+	| LEFT_ASSIGNMENT {
                 $$ = std::pair(
-                               JLang::frontend::tree::ExpressionBinary::LEFT_ASSIGN,
+                               JLang::frontend::tree::ExpressionBinary::LEFT_ASSIGNMENT,
                                std::move($1)
                                );
                 PRINT_NONTERMINALS(($$.second));
         }
-	| RIGHT_ASSIGN {
+	| RIGHT_ASSIGNMENT {
                 $$ = std::pair(
-                               JLang::frontend::tree::ExpressionBinary::RIGHT_ASSIGN,
+                               JLang::frontend::tree::ExpressionBinary::RIGHT_ASSIGNMENT,
                                std::move($1)
                                );
                 PRINT_NONTERMINALS(($$.second));
         }
-	| AND_ASSIGN {
+	| AND_ASSIGNMENT {
                 $$ = std::pair(
-                               JLang::frontend::tree::ExpressionBinary::AND_ASSIGN,
+                               JLang::frontend::tree::ExpressionBinary::AND_ASSIGNMENT,
                                std::move($1)
                                );
                 PRINT_NONTERMINALS(($$.second));
         } 
-	| XOR_ASSIGN {
+	| XOR_ASSIGNMENT {
                 $$ = std::pair(
-                               JLang::frontend::tree::ExpressionBinary::XOR_ASSIGN,
+                               JLang::frontend::tree::ExpressionBinary::XOR_ASSIGNMENT,
                                std::move($1)
                                );
                 PRINT_NONTERMINALS(($$.second));
         }
-	| OR_ASSIGN {
+	| OR_ASSIGNMENT {
                 $$ = std::pair(
-                               JLang::frontend::tree::ExpressionBinary::OR_ASSIGN,
+                               JLang::frontend::tree::ExpressionBinary::OR_ASSIGNMENT,
                                std::move($1)
                                );
                 PRINT_NONTERMINALS(($$.second));

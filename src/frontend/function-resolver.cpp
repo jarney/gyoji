@@ -1920,7 +1920,7 @@ FunctionDefinitionResolver::extract_from_expression_binary(
 	    return false;
 	}
     }
-    else if (op_type == ExpressionBinary::EQUALS) {
+    else if (op_type == ExpressionBinary::ASSIGNMENT) {
 	if (!handle_binary_operation_assignment(
 		function,
 		expression.get_source_ref(),
@@ -1933,7 +1933,7 @@ FunctionDefinitionResolver::extract_from_expression_binary(
 	    return false;
 	}
     }	
-    else if (op_type == ExpressionBinary::MUL_ASSIGN) {
+    else if (op_type == ExpressionBinary::MUL_ASSIGNMENT) {
 	// This is just syntax sugar for * followed by =
 	size_t arithmetic_tmpvar;
 	if (!handle_binary_operation_arithmetic(
@@ -1959,7 +1959,7 @@ FunctionDefinitionResolver::extract_from_expression_binary(
 	    return false;
 	}
     }
-    else if (op_type == ExpressionBinary::DIV_ASSIGN) {
+    else if (op_type == ExpressionBinary::DIV_ASSIGNMENT) {
 	// This is just syntax sugar for / followed by =
 	size_t arithmetic_tmpvar;
 	if (!handle_binary_operation_arithmetic(
@@ -1985,7 +1985,7 @@ FunctionDefinitionResolver::extract_from_expression_binary(
 	    return false;
 	}
     }
-    else if (op_type == ExpressionBinary::MOD_ASSIGN) {
+    else if (op_type == ExpressionBinary::MOD_ASSIGNMENT) {
 	// This is just syntax sugar for % followed by =
 	size_t arithmetic_tmpvar;
 	if (!handle_binary_operation_arithmetic(
@@ -2011,7 +2011,7 @@ FunctionDefinitionResolver::extract_from_expression_binary(
 	    return false;
 	}
     }
-    else if (op_type == ExpressionBinary::ADD_ASSIGN) {
+    else if (op_type == ExpressionBinary::ADD_ASSIGNMENT) {
 	// This is just syntax sugar for + followed by =
 	size_t arithmetic_tmpvar;
 	if (!handle_binary_operation_arithmetic(
@@ -2037,7 +2037,7 @@ FunctionDefinitionResolver::extract_from_expression_binary(
 	    return false;
 	}
     }
-    else if (op_type == ExpressionBinary::SUB_ASSIGN) {
+    else if (op_type == ExpressionBinary::SUB_ASSIGNMENT) {
 	// This is just syntax sugar for - followed by =
 	size_t arithmetic_tmpvar;
 	if (!handle_binary_operation_arithmetic(
@@ -2063,7 +2063,7 @@ FunctionDefinitionResolver::extract_from_expression_binary(
 	    return false;
 	}
     }
-    else if (op_type == ExpressionBinary::LEFT_ASSIGN) {
+    else if (op_type == ExpressionBinary::LEFT_ASSIGNMENT) {
 	// This is just syntax sugar for << followed by =
 	size_t arithmetic_tmpvar;
 	if (!handle_binary_operation_shift(
@@ -2089,7 +2089,7 @@ FunctionDefinitionResolver::extract_from_expression_binary(
 	    return false;
 	}
     }
-    else if (op_type == ExpressionBinary::RIGHT_ASSIGN) {
+    else if (op_type == ExpressionBinary::RIGHT_ASSIGNMENT) {
 	// This is just syntax sugar for >> followed by =
 	size_t arithmetic_tmpvar;
 	if (!handle_binary_operation_shift(
@@ -2115,7 +2115,7 @@ FunctionDefinitionResolver::extract_from_expression_binary(
 	    return false;
 	}
     }
-    else if (op_type == ExpressionBinary::AND_ASSIGN) {
+    else if (op_type == ExpressionBinary::AND_ASSIGNMENT) {
 	// This is just syntax sugar for & followed by =
 	size_t arithmetic_tmpvar;
 	if (!handle_binary_operation_bitwise(
@@ -2141,7 +2141,7 @@ FunctionDefinitionResolver::extract_from_expression_binary(
 	    return false;
 	}
     }
-    else if (op_type == ExpressionBinary::OR_ASSIGN) {
+    else if (op_type == ExpressionBinary::OR_ASSIGNMENT) {
 	// This is just syntax sugar for | followed by =
 	size_t arithmetic_tmpvar;
 	if (!handle_binary_operation_bitwise(
@@ -2167,7 +2167,7 @@ FunctionDefinitionResolver::extract_from_expression_binary(
 	    return false;
 	}
     }
-    else if (op_type == ExpressionBinary::XOR_ASSIGN) {
+    else if (op_type == ExpressionBinary::XOR_ASSIGNMENT) {
 	// This is just syntax sugar for ^ followed by =
 	size_t arithmetic_tmpvar;
 	if (!handle_binary_operation_bitwise(
