@@ -246,6 +246,9 @@ namespace JLang::frontend {
 	bool extract_from_statement_ifelse(
 	    JLang::mir::Function & function,
 	    size_t & current_block,
+	    bool & in_loop,
+	    size_t & loop_break_blockid,
+	    size_t & loop_continue_blockid,
 	    std::map<std::string, JLang::mir::FunctionLabel> & labels,
 	    const JLang::frontend::tree::StatementIfElse & statement
 	    );
@@ -253,6 +256,9 @@ namespace JLang::frontend {
 	bool extract_from_statement_while(
 	    JLang::mir::Function & function,
 	    size_t & current_block,
+	    bool & in_loop,
+	    size_t & loop_break_blockid,
+	    size_t & loop_continue_blockid,
 	    std::map<std::string, JLang::mir::FunctionLabel> & labels,
 	    const JLang::frontend::tree::StatementWhile & statement
 	    );
@@ -263,6 +269,26 @@ namespace JLang::frontend {
 	    std::map<std::string, JLang::mir::FunctionLabel> & labels,
 	    std::vector<std::string> & unwind,
 	    const JLang::frontend::tree::StatementLabel & statement
+	    );
+	
+	bool extract_from_statement_break(
+	    JLang::mir::Function & function,
+	    size_t & current_block,
+	    bool & in_loop,
+	    size_t & loop_break_blockid,
+	    std::map<std::string, JLang::mir::FunctionLabel> & labels,
+	    std::vector<std::string> & unwind,
+	    const JLang::frontend::tree::StatementBreak & statement
+	    );
+	
+	bool extract_from_statement_continue(
+	    JLang::mir::Function & function,
+	    size_t & current_block,
+	    bool & in_loop,
+	    size_t & loop_continue_blockid,
+	    std::map<std::string, JLang::mir::FunctionLabel> & labels,
+	    std::vector<std::string> & unwind,
+	    const JLang::frontend::tree::StatementContinue & statement
 	    );
 	
 	bool extract_from_statement_goto(
@@ -290,6 +316,9 @@ namespace JLang::frontend {
 	bool extract_from_statement_list(
 	    JLang::mir::Function & function,
 	    size_t & current_block,
+	    bool & in_loop,
+	    size_t & loop_break_blockid,
+	    size_t & loop_continue_blockid,
 	    std::map<std::string, JLang::mir::FunctionLabel> & labels,
 	    const JLang::frontend::tree::StatementList & statement_list
 	    );

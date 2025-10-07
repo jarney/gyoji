@@ -2357,6 +2357,9 @@ bool
 FunctionDefinitionResolver::extract_from_statement_ifelse(
     JLang::mir::Function & function,
     size_t & current_block,
+    bool & in_loop,
+    size_t & loop_break_blockid,
+    size_t & loop_continue_blockid,
     std::map<std::string, FunctionLabel> & labels,
     const StatementIfElse & statement
     )
@@ -2410,6 +2413,9 @@ FunctionDefinitionResolver::extract_from_statement_ifelse(
     if (!extract_from_statement_list(
 	function,
 	current_block,
+	in_loop,
+	loop_break_blockid,
+	loop_continue_blockid,
 	labels,
 	statement.get_if_scope_body().get_statements()
 	    )) {
@@ -2432,6 +2438,9 @@ FunctionDefinitionResolver::extract_from_statement_ifelse(
 	if (!extract_from_statement_list(
 	    function,
 	    blockid_else,
+	    in_loop,
+	    loop_break_blockid,
+	    loop_continue_blockid,
 	    labels,
 	    statement.get_else_scope_body().get_statements()
 		)) {
@@ -2451,6 +2460,9 @@ FunctionDefinitionResolver::extract_from_statement_ifelse(
 	if (!extract_from_statement_ifelse(
 	    function,
 	    current_block,
+	    in_loop,
+	    loop_break_blockid,
+	    loop_continue_blockid,
 	    labels,
 	    statement.get_else_if()
 		)) {
@@ -2465,6 +2477,9 @@ bool
 FunctionDefinitionResolver::extract_from_statement_while(
     JLang::mir::Function & function,
     size_t & current_block,
+    bool & in_loop,
+    size_t & loop_break_blockid,
+    size_t & loop_continue_blockid,
     std::map<std::string, JLang::mir::FunctionLabel> & labels,
     const JLang::frontend::tree::StatementWhile & statement
     )
@@ -2492,13 +2507,24 @@ FunctionDefinitionResolver::extract_from_statement_while(
 	blockid_done
 	);
     function.get_basic_block(blockid_evaluate_expression).add_operation(std::move(operation_jump_conditional));
+
+    in_loop = true;
+    loop_break_blockid = blockid_done;
+    loop_continue_blockid = blockid_evaluate_expression;
     
     extract_from_statement_list(
 	function,
 	blockid_if,
+	in_loop,
+	loop_break_blockid,
+	loop_continue_blockid,
 	labels,
 	statement.get_scope_body().get_statements()
 	);
+
+    in_loop = false;
+    loop_break_blockid = 0;
+    loop_continue_blockid = 0;
     
     auto operation_jump_to_evaluate = std::make_unique<OperationJump>(
 	statement.get_source_ref(),
@@ -2511,6 +2537,67 @@ FunctionDefinitionResolver::extract_from_statement_while(
     return true;
 }
 	
+bool
+FunctionDefinitionResolver::extract_from_statement_break(
+    JLang::mir::Function & function,
+    size_t & current_block,
+    bool & in_loop,
+    size_t & loop_break_blockid,
+    std::map<std::string, JLang::mir::FunctionLabel> & labels,
+    std::vector<std::string> & unwind,
+    const JLang::frontend::tree::StatementBreak & statement
+    )
+{
+    if (!in_loop) {
+	compiler_context
+	    .get_errors()
+	    .add_simple_error(statement.get_source_ref(),
+			      "'break' statement not in loop or switch statement",
+			      "'break' keyword must appear inside a loop (for/while)"
+		);
+	return true;
+    }
+    auto operation_jump_to_break = std::make_unique<OperationJump>(
+	statement.get_source_ref(),
+	loop_break_blockid
+	);
+    function.get_basic_block(current_block).add_operation(std::move(operation_jump_to_break));
+    current_block = function.add_block();
+    
+    return true;
+}
+
+bool
+FunctionDefinitionResolver::extract_from_statement_continue(
+    JLang::mir::Function & function,
+    size_t & current_block,
+    bool & in_loop,
+    size_t & loop_continue_blockid,
+    std::map<std::string, JLang::mir::FunctionLabel> & labels,
+    std::vector<std::string> & unwind,
+    const JLang::frontend::tree::StatementContinue & statement
+    )
+{
+    if (!in_loop) {
+	compiler_context
+	    .get_errors()
+	    .add_simple_error(statement.get_source_ref(),
+			      "'continue' statement not in loop or switch statement",
+			      "'continue' keyword must appear inside a loop (for/while)"
+		);
+	return true;
+    }
+    auto operation_jump_to_continue = std::make_unique<OperationJump>(
+	statement.get_source_ref(),
+	loop_continue_blockid
+	);
+    function.get_basic_block(current_block).add_operation(std::move(operation_jump_to_continue));
+    current_block = function.add_block();
+    
+    return true;
+}
+
+
 bool
 FunctionDefinitionResolver::extract_from_statement_label(
     JLang::mir::Function & function,
@@ -2537,11 +2624,11 @@ FunctionDefinitionResolver::extract_from_statement_label(
     // if it is an already completed label, then issue an error
     // because it's a duplicate.
     else if (it->second.is_resolved()) { 
-		std::unique_ptr<JLang::context::Error> error = std::make_unique<JLang::context::Error>("Labels in functions must be unique");
-		error->add_message(statement.get_name_source_ref(),
-				   std::string("Duplicate label ") + label_name);
-		error->add_message(it->second.get_source_ref(),
-				   "First declared here.");
+	std::unique_ptr<JLang::context::Error> error = std::make_unique<JLang::context::Error>("Labels in functions must be unique");
+	error->add_message(statement.get_name_source_ref(),
+			   std::string("Duplicate label ") + label_name);
+	error->add_message(it->second.get_source_ref(),
+			   "First declared here.");
 	compiler_context
 	    .get_errors()
 	    .add_error(std::move(error));
@@ -2644,6 +2731,9 @@ bool
 FunctionDefinitionResolver::extract_from_statement_list(
     JLang::mir::Function & function,
     size_t & start_block,
+    bool & in_loop,
+    size_t & loop_break_blockid,
+    size_t & loop_continue_blockid,
     std::map<std::string, FunctionLabel> & labels,
     const StatementList & statement_list)
 {
@@ -2661,26 +2751,51 @@ FunctionDefinitionResolver::extract_from_statement_list(
 	}
 	else if (std::holds_alternative<JLang::owned<StatementBlock>>(statement_type)) {
 	    const auto & statement = std::get<JLang::owned<StatementBlock>>(statement_type);
-	    if (!extract_from_statement_list(function, current_block, labels, statement->get_scope_body().get_statements())) {
+	    if (!extract_from_statement_list(
+		    function,
+		    current_block,
+		    in_loop,
+		    loop_break_blockid,
+		    loop_continue_blockid,
+		    labels,
+		    statement->get_scope_body().get_statements())) {
 		return false;
 	    }
 	}
 	else if (std::holds_alternative<JLang::owned<StatementExpression>>(statement_type)) {
 	    const auto & statement = std::get<JLang::owned<StatementExpression>>(statement_type);
 	    size_t returned_tmpvar;
-	    if (!extract_from_expression(function, current_block, returned_tmpvar, statement->get_expression())) {
+	    if (!extract_from_expression(
+		    function,
+		    current_block,
+		    returned_tmpvar,
+		    statement->get_expression())) {
 		return false;
 	    }
 	}
 	else if (std::holds_alternative<JLang::owned<StatementIfElse>>(statement_type)) {
 	    const auto & statement = std::get<JLang::owned<StatementIfElse>>(statement_type);
-	    if (!extract_from_statement_ifelse(function, current_block, labels, *statement)) {
+	    if (!extract_from_statement_ifelse(
+		    function,
+		    current_block,
+		    in_loop,
+		    loop_break_blockid,
+		    loop_continue_blockid,
+		    labels,
+		    *statement)) {
 		return false;
 	    }
 	}
 	else if (std::holds_alternative<JLang::owned<StatementWhile>>(statement_type)) {
 	    const auto & statement = std::get<JLang::owned<StatementWhile>>(statement_type);
-	    if (!extract_from_statement_while(function, current_block, labels, *statement)) {
+	    if (!extract_from_statement_while(
+		    function,
+		    current_block,
+		    in_loop,
+		    loop_break_blockid,
+		    loop_continue_blockid,
+		    labels,
+		    *statement)) {
 		return false;
 	    }
 	}
@@ -2702,11 +2817,29 @@ FunctionDefinitionResolver::extract_from_statement_list(
 	}
 	else if (std::holds_alternative<JLang::owned<StatementBreak>>(statement_type)) {
 	    const auto & statement = std::get<JLang::owned<StatementBreak>>(statement_type);
-	    fprintf(stderr, "break\n");
+	    if (!extract_from_statement_break(
+		    function,
+		    current_block,
+		    in_loop,
+		    loop_break_blockid,
+		    labels,
+		    unwind,
+		    *statement)) {
+		return false;
+	    }
 	}
 	else if (std::holds_alternative<JLang::owned<StatementContinue>>(statement_type)) {
 	    const auto & statement = std::get<JLang::owned<StatementContinue>>(statement_type);
-	    fprintf(stderr, "continue\n");
+	    if (!extract_from_statement_continue(
+		    function,
+		    current_block,
+		    in_loop,
+		    loop_continue_blockid,
+		    labels,
+		    unwind,
+		    *statement)) {
+		return false;
+	    }
 	}
 	else if (std::holds_alternative<JLang::owned<StatementReturn>>(statement_type)) {
 	    const auto & statement = std::get<JLang::owned<StatementReturn>>(statement_type);
@@ -2766,8 +2899,18 @@ FunctionDefinitionResolver::extract_from_function_definition(const FileStatement
     size_t start_block = fn->add_block();
     
     std::map<std::string, FunctionLabel> labels;
-    
-    if (!extract_from_statement_list(*fn, start_block, labels, function_definition.get_scope_body().get_statements())) {
+
+    bool in_loop = false;
+    size_t loop_break_blockid = 0;
+    size_t loop_continue_blockid = 0;
+    if (!extract_from_statement_list(
+	    *fn,
+	    start_block,
+	    in_loop,
+	    loop_break_blockid,
+	    loop_continue_blockid,
+	    labels,
+	    function_definition.get_scope_body().get_statements())) {
 	return false;
     }
     
