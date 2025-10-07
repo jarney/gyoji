@@ -2,13 +2,17 @@
 function(html_process html_file)
 add_custom_command(
     OUTPUT ${CMAKE_BINARY_DIR}/website/${html_file}
-    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${html_file}
+    DEPENDS
+        ${CMAKE_CURRENT_SOURCE_DIR}/${html_file}
+        ${CMAKE_CURRENT_SOURCE_DIR}/header.html
+        ${CMAKE_CURRENT_SOURCE_DIR}/footer.html
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     COMMAND cat header.html ${CMAKE_CURRENT_SOURCE_DIR}/${html_file} footer.html >${CMAKE_BINARY_DIR}/website/${html_file}
     )
 endfunction()
 
 html_process(index.html)
+html_process(examples.html)
 html_process(architecture.html)
 html_process(help-wanted.html)
 html_process(goals.html)
@@ -21,6 +25,7 @@ add_custom_target(website
             docs
             gcov-report
 	    ${CMAKE_BINARY_DIR}/website/index.html
+	    ${CMAKE_BINARY_DIR}/website/examples.html
 	    ${CMAKE_BINARY_DIR}/website/help-wanted.html
 	    ${CMAKE_BINARY_DIR}/website/architecture.html
 	    ${CMAKE_BINARY_DIR}/website/goals.html
@@ -31,11 +36,13 @@ add_custom_target(website
 
 set(WEBSITE_ROOT_FILES
     ${CMAKE_BINARY_DIR}/website/index.html
+    ${CMAKE_BINARY_DIR}/website/examples.html
     ${CMAKE_BINARY_DIR}/website/help-wanted.html
     ${CMAKE_BINARY_DIR}/website/architecture.html
     ${CMAKE_BINARY_DIR}/website/goals.html
     ${CMAKE_BINARY_DIR}/website/doxygen.html
     ${CMAKE_BINARY_DIR}/website/code-coverage.html
+    ${CMAKE_BINARY_DIR}/website/support.html
     ${CMAKE_CURRENT_SOURCE_DIR}/styles.css
 )
 
