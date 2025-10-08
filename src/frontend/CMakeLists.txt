@@ -19,6 +19,7 @@ set(FRONTEND_PUBLIC_HEADERS_BOTTOM
     jlang-frontend/parser.hpp
     jlang-frontend/type-resolver.hpp
     jlang-frontend/function-resolver.hpp
+    jlang-frontend/function-scope.hpp
     jlang-frontend/lex-context.hpp
 )
 
@@ -33,6 +34,7 @@ set(FRONTEND_SOURCES
     parser.cpp
     type-resolver.cpp
     function-resolver.cpp
+    function-scope.cpp
     parse-literal-int.cpp
     ${FRONTEND_PUBLIC_HEADERS_TOP}
     ${FRONTEND_PUBLIC_HEADERS_BOTTOM}
@@ -86,6 +88,16 @@ target_link_libraries(test_syntax
     jlang-misc
 )
 add_test(NAME test_syntax COMMAND test_syntax ${CMAKE_SOURCE_DIR})
+
+add_executable(test_scope test_scope.cpp)
+target_include_directories(test_scope PUBLIC ${FRONTEND_INCLUDES})
+target_link_libraries(test_scope
+    jlang-frontend
+    jlang-mir
+    jlang-context
+    jlang-misc
+)
+add_test(NAME test_scope COMMAND test_scope ${CMAKE_SOURCE_DIR})
 
 
 add_executable(test_token_stream test_token_stream.cpp)
