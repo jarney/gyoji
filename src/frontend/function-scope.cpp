@@ -416,6 +416,11 @@ Scope::is_ancestor(const Scope *other) const
     return false;
 }
 
+
+// This needs to be much more sophisticated
+// so that it can walk backward through the
+// operations and up the scope until it finds
+// a possible initialization that we've skipped.
 bool
 Scope::skips_initialization(std::string label) const
 {

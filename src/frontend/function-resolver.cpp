@@ -2635,11 +2635,11 @@ FunctionDefinitionResolver::extract_from_statement_label(
     const FunctionLabel *label = scope_tracker.get_label(label_name);
     if (label == nullptr) {
 	label_block = function->add_block();
-	scope_tracker.label_define(label_name, label_block, statement.get_source_ref());
+	scope_tracker.label_define(label_name, label_block, statement.get_name_source_ref());
     }
     else {
 	if (label->get_scope() == nullptr) {
-	    scope_tracker.label_define(label_name, statement.get_source_ref());
+	    scope_tracker.label_define(label_name, statement.get_name_source_ref());
 	    label_block = label->get_block();
 	}
 	else {
@@ -2681,7 +2681,7 @@ FunctionDefinitionResolver::extract_from_statement_goto(
     else {
 	label_block = label->get_block();
     }
-    scope_tracker.add_goto(label_name, statement.get_source_ref());
+    scope_tracker.add_goto(label_name, statement.get_label_source_ref());
     
     auto operation = std::make_unique<OperationJump>(
 	statement.get_source_ref(),
