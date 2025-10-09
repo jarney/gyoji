@@ -2746,7 +2746,8 @@ FunctionDefinitionResolver::extract_from_statement_list(
     std::map<std::string, FunctionLabel> & labels,
     const StatementList & statement_list)
 {
-    
+
+    bool did_return = false;
     for (const auto & statement_el : statement_list.get_statements()) {
 	const auto & statement_type = statement_el->get_statement();
 	if (std::holds_alternative<JLang::owned<StatementVariableDeclaration>>(statement_type)) {
@@ -2833,14 +2834,21 @@ FunctionDefinitionResolver::extract_from_statement_list(
 	    if (!extract_from_statement_return(*statement)) {
 		return false;
 	    }
+	    did_return = true;
 	}
 	else {
 	    fprintf(stderr, "Compiler bug, invalid statement type\n");
 	    return false;
 	}
     }
-    std::vector<std::string> unwind_scope = scope_tracker.get_variables_to_unwind_for_scope();
-    leave_scope(statement_list.get_source_ref(), unwind_scope);
+    // If we did not do a return, we should
+    // unwind the current scope.
+    // If we did a return already, we will already
+    // have called these, so we should skip it.
+    if (!did_return) {
+	std::vector<std::string> unwind_scope = scope_tracker.get_variables_to_unwind_for_scope();
+	leave_scope(statement_list.get_source_ref(), unwind_scope);
+    }
 
     return true;
 }
