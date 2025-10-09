@@ -8,6 +8,7 @@ using namespace Gyoji::mir;
 using namespace Gyoji::frontend;
 using namespace Gyoji::frontend::ast;
 using namespace Gyoji::frontend::tree;
+using namespace Gyoji::frontend::lowering;
 using namespace Gyoji::frontend::namespaces;
 using namespace Gyoji::frontend::yacc;
 

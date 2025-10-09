@@ -9,8 +9,9 @@
  *  @{
  */
 
-//! Parse Tree Data
-/*!
+/**
+ * @brief Strongly-typed syntax tree.
+ * @details
  * Strongly-typed representation of the parse tree
  * resulting from reading and parsing an input file.
  */

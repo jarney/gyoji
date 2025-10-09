@@ -5,8 +5,8 @@
 
 using namespace Gyoji::mir;
 using namespace Gyoji::context;
-using namespace Gyoji::frontend;
 using namespace Gyoji::frontend::tree;
+using namespace Gyoji::frontend::lowering;
 
 TypeResolver::TypeResolver(
     Gyoji::context::CompilerContext & _compiler_context,

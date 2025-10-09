@@ -2,22 +2,53 @@
 #include <gyoji-frontend.hpp>
 #include <gyoji-mir.hpp>
 
-namespace Gyoji::frontend {
+namespace Gyoji::frontend::lowering {
 
     class Scope;
     class ScopeOperation;
     class ScopeTracker;
     class LocalVariable;
 
+    /**
+     * @brief Primitive operation in a scope
+     * @details
+     * The only types of operations in this scope tracker
+     * are variable declarations, label definitions, goto statements,
+     * and sub-scopes.  This is a HIGHLY abstract
+     * representation specifically for the purpose of reasoning
+     * about the sequence of operations in a 'goto' scenario.
+     * Other types of operations inside scopes are deliberately
+     * omitted because they are irrelevant to the problem
+     * this is trying to solve.
+     */
     class ScopeOperation {
     public:
 
 	typedef enum {
+	    /**
+	     * Represents declaration of a variable inside a scope.
+	     */
 	    VAR_DECL,
+	    /**
+	     * Represents a label declared in the scope.
+	     */
 	    LABEL_DEFINITION,
+	    /**
+	     * Represents a goto statement inside the scope.
+	     */
 	    GOTO_DEFINITION,
+	    /**
+	     * Represents a child of this scope, which is itself
+	     * another scope.
+	     */
 	    CHILD_SCOPE
 	} ScopeOperationType;
+	/**
+	 * @brief Move along, nothing to see here.
+	 *
+	 * @details
+	 * Move along, nothing to see here.
+	 */
 	~ScopeOperation();
 
 	static Gyoji::owned<ScopeOperation> create_variable(
@@ -74,6 +105,12 @@ namespace Gyoji::frontend {
 	    const Gyoji::mir::Type *_type,
 	    const Gyoji::context::SourceReference & _source_ref
 	    );
+	/**
+	 * @brief Move along, nothing to see here.
+	 *
+	 * @details
+	 * Move along, nothing to see here.
+	 */
 	~LocalVariable();
 	const std::string & get_name() const;
 	const Gyoji::mir::Type *get_type() const;
@@ -83,14 +120,45 @@ namespace Gyoji::frontend {
 	const Gyoji::mir::Type *type;
 	const Gyoji::context::SourceReference & source_ref;
     };
-    
+
+    /**
+     * @brief Represents variable declarations, labels, and goto inside a lexical scope.
+     * @details
+     * This class represents a highly simplified representation
+     * of operations inside a lexical scope.  The only
+     * operations that happen here are sub-scopes, labels,
+     * goto statements, and variable declarations.  The order
+     * of the operations is important because it's important
+     * to reason about whether initialization has happened before
+     * labels in the context of a 'goto' to a different scope.
+     *
+     * In addition, if the scope is a 'loop' (i.e. a while or for loop), this
+     * tracks the Block ID of where a 'continue' or 'break' statment should
+     * branch to.
+     */
     class Scope {
     public:
+	/**
+	 * This is an anonymous scope that is NOT a
+	 * loop (i.e. break and continue are not permitted here).
+	 */
 	Scope();
+	/**
+	 * This is a scope that is associated with some
+	 * loop like a 'for' or 'while'.  The block ID for
+	 * where to jump to in case of break or continue
+	 * are provided so that they can be known if they are needed.
+	 */
 	Scope(bool _is_loop,
 	      size_t _loop_break_blockid,
 	      size_t _loop_continue_blockid
 	    );
+	/**
+	 * @brief Move along, nothing to see here.
+	 *
+	 * @details
+	 * Move along, nothing to see here.
+	 */
 	~Scope();
 	void add_operation(Gyoji::owned<ScopeOperation> op);
 	void dump(int indent) const;
@@ -161,6 +229,12 @@ namespace Gyoji::frontend {
 	    size_t _block_id
 	    );
         FunctionLabel(const FunctionLabel & _other);
+	/**
+	 * @brief Move along, nothing to see here.
+	 *
+	 * @details
+	 * Move along, nothing to see here.
+	 */
         ~FunctionLabel();
 	size_t get_block() const;
 	bool is_resolved() const;
@@ -175,9 +249,41 @@ namespace Gyoji::frontend {
 	const Scope *scope;  // The scope where the label is actually defined.
     };
 
+    /**
+     * @brief Tracks variables declared in each scope along with
+     *        abels and goto statements in a highly simplified
+     *        intermediate representation.
+     * @details
+     * This class exists to represent a scope in a
+     * highly simplified way that is specificatlly
+     * designed to provide all of the information
+     * needed to resolve labels and goto statements
+     * and unwind scopes when a goto/branch
+     * would take control of the program directly from
+     * one scope to another.  Some of these constructs
+     * violate the 'normal' scope rules about variable
+     * declaration, so this is done in order to
+     * first check that the jump is legal and then
+     * to provide the information to the FunctionDefinitionResolver
+     * about what variables would be leaving scope
+     * when a goto occurs.  In addition, there is logic
+     * here to deal with the fact that a 'goto' may
+     * precede its corresponding 'label' definition
+     * so that the code can be emitted anyway.
+     *
+     * This scope tracker is only to be used inside the
+     * lowering process as an intermediate calculation
+     * and should not be used outside of that context.
+     */
     class ScopeTracker {
     public:
 	ScopeTracker(const Gyoji::context::CompilerContext & _compiler_context);
+	/**
+	 * @brief Move along, nothing to see here.
+	 *
+	 * @details
+	 * Move along, nothing to see here.
+	 */
 	~ScopeTracker();
 
 	/**

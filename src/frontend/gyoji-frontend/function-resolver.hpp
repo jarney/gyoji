@@ -4,18 +4,58 @@
 #include <gyoji-frontend.hpp>
 #include <gyoji-frontend/function-scope.hpp>
 
-namespace Gyoji::frontend {
+
+/*!
+ *  \addtogroup Frontend
+ *  @{
+ */
+
+/**
+ * @brief Converts the strongly-typed syntax tree into the MIR representation.
+ * @details
+ * This namespace covers the 'lowering' process for the compiler.  This is
+ * the process of coverting the strongly-typed syntax tree into an intermediate
+ * representation (MIR) for the language.  This stage applies most of the 'language'
+ * rules and ultimately creates a machine in the MIR representation that will
+ * safely carry out the intent as described in the syntax given for this
+ * particular program.
+ */
+namespace Gyoji::frontend::lowering {
     class TypeResolver;
-    
+
+    /**
+     * @brief Lowering for a function
+     * @details
+     * This class is responsible for converting a FileStatementFunctionDefinition
+     * into an equivalent program in the MIR representation.  This iterates the
+     * statements inside the function definition and emits MIR code that matches
+     * the intend.  In addition, rules for the validity of the program are
+     * evaluated so that grossly invalid programs never make it to the MIR level.
+     * Semantic errors are reported through the CompilerContext in the form
+     * of context-aware messages that highlight where the error took place.
+     */
     class FunctionDefinitionResolver {
     public:
 	FunctionDefinitionResolver(
 	    Gyoji::context::CompilerContext & _compiler_context,
 	    const Gyoji::frontend::tree::FileStatementFunctionDefinition & _function_definition,
 	    Gyoji::mir::MIR & _mir,
-	    Gyoji::frontend::TypeResolver & _type_resolver
+	    TypeResolver & _type_resolver
 	    );
 	~FunctionDefinitionResolver();
+
+	/**
+	 * @brief Resolve a single function definition.
+	 * @details
+	 * Performs the bulk of the logic for reading a function definition and
+	 * emitting equivalent MIR for it.  The MIR will be in a form that can
+	 * be used in the code-generation phase.
+	 *
+	 * This method returns false if the MIR is unsuitable for code-generation
+	 * due to semantic errors that were found.  Note that not all errors will
+	 * result in an invalid MIR, however, some constructs will make the
+	 * resulting MIR unsuitible for code generation.
+	 */
 	bool resolve();
 
     private:
@@ -237,24 +277,51 @@ namespace Gyoji::frontend {
 	
     };
     
-    //! Function Resolver.
     /**
+     * @brief Resolves all functions found in the MIR.
+     * @details
      * This is the 'lowering' process for functions.
      * It reads the parse result syntax tree and constructs
      * functions and the "BasicBlock" control-flow graph
      * in order to produce the MIR which can later drive
      * semantic analysis like borrow checking and then
      * code-generation.
+     *
+     * This process is mainly performed by using one
+     * FunctionDefinitionResolver for each function found in
+     * the translation unit.
      */
     class FunctionResolver {
     public:
+	/**
+	 * @brief Construct a definition resolver.
+	 * Constructs a function resolver using the
+	 * compiler context, parse result, and an MIR
+	 * to act as the destination of the parse.
+	 * This makes use of the TypeResolver which will
+	 * already have been used to extract type information
+	 * from the translation unit.
+	 */
 	FunctionResolver(
 	    Gyoji::context::CompilerContext & _compiler_context,
 	    const Gyoji::frontend::ParseResult & _parse_result,
 	    Gyoji::mir::MIR & _mir,
-	    Gyoji::frontend::TypeResolver & _type_resolver
+	    TypeResolver & _type_resolver
 	    );
+	
+	/**
+	 * @brief Move along, nothing to see here.
+	 *
+	 * @details
+	 * Move along, nothing to see here.
+	 */
 	~FunctionResolver();
+
+	/**
+	 * Iterates all of the functions in the translation unit
+	 * given by the parse result and lowers each one of them,
+	 * inserting the results into the MIR.
+	 */
 	bool resolve();
     private:
 	Gyoji::context::CompilerContext & compiler_context;
@@ -271,3 +338,5 @@ namespace Gyoji::frontend {
     };
     
 };
+
+/*! @} End of Doxygen Groups*/

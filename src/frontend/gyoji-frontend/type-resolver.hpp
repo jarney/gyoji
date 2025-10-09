@@ -3,10 +3,10 @@
 #include <gyoji-mir.hpp>
 #include <gyoji-frontend.hpp>
 
-namespace Gyoji::frontend {
+namespace Gyoji::frontend::lowering {
     
-    //! Type Resolver
     /**
+     * @brief The TypeResolver is the lowering process for types.
      * This function reads the result of a parse and produces
      * the set of types defined or referenced by it.  This is
      * essentially the process of 'lowering' for types where
@@ -24,15 +24,29 @@ namespace Gyoji::frontend {
 	    Gyoji::context::CompilerContext & _compiler_context,
 	    const Gyoji::frontend::tree::TranslationUnit & _translation_unit,
 	    Gyoji::mir::MIR & _mir);
+	/**
+	 * @brief Move along, nothing to see here.
+	 *
+	 * @details
+	 * Move along, nothing to see here.
+	 */
 	~TypeResolver();
+
+	/**
+	 * This iterates the translation unit and creates a suitable MIR type
+	 * from the strongly-typed syntax tree.  The result of this is that
+	 * the MIR representation will now have type definitions suitable
+	 * for code-generation.
+	 */
 	void resolve();
 	
-	// Note, this is non-const because
-	// it may create a type on the fly,
-	// for example, it may create a 'Type*' for
-	// a usage of an already existing 'Type'
-	// even if it was never referenced in another
-	// type, it may be referenced in a function.
+	/** Note, this is non-const because
+	 * it may create a type on the fly,
+	 * for example, it may create a 'Type*' for
+	 * a usage of an already existing 'Type'
+	 * even if it was never referenced in another
+	 * type, it may be referenced in a function.
+	 */
 	const Gyoji::mir::Type * extract_from_type_specifier(const Gyoji::frontend::tree::TypeSpecifier & type_specifier);
     private:
 	Gyoji::mir::MIR & mir;
@@ -75,3 +89,5 @@ namespace Gyoji::frontend {
 	
     };
 };
+
+

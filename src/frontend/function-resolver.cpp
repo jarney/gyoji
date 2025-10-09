@@ -5,14 +5,14 @@
 
 using namespace Gyoji::mir;
 using namespace Gyoji::context;
-using namespace Gyoji::frontend;
 using namespace Gyoji::frontend::tree;
+using namespace Gyoji::frontend::lowering;
 
 FunctionResolver::FunctionResolver(
     Gyoji::context::CompilerContext & _compiler_context,
     const Gyoji::frontend::ParseResult & _parse_result,
     Gyoji::mir::MIR & _mir,
-    Gyoji::frontend::TypeResolver & _type_resolver
+    Gyoji::frontend::lowering::TypeResolver & _type_resolver
     )
     : compiler_context(_compiler_context)
     , parse_result(_parse_result)
@@ -127,7 +127,7 @@ FunctionDefinitionResolver::FunctionDefinitionResolver(
     Gyoji::context::CompilerContext & _compiler_context,
     const Gyoji::frontend::tree::FileStatementFunctionDefinition & _function_definition,
     Gyoji::mir::MIR & _mir,
-    Gyoji::frontend::TypeResolver & _type_resolver
+    Gyoji::frontend::lowering::TypeResolver & _type_resolver
     )
     : compiler_context(_compiler_context)
     , function_definition(_function_definition)
@@ -220,7 +220,7 @@ FunctionDefinitionResolver::extract_from_expression_primary_identifier(
     // * Maybe we really should 'flatten' our access here.
     
     if (expression.get_identifier().get_identifier_type() == Terminal::IDENTIFIER_LOCAL_SCOPE) {
-	const Gyoji::frontend::LocalVariable *localvar = scope_tracker.get_variable(
+	const LocalVariable *localvar = scope_tracker.get_variable(
 	    expression.get_identifier().get_value()
 	    );
 	if (localvar != nullptr) {
@@ -2221,7 +2221,7 @@ FunctionDefinitionResolver::local_declare_or_error(
     const SourceReference & source_ref
     )
 {
-    const Gyoji::frontend::LocalVariable *maybe_existing = scope_tracker.get_variable(name);
+    const LocalVariable *maybe_existing = scope_tracker.get_variable(name);
 	
     if (maybe_existing != nullptr) {
 	std::unique_ptr<Gyoji::context::Error> error = std::make_unique<Gyoji::context::Error>("Duplicate Local Variable.");

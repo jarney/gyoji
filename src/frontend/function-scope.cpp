@@ -2,7 +2,7 @@
 #include <gyoji-frontend.hpp>
 #include <gyoji-frontend/function-scope.hpp>
 
-using namespace Gyoji::frontend;
+using namespace Gyoji::frontend::lowering;
 
 ScopeOperation::ScopeOperation(
     ScopeOperationType _type,
