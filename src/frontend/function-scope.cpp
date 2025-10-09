@@ -4,7 +4,12 @@
 
 using namespace JLang::frontend;
 
-ScopeOperation::ScopeOperation()
+ScopeOperation::ScopeOperation(
+    ScopeOperationType _type,
+    const JLang::context::SourceReference & _source_ref
+    )
+    : type(_type)
+    , source_ref(_source_ref)
 {}
 
 ScopeOperation::~ScopeOperation()
@@ -31,40 +36,53 @@ ScopeOperation::get_child() const
 { return child.get(); }
 
 JLang::owned<ScopeOperation>
-ScopeOperation::create_variable(std::string _variable_name, const JLang::mir::Type *_variable_type)
+ScopeOperation::create_variable(
+    std::string _variable_name,
+    const JLang::mir::Type *_variable_type,
+    const JLang::context::SourceReference & _source_ref
+    )
 {
-    auto op = JLang::owned<ScopeOperation>(new ScopeOperation());
-    op->type = ScopeOperation::VAR_DECL;
+    auto op = JLang::owned<ScopeOperation>(new ScopeOperation(ScopeOperation::VAR_DECL, _source_ref));
     op->variable_name = _variable_name;
     op->variable_type = _variable_type;
     return op;
 }
 JLang::owned<ScopeOperation>
-ScopeOperation::create_label(std::string _label_name)
+ScopeOperation::create_label(
+    std::string _label_name,
+    const JLang::context::SourceReference & _source_ref
+    )			     
 {
-    auto op = JLang::owned<ScopeOperation>(new ScopeOperation());
-    op->type = ScopeOperation::LABEL_DEFINITION;
+    auto op = JLang::owned<ScopeOperation>(new ScopeOperation(ScopeOperation::LABEL_DEFINITION, _source_ref));
     op->label_name = _label_name;
     return op;
 }
 
 JLang::owned<ScopeOperation>
-ScopeOperation::create_goto(std::string _goto_label)
+ScopeOperation::create_goto(
+    std::string _goto_label,
+    const JLang::context::SourceReference & _source_ref
+    )
 {
-    auto op = JLang::owned<ScopeOperation>(new ScopeOperation());
-    op->type = ScopeOperation::GOTO_DEFINITION;
+    auto op = JLang::owned<ScopeOperation>(new ScopeOperation(ScopeOperation::GOTO_DEFINITION, _source_ref));
     op->goto_label = _goto_label;
     return op;
 }
 
 JLang::owned<ScopeOperation>
-ScopeOperation::create_child(JLang::owned<Scope> _child)
+ScopeOperation::create_child(
+    JLang::owned<Scope> _child,
+    const JLang::context::SourceReference & _source_ref
+    )
 {
-    auto op = JLang::owned<ScopeOperation>(new ScopeOperation());
-    op->type = ScopeOperation::CHILD_SCOPE;
+    auto op = JLang::owned<ScopeOperation>(new ScopeOperation(ScopeOperation::CHILD_SCOPE, _source_ref));
     op->child = std::move(_child);
     return op;
 }
+
+const JLang::context::SourceReference &
+ScopeOperation::get_source_ref() const
+{ return source_ref; }
 
 Scope::Scope()
     : parent(nullptr)
@@ -98,7 +116,7 @@ Scope::add_variable(std::string name, const JLang::mir::Type *type, const JLang:
 {
     JLang::owned<LocalVariable> local_variable = std::make_unique<LocalVariable>(name, type, source_ref);
     variables.insert(std::pair(name, std::move(local_variable)));
-    auto local_var_op = ScopeOperation::create_variable(name, type);
+    auto local_var_op = ScopeOperation::create_variable(name, type, source_ref);
     operations.push_back(std::move(local_var_op));
 }
 
@@ -142,22 +160,22 @@ ScopeTracker::~ScopeTracker()
 
 
 void
-ScopeTracker::scope_push()
+ScopeTracker::scope_push(const JLang::context::SourceReference & _source_ref)
 {
     auto child_scope = std::make_unique<Scope>();
     Scope *new_current = child_scope.get();
     child_scope->parent = current;
-    auto child_op = ScopeOperation::create_child(std::move(child_scope));
+    auto child_op = ScopeOperation::create_child(std::move(child_scope), _source_ref);
     current->add_operation(std::move(child_op));
     current = new_current;
 }
 void
-ScopeTracker::scope_push_loop(size_t _loop_break_blockid, size_t _loop_continue_blockid)
+ScopeTracker::scope_push_loop(const JLang::context::SourceReference & _source_ref, size_t _loop_break_blockid, size_t _loop_continue_blockid)
 {
     auto child_scope = std::make_unique<Scope>(true, _loop_break_blockid, _loop_continue_blockid);
     Scope *new_current = child_scope.get();
     child_scope->parent = current;
-    auto child_op = ScopeOperation::create_child(std::move(child_scope));
+    auto child_op = ScopeOperation::create_child(std::move(child_scope), _source_ref);
     current->add_operation(std::move(child_op));
     current = new_current;    
 }
@@ -185,7 +203,10 @@ ScopeTracker::get_label(std::string name) const
 }
 
 void
-ScopeTracker::label_define(std::string label_name)
+ScopeTracker::label_define(
+    std::string label_name,
+    const JLang::context::SourceReference & _source_ref
+    )
 {
     const auto & it_notfound = notfound_labels.find(label_name);
     if (it_notfound == notfound_labels.end()) {
@@ -193,18 +214,23 @@ ScopeTracker::label_define(std::string label_name)
 	exit(1);
 	return;
     }
-    it_notfound->second->set_scope(current);
+    it_notfound->second->set_scope(current, _source_ref);
     labels.insert(std::pair(label_name, std::move(it_notfound->second)));
     notfound_labels.erase(it_notfound);
+    add_operation(ScopeOperation::create_label(label_name, _source_ref));
 }
 
 void
-ScopeTracker::label_define(std::string label_name, size_t label_blockid)
+ScopeTracker::label_define(
+    std::string label_name,
+    size_t label_blockid,
+    const JLang::context::SourceReference & _source_ref
+    )
 {
     JLang::owned<FunctionLabel> new_label = std::make_unique<FunctionLabel>(label_name, label_blockid);
-    new_label->set_scope(current);
+    new_label->set_scope(current, _source_ref);
     labels.insert(std::pair(label_name, std::move(new_label)));
-    add_operation(ScopeOperation::create_label(label_name));
+    add_operation(ScopeOperation::create_label(label_name, _source_ref));
 }
     
 // Use this for 'goto' to say we want a label, but we
@@ -215,18 +241,20 @@ ScopeTracker::label_declare(std::string label_name, size_t label_blockid)
 {
     JLang::owned<FunctionLabel> new_label = std::make_unique<FunctionLabel>(label_name, label_blockid);
     notfound_labels.insert(std::pair(label_name, std::move(new_label)));
-    add_operation(ScopeOperation::create_label(label_name));
 }
 
 
 void
-ScopeTracker::add_goto(std::string goto_label)
+ScopeTracker::add_goto(
+    std::string goto_label,
+    const JLang::context::SourceReference & _source_ref
+    )
 {
     // TODO:
     // Check if this label exists and jump to that
     // label if it does.  If it doesn't, forward declare it.
     // and put it in the 'forward declared' labels list.
-    add_operation(ScopeOperation::create_goto(goto_label));
+    add_operation(ScopeOperation::create_goto(goto_label, _source_ref));
 }
 
 const LocalVariable *
@@ -408,41 +436,59 @@ Scope::skips_initialization(std::string label) const
 }
 
 bool
-ScopeTracker::check_scope(const Scope *s) const
+ScopeTracker::check_scope(
+    const Scope *s,
+    const JLang::context::CompilerContext & compiler_context
+    ) const
 {
     // Iterate each operation.
+    bool ok = true;
     for (const auto & op : s->operations) {
 	if (op->get_type() == ScopeOperation::GOTO_DEFINITION) {
 	    // Check that the label exists.
+	    fprintf(stderr, "Evaluting goto label %s\n", op->get_goto_label().c_str());
 	    const FunctionLabel *function_label = get_label(op->get_goto_label());
 	    if (function_label == nullptr || function_label->get_scope() == nullptr) {
-		fprintf(stderr, "Label %s does not exist\n", op->get_goto_label().c_str());
-		return false;
+		    std::unique_ptr<JLang::context::Error> error = std::make_unique<JLang::context::Error>("Goto for an un-defined label.");
+		    error->add_message(op->get_source_ref(),
+				       std::string("Goto label ") + op->get_goto_label() + " had an undefined destination.");
+		    compiler_context
+			.get_errors()
+			.add_error(std::move(error));
+		    ok = false;
+		ok = false;
+		continue;
 	    }
 	    if (!s->is_ancestor(function_label->get_scope())) {
 		if (function_label->get_scope()->skips_initialization(op->get_goto_label())) {
-		    fprintf(stderr, "Label %s would skip initialization\n", op->get_goto_label().c_str());
-		    return false;
+		    std::unique_ptr<JLang::context::Error> error = std::make_unique<JLang::context::Error>("Goto would skip initialization.");
+		    error->add_message(op->get_source_ref(),
+				       std::string("Goto label ") + op->get_goto_label() + " would skip initialization of variables in destination scope.");
+		    error->add_message(function_label->get_source_ref(),
+				       "Label declared here.");
+		    compiler_context
+			.get_errors()
+			.add_error(std::move(error));
+		    ok = false;
 		}
 	    }
-	    else {
-		fprintf(stderr, "It's an ancestor, so it's ok\n");
-	    }
-	    
 	}
 	else if (op->get_type() == ScopeOperation::CHILD_SCOPE) {
-	    return check_scope(op->get_child());
+	    if (!check_scope(op->get_child(), compiler_context)) {
+		ok = false;
+	    }
 	}
     }    
-    return true;
+    return ok;
 }
 
 bool
-ScopeTracker::check() const
+ScopeTracker::check(
+    const JLang::context::CompilerContext & compiler_context
+    ) const
 {
     Scope *s = root.get();
-
-    return check_scope(s);
+    return check_scope(s, compiler_context);
 }
 
 
@@ -540,13 +586,6 @@ FunctionLabel::FunctionLabel(const FunctionLabel & _other)
 FunctionLabel::~FunctionLabel()
 {}
 
-void
-FunctionLabel::set_label(const JLang::context::SourceReference & _src_ref)
-{
-    resolved = true;
-    src_ref = &_src_ref;
-}
-
 const JLang::context::SourceReference &
 FunctionLabel::get_source_ref() const
 { return *src_ref; }
@@ -564,5 +603,9 @@ FunctionLabel::get_scope() const
 { return scope; }
 
 void
-FunctionLabel::set_scope(const Scope *_scope)
-{ scope = _scope; }
+FunctionLabel::set_scope(const Scope *_scope, const JLang::context::SourceReference & _src_ref)
+{
+    scope = _scope;
+    resolved = true;
+    src_ref = &_src_ref;
+}

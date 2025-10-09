@@ -47,6 +47,14 @@ int main(int argc, char **argv)
 	fclose(mir_output);
     }
 
+    // If we had errors at the MIR construction
+    // phase, it is likely we'll have an unsuitable
+    // MIR for analysis, so don't bother.
+    if (context.has_errors()) {
+	context.get_errors().print();
+	return -1;
+    }
+
     // Make sure that all types that are used in functions
     // actually have 'complete' definitions.
     std::vector<JLang::owned<AnalysisPass>> analysis_passes;

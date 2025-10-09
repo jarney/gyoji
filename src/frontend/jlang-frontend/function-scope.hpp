@@ -20,10 +20,23 @@ namespace JLang::frontend {
 	} ScopeOperationType;
 	~ScopeOperation();
 
-	static JLang::owned<ScopeOperation> create_variable(std::string variable_name, const JLang::mir::Type *variable_type);
-	static JLang::owned<ScopeOperation> create_label(std::string label_name);
-	static JLang::owned<ScopeOperation> create_goto(std::string goto_label);
-	static JLang::owned<ScopeOperation> create_child(JLang::owned<Scope> child);
+	static JLang::owned<ScopeOperation> create_variable(
+	    std::string _variable_name,
+	    const JLang::mir::Type *_variable_type,
+	    const JLang::context::SourceReference & _source_ref
+	    );
+	static JLang::owned<ScopeOperation> create_label(
+	    std::string _label_name,
+	    const JLang::context::SourceReference & _source_ref
+	    );
+	static JLang::owned<ScopeOperation> create_goto(
+	    std::string _goto_label,
+	    const JLang::context::SourceReference & _source_ref
+	    );
+	static JLang::owned<ScopeOperation> create_child(
+	    JLang::owned<Scope> _child,
+	    const JLang::context::SourceReference & _source_ref
+	    );
 	
 	void dump(int indent) const;
 	const ScopeOperationType & get_type() const;
@@ -31,9 +44,18 @@ namespace JLang::frontend {
 	const std::string & get_goto_label() const;
 	const std::string & get_variable_name() const;
 	const Scope *get_child() const;
+
+	const JLang::context::SourceReference & get_source_ref() const;
+
+	
     private:
-	ScopeOperation();
+	ScopeOperation(
+	    ScopeOperationType _type,
+	    const JLang::context::SourceReference & _source_ref
+	    );
 	ScopeOperationType type;
+
+	const JLang::context::SourceReference & source_ref;
 
 	LocalVariable *local_variable;
 	const JLang::mir::Type *variable_type;
@@ -140,11 +162,10 @@ namespace JLang::frontend {
 	    );
         FunctionLabel(const FunctionLabel & _other);
         ~FunctionLabel();
-	void set_label(const JLang::context::SourceReference & _src_ref);
 	size_t get_block() const;
 	bool is_resolved() const;
 	const Scope *get_scope() const;
-	void set_scope(const Scope *scope);
+	void set_scope(const Scope *scope, const JLang::context::SourceReference & _src_ref);
 	const JLang::context::SourceReference & get_source_ref() const;
     private:
 	std::string name;
@@ -162,13 +183,19 @@ namespace JLang::frontend {
 	/**
 	 * Enter a new (un-named) scope.
 	 */
-	void scope_push();
+	void scope_push(
+	    const JLang::context::SourceReference & _source_ref
+	    );
 
 	/**
 	 * Pushes a 'loop' scope which knows where
 	 * we would jump to in case of 'break' or 'continue'.
 	 */
-	void scope_push_loop(size_t _loop_break_blockid, size_t _loop_continue_blockid);
+	void scope_push_loop(
+	    const JLang::context::SourceReference & _source_ref,
+	    size_t _loop_break_blockid,
+	    size_t _loop_continue_blockid
+	    );
 
 	/**
 	 * Pop out of current scope back to parent.
@@ -181,24 +208,33 @@ namespace JLang::frontend {
 	 * we pull it out of that list and put it into the scope
 	 * where it belongs.
 	 */
-//	void add_label(std::string label_name, size_t label_block_id);
-
 	// Use this for 'label' to say we have a label and it's in the current
 	// scope, but it's on the 'notfound' list, so move it over to
 	// the real list because we've found it now.
-	void label_define(std::string label_name);
+	void label_define(
+	    std::string label_name,
+	    const JLang::context::SourceReference & _source_ref
+	    );
 
 	// Use this for 'label' to say we have a label, it's in the
 	// current scope, but it wasn't forwar-declared on the
 	// notfound list.
-	void label_define(std::string label_name, size_t label_block_id);
+	void label_define(
+	    std::string label_name,
+	    size_t label_block_id,
+	    const JLang::context::SourceReference & _source_ref
+	    );
     
 	// Use this for 'goto' to say we want a label, but we
 	// don't yet know where it will live, so put it on the
 	// notfound labels list.
 	void label_declare(std::string label_name, size_t label_blockid);
 	
-	void add_goto(std::string goto_label);
+	void add_goto(
+	    std::string goto_label,
+	    const JLang::context::SourceReference & _source_ref
+	    );
+		      
 
 	const FunctionLabel * get_label(std::string name) const;
 
@@ -211,7 +247,7 @@ namespace JLang::frontend {
 
 	// Evaluate the rules
 	// to make sure all jumps are legal.
-	bool check() const;
+	bool check(const JLang::context::CompilerContext & compiler_context) const;
 	
 	/**
 	 * Returns true if this or any ancestor is a 'loop'
@@ -257,7 +293,10 @@ namespace JLang::frontend {
 	const Scope *get_current() const;
 	
     private:
-	bool check_scope(const Scope *s) const;
+	bool check_scope(
+	    const Scope *s,
+	    const JLang::context::CompilerContext & compiler_context
+	    ) const;
 	void add_operation(JLang::owned<ScopeOperation> op);
 	JLang::owned<Scope> root;
 	Scope *current;

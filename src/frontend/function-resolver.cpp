@@ -190,7 +190,7 @@ FunctionDefinitionResolver::resolve()
     mir.get_functions().add_function(std::move(function));
 
     scope_tracker.dump();
-    scope_tracker.check();
+    scope_tracker.check(compiler_context);
 
     return true;
 }
@@ -2365,7 +2365,7 @@ FunctionDefinitionResolver::extract_from_statement_ifelse(
     current_block = blockid_if;
 
     // Perform the stuff inside the 'if' block.
-    scope_tracker.scope_push();
+    scope_tracker.scope_push(statement.get_if_scope_body().get_source_ref());
     if (!extract_from_statement_list(
 	statement.get_if_scope_body().get_statements()
 	    )) {
@@ -2386,7 +2386,7 @@ FunctionDefinitionResolver::extract_from_statement_ifelse(
     
     if (statement.has_else()) {
 	// Perform the stuff in the 'else' block.
-	scope_tracker.scope_push();
+	scope_tracker.scope_push(statement.get_else_scope_body().get_source_ref());
 	size_t blockid_tmp = current_block;
 	current_block = blockid_else;
 	if (!extract_from_statement_list(
@@ -2451,7 +2451,11 @@ FunctionDefinitionResolver::extract_from_statement_while(
     function->get_basic_block(blockid_evaluate_expression).add_operation(std::move(operation_jump_conditional));
 
     // Push a loop scope.
-    scope_tracker.scope_push_loop(blockid_done, blockid_evaluate_expression);
+    scope_tracker.scope_push_loop(
+	statement.get_scope_body().get_source_ref(),
+	blockid_done,
+	blockid_evaluate_expression
+	);
     size_t blockid_tmp_if = current_block;
     current_block = blockid_if;
     if (!extract_from_statement_list(
@@ -2525,7 +2529,11 @@ FunctionDefinitionResolver::extract_from_statement_for(
 	);
     function->get_basic_block(blockid_evaluate_expression_termination).add_operation(std::move(operation_jump_conditional));
 
-    scope_tracker.scope_push_loop(blockid_done, blockid_evaluate_expression_termination);
+    scope_tracker.scope_push_loop(
+	statement.get_scope_body().get_source_ref(),
+	blockid_done,
+	blockid_evaluate_expression_termination
+	);
     
     size_t blockid_tmp_if = current_block;
     current_block = blockid_if;
@@ -2627,14 +2635,12 @@ FunctionDefinitionResolver::extract_from_statement_label(
     const FunctionLabel *label = scope_tracker.get_label(label_name);
     if (label == nullptr) {
 	label_block = function->add_block();
-	scope_tracker.label_define(label_name, label_block);
-	fprintf(stderr, "Defining label %s for block %ld\n", label_name.c_str(), label_block);
+	scope_tracker.label_define(label_name, label_block, statement.get_source_ref());
     }
     else {
 	if (label->get_scope() == nullptr) {
-	    scope_tracker.label_define(label_name);
+	    scope_tracker.label_define(label_name, statement.get_source_ref());
 	    label_block = label->get_block();
-	    fprintf(stderr, "Defining forward-declared label %s at %ld\n", label_name.c_str(), label_block);
 	}
 	else {
 	    std::unique_ptr<JLang::context::Error> error = std::make_unique<JLang::context::Error>("Labels in functions must be unique");
@@ -2648,12 +2654,10 @@ FunctionDefinitionResolver::extract_from_statement_label(
 	    return true;
 	}
     }
-    fprintf(stderr, "Adding jump %ld\n", label_block);
     auto operation = std::make_unique<OperationJump>(
 	statement.get_source_ref(),
 	label_block
 	);
-    fprintf(stderr, "Dump done\n");
     function->get_basic_block(current_block).add_operation(std::move(operation));
     // Then whatever we add next will be in this new block.
     current_block = label_block;
@@ -2673,13 +2677,12 @@ FunctionDefinitionResolver::extract_from_statement_goto(
     if (label == nullptr) {
 	label_block = function->add_block();
 	scope_tracker.label_declare(label_name, label_block);
-	fprintf(stderr, "Forward-declaring label %s at %ld\n", label_name.c_str(), label_block);
     }
     else {
 	label_block = label->get_block();
-	fprintf(stderr, "Found label %s at %ld\n", label_name.c_str(), label_block);
     }
-
+    scope_tracker.add_goto(label_name, statement.get_source_ref());
+    
     auto operation = std::make_unique<OperationJump>(
 	statement.get_source_ref(),
 	label_block
@@ -2745,7 +2748,7 @@ FunctionDefinitionResolver::extract_from_statement_list(
 	}
 	else if (std::holds_alternative<JLang::owned<StatementBlock>>(statement_type)) {
 	    const auto & statement = std::get<JLang::owned<StatementBlock>>(statement_type);
-	    scope_tracker.scope_push();
+	    scope_tracker.scope_push(statement->get_scope_body().get_source_ref());
 	    if (!extract_from_statement_list(statement->get_scope_body().get_statements())) {
 		return false;
 	    }

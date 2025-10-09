@@ -835,9 +835,7 @@ OperationJump::OperationJump(
     size_t _block
     )
     : Operation(OP_JUMP, _src_ref, 0, _block)
-{
-    fprintf(stderr, "Jump %ld\n", _block);
-}
+{}
 OperationJump::~OperationJump()
 {}
 
