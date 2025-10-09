@@ -40,12 +40,11 @@ ScopeOperation::create_variable(std::string _variable_name, const JLang::mir::Ty
     return op;
 }
 JLang::owned<ScopeOperation>
-ScopeOperation::create_label(std::string _label_name, size_t _label_blockid)
+ScopeOperation::create_label(std::string _label_name)
 {
     auto op = JLang::owned<ScopeOperation>(new ScopeOperation());
     op->type = ScopeOperation::LABEL_DEFINITION;
     op->label_name = _label_name;
-    op->label_blockid = _label_blockid;
     return op;
 }
 
@@ -171,16 +170,54 @@ ScopeTracker::scope_pop()
 }
 
 
-void
-ScopeTracker::add_label(std::string label_name, size_t label_blockid)
+const FunctionLabel *
+ScopeTracker::get_label(std::string name) const
 {
-    // TODO:
-    // Check if this label was declared in a goto and
-    // use that blockid instead if it was found, removing it from
-    // the 'forward declared' labels.
-    add_operation(ScopeOperation::create_label(label_name, label_blockid));
-    labels.insert(std::pair(label_name, current));
+    const auto & it_notfound = notfound_labels.find(name);
+    if (it_notfound != notfound_labels.end()) {
+	return it_notfound->second.get();
+    }
+    const auto & it = labels.find(name);
+    if (it != labels.end()) {
+	return it->second.get();
+    }
+    return nullptr;
 }
+
+void
+ScopeTracker::label_define(std::string label_name)
+{
+    const auto & it_notfound = notfound_labels.find(label_name);
+    if (it_notfound == notfound_labels.end()) {
+	fprintf(stderr, "This should not happen\n");
+	exit(1);
+	return;
+    }
+    it_notfound->second->set_scope(current);
+    labels.insert(std::pair(label_name, std::move(it_notfound->second)));
+    notfound_labels.erase(it_notfound);
+}
+
+void
+ScopeTracker::label_define(std::string label_name, size_t label_blockid)
+{
+    JLang::owned<FunctionLabel> new_label = std::make_unique<FunctionLabel>(label_name, label_blockid);
+    new_label->set_scope(current);
+    labels.insert(std::pair(label_name, std::move(new_label)));
+    add_operation(ScopeOperation::create_label(label_name));
+}
+    
+// Use this for 'goto' to say we want a label, but we
+// don't yet know where it will live, so put it on the
+// notfound labels list.
+void
+ScopeTracker::label_declare(std::string label_name, size_t label_blockid)
+{
+    JLang::owned<FunctionLabel> new_label = std::make_unique<FunctionLabel>(label_name, label_blockid);
+    notfound_labels.insert(std::pair(label_name, std::move(new_label)));
+    add_operation(ScopeOperation::create_label(label_name));
+}
+
 
 void
 ScopeTracker::add_goto(std::string goto_label)
@@ -248,6 +285,10 @@ ScopeTracker::get_variables_to_unwind_for_break() const
 
 }
 
+const Scope *
+ScopeTracker::get_current() const
+{ return current; }
+
 bool
 ScopeTracker::add_variable(std::string variable_name, const JLang::mir::Type *mir_type, const JLang::context::SourceReference & source_ref)
 {
@@ -293,17 +334,6 @@ ScopeTracker::dump() const
     fprintf(stderr, "{\n");
     s->dump(0);
     fprintf(stderr, "}\n");
-}
-
-Scope *
-ScopeTracker::label_find(std::string label_name) const
-{
-    const auto & it = labels.find(label_name);
-    if (it == labels.end()) {
-	// Label does not exist
-	return nullptr;
-    }
-    return it->second;
 }
 
 bool
@@ -384,13 +414,13 @@ ScopeTracker::check_scope(const Scope *s) const
     for (const auto & op : s->operations) {
 	if (op->get_type() == ScopeOperation::GOTO_DEFINITION) {
 	    // Check that the label exists.
-	    Scope *label_scope = label_find(op->get_goto_label());
-	    if (label_scope == nullptr) {
+	    const FunctionLabel *function_label = get_label(op->get_goto_label());
+	    if (function_label == nullptr || function_label->get_scope() == nullptr) {
 		fprintf(stderr, "Label %s does not exist\n", op->get_goto_label().c_str());
 		return false;
 	    }
-	    if (!s->is_ancestor(label_scope)) {
-		if (label_scope->skips_initialization(op->get_goto_label())) {
+	    if (!s->is_ancestor(function_label->get_scope())) {
+		if (function_label->get_scope()->skips_initialization(op->get_goto_label())) {
 		    fprintf(stderr, "Label %s would skip initialization\n", op->get_goto_label().c_str());
 		    return false;
 		}
@@ -487,3 +517,52 @@ const JLang::context::SourceReference &
 LocalVariable::get_source_ref() const
 { return source_ref; }
  
+/////////////////////////////////////
+// FunctionLabel
+/////////////////////////////////////
+FunctionLabel::FunctionLabel(
+    std::string _name,
+    size_t _block_id
+    )
+    : name(_name)
+    , resolved(false)
+    , block_id(_block_id)
+    , src_ref(nullptr)
+    , scope(nullptr)
+{}
+FunctionLabel::FunctionLabel(const FunctionLabel & _other)
+    : name(_other.name)
+    , resolved(_other.resolved)
+    , block_id(_other.block_id)
+    , src_ref(_other.src_ref)
+    , scope(_other.scope)
+{}
+FunctionLabel::~FunctionLabel()
+{}
+
+void
+FunctionLabel::set_label(const JLang::context::SourceReference & _src_ref)
+{
+    resolved = true;
+    src_ref = &_src_ref;
+}
+
+const JLang::context::SourceReference &
+FunctionLabel::get_source_ref() const
+{ return *src_ref; }
+
+size_t
+FunctionLabel::get_block() const
+{ return block_id; }
+
+bool
+FunctionLabel::is_resolved() const
+{ return resolved; }
+
+const Scope *
+FunctionLabel::get_scope() const
+{ return scope; }
+
+void
+FunctionLabel::set_scope(const Scope *_scope)
+{ scope = _scope; }

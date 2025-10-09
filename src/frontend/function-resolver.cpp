@@ -182,15 +182,15 @@ FunctionDefinitionResolver::resolve()
     
     current_block = function->add_block();
     
-    std::map<std::string, FunctionLabel> labels;
-
     if (!extract_from_statement_list(
-	    labels,
 	    function_definition.get_scope_body().get_statements())) {
 	return false;
     }
     
     mir.get_functions().add_function(std::move(function));
+
+    scope_tracker.dump();
+    scope_tracker.check();
 
     return true;
 }
@@ -2316,7 +2316,6 @@ FunctionDefinitionResolver::extract_from_statement_variable_declaration(
 
 bool
 FunctionDefinitionResolver::extract_from_statement_ifelse(
-    std::map<std::string, FunctionLabel> & labels,
     const StatementIfElse & statement
     )
 {
@@ -2368,7 +2367,6 @@ FunctionDefinitionResolver::extract_from_statement_ifelse(
     // Perform the stuff inside the 'if' block.
     scope_tracker.scope_push();
     if (!extract_from_statement_list(
-	labels,
 	statement.get_if_scope_body().get_statements()
 	    )) {
 	return false;
@@ -2392,7 +2390,6 @@ FunctionDefinitionResolver::extract_from_statement_ifelse(
 	size_t blockid_tmp = current_block;
 	current_block = blockid_else;
 	if (!extract_from_statement_list(
-	    labels,
 	    statement.get_else_scope_body().get_statements()
 		)) {
 	    return false;
@@ -2411,7 +2408,6 @@ FunctionDefinitionResolver::extract_from_statement_ifelse(
     }
     else if (statement.has_else_if()) {
 	if (!extract_from_statement_ifelse(
-	    labels,
 	    statement.get_else_if()
 		)) {
 	    return false;
@@ -2423,7 +2419,6 @@ FunctionDefinitionResolver::extract_from_statement_ifelse(
 
 bool
 FunctionDefinitionResolver::extract_from_statement_while(
-    std::map<std::string, JLang::mir::FunctionLabel> & labels,
     const JLang::frontend::tree::StatementWhile & statement
     )
 {
@@ -2460,7 +2455,6 @@ FunctionDefinitionResolver::extract_from_statement_while(
     size_t blockid_tmp_if = current_block;
     current_block = blockid_if;
     if (!extract_from_statement_list(
-	labels,
 	statement.get_scope_body().get_statements()
 	    )) {
 	return false;
@@ -2483,7 +2477,6 @@ FunctionDefinitionResolver::extract_from_statement_while(
 
 bool
 FunctionDefinitionResolver::extract_from_statement_for(
-    std::map<std::string, JLang::mir::FunctionLabel> & labels,
     const JLang::frontend::tree::StatementFor & statement
     )
 {
@@ -2537,7 +2530,6 @@ FunctionDefinitionResolver::extract_from_statement_for(
     size_t blockid_tmp_if = current_block;
     current_block = blockid_if;
     if (!extract_from_statement_list(
-	labels,
 	statement.get_scope_body().get_statements()
 	    )) {
 	return false;
@@ -2569,7 +2561,6 @@ FunctionDefinitionResolver::extract_from_statement_for(
 
 bool
 FunctionDefinitionResolver::extract_from_statement_break(
-    std::map<std::string, JLang::mir::FunctionLabel> & labels,
     const JLang::frontend::tree::StatementBreak & statement
     )
 {
@@ -2598,7 +2589,6 @@ FunctionDefinitionResolver::extract_from_statement_break(
 
 bool
 FunctionDefinitionResolver::extract_from_statement_continue(
-    std::map<std::string, JLang::mir::FunctionLabel> & labels,
     const JLang::frontend::tree::StatementContinue & statement
     )
 {
@@ -2624,7 +2614,6 @@ FunctionDefinitionResolver::extract_from_statement_continue(
 
 bool
 FunctionDefinitionResolver::extract_from_statement_label(
-    std::map<std::string, FunctionLabel> & labels,
     const JLang::frontend::tree::StatementLabel & statement
     )
 {
@@ -2633,40 +2622,38 @@ FunctionDefinitionResolver::extract_from_statement_label(
     // block and issue a 'jump' to it.
 
     const std::string & label_name = statement.get_name();
-    const auto & it = labels.find(label_name);
     size_t label_block;
-    if (it == labels.end()) {
-	label_block = function->add_block();
-	FunctionLabel label_desc(label_name, label_block);
-	label_desc.set_label(statement.get_name_source_ref());
-	labels.insert(std::pair(label_name, label_desc));
-    }
-    // There's a label record.  It may be a 'goto', but
-    // if it is an already completed label, then issue an error
-    // because it's a duplicate.
-    else if (it->second.is_resolved()) { 
-	std::unique_ptr<JLang::context::Error> error = std::make_unique<JLang::context::Error>("Labels in functions must be unique");
-	error->add_message(statement.get_name_source_ref(),
-			   std::string("Duplicate label ") + label_name);
-	error->add_message(it->second.get_source_ref(),
-			   "First declared here.");
-	compiler_context
-	    .get_errors()
-	    .add_error(std::move(error));
-	return true;
-    }
-    // There's a label and it's not complete, so it must
-    // be a goto statement that hasn't seen its target
-    // label yet, so we just complete it.
-    else {
-	it->second.set_label(statement.get_name_source_ref());
-	label_block = it->second.get_block();
-    }
     
+    const FunctionLabel *label = scope_tracker.get_label(label_name);
+    if (label == nullptr) {
+	label_block = function->add_block();
+	scope_tracker.label_define(label_name, label_block);
+	fprintf(stderr, "Defining label %s for block %ld\n", label_name.c_str(), label_block);
+    }
+    else {
+	if (label->get_scope() == nullptr) {
+	    scope_tracker.label_define(label_name);
+	    label_block = label->get_block();
+	    fprintf(stderr, "Defining forward-declared label %s at %ld\n", label_name.c_str(), label_block);
+	}
+	else {
+	    std::unique_ptr<JLang::context::Error> error = std::make_unique<JLang::context::Error>("Labels in functions must be unique");
+	    error->add_message(statement.get_name_source_ref(),
+			       std::string("Duplicate label ") + label_name);
+	    error->add_message(label->get_source_ref(),
+			       "First declared here.");
+	    compiler_context
+		.get_errors()
+		.add_error(std::move(error));
+	    return true;
+	}
+    }
+    fprintf(stderr, "Adding jump %ld\n", label_block);
     auto operation = std::make_unique<OperationJump>(
 	statement.get_source_ref(),
 	label_block
 	);
+    fprintf(stderr, "Dump done\n");
     function->get_basic_block(current_block).add_operation(std::move(operation));
     // Then whatever we add next will be in this new block.
     current_block = label_block;
@@ -2676,31 +2663,32 @@ FunctionDefinitionResolver::extract_from_statement_label(
 
 bool
 FunctionDefinitionResolver::extract_from_statement_goto(
-    std::map<std::string, FunctionLabel> & labels,
     const JLang::frontend::tree::StatementGoto & statement
     )
 {
     const std::string & label_name = statement.get_label();
-    const auto & it = labels.find(label_name);
 
-    // Label is not yet found, we need to create it.
-    // but we can't resolve it yet because we don't
-    // yet know the ID of the target.
-    if (it == labels.end()) {
-	size_t label_block = function->add_block();
-	FunctionLabel label_desc(label_name, label_block);
-	labels.insert(std::pair(label_name, label_desc));
+    const FunctionLabel *label = scope_tracker.get_label(label_name);
+    size_t label_block;
+    if (label == nullptr) {
+	label_block = function->add_block();
+	scope_tracker.label_declare(label_name, label_block);
+	fprintf(stderr, "Forward-declaring label %s at %ld\n", label_name.c_str(), label_block);
     }
     else {
-	auto operation = std::make_unique<OperationJump>(
-	    statement.get_source_ref(),
-	    it->second.get_block()
-	    );
-	function->get_basic_block(current_block).add_operation(std::move(operation));
-	// This jump ends the basic block, so we start a new one.
-	size_t next_block = function->add_block();
-	current_block = next_block;
+	label_block = label->get_block();
+	fprintf(stderr, "Found label %s at %ld\n", label_name.c_str(), label_block);
     }
+
+    auto operation = std::make_unique<OperationJump>(
+	statement.get_source_ref(),
+	label_block
+	);
+    function->get_basic_block(current_block).add_operation(std::move(operation));
+    // This jump ends the basic block, so we start a new one.
+    size_t next_block = function->add_block();
+    current_block = next_block;
+
     return true;
 }
 	
@@ -2743,7 +2731,6 @@ FunctionDefinitionResolver::leave_scope(
 	    
 bool
 FunctionDefinitionResolver::extract_from_statement_list(
-    std::map<std::string, FunctionLabel> & labels,
     const StatementList & statement_list)
 {
 
@@ -2759,9 +2746,7 @@ FunctionDefinitionResolver::extract_from_statement_list(
 	else if (std::holds_alternative<JLang::owned<StatementBlock>>(statement_type)) {
 	    const auto & statement = std::get<JLang::owned<StatementBlock>>(statement_type);
 	    scope_tracker.scope_push();
-	    if (!extract_from_statement_list(
-		    labels,
-		    statement->get_scope_body().get_statements())) {
+	    if (!extract_from_statement_list(statement->get_scope_body().get_statements())) {
 		return false;
 	    }
 	    scope_tracker.scope_pop();
@@ -2778,7 +2763,6 @@ FunctionDefinitionResolver::extract_from_statement_list(
 	else if (std::holds_alternative<JLang::owned<StatementIfElse>>(statement_type)) {
 	    const auto & statement = std::get<JLang::owned<StatementIfElse>>(statement_type);
 	    if (!extract_from_statement_ifelse(
-		    labels,
 		    *statement)) {
 		return false;
 	    }
@@ -2786,7 +2770,6 @@ FunctionDefinitionResolver::extract_from_statement_list(
 	else if (std::holds_alternative<JLang::owned<StatementWhile>>(statement_type)) {
 	    const auto & statement = std::get<JLang::owned<StatementWhile>>(statement_type);
 	    if (!extract_from_statement_while(
-		    labels,
 		    *statement)) {
 		return false;
 	    }
@@ -2794,27 +2777,25 @@ FunctionDefinitionResolver::extract_from_statement_list(
 	else if (std::holds_alternative<JLang::owned<StatementFor>>(statement_type)) {
 	    const auto & statement = std::get<JLang::owned<StatementFor>>(statement_type);
 	    if (!extract_from_statement_for(
-		    labels,
 		    *statement)) {
 		return false;
 	    }
 	}
 	else if (std::holds_alternative<JLang::owned<StatementLabel>>(statement_type)) {
 	    const auto & statement = std::get<JLang::owned<StatementLabel>>(statement_type);
-	    if (!extract_from_statement_label(labels, *statement)) {
+	    if (!extract_from_statement_label(*statement)) {
 		return false;
 	    }
 	}
 	else if (std::holds_alternative<JLang::owned<StatementGoto>>(statement_type)) {
 	    const auto & statement = std::get<JLang::owned<StatementGoto>>(statement_type);
-	    if (!extract_from_statement_goto(labels, *statement)) {
+	    if (!extract_from_statement_goto(*statement)) {
 		return false;
 	    }
 	}
 	else if (std::holds_alternative<JLang::owned<StatementBreak>>(statement_type)) {
 	    const auto & statement = std::get<JLang::owned<StatementBreak>>(statement_type);
 	    if (!extract_from_statement_break(
-		    labels,
 		    *statement)) {
 		return false;
 	    }
@@ -2822,7 +2803,6 @@ FunctionDefinitionResolver::extract_from_statement_list(
 	else if (std::holds_alternative<JLang::owned<StatementContinue>>(statement_type)) {
 	    const auto & statement = std::get<JLang::owned<StatementContinue>>(statement_type);
 	    if (!extract_from_statement_continue(
-		    labels,
 		    *statement)) {
 		return false;
 	    }

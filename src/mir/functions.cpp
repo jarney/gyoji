@@ -170,46 +170,6 @@ BasicBlock::contains_terminator() const
 }
 
 /////////////////////////////////////
-// FunctionLabel
-/////////////////////////////////////
-FunctionLabel::FunctionLabel(
-    std::string _name,
-    size_t _block_id
-    )
-    : name(_name)
-    , resolved(false)
-    , block_id(_block_id)
-    , src_ref(nullptr)
-{}
-FunctionLabel::FunctionLabel(const FunctionLabel & _other)
-    : name(_other.name)
-    , resolved(_other.resolved)
-    , block_id(_other.block_id)
-    , src_ref(_other.src_ref)
-{}
-FunctionLabel::~FunctionLabel()
-{}
-
-void
-FunctionLabel::set_label(const JLang::context::SourceReference & _src_ref)
-{
-    resolved = true;
-    src_ref = &_src_ref;
-}
-
-const JLang::context::SourceReference &
-FunctionLabel::get_source_ref() const
-{ return *src_ref; }
-
-size_t
-FunctionLabel::get_block() const
-{ return block_id; }
-
-bool
-FunctionLabel::is_resolved() const
-{ return resolved; }
-
-/////////////////////////////////////
 // FunctionArgument
 /////////////////////////////////////
 FunctionArgument::FunctionArgument(

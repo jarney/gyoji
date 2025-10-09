@@ -7,6 +7,7 @@ static const JLang::context::SourceReference zero_source_ref("internal", 1, 0, 0
 
 int main(int argc, char **argv)
 {
+#if 0
     JLang::context::CompilerContext compiler_context("Some name");
     
     ScopeTracker tracker(compiler_context);
@@ -50,6 +51,6 @@ int main(int argc, char **argv)
     // written?
 
     // The latter seems cleaner?
-    
+#endif    
     return 0;
 }

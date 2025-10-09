@@ -21,7 +21,7 @@ namespace JLang::frontend {
 	~ScopeOperation();
 
 	static JLang::owned<ScopeOperation> create_variable(std::string variable_name, const JLang::mir::Type *variable_type);
-	static JLang::owned<ScopeOperation> create_label(std::string label_name, size_t label_block_id);
+	static JLang::owned<ScopeOperation> create_label(std::string label_name);
 	static JLang::owned<ScopeOperation> create_goto(std::string goto_label);
 	static JLang::owned<ScopeOperation> create_child(JLang::owned<Scope> child);
 	
@@ -40,7 +40,6 @@ namespace JLang::frontend {
 	std::string variable_name;
 	
 	std::string label_name;
-	std::string label_blockid;
 	
 	std::string goto_label;
 	JLang::owned<Scope> child;
@@ -112,6 +111,49 @@ namespace JLang::frontend {
 	std::map<std::string, JLang::owned<LocalVariable>> variables;
     };
 
+    /**
+     * @brief A named label inside a scope.
+     *
+     * @details
+     * A label represents a location in a scope
+     * that can be the target of a 'goto' statement.
+     * Labels also have associated with them a set of
+     * local variables that are currently in scope.
+     * The rule for a 'goto' statement is that
+     * you can only 'goto' a label that is in the
+     * same scope and has the same local variables
+     * defined in it.  Jumping to other scopes
+     * would bring complicated behavior involving
+     * dynamically de-allocating and re-allocating
+     * variables in the scope that we would rather
+     * avoid.
+     *
+     * By definition, a label is the start of a
+     * basic block and a 'goto' is the end of a
+     * basic block almost by definition of basic blocks.
+     */
+    class FunctionLabel {
+    public:
+        FunctionLabel(
+	    std::string _name,
+	    size_t _block_id
+	    );
+        FunctionLabel(const FunctionLabel & _other);
+        ~FunctionLabel();
+	void set_label(const JLang::context::SourceReference & _src_ref);
+	size_t get_block() const;
+	bool is_resolved() const;
+	const Scope *get_scope() const;
+	void set_scope(const Scope *scope);
+	const JLang::context::SourceReference & get_source_ref() const;
+    private:
+	std::string name;
+	bool resolved;
+	size_t block_id;
+	const JLang::context::SourceReference * src_ref;
+	const Scope *scope;  // The scope where the label is actually defined.
+    };
+
     class ScopeTracker {
     public:
 	ScopeTracker(const JLang::context::CompilerContext & _compiler_context);
@@ -139,8 +181,26 @@ namespace JLang::frontend {
 	 * we pull it out of that list and put it into the scope
 	 * where it belongs.
 	 */
-	void add_label(std::string label_name, size_t label_block_id);
+//	void add_label(std::string label_name, size_t label_block_id);
+
+	// Use this for 'label' to say we have a label and it's in the current
+	// scope, but it's on the 'notfound' list, so move it over to
+	// the real list because we've found it now.
+	void label_define(std::string label_name);
+
+	// Use this for 'label' to say we have a label, it's in the
+	// current scope, but it wasn't forwar-declared on the
+	// notfound list.
+	void label_define(std::string label_name, size_t label_block_id);
+    
+	// Use this for 'goto' to say we want a label, but we
+	// don't yet know where it will live, so put it on the
+	// notfound labels list.
+	void label_declare(std::string label_name, size_t label_blockid);
+	
 	void add_goto(std::string goto_label);
+
+	const FunctionLabel * get_label(std::string name) const;
 
 	/**
 	 * Defines a variable in the current scope.
@@ -153,8 +213,6 @@ namespace JLang::frontend {
 	// to make sure all jumps are legal.
 	bool check() const;
 	
-	Scope * label_find(std::string label_name) const;
-
 	/**
 	 * Returns true if this or any ancestor is a 'loop'
 	 * that can be 'break' or 'continue' out of.
@@ -195,6 +253,8 @@ namespace JLang::frontend {
 	 * to a common ancestor of the label.
 	 */
 	std::vector<std::string> get_variables_to_unwind_for_label(std::string & label) const;
+
+	const Scope *get_current() const;
 	
     private:
 	bool check_scope(const Scope *s) const;
@@ -204,11 +264,11 @@ namespace JLang::frontend {
 	const JLang::context::CompilerContext & compiler_context;
 	
 	// Labels that actually have a definition.
-	std::map<std::string, Scope*> labels;
+	std::map<std::string, JLang::owned<FunctionLabel>> labels;
 
 	// Labels that have been referenced in a 'goto'
 	// but not yet defined in a scope.
-	std::map<std::string, size_t> notfound_labels;
+	std::map<std::string, JLang::owned<FunctionLabel>> notfound_labels;
 	
     };
     
