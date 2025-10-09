@@ -2434,13 +2434,11 @@ FunctionDefinitionResolver::extract_from_statement_while(
 	);
     function->get_basic_block(current_block).add_operation(std::move(operation_jump_initial));
 
-    size_t blockid_tmp = current_block;
     current_block = blockid_evaluate_expression;
     
     if (!extract_from_expression(condition_tmpvar, statement.get_expression())) {
 	return false;
     }
-    current_block = blockid_tmp;
 
     auto operation_jump_conditional = std::make_unique<OperationJumpConditional>(
 	statement.get_source_ref(),
@@ -2448,22 +2446,21 @@ FunctionDefinitionResolver::extract_from_statement_while(
 	blockid_if,
 	blockid_done
 	);
-    function->get_basic_block(blockid_evaluate_expression).add_operation(std::move(operation_jump_conditional));
+    function->get_basic_block(current_block).add_operation(std::move(operation_jump_conditional));
 
     // Push a loop scope.
+    current_block = blockid_if;
     scope_tracker.scope_push_loop(
 	statement.get_scope_body().get_source_ref(),
 	blockid_done,
 	blockid_evaluate_expression
 	);
     size_t blockid_tmp_if = current_block;
-    current_block = blockid_if;
     if (!extract_from_statement_list(
 	statement.get_scope_body().get_statements()
 	    )) {
 	return false;
     }
-    current_block = blockid_tmp_if;
     
     // Pop back from the scope.
     scope_tracker.scope_pop();
@@ -2472,7 +2469,7 @@ FunctionDefinitionResolver::extract_from_statement_while(
 	statement.get_source_ref(),
 	blockid_evaluate_expression
 	);
-    function->get_basic_block(blockid_if).add_operation(std::move(operation_jump_to_evaluate));
+    function->get_basic_block(current_block).add_operation(std::move(operation_jump_to_evaluate));
     
     current_block = blockid_done;
     

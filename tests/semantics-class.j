@@ -2,16 +2,16 @@ class Foo {
     u32 a;
     u8 b;
     u8* s;
-    void set_something();
+//    void set_something();
 };
 
 u32 print_value(u32 number);
 
-void
-Foo::set_something()
-{
-  a = 10;
-}
+//void
+//Foo::set_something()
+//{
+//  a = 10;
+//}
 
 u32 main(u32 argc, u8**argv)
 {
