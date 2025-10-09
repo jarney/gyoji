@@ -1,11 +1,11 @@
-#include <jlang-codegen.hpp>
-#include <jlang-context.hpp>
+#include <gyoji-codegen.hpp>
+#include <gyoji-context.hpp>
 #include <stdio.h>
 
-using namespace JLang::mir;
+using namespace Gyoji::mir;
 
-void JLang::codegen::generate_code(
-    const JLang::context::CompilerContext & _compiler_context,
+void Gyoji::codegen::generate_code(
+    const Gyoji::context::CompilerContext & _compiler_context,
     const MIR & _mir,
     const std::string & _filename
     )

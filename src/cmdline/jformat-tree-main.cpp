@@ -1,12 +1,12 @@
-#include <jlang-frontend.hpp>
-#include <jlang-misc/input-source-file.hpp>
+#include <gyoji-frontend.hpp>
+#include <gyoji-misc/input-source-file.hpp>
 #include "jformat-tree.hpp"
 
-using namespace JLang::context;
-using namespace JLang::frontend;
-using namespace JLang::frontend::tree;
-using namespace JLang::frontend::namespaces;
-using namespace JLang::cmdline;
+using namespace Gyoji::context;
+using namespace Gyoji::frontend;
+using namespace Gyoji::frontend::tree;
+using namespace Gyoji::frontend::namespaces;
+using namespace Gyoji::cmdline;
 
 int main(int argc, char **argv)
 {
@@ -25,9 +25,9 @@ int main(int argc, char **argv)
     
     CompilerContext context(argv[1]);
     
-    JLang::misc::InputSourceFile input_source(input);
+    Gyoji::misc::InputSourceFile input_source(input);
     
-    JLang::owned<ParseResult> parse_result = 
+    Gyoji::owned<ParseResult> parse_result = 
         Parser::parse(
 	    context,
 	    input_source

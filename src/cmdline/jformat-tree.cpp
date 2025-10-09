@@ -1,12 +1,12 @@
 #include "jformat-tree.hpp"
 #include <iostream>
-#include <jlang-misc/xml.hpp>
+#include <gyoji-misc/xml.hpp>
 
-using namespace JLang::misc;
-using namespace JLang::frontend::ast;
-using namespace JLang::frontend::tree;
-using namespace JLang::cmdline;
-using namespace JLang::context;
+using namespace Gyoji::misc;
+using namespace Gyoji::frontend::ast;
+using namespace Gyoji::frontend::tree;
+using namespace Gyoji::cmdline;
+using namespace Gyoji::context;
 
 struct TokenName {
     TokenID token;

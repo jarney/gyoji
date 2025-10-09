@@ -1,24 +1,24 @@
-#include <jlang-frontend.hpp>
+#include <gyoji-frontend.hpp>
 
-#include <jlang.l.hpp>
-#include <jlang.y.hpp>
+#include <gyoji.l.hpp>
+#include <gyoji.y.hpp>
 
-using namespace JLang::context;
-using namespace JLang::mir;
-using namespace JLang::frontend;
-using namespace JLang::frontend::ast;
-using namespace JLang::frontend::tree;
-using namespace JLang::frontend::namespaces;
-using namespace JLang::frontend::yacc;
+using namespace Gyoji::context;
+using namespace Gyoji::mir;
+using namespace Gyoji::frontend;
+using namespace Gyoji::frontend::ast;
+using namespace Gyoji::frontend::tree;
+using namespace Gyoji::frontend::namespaces;
+using namespace Gyoji::frontend::yacc;
 
-JLang::owned<ParseResult>
+Gyoji::owned<ParseResult>
 Parser::parse(
-    JLang::context::CompilerContext & _compiler_context,
-    JLang::misc::InputSource & _input_source
+    Gyoji::context::CompilerContext & _compiler_context,
+    Gyoji::misc::InputSource & _input_source
     )
 {
-    auto namespace_context = std::make_unique<JLang::frontend::namespaces::NamespaceContext>();
-    JLang::owned<ParseResult> result = std::make_unique<ParseResult>(
+    auto namespace_context = std::make_unique<Gyoji::frontend::namespaces::NamespaceContext>();
+    Gyoji::owned<ParseResult> result = std::make_unique<ParseResult>(
 	_compiler_context,
 	std::move(namespace_context)
 	);
@@ -39,10 +39,10 @@ Parser::parse(
     return result;
 }
 
-JLang::owned<MIR>
+Gyoji::owned<MIR>
 Parser::parse_to_mir(
-    JLang::context::CompilerContext & _compiler_context,
-    JLang::misc::InputSource & _input_source
+    Gyoji::context::CompilerContext & _compiler_context,
+    Gyoji::misc::InputSource & _input_source
     )
 {
     
@@ -51,8 +51,8 @@ Parser::parse_to_mir(
     // that our caller should not even have called us
     // and should report a syntax error at the
     // higher level.
-    JLang::owned<ParseResult> parse_result = parse(_compiler_context, _input_source);
-    JLang::owned<MIR> mir = std::make_unique<MIR>();
+    Gyoji::owned<ParseResult> parse_result = parse(_compiler_context, _input_source);
+    Gyoji::owned<MIR> mir = std::make_unique<MIR>();
     
     if (!parse_result->has_translation_unit()) {
 	// It's harmless to return an empty mir
@@ -60,7 +60,7 @@ Parser::parse_to_mir(
 	return mir;
     }
 
-    JLang::mir::operation_static_init();
+    Gyoji::mir::operation_static_init();
 
     fprintf(stderr, "============================\n");
     fprintf(stderr, "Type and symbol table resolution pass\n");

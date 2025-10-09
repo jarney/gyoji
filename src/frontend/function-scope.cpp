@@ -1,12 +1,12 @@
 
-#include <jlang-frontend.hpp>
-#include <jlang-frontend/function-scope.hpp>
+#include <gyoji-frontend.hpp>
+#include <gyoji-frontend/function-scope.hpp>
 
-using namespace JLang::frontend;
+using namespace Gyoji::frontend;
 
 ScopeOperation::ScopeOperation(
     ScopeOperationType _type,
-    const JLang::context::SourceReference & _source_ref
+    const Gyoji::context::SourceReference & _source_ref
     )
     : type(_type)
     , source_ref(_source_ref)
@@ -35,52 +35,52 @@ const Scope *
 ScopeOperation::get_child() const
 { return child.get(); }
 
-JLang::owned<ScopeOperation>
+Gyoji::owned<ScopeOperation>
 ScopeOperation::create_variable(
     std::string _variable_name,
-    const JLang::mir::Type *_variable_type,
-    const JLang::context::SourceReference & _source_ref
+    const Gyoji::mir::Type *_variable_type,
+    const Gyoji::context::SourceReference & _source_ref
     )
 {
-    auto op = JLang::owned<ScopeOperation>(new ScopeOperation(ScopeOperation::VAR_DECL, _source_ref));
+    auto op = Gyoji::owned<ScopeOperation>(new ScopeOperation(ScopeOperation::VAR_DECL, _source_ref));
     op->variable_name = _variable_name;
     op->variable_type = _variable_type;
     return op;
 }
-JLang::owned<ScopeOperation>
+Gyoji::owned<ScopeOperation>
 ScopeOperation::create_label(
     std::string _label_name,
-    const JLang::context::SourceReference & _source_ref
+    const Gyoji::context::SourceReference & _source_ref
     )			     
 {
-    auto op = JLang::owned<ScopeOperation>(new ScopeOperation(ScopeOperation::LABEL_DEFINITION, _source_ref));
+    auto op = Gyoji::owned<ScopeOperation>(new ScopeOperation(ScopeOperation::LABEL_DEFINITION, _source_ref));
     op->label_name = _label_name;
     return op;
 }
 
-JLang::owned<ScopeOperation>
+Gyoji::owned<ScopeOperation>
 ScopeOperation::create_goto(
     std::string _goto_label,
-    const JLang::context::SourceReference & _source_ref
+    const Gyoji::context::SourceReference & _source_ref
     )
 {
-    auto op = JLang::owned<ScopeOperation>(new ScopeOperation(ScopeOperation::GOTO_DEFINITION, _source_ref));
+    auto op = Gyoji::owned<ScopeOperation>(new ScopeOperation(ScopeOperation::GOTO_DEFINITION, _source_ref));
     op->goto_label = _goto_label;
     return op;
 }
 
-JLang::owned<ScopeOperation>
+Gyoji::owned<ScopeOperation>
 ScopeOperation::create_child(
-    JLang::owned<Scope> _child,
-    const JLang::context::SourceReference & _source_ref
+    Gyoji::owned<Scope> _child,
+    const Gyoji::context::SourceReference & _source_ref
     )
 {
-    auto op = JLang::owned<ScopeOperation>(new ScopeOperation(ScopeOperation::CHILD_SCOPE, _source_ref));
+    auto op = Gyoji::owned<ScopeOperation>(new ScopeOperation(ScopeOperation::CHILD_SCOPE, _source_ref));
     op->child = std::move(_child);
     return op;
 }
 
-const JLang::context::SourceReference &
+const Gyoji::context::SourceReference &
 ScopeOperation::get_source_ref() const
 { return source_ref; }
 
@@ -106,15 +106,15 @@ Scope::~Scope()
 {}
 
 void
-Scope::add_operation(JLang::owned<ScopeOperation> op)
+Scope::add_operation(Gyoji::owned<ScopeOperation> op)
 {
     operations.push_back(std::move(op));
 }
 
 void
-Scope::add_variable(std::string name, const JLang::mir::Type *type, const JLang::context::SourceReference & source_ref)
+Scope::add_variable(std::string name, const Gyoji::mir::Type *type, const Gyoji::context::SourceReference & source_ref)
 {
-    JLang::owned<LocalVariable> local_variable = std::make_unique<LocalVariable>(name, type, source_ref);
+    Gyoji::owned<LocalVariable> local_variable = std::make_unique<LocalVariable>(name, type, source_ref);
     variables.insert(std::pair(name, std::move(local_variable)));
     auto local_var_op = ScopeOperation::create_variable(name, type, source_ref);
     operations.push_back(std::move(local_var_op));
@@ -143,11 +143,11 @@ size_t
 Scope::get_loop_continue_blockid() const
 { return loop_continue_blockid; }
 
-const std::map<std::string, JLang::owned<LocalVariable>> &
+const std::map<std::string, Gyoji::owned<LocalVariable>> &
 Scope::get_variables() const
 { return variables; }
 
-ScopeTracker::ScopeTracker(const JLang::context::CompilerContext & _compiler_context)
+ScopeTracker::ScopeTracker(const Gyoji::context::CompilerContext & _compiler_context)
     : root(std::make_unique<Scope>())
     , compiler_context(_compiler_context)
 {
@@ -160,7 +160,7 @@ ScopeTracker::~ScopeTracker()
 
 
 void
-ScopeTracker::scope_push(const JLang::context::SourceReference & _source_ref)
+ScopeTracker::scope_push(const Gyoji::context::SourceReference & _source_ref)
 {
     auto child_scope = std::make_unique<Scope>();
     Scope *new_current = child_scope.get();
@@ -170,7 +170,7 @@ ScopeTracker::scope_push(const JLang::context::SourceReference & _source_ref)
     current = new_current;
 }
 void
-ScopeTracker::scope_push_loop(const JLang::context::SourceReference & _source_ref, size_t _loop_break_blockid, size_t _loop_continue_blockid)
+ScopeTracker::scope_push_loop(const Gyoji::context::SourceReference & _source_ref, size_t _loop_break_blockid, size_t _loop_continue_blockid)
 {
     auto child_scope = std::make_unique<Scope>(true, _loop_break_blockid, _loop_continue_blockid);
     Scope *new_current = child_scope.get();
@@ -205,7 +205,7 @@ ScopeTracker::get_label(std::string name) const
 void
 ScopeTracker::label_define(
     std::string label_name,
-    const JLang::context::SourceReference & _source_ref
+    const Gyoji::context::SourceReference & _source_ref
     )
 {
     const auto & it_notfound = notfound_labels.find(label_name);
@@ -224,10 +224,10 @@ void
 ScopeTracker::label_define(
     std::string label_name,
     size_t label_blockid,
-    const JLang::context::SourceReference & _source_ref
+    const Gyoji::context::SourceReference & _source_ref
     )
 {
-    JLang::owned<FunctionLabel> new_label = std::make_unique<FunctionLabel>(label_name, label_blockid);
+    Gyoji::owned<FunctionLabel> new_label = std::make_unique<FunctionLabel>(label_name, label_blockid);
     new_label->set_scope(current, _source_ref);
     labels.insert(std::pair(label_name, std::move(new_label)));
     add_operation(ScopeOperation::create_label(label_name, _source_ref));
@@ -239,7 +239,7 @@ ScopeTracker::label_define(
 void
 ScopeTracker::label_declare(std::string label_name, size_t label_blockid)
 {
-    JLang::owned<FunctionLabel> new_label = std::make_unique<FunctionLabel>(label_name, label_blockid);
+    Gyoji::owned<FunctionLabel> new_label = std::make_unique<FunctionLabel>(label_name, label_blockid);
     notfound_labels.insert(std::pair(label_name, std::move(new_label)));
 }
 
@@ -247,7 +247,7 @@ ScopeTracker::label_declare(std::string label_name, size_t label_blockid)
 void
 ScopeTracker::add_goto(
     std::string goto_label,
-    const JLang::context::SourceReference & _source_ref
+    const Gyoji::context::SourceReference & _source_ref
     )
 {
     // TODO:
@@ -318,7 +318,7 @@ ScopeTracker::get_current() const
 { return current; }
 
 bool
-ScopeTracker::add_variable(std::string variable_name, const JLang::mir::Type *mir_type, const JLang::context::SourceReference & source_ref)
+ScopeTracker::add_variable(std::string variable_name, const Gyoji::mir::Type *mir_type, const Gyoji::context::SourceReference & source_ref)
 {
     // Walk up from the current scope up to the root and
     // see if this variable is defined anywhere.
@@ -346,7 +346,7 @@ ScopeTracker::add_variable(std::string variable_name, const JLang::mir::Type *mi
 // TODO: We should give a better interface
 // here so we can easily declare locals, labels, gotos.
 void
-ScopeTracker::add_operation(JLang::owned<ScopeOperation> op)
+ScopeTracker::add_operation(Gyoji::owned<ScopeOperation> op)
 {
     current->add_operation(std::move(op));
 }
@@ -443,7 +443,7 @@ Scope::skips_initialization(std::string label) const
 bool
 ScopeTracker::check_scope(
     const Scope *s,
-    const JLang::context::CompilerContext & compiler_context
+    const Gyoji::context::CompilerContext & compiler_context
     ) const
 {
     // Iterate each operation.
@@ -454,7 +454,7 @@ ScopeTracker::check_scope(
 	    fprintf(stderr, "Evaluting goto label %s\n", op->get_goto_label().c_str());
 	    const FunctionLabel *function_label = get_label(op->get_goto_label());
 	    if (function_label == nullptr || function_label->get_scope() == nullptr) {
-		    std::unique_ptr<JLang::context::Error> error = std::make_unique<JLang::context::Error>("Goto for an un-defined label.");
+		    std::unique_ptr<Gyoji::context::Error> error = std::make_unique<Gyoji::context::Error>("Goto for an un-defined label.");
 		    error->add_message(op->get_source_ref(),
 				       std::string("Goto label ") + op->get_goto_label() + " had an undefined destination.");
 		    compiler_context
@@ -466,7 +466,7 @@ ScopeTracker::check_scope(
 	    }
 	    if (!s->is_ancestor(function_label->get_scope())) {
 		if (function_label->get_scope()->skips_initialization(op->get_goto_label())) {
-		    std::unique_ptr<JLang::context::Error> error = std::make_unique<JLang::context::Error>("Goto would skip initialization.");
+		    std::unique_ptr<Gyoji::context::Error> error = std::make_unique<Gyoji::context::Error>("Goto would skip initialization.");
 		    error->add_message(op->get_source_ref(),
 				       std::string("Goto label ") + op->get_goto_label() + " would skip initialization of variables in destination scope.");
 		    error->add_message(function_label->get_source_ref(),
@@ -489,7 +489,7 @@ ScopeTracker::check_scope(
 
 bool
 ScopeTracker::check(
-    const JLang::context::CompilerContext & compiler_context
+    const Gyoji::context::CompilerContext & compiler_context
     ) const
 {
     Scope *s = root.get();
@@ -545,8 +545,8 @@ Scope::dump(int indent) const
 ///////////////////////////////////////////
 LocalVariable::LocalVariable(
     std::string _name,
-    const JLang::mir::Type *_type,
-    const JLang::context::SourceReference & _source_ref
+    const Gyoji::mir::Type *_type,
+    const Gyoji::context::SourceReference & _source_ref
     )
     : name(_name)
     , type(_type)
@@ -560,11 +560,11 @@ const std::string &
 LocalVariable::get_name() const
 { return name; }
 
-const JLang::mir::Type *
+const Gyoji::mir::Type *
 LocalVariable::get_type() const
 { return type; }
 
-const JLang::context::SourceReference &
+const Gyoji::context::SourceReference &
 LocalVariable::get_source_ref() const
 { return source_ref; }
  
@@ -591,7 +591,7 @@ FunctionLabel::FunctionLabel(const FunctionLabel & _other)
 FunctionLabel::~FunctionLabel()
 {}
 
-const JLang::context::SourceReference &
+const Gyoji::context::SourceReference &
 FunctionLabel::get_source_ref() const
 { return *src_ref; }
 
@@ -608,7 +608,7 @@ FunctionLabel::get_scope() const
 { return scope; }
 
 void
-FunctionLabel::set_scope(const Scope *_scope, const JLang::context::SourceReference & _src_ref)
+FunctionLabel::set_scope(const Scope *_scope, const Gyoji::context::SourceReference & _src_ref)
 {
     scope = _scope;
     resolved = true;

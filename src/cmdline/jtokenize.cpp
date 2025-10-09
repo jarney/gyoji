@@ -1,12 +1,12 @@
-#include <jlang-misc/input-source-file.hpp>
-#include <jlang-frontend.hpp>
-#include <jlang-context.hpp>
-#include <jlang.l.hpp>
-#include <jlang.y.hpp>
+#include <gyoji-misc/input-source-file.hpp>
+#include <gyoji-frontend.hpp>
+#include <gyoji-context.hpp>
+#include <gyoji.l.hpp>
+#include <gyoji.y.hpp>
 
-using namespace JLang::context;
-using namespace JLang::frontend::tree;
-using namespace JLang::frontend::yacc;
+using namespace Gyoji::context;
+using namespace Gyoji::frontend::tree;
+using namespace Gyoji::frontend::yacc;
 
 int main(int argc, char **argv)
 {
@@ -23,9 +23,9 @@ int main(int argc, char **argv)
     }
     
     CompilerContext context(argv[1]);
-    JLang::frontend::namespaces::NamespaceContext namespace_context;
+    Gyoji::frontend::namespaces::NamespaceContext namespace_context;
     
-    JLang::misc::InputSourceFile input_source(input);
+    Gyoji::misc::InputSourceFile input_source(input);
     
     LexContext lex_context(
 	namespace_context,
@@ -37,12 +37,12 @@ int main(int argc, char **argv)
     yyset_extra(&lex_context, scanner);
     
     while (true) {
-	JLang::frontend::yacc::YaccParser::semantic_type lvalue;
+	Gyoji::frontend::yacc::YaccParser::semantic_type lvalue;
 	int rc = yylex (&lvalue, scanner);
 	if (rc == 0) {
 	    break;
 	}
-	const JLang::owned<JLang::frontend::tree::Terminal> & token = lvalue.as<JLang::owned<JLang::frontend::tree::Terminal>>();
+	const Gyoji::owned<Gyoji::frontend::tree::Terminal> & token = lvalue.as<Gyoji::owned<Gyoji::frontend::tree::Terminal>>();
 	printf("%ld %ld : %d %s\n",
 	       token->get_source_ref().get_line(),
 	       token->get_source_ref().get_column(),

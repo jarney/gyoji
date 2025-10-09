@@ -1,6 +1,6 @@
 
 set(ANALYSIS_PUBLIC_HEADERS
-    jlang-analysis.hpp
+    gyoji-analysis.hpp
 )
 set(ANALYSIS_SOURCES
     analysis.cpp
@@ -10,8 +10,8 @@ set(ANALYSIS_SOURCES
     ${ANALYSIS_PUBLIC_HEADERS}
 )
 
-add_library(jlang-analysis ${ANALYSIS_SOURCES})
-target_include_directories(jlang-analysis
+add_library(gyoji-analysis ${ANALYSIS_SOURCES})
+target_include_directories(gyoji-analysis
     PUBLIC
             ${PROJECT_SOURCE_DIR}/src/misc
             ${PROJECT_SOURCE_DIR}/src/context
@@ -20,13 +20,13 @@ target_include_directories(jlang-analysis
 )
 install(
     TARGETS
-        jlang-analysis
+        gyoji-analysis
         LIBRARY DESTINATION lib
 )
 install(
     FILES
         ${ANALYSIS_PUBLIC_HEADERS}
-        DESTINATION include/jlang-analysis
+        DESTINATION include/gyoji-analysis
 )
 
 add_executable(test_analysis test_analysis.cpp)
@@ -34,6 +34,6 @@ target_include_directories(test_analysis
     PUBLIC
     ${PROJECT_SOURCE_DIR}/src/analysis
     )
-target_link_libraries(test_analysis jlang-analysis jlang-mir jlang-context jlang-misc)
+target_link_libraries(test_analysis gyoji-analysis gyoji-mir gyoji-context gyoji-misc)
 add_test(NAME test_analysis COMMAND test_analysis ${CMAKE_SOURCE_DIR})
 

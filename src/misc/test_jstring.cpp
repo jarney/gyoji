@@ -1,7 +1,7 @@
-#include <jlang-misc/jstring.hpp>
-#include <jlang-misc/test.hpp>
+#include <gyoji-misc/jstring.hpp>
+#include <gyoji-misc/test.hpp>
 
-using namespace JLang::misc;
+using namespace Gyoji::misc;
 
 int main(int argc, char **argv)
 {

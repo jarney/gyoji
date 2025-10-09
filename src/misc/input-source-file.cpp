@@ -1,8 +1,8 @@
-#include <jlang-misc/input-source-file.hpp>
+#include <gyoji-misc/input-source-file.hpp>
 #include <errno.h>
 #include <unistd.h>
 
-using namespace JLang::misc;
+using namespace Gyoji::misc;
 
 InputSourceFile::InputSourceFile(int _fd)
     : fd(_fd)

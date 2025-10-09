@@ -1,9 +1,9 @@
-#include <jlang-analysis.hpp>
+#include <gyoji-analysis.hpp>
 #include <stdio.h>
 
-using namespace JLang::mir;
-using namespace JLang::context;
-using namespace JLang::analysis;
+using namespace Gyoji::mir;
+using namespace Gyoji::context;
+using namespace Gyoji::analysis;
 
 AnalysisPass::AnalysisPass(CompilerContext & _compiler_context, std::string _name)
     : compiler_context(_compiler_context)
@@ -13,7 +13,7 @@ AnalysisPass::AnalysisPass(CompilerContext & _compiler_context, std::string _nam
 AnalysisPass::~AnalysisPass()
 {}
 
-JLang::context::CompilerContext &
+Gyoji::context::CompilerContext &
 AnalysisPass::get_compiler_context() const
 { return compiler_context; }
 

@@ -1,9 +1,9 @@
 #pragma once
 
-#include <jlang-backend/jbackend.hpp>
+#include <gyoji-backend/jbackend.hpp>
 
-namespace JLang::backend {
-    using namespace JLang::frontend::ast;
+namespace Gyoji::backend {
+    using namespace Gyoji::frontend::ast;
     /**
      * This is the identity transformation that should always
      * format the code exactly as it appeared in the input,

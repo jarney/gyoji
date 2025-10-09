@@ -1,9 +1,9 @@
-#include <jlang-mir/types.hpp>
+#include <gyoji-mir/types.hpp>
 #include <variant>
 #include <stdio.h>
 
-using namespace JLang::context;
-using namespace JLang::mir;
+using namespace Gyoji::context;
+using namespace Gyoji::mir;
 
 ////////////////////////////////////////
 // Types
@@ -54,7 +54,7 @@ Types::get_pointer_to(const Type *_type, const SourceReference & src_ref)
     if (pointer_type != nullptr) {
 	return pointer_type;
     }
-    JLang::owned<Type> pointer_owned = std::make_unique<Type>(pointer_type_name, Type::TYPE_POINTER, false, src_ref);
+    Gyoji::owned<Type> pointer_owned = std::make_unique<Type>(pointer_type_name, Type::TYPE_POINTER, false, src_ref);
     pointer_type = pointer_owned.get();
     pointer_owned->complete_pointer_definition(_type, src_ref);
     define_type(std::move(pointer_owned));
@@ -70,7 +70,7 @@ Types::get_reference_to(const Type *_type, const SourceReference & src_ref)
     if (pointer_type != nullptr) {
 	return pointer_type;
     }
-    JLang::owned<Type> pointer_owned = std::make_unique<Type>(pointer_type_name, Type::TYPE_REFERENCE, false, src_ref);
+    Gyoji::owned<Type> pointer_owned = std::make_unique<Type>(pointer_type_name, Type::TYPE_REFERENCE, false, src_ref);
     pointer_type = pointer_owned.get();
     pointer_owned->complete_pointer_definition(_type, src_ref);
     define_type(std::move(pointer_owned));
@@ -86,7 +86,7 @@ Types::get_array_of(const Type *_type, size_t _length, const SourceReference & s
     if (array_type != nullptr) {
 	return array_type;
     }
-    JLang::owned<Type> array_owned = std::make_unique<Type>(array_type_name, Type::TYPE_ARRAY, false, src_ref);
+    Gyoji::owned<Type> array_owned = std::make_unique<Type>(array_type_name, Type::TYPE_ARRAY, false, src_ref);
     array_type = array_owned.get();
     array_owned->complete_array_definition(_type, _length, src_ref);
     define_type(std::move(array_owned));
@@ -94,13 +94,13 @@ Types::get_array_of(const Type *_type, size_t _length, const SourceReference & s
 }
 
 void
-Types::define_type(JLang::owned<Type> type)
+Types::define_type(Gyoji::owned<Type> type)
 {
     std::string type_name = type->get_name();
-    type_map.insert(std::pair<std::string, JLang::owned<Type>>(type_name, std::move(type)));
+    type_map.insert(std::pair<std::string, Gyoji::owned<Type>>(type_name, std::move(type)));
 }
 
-const std::map<std::string, JLang::owned<Type>> &
+const std::map<std::string, Gyoji::owned<Type>> &
 Types::get_types() const
 { return type_map; }
 

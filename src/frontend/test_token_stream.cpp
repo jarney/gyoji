@@ -1,11 +1,11 @@
-#include <jlang-frontend.hpp>
-#include <jlang-misc/input-source-file.hpp>
-#include <jlang-misc/test.hpp>
+#include <gyoji-frontend.hpp>
+#include <gyoji-misc/input-source-file.hpp>
+#include <gyoji-misc/test.hpp>
 
-using namespace JLang::context;
-using namespace JLang::frontend;
-using namespace JLang::frontend::tree;
-using namespace JLang::frontend::namespaces;
+using namespace Gyoji::context;
+using namespace Gyoji::frontend;
+using namespace Gyoji::frontend::tree;
+using namespace Gyoji::frontend::namespaces;
 
 /*
  * The purpose of this file is to
@@ -18,7 +18,7 @@ using namespace JLang::frontend::namespaces;
  */
 
 static
-JLang::owned<ParseResult>
+Gyoji::owned<ParseResult>
 parse(std::string & filename, CompilerContext & context)
 {
     int input = open(filename.c_str(), O_RDONLY);
@@ -27,8 +27,8 @@ parse(std::string & filename, CompilerContext & context)
 	return nullptr;
     }
     
-    JLang::misc::InputSourceFile input_source(input);
-    JLang::owned<ParseResult> parse_result = 
+    Gyoji::misc::InputSourceFile input_source(input);
+    Gyoji::owned<ParseResult> parse_result = 
 	Parser::parse(
 	    context,
 	    input_source
@@ -53,12 +53,12 @@ int main(int argc, char **argv)
     
     CompilerContext context(path);
     
-    JLang::owned<ParseResult> result = parse(path, context);
+    Gyoji::owned<ParseResult> result = parse(path, context);
     if (!result) {
 	return 1;
     }
     
-    for (const JLang::owned<Token> & token : result->get_token_stream().get_tokens()) {
+    for (const Gyoji::owned<Token> & token : result->get_token_stream().get_tokens()) {
 	printf("%s", token->get_value().c_str());
     }
     

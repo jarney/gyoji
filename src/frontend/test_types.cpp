@@ -1,17 +1,17 @@
-#include <jlang-misc/input-source-file.hpp>
-#include <jlang-frontend.hpp>
-#include <jlang-frontend/type-resolver.hpp>
-#include <jlang-mir.hpp>
-#include <jlang-misc/test.hpp>
+#include <gyoji-misc/input-source-file.hpp>
+#include <gyoji-frontend.hpp>
+#include <gyoji-frontend/type-resolver.hpp>
+#include <gyoji-mir.hpp>
+#include <gyoji-misc/test.hpp>
 
-using namespace JLang::context;
-using namespace JLang::frontend;
-using namespace JLang::frontend::namespaces;
-using namespace JLang::mir;
+using namespace Gyoji::context;
+using namespace Gyoji::frontend;
+using namespace Gyoji::frontend::namespaces;
+using namespace Gyoji::mir;
 
 
 static
-JLang::owned<MIR>
+Gyoji::owned<MIR>
 parse_to_mir(std::string & path, CompilerContext & context, std::string base_filename);
 
 int main(int argc, char **argv)
@@ -35,7 +35,7 @@ int main(int argc, char **argv)
 }
 
 static
-JLang::owned<MIR>
+Gyoji::owned<MIR>
 parse_to_mir(std::string & path, CompilerContext & context, std::string base_filename)
 {
     std::string filename = path + std::string("/") + base_filename;
@@ -46,7 +46,7 @@ parse_to_mir(std::string & path, CompilerContext & context, std::string base_fil
 	return nullptr;
     }
     
-    JLang::misc::InputSourceFile input_source(input);
+    Gyoji::misc::InputSourceFile input_source(input);
     auto mir =
 	Parser::parse_to_mir(
 	    context,

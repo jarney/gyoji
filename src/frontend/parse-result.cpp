@@ -1,16 +1,16 @@
-#include <jlang-frontend.hpp>
-#include <jlang.l.hpp>
-#include <jlang.y.hpp>
-#include <jlang-misc/jstring.hpp>
+#include <gyoji-frontend.hpp>
+#include <gyoji.l.hpp>
+#include <gyoji.y.hpp>
+#include <gyoji-misc/jstring.hpp>
 
-using namespace JLang::context;
-using namespace JLang::frontend;
-using namespace JLang::frontend::namespaces;
-using namespace JLang::frontend::tree;
+using namespace Gyoji::context;
+using namespace Gyoji::frontend;
+using namespace Gyoji::frontend::namespaces;
+using namespace Gyoji::frontend::tree;
 
 ParseResult::ParseResult(
-    JLang::context::CompilerContext & _compiler_context,
-    JLang::owned<NamespaceContext>  _namespace_context
+    Gyoji::context::CompilerContext & _compiler_context,
+    Gyoji::owned<NamespaceContext>  _namespace_context
     )
     : namespace_context(std::move(_namespace_context))
     , compiler_context(_compiler_context)
@@ -50,12 +50,12 @@ ParseResult::get_token_stream() const
 {
     return compiler_context.get_token_stream();
 }
-const JLang::context::CompilerContext &
+const Gyoji::context::CompilerContext &
 ParseResult::get_compiler_context() const
 { return compiler_context; }
 
 void
-ParseResult::set_translation_unit(JLang::owned<TranslationUnit> _translation_unit)
+ParseResult::set_translation_unit(Gyoji::owned<TranslationUnit> _translation_unit)
 {
     translation_unit = std::move(_translation_unit);
 }
@@ -92,7 +92,7 @@ ParseResult::symbol_get_or_create(std::string symbol_name, const SourceReference
     const Symbol *found = symbol_get(symbol_name, src_ref);
     if (found) return found;
     
-    std::string fqs = JLang::misc::join_nonempty(
+    std::string fqs = Gyoji::misc::join_nonempty(
 	namespace_context->current()->fully_qualified(),
 	symbol_name,
 	std::string("::")
@@ -118,7 +118,7 @@ ParseResult::symbol_get(std::string symbol_name, const SourceReference & src_ref
 	return found_symbols.at(0);
     }
     else if (found_symbols.size() > 1) {
-	auto error = std::make_unique<JLang::context::Error>(std::string("Reference to ") + symbol_name + std::string(" is ambiguous"));
+	auto error = std::make_unique<Gyoji::context::Error>(std::string("Reference to ") + symbol_name + std::string(" is ambiguous"));
 	error->add_message(src_ref, std::string("Reference to ") + symbol_name + std::string(" is ambiguous"));
 	for (const auto *sym : found_symbols) {
 	    error->add_message(sym->src_ref, std::string("Note: candidates are: ") + sym->name);

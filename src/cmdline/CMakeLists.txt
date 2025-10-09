@@ -1,10 +1,10 @@
 set(CMDLINE_LINK_LIBRARIES
-        jlang-frontend
-        jlang-analysis
-        jlang-codegen
-        jlang-mir
-        jlang-context
-        jlang-misc
+        gyoji-frontend
+        gyoji-analysis
+        gyoji-codegen
+        gyoji-mir
+        gyoji-context
+        gyoji-misc
 	-L/usr/lib/llvm-18/lib -lLLVM-18
 )
 

@@ -38,7 +38,7 @@
 * Figure out the 'reasoning' engine we want to use for it.
   Probably some type of HornSAT solver, possibly even one that
   we can incorporate into the standard library so we can
-  write the borrow checker in JLang itself instead of in C
+  write the borrow checker in Gyoji itself instead of in C
 
 ## Semantic processing
   * Merge blocks for assignments in control-flow statements.
@@ -122,7 +122,7 @@ Some rules for classes and such:
   without cluttering the design and causing too much
   bloat.
 
-## Start writing the standard library in JLang
+## Start writing the standard library in Gyoji
 
 * Basic string manipulation functions
 

@@ -1,14 +1,14 @@
-#include <jlang-frontend.hpp>
-#include <jlang-frontend/function-scope.hpp>
+#include <gyoji-frontend.hpp>
+#include <gyoji-frontend/function-scope.hpp>
 
-using namespace JLang::frontend;
+using namespace Gyoji::frontend;
 
-static const JLang::context::SourceReference zero_source_ref("internal", 1, 0, 0);
+static const Gyoji::context::SourceReference zero_source_ref("internal", 1, 0, 0);
 
 int main(int argc, char **argv)
 {
 #if 0
-    JLang::context::CompilerContext compiler_context("Some name");
+    Gyoji::context::CompilerContext compiler_context("Some name");
     
     ScopeTracker tracker(compiler_context);
 

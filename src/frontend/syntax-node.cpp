@@ -1,8 +1,8 @@
-#include <jlang-frontend.hpp>
+#include <gyoji-frontend.hpp>
 
-using namespace JLang::context;
-using namespace JLang::frontend;
-using namespace JLang::frontend::ast;
+using namespace Gyoji::context;
+using namespace Gyoji::frontend;
+using namespace Gyoji::frontend::ast;
 
 ///////////////////////////////////////////////////
 SyntaxNode::SyntaxNode(

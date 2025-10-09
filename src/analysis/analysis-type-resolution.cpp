@@ -1,9 +1,9 @@
-#include <jlang-analysis.hpp>
+#include <gyoji-analysis.hpp>
 #include <stdio.h>
 
-using namespace JLang::mir;
-using namespace JLang::context;
-using namespace JLang::analysis;
+using namespace Gyoji::mir;
+using namespace Gyoji::context;
+using namespace Gyoji::analysis;
 
 AnalysisPassTypeResolution::AnalysisPassTypeResolution(CompilerContext & _compiler_context)
     : AnalysisPass(_compiler_context, "type resolution")
@@ -30,7 +30,7 @@ AnalysisPassTypeResolution::check_type(const Type & type) const
     if (type.get_type() == Type::TYPE_COMPOSITE) {
 	for (const auto & member : type.get_members()) {
 	    if (!member.get_type()->is_complete()) {
-		std::unique_ptr<JLang::context::Error> error = std::make_unique<JLang::context::Error>("Class contains incomplete type");
+		std::unique_ptr<Gyoji::context::Error> error = std::make_unique<Gyoji::context::Error>("Class contains incomplete type");
 		error->add_message(member.get_source_ref(),
 				   std::string("Incomplete type in member ") + member.get_name() + std::string(" of type ") + type.get_name());
 		error->add_message(member.get_type()->get_declared_source_ref(),

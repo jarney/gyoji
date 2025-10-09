@@ -1,11 +1,11 @@
 
-#include <jlang-backend/jbackend-toc.hpp>
+#include <gyoji-backend/jbackend-toc.hpp>
 
-using namespace JLang::frontend::ast;
+using namespace Gyoji::frontend::ast;
 
 // TODO: This should not be so tightly coupled.
-#include <jlang.l.hpp>
-#include <jlang.y.hpp>
+#include <gyoji.l.hpp>
+#include <gyoji.y.hpp>
 #include <iostream>
 
 JBackendToC::JBackendToC()

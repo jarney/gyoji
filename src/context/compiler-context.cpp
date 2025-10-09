@@ -1,6 +1,6 @@
-#include <jlang-context.hpp>
+#include <gyoji-context.hpp>
 
-using namespace JLang::context;
+using namespace Gyoji::context;
 
 CompilerContext::CompilerContext(std::string _filename)
 {

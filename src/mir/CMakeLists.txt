@@ -1,10 +1,10 @@
 
 set(TYPES_PUBLIC_HEADERS
-    jlang-mir.hpp
-    jlang-mir/functions.hpp
-    jlang-mir/types.hpp
-    jlang-mir/symbols.hpp
-    jlang-mir/operations.hpp
+    gyoji-mir.hpp
+    gyoji-mir/functions.hpp
+    gyoji-mir/types.hpp
+    gyoji-mir/symbols.hpp
+    gyoji-mir/operations.hpp
 )
 set(TYPES_SOURCES
     mir.cpp
@@ -17,8 +17,8 @@ set(TYPES_SOURCES
     ${TYPES_PUBLIC_HEADERS}
 )
 
-add_library(jlang-mir ${TYPES_SOURCES})
-target_include_directories(jlang-mir
+add_library(gyoji-mir ${TYPES_SOURCES})
+target_include_directories(gyoji-mir
     PUBLIC
             ${PROJECT_SOURCE_DIR}/src/frontend
             ${PROJECT_SOURCE_DIR}/src/misc
@@ -27,12 +27,12 @@ target_include_directories(jlang-mir
 )
 install(
     TARGETS
-        jlang-mir
+        gyoji-mir
         LIBRARY DESTINATION lib
 )
 install(
     FILES
         ${TYPES_PUBLIC_HEADERS}
-        DESTINATION include/jlang-mir
+        DESTINATION include/gyoji-mir
 )
 

@@ -1,13 +1,13 @@
-#include <jlang-mir/operations.hpp>
-#include <jlang-misc/jstring.hpp>
+#include <gyoji-mir/operations.hpp>
+#include <gyoji-misc/jstring.hpp>
 
-using namespace JLang::mir;
+using namespace Gyoji::mir;
 
-namespace JLang::mir {
+namespace Gyoji::mir {
     static std::map<Operation::OperationType, std::string> op_type_names;
 }
 
-void JLang::mir::operation_static_init()
+void Gyoji::mir::operation_static_init()
 {
     // This doesn't really belong here, but I don't have a
     // better place to globally initialize static data.
@@ -85,7 +85,7 @@ void JLang::mir::operation_static_init()
 
 Operation::Operation(
     OperationType _type,
-    const JLang::context::SourceReference & _src_ref,
+    const Gyoji::context::SourceReference & _src_ref,
     size_t _result
     )
     : type(_type)
@@ -94,7 +94,7 @@ Operation::Operation(
 {}
 Operation::Operation(
     OperationType _type,
-    const JLang::context::SourceReference & _src_ref,
+    const Gyoji::context::SourceReference & _src_ref,
     size_t _result,
     size_t _operand
     )
@@ -106,7 +106,7 @@ Operation::Operation(
 }
 Operation::Operation(
     OperationType _type,
-    const JLang::context::SourceReference & _src_ref,
+    const Gyoji::context::SourceReference & _src_ref,
     size_t _result,
     size_t _operand_a,
     size_t _operand_b
@@ -120,7 +120,7 @@ Operation::Operation(
 }
 Operation::Operation(
     OperationType _type,
-    const JLang::context::SourceReference & _src_ref,
+    const Gyoji::context::SourceReference & _src_ref,
     size_t _result,
     size_t _operand_a,
     size_t _operand_b,
@@ -179,7 +179,7 @@ size_t
 Operation::get_result() const
 { return result; }
 
-const JLang::context::SourceReference &
+const Gyoji::context::SourceReference &
 Operation::get_source_ref() const
 { return src_ref; }
 
@@ -195,7 +195,7 @@ Operation::dump(FILE *out) const
 //////////////////////////////////////////////
 OperationUnary::OperationUnary(
 	    OperationType _type,
-	    const JLang::context::SourceReference & _src_ref,
+	    const Gyoji::context::SourceReference & _src_ref,
 	    size_t _result,
 	    size_t _operand
 	    )
@@ -211,7 +211,7 @@ OperationUnary::get_a() const
 //////////////////////////////////////////////
 OperationCast::OperationCast(
     OperationType _type,
-    const JLang::context::SourceReference & _src_ref,
+    const Gyoji::context::SourceReference & _src_ref,
     size_t _result,
     size_t _operand,
     const Type *_cast_type
@@ -245,7 +245,7 @@ OperationCast::get_description() const
 
 OperationBinary::OperationBinary(
     OperationType _type,
-    const JLang::context::SourceReference & _src_ref,
+    const Gyoji::context::SourceReference & _src_ref,
     size_t _result,
     size_t _operand_a,
     size_t _operand_b
@@ -267,7 +267,7 @@ OperationBinary::get_b() const
 // OperationFunctionCall
 //////////////////////////////////////////////
 OperationFunctionCall::OperationFunctionCall(
-    const JLang::context::SourceReference & _src_ref,
+    const Gyoji::context::SourceReference & _src_ref,
     size_t _result,
     size_t _callee_tmpvar,
     std::vector<size_t> _arg_args
@@ -286,7 +286,7 @@ OperationFunctionCall::~OperationFunctionCall()
 // OperationSymbol
 //////////////////////////////////////////////
 OperationSymbol::OperationSymbol(
-    const JLang::context::SourceReference & _src_ref,
+    const Gyoji::context::SourceReference & _src_ref,
     size_t _result,
     std::string _symbol_name
     )
@@ -317,7 +317,7 @@ OperationSymbol::get_description() const
 // OperationArrayIndex
 //////////////////////////////////////////////
 OperationArrayIndex::OperationArrayIndex(
-    const JLang::context::SourceReference & _src_ref,
+    const Gyoji::context::SourceReference & _src_ref,
     size_t _result,
     size_t _array_tmpvar,
     size_t _index_tmpvar
@@ -331,7 +331,7 @@ OperationArrayIndex::~OperationArrayIndex()
 // OperationDot
 //////////////////////////////////////////////
 OperationDot::OperationDot(
-    const JLang::context::SourceReference & _src_ref,
+    const Gyoji::context::SourceReference & _src_ref,
     size_t _result,
     size_t _operand,
     std::string _member_name
@@ -364,7 +364,7 @@ OperationDot::get_description() const
 // OperationLocalVariable
 //////////////////////////////////////////////
 OperationLocalVariable::OperationLocalVariable(
-    const JLang::context::SourceReference & _src_ref,
+    const Gyoji::context::SourceReference & _src_ref,
     size_t _result,
     std::string _symbol_name,
     const Type * _var_type
@@ -401,7 +401,7 @@ OperationLocalVariable::get_description() const
 // OperationLiteralChar
 //////////////////////////////////////////////
 OperationLiteralChar::OperationLiteralChar(
-    const JLang::context::SourceReference & _src_ref,
+    const Gyoji::context::SourceReference & _src_ref,
     size_t _result,
     char _literal_char
     )
@@ -423,7 +423,7 @@ OperationLiteralChar::get_description() const
     std::string char_unescaped;
     char_unescaped.push_back(literal_char);
     std::string char_escaped;
-    JLang::misc::string_c_escape(char_escaped, char_unescaped, true);
+    Gyoji::misc::string_c_escape(char_escaped, char_unescaped, true);
     
     std::string desc = std::string("_") + std::to_string(result) + std::string(" = ") + op_name + std::string(" (");
     desc = desc + std::string(" ") + literal_char;
@@ -435,7 +435,7 @@ OperationLiteralChar::get_description() const
 // OperationLiteralString
 //////////////////////////////////////////////
 OperationLiteralString::OperationLiteralString(
-    const JLang::context::SourceReference & _src_ref,
+    const Gyoji::context::SourceReference & _src_ref,
     size_t _result,
     std::string _literal_string
     )
@@ -456,7 +456,7 @@ OperationLiteralString::get_description() const
     const std::string & op_name = it->second;
 
     std::string literal_escaped;
-    JLang::misc::string_c_escape(literal_escaped, literal_string, false);
+    Gyoji::misc::string_c_escape(literal_escaped, literal_string, false);
 
     std::string desc = std::string("_") + std::to_string(result) + std::string(" = ") + op_name + std::string(" (");
     desc = desc + std::string(" \"") + literal_escaped;
@@ -468,7 +468,7 @@ OperationLiteralString::get_description() const
 // OperationLiteralInt
 //////////////////////////////////////////////
 OperationLiteralInt::OperationLiteralInt(
-    const JLang::context::SourceReference & _src_ref,
+    const Gyoji::context::SourceReference & _src_ref,
     size_t _result,
     Type::TypeType _literal_type,
     unsigned char _literal_u8
@@ -485,7 +485,7 @@ OperationLiteralInt::OperationLiteralInt(
     , literal_i64(0)
 {}
 OperationLiteralInt::OperationLiteralInt(
-    const JLang::context::SourceReference & _src_ref,
+    const Gyoji::context::SourceReference & _src_ref,
     size_t _result,
     Type::TypeType _literal_type,
     unsigned short _literal_u16
@@ -502,7 +502,7 @@ OperationLiteralInt::OperationLiteralInt(
     , literal_i64(0)
 {}
 OperationLiteralInt::OperationLiteralInt(
-    const JLang::context::SourceReference & _src_ref,
+    const Gyoji::context::SourceReference & _src_ref,
     size_t _result,
     Type::TypeType _literal_type,
     unsigned int _literal_u32
@@ -519,7 +519,7 @@ OperationLiteralInt::OperationLiteralInt(
     , literal_i64(0)
 {}
 OperationLiteralInt::OperationLiteralInt(
-    const JLang::context::SourceReference & _src_ref,
+    const Gyoji::context::SourceReference & _src_ref,
     size_t _result,
     Type::TypeType _literal_type,
     unsigned long _literal_u64
@@ -537,7 +537,7 @@ OperationLiteralInt::OperationLiteralInt(
 {}
 /////
 OperationLiteralInt::OperationLiteralInt(
-    const JLang::context::SourceReference & _src_ref,
+    const Gyoji::context::SourceReference & _src_ref,
     size_t _result,
     Type::TypeType _literal_type,
     char _literal_i8
@@ -554,7 +554,7 @@ OperationLiteralInt::OperationLiteralInt(
     , literal_i64(0)
 {}
 OperationLiteralInt::OperationLiteralInt(
-    const JLang::context::SourceReference & _src_ref,
+    const Gyoji::context::SourceReference & _src_ref,
     size_t _result,
     Type::TypeType _literal_type,
     short _literal_i16
@@ -571,7 +571,7 @@ OperationLiteralInt::OperationLiteralInt(
     , literal_i64(0)
 {}
 OperationLiteralInt::OperationLiteralInt(
-    const JLang::context::SourceReference & _src_ref,
+    const Gyoji::context::SourceReference & _src_ref,
     size_t _result,
     Type::TypeType _literal_type,
     int _literal_i32
@@ -588,7 +588,7 @@ OperationLiteralInt::OperationLiteralInt(
     , literal_i64(0)
 {}
 OperationLiteralInt::OperationLiteralInt(
-    const JLang::context::SourceReference & _src_ref,
+    const Gyoji::context::SourceReference & _src_ref,
     size_t _result,
     Type::TypeType _literal_type,
     long _literal_i64
@@ -693,7 +693,7 @@ OperationLiteralInt::get_description() const
 //////////////////////////////////////////////
 	    
 OperationLiteralFloat::OperationLiteralFloat(
-    const JLang::context::SourceReference & _src_ref,
+    const Gyoji::context::SourceReference & _src_ref,
     size_t _result,
     float _literal_float
     )
@@ -703,7 +703,7 @@ OperationLiteralFloat::OperationLiteralFloat(
     , literal_float_f64(0.0)
 {}
 OperationLiteralFloat::OperationLiteralFloat(
-    const JLang::context::SourceReference & _src_ref,
+    const Gyoji::context::SourceReference & _src_ref,
     size_t _result,
     double _literal_float
     )
@@ -755,7 +755,7 @@ OperationLiteralFloat::get_description() const
 // OperationLiteralBool
 //////////////////////////////////////////////
 OperationLiteralBool::OperationLiteralBool(
-	    const JLang::context::SourceReference & _src_ref,
+	    const Gyoji::context::SourceReference & _src_ref,
 	    size_t _result,
 	    bool _literal_bool
 	    )
@@ -781,7 +781,7 @@ OperationLiteralBool::get_description() const
 // OperationLiteralNull
 //////////////////////////////////////////////
 OperationLiteralNull::OperationLiteralNull(
-	    const JLang::context::SourceReference & _src_ref,
+	    const Gyoji::context::SourceReference & _src_ref,
 	    size_t _result
 	    )
     : Operation(OP_LITERAL_NULL, _src_ref, _result)
@@ -802,7 +802,7 @@ OperationLiteralNull::get_description() const
 // OperationJumpConditional
 //////////////////////////////////////////////
 OperationJumpConditional::OperationJumpConditional(
-    const JLang::context::SourceReference & _src_ref,
+    const Gyoji::context::SourceReference & _src_ref,
     size_t _operand,
     size_t _if_block,
     size_t _else_block
@@ -831,7 +831,7 @@ OperationJumpConditional::get_description() const
 // OperationJump
 //////////////////////////////////////////////
 OperationJump::OperationJump(
-    const JLang::context::SourceReference & _src_ref,
+    const Gyoji::context::SourceReference & _src_ref,
     size_t _block
     )
     : Operation(OP_JUMP, _src_ref, 0, _block)
@@ -855,7 +855,7 @@ OperationJump::get_description() const
 // OperationReturn
 //////////////////////////////////////////////
 OperationReturn::OperationReturn(
-    const JLang::context::SourceReference & _src_ref,
+    const Gyoji::context::SourceReference & _src_ref,
     size_t _operand
     )
     : Operation(OP_RETURN, _src_ref, 0, _operand)
@@ -879,7 +879,7 @@ OperationReturn::get_description() const
 // OperationLocalDeclare
 //////////////////////////////////////////////
 OperationLocalDeclare::OperationLocalDeclare(
-    const JLang::context::SourceReference & _src_ref,
+    const Gyoji::context::SourceReference & _src_ref,
     std::string _variable,
     const Type *_variable_type
     )
@@ -912,7 +912,7 @@ OperationLocalDeclare::get_description() const
 // OperationLocalUndeclare
 //////////////////////////////////////////////
 OperationLocalUndeclare::OperationLocalUndeclare(
-    const JLang::context::SourceReference & _src_ref,
+    const Gyoji::context::SourceReference & _src_ref,
     std::string _variable
     )
     : Operation(OP_LOCAL_UNDECLARE, _src_ref, 0)
@@ -937,7 +937,7 @@ OperationLocalUndeclare::get_description() const
 // OperationSizeofType
 //////////////////////////////////////////////
 OperationSizeofType::OperationSizeofType(
-    const JLang::context::SourceReference & _src_ref,
+    const Gyoji::context::SourceReference & _src_ref,
     size_t _result,
     const Type *_type
     )

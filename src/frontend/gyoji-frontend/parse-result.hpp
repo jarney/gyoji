@@ -1,0 +1,193 @@
+#ifndef _GYOJI_INTERNAL
+#error "This header is intended to be used internally as a part of the Gyoji front-end.  Please include frontend.hpp instead."
+#endif
+#pragma once
+
+namespace Gyoji::frontend::yacc {
+    class YaccParser;
+    class LexContext;
+}
+
+/*!
+ *  \addtogroup Frontend
+ *  @{
+ */
+namespace Gyoji::frontend {
+    class Parser;
+
+    class Symbol {
+    public:
+	Symbol(std::string _name, const Gyoji::context::SourceReference & _src_ref);
+	Symbol(const Symbol & _other);
+	~Symbol();
+	std::string name;
+	const Gyoji::context::SourceReference src_ref;
+    };
+    
+    /**
+     * This class represents the result of parsing a source-file.
+     * This class holds all of the results relevant to that parse.
+     *
+     * The syntax tree is held by the "translation_unit" which represents
+     * the parse-tree of any valid parse of the input.
+     *
+     * In the event that some or all of the input could not be parsed
+     * correctly, the "errors" object contains detailed information
+     * about exactly what is wrong with the parse including any errors
+     * and descriptions as well as context information surrounding the site
+     * where the parse failed.
+     *
+     * In addition, the source-file may make use of namespaces to define
+     * types, classes, functions inside them and organize them in
+     * a heirarchy.  The "namespaces" object returns information about
+     * the types and namespaces they are defined inside of including
+     * the fully-qualified type names, for example, a primitive type
+     * will have name "::u32", for example, whereas another type
+     * may be defined in the "foo" namespace as "::foo::bar".
+     *
+     * Finally, the "token_stream" contains the list of tokens
+     * parsed by the lexer including verbatim copies of the input.
+     * This data may be useful for code-formatters or producing rich
+     * error messages with the full context of the input.
+     */
+    class ParseResult {
+    public:
+	/**
+	 * The constructor requires the caller to pass a namespace context
+	 * in order to define the built-in primitive types.
+	 * 
+	 * This is important because the primitive types are generally governed
+	 * by the back-end code-generation layer which must inform the initial
+	 * set of primitive types available.
+	 */
+	ParseResult(
+	    Gyoji::context::CompilerContext & _compiler_context,
+	    Gyoji::owned<Gyoji::frontend::namespaces::NamespaceContext> _namespace_context
+	    );
+	/**
+	 * Destructor, nothing special.
+	 */
+	~ParseResult();
+	
+	/**
+	 * This returns a reference to the namespace context containing
+	 * the namespaces defined by the source-file and the types and
+	 * classes defined in them.  Note that this reference may only
+	 * be accessed for as long as this (ParseResult) object is in scope
+	 * since the namespace context is owned by this object.
+	 */
+	const Gyoji::frontend::namespaces::NamespaceContext & get_namespace_context() const;
+	
+	/**
+	 * This returns true if any parse errors occurred during the parse of the
+	 * source-file.
+	 */
+	bool has_errors() const;
+	
+	/**
+	 * This returns an object containing the details of any parse errors
+	 * that occurred during the parse.
+	 */
+	Gyoji::context::Errors & get_errors() const;
+	
+	/**
+	 * This returns true if the parse resulted in a valid TranslationUnit.
+	 * That is to say, if the parse was able to parse correctly or recover
+	 * from any recoverable errors and produce a parse tree.  Note that
+	 * if the has_errors() returns true, then the resulting parse tree
+	 * may be inaccurate or incomplete.
+	 */
+	bool has_translation_unit() const;
+	
+	/**
+	 * If the parse resulted in a valid parse, then the translation unit
+	 * returns the strongly-typed parse tree for the source-file.  This
+	 * can be used for multiple purposes including to reproduce the input
+	 * either identically or as a "pretty print" version.  It can also be
+	 * used to drive the intermediate representation and code-generation
+	 * in order to compile output.  The front-end does not perform any of those
+	 * tasks, but the parse tree generated here is a faithful and strongly-typed
+	 * representation of the input.
+	 */
+	const Gyoji::frontend::tree::TranslationUnit & get_translation_unit() const;
+	
+	/**
+	 * This returns the token stream associated with the parse.
+	 * The token stream is the series of tokens produced by the
+	 * lexical analysis (gyoji.l) and represents the input data
+	 * organized as tokens.  This token stream can be used to
+	 * reconstruct all of the input data, but also allows structured
+	 * access to it for the purpose of producing structured error messages.
+	 */
+	const Gyoji::context::TokenStream & get_token_stream() const;
+	
+	/**
+	 * Returns the compiler context that this was parsed for.
+	 */
+	const Gyoji::context::CompilerContext & get_compiler_context() const;
+	
+	friend Gyoji::frontend::yacc::YaccParser;
+	friend Gyoji::frontend::yacc::LexContext;
+	friend Gyoji::frontend::Parser;
+
+	void symbol_table_dump();
+	
+	const Symbol *symbol_get_or_create(std::string symbol, const Gyoji::context::SourceReference & _src_ref);
+	
+	const Symbol *symbol_get(std::string symbol, const Gyoji::context::SourceReference & _src_ref) const;
+	
+	void symbol_define(std::string symbol, const Gyoji::context::SourceReference & _src_ref);
+	/**
+	 * Searches for the symbol 'name' in the current namespace context.
+	 * Returns all possible symbol matches for the given name.
+	 *
+	 * The name may be fully-qualified like '::foo::bar' and it may
+	 * be a simple name like 'bar'.  The namespace search path
+	 * and 'using' clauses will be used to find all possible
+	 * namespace prefixes and each namespace prefix will be used
+	 * to search for the existence of the symbol.  If found, it will
+	 * return the symbol.  If not found, it will return nullptr.
+	 */
+	const Symbol *symbol_find(std::string name) const;
+    private:
+	/**
+	 * This is used internally by the YACC grammar to return the parse tree.
+	 */
+	void set_translation_unit(Gyoji::owned<Gyoji::frontend::tree::TranslationUnit> tu);
+	
+	Gyoji::owned<Gyoji::frontend::namespaces::NamespaceContext> namespace_context;
+	
+	Gyoji::context::CompilerContext & compiler_context;
+	
+	Gyoji::owned<Gyoji::frontend::tree::TranslationUnit> translation_unit;
+
+	/**
+	 * This is the 'symbol table' which contains all of the globally
+	 * accessible symbols.  This includes global variables and functions
+	 * accessible within various namespaces.  The name of each symbol is
+	 * already mangled so it can be passed down to the code-generation
+	 * stage and used in the MIR so that it does not have to be namespace-aware.
+	 *
+	 * For example, namespace foo { u32 bar(); }
+	 * will have the symbol name foo::bar() already mangled
+	 * and that is the symbol used in the "fully_qualified" name.
+	 */
+	std::map<std::string, Symbol> symbol_table;
+	
+	// We probably need a 'symbol table' which keeps track of global
+	// variables and functions.  The index would be the 'symbol name'
+	// which would consist of the unique name.  For globals, this is just
+	// the symbol name as a fully qualified name.  For functions, this is
+	// the fully namespace qualified name along with mangled argument list
+	// in C++ style.  It should be C++ compatible mangling (maybe?)
+
+	// When we encounter an unqualified name, we try applying the current
+	// search space (usings) and current scopes, try variations on the
+	// name based on the path until we get a match.  If there's no match, we're
+	// clear to create a new one.
+    };
+    
+};
+
+
+/*! @} End of Doxygen Groups*/

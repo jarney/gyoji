@@ -1,6 +1,6 @@
-#include <jlang-misc/input-source.hpp>
+#include <gyoji-misc/input-source.hpp>
 
-using namespace JLang::misc;
+using namespace Gyoji::misc;
 
 InputSource::InputSource()
 {}

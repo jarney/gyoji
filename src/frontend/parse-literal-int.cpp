@@ -1,8 +1,8 @@
-#include <jlang-frontend.hpp>
-#include <jlang-misc/jstring.hpp>
+#include <gyoji-frontend.hpp>
+#include <gyoji-misc/jstring.hpp>
 
-using namespace JLang::frontend::integers;
-using namespace JLang::mir;
+using namespace Gyoji::frontend::integers;
+using namespace Gyoji::mir;
 
 static std::string u8_type("u8");
 static std::string u16_type("u16");
@@ -14,10 +14,10 @@ static std::string i16_type("i16");
 static std::string i32_type("i32");
 static std::string i64_type("i64");
 
-bool JLang::frontend::integers::parse_literal_int(
-    const JLang::context::CompilerContext & compiler_context,
-    const JLang::mir::Types & types,
-    const JLang::frontend::tree::Terminal & literal_int_token,
+bool Gyoji::frontend::integers::parse_literal_int(
+    const Gyoji::context::CompilerContext & compiler_context,
+    const Gyoji::mir::Types & types,
+    const Gyoji::frontend::tree::Terminal & literal_int_token,
     ParseLiteralIntResult & result
     )
 {
@@ -37,35 +37,35 @@ bool JLang::frontend::integers::parse_literal_int(
 
     const std::string & token_value = literal_int_token.get_value();
     size_t len = token_value.size();
-    if (JLang::misc::endswith(token_value, u8_type)) {
+    if (Gyoji::misc::endswith(token_value, u8_type)) {
 	integer_part = token_value.substr(0, len - u8_type.size());
 	type_part = types.get_type("u8");
     }
-    else if (JLang::misc::endswith(token_value, u16_type)) {
+    else if (Gyoji::misc::endswith(token_value, u16_type)) {
 	integer_part = token_value.substr(0, len - u16_type.size());
 	type_part = types.get_type("u16");
     }
-    else if (JLang::misc::endswith(token_value, u32_type)) {
+    else if (Gyoji::misc::endswith(token_value, u32_type)) {
 	integer_part = token_value.substr(0, len - u32_type.size());
 	type_part = types.get_type("u32");
     }
-    else if (JLang::misc::endswith(token_value, u64_type)) {
+    else if (Gyoji::misc::endswith(token_value, u64_type)) {
 	integer_part = token_value.substr(0, len - u64_type.size());
 	type_part = types.get_type("u64");
     }
-    else if (JLang::misc::endswith(token_value, i8_type)) {
+    else if (Gyoji::misc::endswith(token_value, i8_type)) {
 	integer_part = token_value.substr(0, len - i8_type.size());
 	type_part = types.get_type("i8");
     }
-    else if (JLang::misc::endswith(token_value, i16_type)) {
+    else if (Gyoji::misc::endswith(token_value, i16_type)) {
 	integer_part = token_value.substr(0, len - i16_type.size());
 	type_part = types.get_type("i16");
     }
-    else if (JLang::misc::endswith(token_value, i32_type)) {
+    else if (Gyoji::misc::endswith(token_value, i32_type)) {
 	integer_part = token_value.substr(0, len - i32_type.size());
 	type_part = types.get_type("i32");
     }
-    else if (JLang::misc::endswith(token_value, i64_type)) {
+    else if (Gyoji::misc::endswith(token_value, i64_type)) {
 	integer_part = token_value.substr(0, len - i64_type.size());
 	type_part = types.get_type("i64");
     }
@@ -87,7 +87,7 @@ bool JLang::frontend::integers::parse_literal_int(
     // starts with a '-' then we flip the sign bit
     // to make it negative and remove the '-' so
     // we can parse the radix part.
-    if (JLang::misc::startswith(integer_part, "-")) {
+    if (Gyoji::misc::startswith(integer_part, "-")) {
 	integer_part = integer_part.substr(1);
 	sign_positive = false;
     }
@@ -114,19 +114,19 @@ bool JLang::frontend::integers::parse_literal_int(
     // supported for readability purposes and play
     // no semantic role.
     // Hex is supported
-    integer_part = JLang::misc::string_remove(integer_part, "_");
-    if (JLang::misc::startswith(integer_part, "0x")) {
-	integer_part = JLang::misc::string_remove(integer_part, "0x");
+    integer_part = Gyoji::misc::string_remove(integer_part, "_");
+    if (Gyoji::misc::startswith(integer_part, "0x")) {
+	integer_part = Gyoji::misc::string_remove(integer_part, "0x");
 	radix = 16;
     }
     // Binary is supported
-    else if (JLang::misc::startswith(integer_part, "0b")) {
-	integer_part = JLang::misc::string_remove(integer_part, "0b");
+    else if (Gyoji::misc::startswith(integer_part, "0b")) {
+	integer_part = Gyoji::misc::string_remove(integer_part, "0b");
 	radix = 2;
     }
     // Octal is supported.
-    else if (JLang::misc::startswith(integer_part, "0o")) {
-	integer_part = JLang::misc::string_remove(integer_part, "0o");
+    else if (Gyoji::misc::startswith(integer_part, "0o")) {
+	integer_part = Gyoji::misc::string_remove(integer_part, "0o");
 	radix = 8;
     }
     // If radix is not specified, assume decimal.

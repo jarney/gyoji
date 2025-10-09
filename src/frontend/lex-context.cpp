@@ -1,16 +1,16 @@
-#include <jlang-frontend.hpp>
-#define _JLANG_INTERNAL
-#include <jlang-frontend/lex-context.hpp>
-#undef _JLANG_INTERNAL
-#include <jlang.l.hpp>
-#include <jlang.y.hpp>
+#include <gyoji-frontend.hpp>
+#define _GYOJI_INTERNAL
+#include <gyoji-frontend/lex-context.hpp>
+#undef _GYOJI_INTERNAL
+#include <gyoji.l.hpp>
+#include <gyoji.y.hpp>
 
-using namespace JLang::frontend::yacc;
+using namespace Gyoji::frontend::yacc;
 
 LexContext::LexContext(
-    JLang::frontend::namespaces::NamespaceContext &_namespace_context,
-    JLang::context::CompilerContext & _compiler_context,
-    JLang::misc::InputSource &_input_source)
+    Gyoji::frontend::namespaces::NamespaceContext &_namespace_context,
+    Gyoji::context::CompilerContext & _compiler_context,
+    Gyoji::misc::InputSource &_input_source)
     : namespace_context(_namespace_context)
     , input_source(_input_source)
     , compiler_context(_compiler_context)

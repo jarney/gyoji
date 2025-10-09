@@ -1,18 +1,18 @@
-#include <jlang-frontend/function-resolver.hpp>
-#include <jlang-misc/jstring.hpp>
+#include <gyoji-frontend/function-resolver.hpp>
+#include <gyoji-misc/jstring.hpp>
 #include <variant>
 #include <stdio.h>
 
-using namespace JLang::mir;
-using namespace JLang::context;
-using namespace JLang::frontend;
-using namespace JLang::frontend::tree;
+using namespace Gyoji::mir;
+using namespace Gyoji::context;
+using namespace Gyoji::frontend;
+using namespace Gyoji::frontend::tree;
 
 FunctionResolver::FunctionResolver(
-    JLang::context::CompilerContext & _compiler_context,
-    const JLang::frontend::ParseResult & _parse_result,
-    JLang::mir::MIR & _mir,
-    JLang::frontend::TypeResolver & _type_resolver
+    Gyoji::context::CompilerContext & _compiler_context,
+    const Gyoji::frontend::ParseResult & _parse_result,
+    Gyoji::mir::MIR & _mir,
+    Gyoji::frontend::TypeResolver & _type_resolver
     )
     : compiler_context(_compiler_context)
     , parse_result(_parse_result)
@@ -52,20 +52,20 @@ FunctionResolver::extract_from_class_definition(const ClassDefinition & definiti
 }
 
 bool
-FunctionResolver::extract_functions(const std::vector<JLang::owned<FileStatement>> & statements)
+FunctionResolver::extract_functions(const std::vector<Gyoji::owned<FileStatement>> & statements)
 {
     for (const auto & statement : statements) {
 	const auto & file_statement = statement->get_statement();
-	if (std::holds_alternative<JLang::owned<FileStatementFunctionDeclaration>>(file_statement)) {
+	if (std::holds_alternative<Gyoji::owned<FileStatementFunctionDeclaration>>(file_statement)) {
 	    // Nothing, no functions can exist here.
 	}
-	else if (std::holds_alternative<JLang::owned<FileStatementFunctionDefinition>>(file_statement)) {
+	else if (std::holds_alternative<Gyoji::owned<FileStatementFunctionDefinition>>(file_statement)) {
 	    // This is the only place that functions can be extracted from.
 	    // We make this a separate object because we want convenient
 	    // access to certain pieces of context used in resolution.
 	    FunctionDefinitionResolver function_def_resolver(
 		compiler_context,
-		*std::get<JLang::owned<FileStatementFunctionDefinition>>(file_statement),
+		*std::get<Gyoji::owned<FileStatementFunctionDefinition>>(file_statement),
 		mir,
 		type_resolver
 		);
@@ -73,36 +73,36 @@ FunctionResolver::extract_functions(const std::vector<JLang::owned<FileStatement
 		return false;
 	    }
 	}
-	else if (std::holds_alternative<JLang::owned<FileStatementGlobalDefinition>>(file_statement)) {
+	else if (std::holds_alternative<Gyoji::owned<FileStatementGlobalDefinition>>(file_statement)) {
 	    // TODO:
 	    // We want to resolve global variables at this stage, but
 	    // for now, let's handle resolution of local and stack variables
 	    // before we dive into global resolution.
 	}
-	else if (std::holds_alternative<JLang::owned<ClassDeclaration>>(file_statement)) {
+	else if (std::holds_alternative<Gyoji::owned<ClassDeclaration>>(file_statement)) {
 	    // Nothing, no functions can exist here.
 	    // Class declarations should already be resolved by the type_resolver earlier.
 	}
-	else if (std::holds_alternative<JLang::owned<ClassDefinition>>(file_statement)) {
+	else if (std::holds_alternative<Gyoji::owned<ClassDefinition>>(file_statement)) {
 	    // Constructors, Destructors, and methods are special cases.
-	    if (!extract_from_class_definition(*std::get<JLang::owned<ClassDefinition>>(file_statement))) {
+	    if (!extract_from_class_definition(*std::get<Gyoji::owned<ClassDefinition>>(file_statement))) {
 		return false;
 	    }
 	}
-	else if (std::holds_alternative<JLang::owned<EnumDefinition>>(file_statement)) {
+	else if (std::holds_alternative<Gyoji::owned<EnumDefinition>>(file_statement)) {
 	    // Nothing, no functions can exist here.
 	    // Enums should already be resolved by the type_resolver earlier.
 	}
-	else if (std::holds_alternative<JLang::owned<TypeDefinition>>(file_statement)) {
+	else if (std::holds_alternative<Gyoji::owned<TypeDefinition>>(file_statement)) {
 	    // Nothing, no functions can exist here.
 	    // Typedefs should already be resolved by the type_resolver earlier.
 	}
-	else if (std::holds_alternative<JLang::owned<FileStatementNamespace>>(file_statement)) {
-	    if (!extract_from_namespace(*std::get<JLang::owned<FileStatementNamespace>>(file_statement))) {
+	else if (std::holds_alternative<Gyoji::owned<FileStatementNamespace>>(file_statement)) {
+	    if (!extract_from_namespace(*std::get<Gyoji::owned<FileStatementNamespace>>(file_statement))) {
 		return false;
 	    }
 	}
-	else if (std::holds_alternative<JLang::owned<FileStatementUsing>>(file_statement)) {
+	else if (std::holds_alternative<Gyoji::owned<FileStatementUsing>>(file_statement)) {
 	    // Namespace using is largely handled by the parse stage, so we don't
 	    // need to do any function resolution here.
 	}
@@ -124,10 +124,10 @@ FunctionResolver::extract_functions(const std::vector<JLang::owned<FileStatement
 ////////////////////////////////////////////////
 
 FunctionDefinitionResolver::FunctionDefinitionResolver(
-    JLang::context::CompilerContext & _compiler_context,
-    const JLang::frontend::tree::FileStatementFunctionDefinition & _function_definition,
-    JLang::mir::MIR & _mir,
-    JLang::frontend::TypeResolver & _type_resolver
+    Gyoji::context::CompilerContext & _compiler_context,
+    const Gyoji::frontend::tree::FileStatementFunctionDefinition & _function_definition,
+    Gyoji::mir::MIR & _mir,
+    Gyoji::frontend::TypeResolver & _type_resolver
     )
     : compiler_context(_compiler_context)
     , function_definition(_function_definition)
@@ -160,7 +160,7 @@ FunctionDefinitionResolver::resolve()
     const auto & function_definition_args = function_argument_list.get_arguments();
     for (const auto & function_definition_arg : function_definition_args) {
        std::string name = function_definition_arg->get_name();
-       const JLang::mir::Type * mir_type = type_resolver.extract_from_type_specifier(function_definition_arg->get_type_specifier());
+       const Gyoji::mir::Type * mir_type = type_resolver.extract_from_type_specifier(function_definition_arg->get_type_specifier());
        
        FunctionArgument arg(name, mir_type);
        arguments.push_back(arg);
@@ -198,7 +198,7 @@ FunctionDefinitionResolver::resolve()
 bool
 FunctionDefinitionResolver::extract_from_expression_primary_identifier(
     size_t & returned_tmpvar,
-    const JLang::frontend::tree::ExpressionPrimaryIdentifier & expression
+    const Gyoji::frontend::tree::ExpressionPrimaryIdentifier & expression
     )
 {
     // At this point, we should try to identify what this
@@ -220,7 +220,7 @@ FunctionDefinitionResolver::extract_from_expression_primary_identifier(
     // * Maybe we really should 'flatten' our access here.
     
     if (expression.get_identifier().get_identifier_type() == Terminal::IDENTIFIER_LOCAL_SCOPE) {
-	const JLang::frontend::LocalVariable *localvar = scope_tracker.get_variable(
+	const Gyoji::frontend::LocalVariable *localvar = scope_tracker.get_variable(
 	    expression.get_identifier().get_value()
 	    );
 	if (localvar != nullptr) {
@@ -266,7 +266,7 @@ FunctionDefinitionResolver::extract_from_expression_primary_identifier(
 	// Look in the list of functions,
 	// this might be a function pointer assignment or
 	// a global variable.
-	const JLang::mir::Symbol *symbol = mir.get_symbols().get_symbol(
+	const Gyoji::mir::Symbol *symbol = mir.get_symbols().get_symbol(
 	    expression.get_identifier().get_fully_qualified_name()
 	    );
 	if (symbol == nullptr) {
@@ -295,7 +295,7 @@ FunctionDefinitionResolver::extract_from_expression_primary_identifier(
 bool
 FunctionDefinitionResolver::extract_from_expression_primary_nested(
     size_t & returned_tmpvar,
-    const JLang::frontend::tree::ExpressionPrimaryNested & expression)
+    const Gyoji::frontend::tree::ExpressionPrimaryNested & expression)
 {
     // Nested expressions don't emit blocks on their own, just run whatever is nested.
     return extract_from_expression(
@@ -307,11 +307,11 @@ FunctionDefinitionResolver::extract_from_expression_primary_nested(
 bool
 FunctionDefinitionResolver::extract_from_expression_primary_literal_char(
     size_t & returned_tmpvar,
-    const JLang::frontend::tree::ExpressionPrimaryLiteralChar & expression)
+    const Gyoji::frontend::tree::ExpressionPrimaryLiteralChar & expression)
 {
     std::string string_unescaped;
     size_t location;
-    bool escape_success = JLang::misc::string_c_unescape(string_unescaped, location, expression.get_value(), true);
+    bool escape_success = Gyoji::misc::string_c_unescape(string_unescaped, location, expression.get_value(), true);
     char c;
     if (!escape_success) {
 	compiler_context
@@ -359,7 +359,7 @@ FunctionDefinitionResolver::extract_from_expression_primary_literal_char(
 bool
 FunctionDefinitionResolver::extract_from_expression_primary_literal_string(
     size_t & returned_tmpvar,
-    const JLang::frontend::tree::ExpressionPrimaryLiteralString & expression)
+    const Gyoji::frontend::tree::ExpressionPrimaryLiteralString & expression)
 {
     // The hardest part here is that we need to extract the escape sequences from
     // the source representation and place the raw data into the operation
@@ -368,7 +368,7 @@ FunctionDefinitionResolver::extract_from_expression_primary_literal_string(
 
     std::string string_unescaped;
     size_t location;
-    bool escape_success = JLang::misc::string_c_unescape(string_unescaped, location, expression.get_value(), false);
+    bool escape_success = Gyoji::misc::string_c_unescape(string_unescaped, location, expression.get_value(), false);
     if (!escape_success) {
 	compiler_context
 	    .get_errors()
@@ -400,12 +400,12 @@ FunctionDefinitionResolver::extract_from_expression_primary_literal_string(
 
 bool
 FunctionDefinitionResolver::create_constant_integer_one(
-    const JLang::mir::Type *type,
+    const Gyoji::mir::Type *type,
     size_t & returned_tmpvar,
-    const JLang::context::SourceReference & _src_ref
+    const Gyoji::context::SourceReference & _src_ref
 )
 {
-    JLang::frontend::integers::ParseLiteralIntResult parse_result;
+    Gyoji::frontend::integers::ParseLiteralIntResult parse_result;
     parse_result.parsed_type = type;
 
     switch (type->get_type()) {
@@ -448,15 +448,15 @@ FunctionDefinitionResolver::create_constant_integer_one(
 
 bool
 FunctionDefinitionResolver::create_constant_integer(
-    const JLang::frontend::integers::ParseLiteralIntResult & parse_result,
+    const Gyoji::frontend::integers::ParseLiteralIntResult & parse_result,
     size_t & returned_tmpvar,
-    const JLang::context::SourceReference & _src_ref
+    const Gyoji::context::SourceReference & _src_ref
     )
 {
     const Type *type_part = parse_result.parsed_type;
     returned_tmpvar = function->tmpvar_define(type_part);
     
-    JLang::owned<JLang::mir::Operation> operation;
+    Gyoji::owned<Gyoji::mir::Operation> operation;
     switch (type_part->get_type()) {
     case Type::TYPE_PRIMITIVE_u8:
     {
@@ -581,9 +581,9 @@ FunctionDefinitionResolver::create_constant_integer(
 bool
 FunctionDefinitionResolver::extract_from_expression_primary_literal_int(
     size_t & returned_tmpvar,
-    const JLang::frontend::tree::ExpressionPrimaryLiteralInt & expression)
+    const Gyoji::frontend::tree::ExpressionPrimaryLiteralInt & expression)
 {
-    JLang::frontend::integers::ParseLiteralIntResult parse_result;
+    Gyoji::frontend::integers::ParseLiteralIntResult parse_result;
     const Terminal & literal_int_token = expression.get_literal_int_token();
     bool parsed = parse_literal_int(compiler_context, mir.get_types(), literal_int_token, parse_result);
     if (!parsed || parse_result.parsed_type == nullptr) {
@@ -599,11 +599,11 @@ FunctionDefinitionResolver::extract_from_expression_primary_literal_int(
 bool
 FunctionDefinitionResolver::extract_from_expression_primary_literal_float(
     size_t & returned_tmpvar,
-    const JLang::frontend::tree::ExpressionPrimaryLiteralFloat & expression)
+    const Gyoji::frontend::tree::ExpressionPrimaryLiteralFloat & expression)
 {
     std::string literal_type_name = expression.get_type();
     returned_tmpvar = function->tmpvar_define(mir.get_types().get_type(literal_type_name));
-    JLang::owned<OperationLiteralFloat> operation;
+    Gyoji::owned<OperationLiteralFloat> operation;
     char *endptr;
     const char *source_cstring = expression.get_value().c_str();
     size_t length = expression.get_value().size();
@@ -908,7 +908,7 @@ FunctionDefinitionResolver::extract_from_expression_postfix_incdec(
 
 bool
 FunctionDefinitionResolver::create_incdec_operation(
-    const JLang::context::SourceReference & src_ref,
+    const Gyoji::context::SourceReference & src_ref,
     size_t & returned_tmpvar,
     const size_t & operand_tmpvar,
     bool is_increment,
@@ -1165,7 +1165,7 @@ FunctionDefinitionResolver::extract_from_expression_unary_sizeof_type(
 
 bool
 FunctionDefinitionResolver::numeric_widen(
-    const JLang::context::SourceReference & _src_ref,
+    const Gyoji::context::SourceReference & _src_ref,
     size_t & _widen_var,
     const Type *widen_to
     )
@@ -1203,12 +1203,12 @@ FunctionDefinitionResolver::numeric_widen(
 }
 bool
 FunctionDefinitionResolver::numeric_widen_binary_operation(
-    const JLang::context::SourceReference & _src_ref,
+    const Gyoji::context::SourceReference & _src_ref,
     size_t & a_tmpvar,
     size_t & b_tmpvar,
-    const JLang::mir::Type *atype,
-    const JLang::mir::Type *btype,
-    const JLang::mir::Type **widened
+    const Gyoji::mir::Type *atype,
+    const Gyoji::mir::Type *btype,
+    const Gyoji::mir::Type **widened
     )
 {
     if (atype->is_integer()) {
@@ -1287,7 +1287,7 @@ FunctionDefinitionResolver::numeric_widen_binary_operation(
 
 bool
 FunctionDefinitionResolver::handle_binary_operation_arithmetic(
-    const JLang::context::SourceReference & _src_ref,
+    const Gyoji::context::SourceReference & _src_ref,
     Operation::OperationType type,
     size_t & returned_tmpvar,
     size_t a_tmpvar,
@@ -1370,7 +1370,7 @@ FunctionDefinitionResolver::handle_binary_operation_arithmetic(
 
 bool
 FunctionDefinitionResolver::handle_binary_operation_logical(
-    const JLang::context::SourceReference & _src_ref,
+    const Gyoji::context::SourceReference & _src_ref,
     Operation::OperationType type,
     size_t & returned_tmpvar,
     size_t a_tmpvar,
@@ -1405,7 +1405,7 @@ FunctionDefinitionResolver::handle_binary_operation_logical(
 
 bool
 FunctionDefinitionResolver::handle_binary_operation_bitwise(
-    const JLang::context::SourceReference & _src_ref,
+    const Gyoji::context::SourceReference & _src_ref,
     Operation::OperationType type,
     size_t & returned_tmpvar,
     size_t a_tmpvar,
@@ -1457,7 +1457,7 @@ FunctionDefinitionResolver::handle_binary_operation_bitwise(
 
 bool
 FunctionDefinitionResolver::handle_binary_operation_shift(
-    const JLang::context::SourceReference & _src_ref,
+    const Gyoji::context::SourceReference & _src_ref,
     Operation::OperationType type,
     size_t & returned_tmpvar,
     size_t a_tmpvar,
@@ -1508,7 +1508,7 @@ FunctionDefinitionResolver::handle_binary_operation_shift(
 
 bool
 FunctionDefinitionResolver::handle_binary_operation_compare(
-    const JLang::context::SourceReference & _src_ref,
+    const Gyoji::context::SourceReference & _src_ref,
     Operation::OperationType type,
     size_t & returned_tmpvar,
     size_t a_tmpvar,
@@ -1595,7 +1595,7 @@ FunctionDefinitionResolver::handle_binary_operation_compare(
 
 bool
 FunctionDefinitionResolver::handle_binary_operation_assignment(
-    const JLang::context::SourceReference & _src_ref,
+    const Gyoji::context::SourceReference & _src_ref,
     Operation::OperationType type,
     size_t & returned_tmpvar,
     size_t a_tmpvar,
@@ -2144,68 +2144,68 @@ FunctionDefinitionResolver::extract_from_expression(
 {
   const auto & expression_type = expression_container.get_expression();
 
-  if (std::holds_alternative<JLang::owned<ExpressionPrimaryIdentifier>>(expression_type)) {
-    const auto & expression = std::get<JLang::owned<ExpressionPrimaryIdentifier>>(expression_type);
+  if (std::holds_alternative<Gyoji::owned<ExpressionPrimaryIdentifier>>(expression_type)) {
+    const auto & expression = std::get<Gyoji::owned<ExpressionPrimaryIdentifier>>(expression_type);
     return extract_from_expression_primary_identifier(returned_tmpvar, *expression);
   }
-  else if (std::holds_alternative<JLang::owned<ExpressionPrimaryNested>>(expression_type)) {
-    const auto & expression = std::get<JLang::owned<ExpressionPrimaryNested>>(expression_type);
+  else if (std::holds_alternative<Gyoji::owned<ExpressionPrimaryNested>>(expression_type)) {
+    const auto & expression = std::get<Gyoji::owned<ExpressionPrimaryNested>>(expression_type);
     return extract_from_expression_primary_nested(returned_tmpvar, *expression);
   }
-  else if (std::holds_alternative<JLang::owned<ExpressionPrimaryLiteralChar>>(expression_type)) {
-    const auto & expression = std::get<JLang::owned<ExpressionPrimaryLiteralChar>>(expression_type);
+  else if (std::holds_alternative<Gyoji::owned<ExpressionPrimaryLiteralChar>>(expression_type)) {
+    const auto & expression = std::get<Gyoji::owned<ExpressionPrimaryLiteralChar>>(expression_type);
     return extract_from_expression_primary_literal_char(returned_tmpvar, *expression);
   }
-  else if (std::holds_alternative<JLang::owned<ExpressionPrimaryLiteralString>>(expression_type)) {
-    const auto & expression = std::get<JLang::owned<ExpressionPrimaryLiteralString>>(expression_type);
+  else if (std::holds_alternative<Gyoji::owned<ExpressionPrimaryLiteralString>>(expression_type)) {
+    const auto & expression = std::get<Gyoji::owned<ExpressionPrimaryLiteralString>>(expression_type);
     return extract_from_expression_primary_literal_string(returned_tmpvar, *expression);
   }
-  else if (std::holds_alternative<JLang::owned<ExpressionPrimaryLiteralInt>>(expression_type)) {
-    const auto & expression = std::get<JLang::owned<ExpressionPrimaryLiteralInt>>(expression_type);
+  else if (std::holds_alternative<Gyoji::owned<ExpressionPrimaryLiteralInt>>(expression_type)) {
+    const auto & expression = std::get<Gyoji::owned<ExpressionPrimaryLiteralInt>>(expression_type);
     return extract_from_expression_primary_literal_int(returned_tmpvar, *expression);
   }
-  else if (std::holds_alternative<JLang::owned<ExpressionPrimaryLiteralFloat>>(expression_type)) {
-    const auto & expression = std::get<JLang::owned<ExpressionPrimaryLiteralFloat>>(expression_type);
+  else if (std::holds_alternative<Gyoji::owned<ExpressionPrimaryLiteralFloat>>(expression_type)) {
+    const auto & expression = std::get<Gyoji::owned<ExpressionPrimaryLiteralFloat>>(expression_type);
     return extract_from_expression_primary_literal_float(returned_tmpvar, *expression);
   }
-  else if (std::holds_alternative<JLang::owned<ExpressionPostfixArrayIndex>>(expression_type)) {
-    const auto & expression = std::get<JLang::owned<ExpressionPostfixArrayIndex>>(expression_type);
+  else if (std::holds_alternative<Gyoji::owned<ExpressionPostfixArrayIndex>>(expression_type)) {
+    const auto & expression = std::get<Gyoji::owned<ExpressionPostfixArrayIndex>>(expression_type);
     return extract_from_expression_postfix_array_index(returned_tmpvar, *expression);
   }
-  else if (std::holds_alternative<JLang::owned<ExpressionPostfixFunctionCall>>(expression_type)) {
-    const auto & expression = std::get<JLang::owned<ExpressionPostfixFunctionCall>>(expression_type);
+  else if (std::holds_alternative<Gyoji::owned<ExpressionPostfixFunctionCall>>(expression_type)) {
+    const auto & expression = std::get<Gyoji::owned<ExpressionPostfixFunctionCall>>(expression_type);
     return extract_from_expression_postfix_function_call(returned_tmpvar, *expression);
   }
-  else if (std::holds_alternative<JLang::owned<ExpressionPostfixDot>>(expression_type)) {
-    const auto & expression = std::get<JLang::owned<ExpressionPostfixDot>>(expression_type);
+  else if (std::holds_alternative<Gyoji::owned<ExpressionPostfixDot>>(expression_type)) {
+    const auto & expression = std::get<Gyoji::owned<ExpressionPostfixDot>>(expression_type);
     return extract_from_expression_postfix_dot(returned_tmpvar, *expression);
   }
-  else if (std::holds_alternative<JLang::owned<ExpressionPostfixArrow>>(expression_type)) {
-    const auto & expression = std::get<JLang::owned<ExpressionPostfixArrow>>(expression_type);
+  else if (std::holds_alternative<Gyoji::owned<ExpressionPostfixArrow>>(expression_type)) {
+    const auto & expression = std::get<Gyoji::owned<ExpressionPostfixArrow>>(expression_type);
     return extract_from_expression_postfix_arrow(returned_tmpvar, *expression);
   }
-  else if (std::holds_alternative<JLang::owned<ExpressionPostfixIncDec>>(expression_type)) {
-    const auto & expression = std::get<JLang::owned<ExpressionPostfixIncDec>>(expression_type);
+  else if (std::holds_alternative<Gyoji::owned<ExpressionPostfixIncDec>>(expression_type)) {
+    const auto & expression = std::get<Gyoji::owned<ExpressionPostfixIncDec>>(expression_type);
     return extract_from_expression_postfix_incdec(returned_tmpvar, *expression);
   }
-  else if (std::holds_alternative<JLang::owned<ExpressionUnaryPrefix>>(expression_type)) {
-    const auto & expression = std::get<JLang::owned<ExpressionUnaryPrefix>>(expression_type);
+  else if (std::holds_alternative<Gyoji::owned<ExpressionUnaryPrefix>>(expression_type)) {
+    const auto & expression = std::get<Gyoji::owned<ExpressionUnaryPrefix>>(expression_type);
     return extract_from_expression_unary_prefix(returned_tmpvar, *expression);
   }
-  else if (std::holds_alternative<JLang::owned<ExpressionUnarySizeofType>>(expression_type)) {
-    const auto & expression = std::get<JLang::owned<ExpressionUnarySizeofType>>(expression_type);
+  else if (std::holds_alternative<Gyoji::owned<ExpressionUnarySizeofType>>(expression_type)) {
+    const auto & expression = std::get<Gyoji::owned<ExpressionUnarySizeofType>>(expression_type);
     return extract_from_expression_unary_sizeof_type(returned_tmpvar, *expression);
   }
-  else if (std::holds_alternative<JLang::owned<ExpressionBinary>>(expression_type)) {
-    const auto & expression = std::get<JLang::owned<ExpressionBinary>>(expression_type);
+  else if (std::holds_alternative<Gyoji::owned<ExpressionBinary>>(expression_type)) {
+    const auto & expression = std::get<Gyoji::owned<ExpressionBinary>>(expression_type);
     return extract_from_expression_binary(returned_tmpvar, *expression);
   }
-  else if (std::holds_alternative<JLang::owned<ExpressionTrinary>>(expression_type)) {
-    const auto & expression = std::get<JLang::owned<ExpressionTrinary>>(expression_type);
+  else if (std::holds_alternative<Gyoji::owned<ExpressionTrinary>>(expression_type)) {
+    const auto & expression = std::get<Gyoji::owned<ExpressionTrinary>>(expression_type);
     return extract_from_expression_trinary(returned_tmpvar, *expression);
   }
-  else if (std::holds_alternative<JLang::owned<ExpressionCast>>(expression_type)) {
-    const auto & expression = std::get<JLang::owned<ExpressionCast>>(expression_type);
+  else if (std::holds_alternative<Gyoji::owned<ExpressionCast>>(expression_type)) {
+    const auto & expression = std::get<Gyoji::owned<ExpressionCast>>(expression_type);
     return extract_from_expression_cast(returned_tmpvar, *expression);
   }
   else {
@@ -2216,15 +2216,15 @@ FunctionDefinitionResolver::extract_from_expression(
 
 bool
 FunctionDefinitionResolver::local_declare_or_error(
-    const JLang::mir::Type *mir_type,
+    const Gyoji::mir::Type *mir_type,
     const std::string & name,
     const SourceReference & source_ref
     )
 {
-    const JLang::frontend::LocalVariable *maybe_existing = scope_tracker.get_variable(name);
+    const Gyoji::frontend::LocalVariable *maybe_existing = scope_tracker.get_variable(name);
 	
     if (maybe_existing != nullptr) {
-	std::unique_ptr<JLang::context::Error> error = std::make_unique<JLang::context::Error>("Duplicate Local Variable.");
+	std::unique_ptr<Gyoji::context::Error> error = std::make_unique<Gyoji::context::Error>("Duplicate Local Variable.");
 	error->add_message(source_ref,
 			   std::string("Variable with name ") + name + " is already in scope and cannot be duplicated.");
 	error->add_message(maybe_existing->get_source_ref(),
@@ -2259,7 +2259,7 @@ FunctionDefinitionResolver::extract_from_statement_variable_declaration(
     
     // Once the variable exists, we can start performing the initialization
     // and assigning the value to something.
-    const JLang::mir::Type * mir_type = type_resolver.extract_from_type_specifier(statement.get_type_specifier());
+    const Gyoji::mir::Type * mir_type = type_resolver.extract_from_type_specifier(statement.get_type_specifier());
     
     if (!local_declare_or_error(
 	    mir_type,
@@ -2419,7 +2419,7 @@ FunctionDefinitionResolver::extract_from_statement_ifelse(
 
 bool
 FunctionDefinitionResolver::extract_from_statement_while(
-    const JLang::frontend::tree::StatementWhile & statement
+    const Gyoji::frontend::tree::StatementWhile & statement
     )
 {
     size_t condition_tmpvar;
@@ -2455,7 +2455,6 @@ FunctionDefinitionResolver::extract_from_statement_while(
 	blockid_done,
 	blockid_evaluate_expression
 	);
-    size_t blockid_tmp_if = current_block;
     if (!extract_from_statement_list(
 	statement.get_scope_body().get_statements()
 	    )) {
@@ -2478,7 +2477,7 @@ FunctionDefinitionResolver::extract_from_statement_while(
 
 bool
 FunctionDefinitionResolver::extract_from_statement_for(
-    const JLang::frontend::tree::StatementFor & statement
+    const Gyoji::frontend::tree::StatementFor & statement
     )
 {
     size_t condition_tmpvar;
@@ -2488,7 +2487,7 @@ FunctionDefinitionResolver::extract_from_statement_for(
     size_t blockid_done = function->add_block();
 
     if (statement.is_declaration()) {
-	const JLang::mir::Type * mir_type = type_resolver.extract_from_type_specifier(statement.get_type_specifier());
+	const Gyoji::mir::Type * mir_type = type_resolver.extract_from_type_specifier(statement.get_type_specifier());
 	
 	if (!local_declare_or_error(
 		mir_type,
@@ -2566,7 +2565,7 @@ FunctionDefinitionResolver::extract_from_statement_for(
 
 bool
 FunctionDefinitionResolver::extract_from_statement_break(
-    const JLang::frontend::tree::StatementBreak & statement
+    const Gyoji::frontend::tree::StatementBreak & statement
     )
 {
     if (!scope_tracker.is_in_loop()) {
@@ -2594,7 +2593,7 @@ FunctionDefinitionResolver::extract_from_statement_break(
 
 bool
 FunctionDefinitionResolver::extract_from_statement_continue(
-    const JLang::frontend::tree::StatementContinue & statement
+    const Gyoji::frontend::tree::StatementContinue & statement
     )
 {
     if (!scope_tracker.is_in_loop()) {
@@ -2619,7 +2618,7 @@ FunctionDefinitionResolver::extract_from_statement_continue(
 
 bool
 FunctionDefinitionResolver::extract_from_statement_label(
-    const JLang::frontend::tree::StatementLabel & statement
+    const Gyoji::frontend::tree::StatementLabel & statement
     )
 {
     // We're starting a new label, so this is, by definition,
@@ -2640,7 +2639,7 @@ FunctionDefinitionResolver::extract_from_statement_label(
 	    label_block = label->get_block();
 	}
 	else {
-	    std::unique_ptr<JLang::context::Error> error = std::make_unique<JLang::context::Error>("Labels in functions must be unique");
+	    std::unique_ptr<Gyoji::context::Error> error = std::make_unique<Gyoji::context::Error>("Labels in functions must be unique");
 	    error->add_message(statement.get_name_source_ref(),
 			       std::string("Duplicate label ") + label_name);
 	    error->add_message(label->get_source_ref(),
@@ -2664,7 +2663,7 @@ FunctionDefinitionResolver::extract_from_statement_label(
 
 bool
 FunctionDefinitionResolver::extract_from_statement_goto(
-    const JLang::frontend::tree::StatementGoto & statement
+    const Gyoji::frontend::tree::StatementGoto & statement
     )
 {
     const std::string & label_name = statement.get_label();
@@ -2737,22 +2736,22 @@ FunctionDefinitionResolver::extract_from_statement_list(
     bool did_return = false;
     for (const auto & statement_el : statement_list.get_statements()) {
 	const auto & statement_type = statement_el->get_statement();
-	if (std::holds_alternative<JLang::owned<StatementVariableDeclaration>>(statement_type)) {
-	    const auto & statement = std::get<JLang::owned<StatementVariableDeclaration>>(statement_type);
+	if (std::holds_alternative<Gyoji::owned<StatementVariableDeclaration>>(statement_type)) {
+	    const auto & statement = std::get<Gyoji::owned<StatementVariableDeclaration>>(statement_type);
 	    if (!extract_from_statement_variable_declaration(*statement)) {
 		return false;
 	    }
 	}
-	else if (std::holds_alternative<JLang::owned<StatementBlock>>(statement_type)) {
-	    const auto & statement = std::get<JLang::owned<StatementBlock>>(statement_type);
+	else if (std::holds_alternative<Gyoji::owned<StatementBlock>>(statement_type)) {
+	    const auto & statement = std::get<Gyoji::owned<StatementBlock>>(statement_type);
 	    scope_tracker.scope_push(statement->get_scope_body().get_source_ref());
 	    if (!extract_from_statement_list(statement->get_scope_body().get_statements())) {
 		return false;
 	    }
 	    scope_tracker.scope_pop();
 	}
-	else if (std::holds_alternative<JLang::owned<StatementExpression>>(statement_type)) {
-	    const auto & statement = std::get<JLang::owned<StatementExpression>>(statement_type);
+	else if (std::holds_alternative<Gyoji::owned<StatementExpression>>(statement_type)) {
+	    const auto & statement = std::get<Gyoji::owned<StatementExpression>>(statement_type);
 	    size_t returned_tmpvar;
 	    if (!extract_from_expression(
 		    returned_tmpvar,
@@ -2760,55 +2759,55 @@ FunctionDefinitionResolver::extract_from_statement_list(
 		return false;
 	    }
 	}
-	else if (std::holds_alternative<JLang::owned<StatementIfElse>>(statement_type)) {
-	    const auto & statement = std::get<JLang::owned<StatementIfElse>>(statement_type);
+	else if (std::holds_alternative<Gyoji::owned<StatementIfElse>>(statement_type)) {
+	    const auto & statement = std::get<Gyoji::owned<StatementIfElse>>(statement_type);
 	    if (!extract_from_statement_ifelse(
 		    *statement)) {
 		return false;
 	    }
 	}
-	else if (std::holds_alternative<JLang::owned<StatementWhile>>(statement_type)) {
-	    const auto & statement = std::get<JLang::owned<StatementWhile>>(statement_type);
+	else if (std::holds_alternative<Gyoji::owned<StatementWhile>>(statement_type)) {
+	    const auto & statement = std::get<Gyoji::owned<StatementWhile>>(statement_type);
 	    if (!extract_from_statement_while(
 		    *statement)) {
 		return false;
 	    }
 	}
-	else if (std::holds_alternative<JLang::owned<StatementFor>>(statement_type)) {
-	    const auto & statement = std::get<JLang::owned<StatementFor>>(statement_type);
+	else if (std::holds_alternative<Gyoji::owned<StatementFor>>(statement_type)) {
+	    const auto & statement = std::get<Gyoji::owned<StatementFor>>(statement_type);
 	    if (!extract_from_statement_for(
 		    *statement)) {
 		return false;
 	    }
 	}
-	else if (std::holds_alternative<JLang::owned<StatementLabel>>(statement_type)) {
-	    const auto & statement = std::get<JLang::owned<StatementLabel>>(statement_type);
+	else if (std::holds_alternative<Gyoji::owned<StatementLabel>>(statement_type)) {
+	    const auto & statement = std::get<Gyoji::owned<StatementLabel>>(statement_type);
 	    if (!extract_from_statement_label(*statement)) {
 		return false;
 	    }
 	}
-	else if (std::holds_alternative<JLang::owned<StatementGoto>>(statement_type)) {
-	    const auto & statement = std::get<JLang::owned<StatementGoto>>(statement_type);
+	else if (std::holds_alternative<Gyoji::owned<StatementGoto>>(statement_type)) {
+	    const auto & statement = std::get<Gyoji::owned<StatementGoto>>(statement_type);
 	    if (!extract_from_statement_goto(*statement)) {
 		return false;
 	    }
 	}
-	else if (std::holds_alternative<JLang::owned<StatementBreak>>(statement_type)) {
-	    const auto & statement = std::get<JLang::owned<StatementBreak>>(statement_type);
+	else if (std::holds_alternative<Gyoji::owned<StatementBreak>>(statement_type)) {
+	    const auto & statement = std::get<Gyoji::owned<StatementBreak>>(statement_type);
 	    if (!extract_from_statement_break(
 		    *statement)) {
 		return false;
 	    }
 	}
-	else if (std::holds_alternative<JLang::owned<StatementContinue>>(statement_type)) {
-	    const auto & statement = std::get<JLang::owned<StatementContinue>>(statement_type);
+	else if (std::holds_alternative<Gyoji::owned<StatementContinue>>(statement_type)) {
+	    const auto & statement = std::get<Gyoji::owned<StatementContinue>>(statement_type);
 	    if (!extract_from_statement_continue(
 		    *statement)) {
 		return false;
 	    }
 	}
-	else if (std::holds_alternative<JLang::owned<StatementReturn>>(statement_type)) {
-	    const auto & statement = std::get<JLang::owned<StatementReturn>>(statement_type);
+	else if (std::holds_alternative<Gyoji::owned<StatementReturn>>(statement_type)) {
+	    const auto & statement = std::get<Gyoji::owned<StatementReturn>>(statement_type);
 	    // The return may need to unwind local declarations
 	    // and ensure destructors are called.
 	    if (!extract_from_statement_return(*statement)) {

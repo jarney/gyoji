@@ -1,9 +1,9 @@
-#include <jlang-frontend/namespace.hpp>
-#include <jlang-misc/jstring.hpp>
+#include <gyoji-frontend/namespace.hpp>
+#include <gyoji-misc/jstring.hpp>
 #include <set>
 
-using namespace JLang::misc;
-using namespace JLang::frontend::namespaces;
+using namespace Gyoji::misc;
+using namespace Gyoji::frontend::namespaces;
 
 NamespaceFoundReason::NamespaceFoundReason(int _reason)
     : reason(_reason)
@@ -118,7 +118,7 @@ NamespaceContext::~NamespaceContext()
 Namespace* NamespaceContext::namespace_new(std::string name, int type, int visibility)
 {
     Namespace* current = stack.back();
-    JLang::owned<Namespace> new_namespace = std::make_unique<Namespace>(name, type, visibility, current);
+    Gyoji::owned<Namespace> new_namespace = std::make_unique<Namespace>(name, type, visibility, current);
     current->children.insert(std::pair(name, std::move(new_namespace)));
     return new_namespace.get();
 }

@@ -7,25 +7,25 @@ set(FRONTEND_INCLUDES
 )
 
 set(FRONTEND_PUBLIC_HEADERS_TOP
-    jlang-frontend.hpp
+    gyoji-frontend.hpp
 )
 set(FRONTEND_PUBLIC_HEADERS_BOTTOM
-    jlang-frontend/tree.hpp
-    jlang-frontend/syntax-node.hpp
-    jlang-frontend/parse-literal-int.hpp
-    jlang-frontend/namespace.hpp
-    jlang-frontend/parse-result.hpp
-    jlang-frontend/forward.hpp
-    jlang-frontend/parser.hpp
-    jlang-frontend/type-resolver.hpp
-    jlang-frontend/function-resolver.hpp
-    jlang-frontend/function-scope.hpp
-    jlang-frontend/lex-context.hpp
+    gyoji-frontend/tree.hpp
+    gyoji-frontend/syntax-node.hpp
+    gyoji-frontend/parse-literal-int.hpp
+    gyoji-frontend/namespace.hpp
+    gyoji-frontend/parse-result.hpp
+    gyoji-frontend/forward.hpp
+    gyoji-frontend/parser.hpp
+    gyoji-frontend/type-resolver.hpp
+    gyoji-frontend/function-resolver.hpp
+    gyoji-frontend/function-scope.hpp
+    gyoji-frontend/lex-context.hpp
 )
 
 set(FRONTEND_SOURCES
-    jlang.l
-    jlang.y
+    gyoji.l
+    gyoji.y
     tree.cpp
     syntax-node.cpp
     namespace.cpp
@@ -41,20 +41,20 @@ set(FRONTEND_SOURCES
 )
 
 
-BISON_TARGET(jlang_y jlang.y ${CMAKE_BINARY_DIR}/jlang.y.cpp
-             DEFINES_FILE ${CMAKE_BINARY_DIR}/jlang.y.hpp)
-FLEX_TARGET(jlang_l jlang.l ${CMAKE_BINARY_DIR}/jlang.l.cpp
-            DEFINES_FILE ${CMAKE_BINARY_DIR}/jlang.l.hpp)
+BISON_TARGET(gyoji_y gyoji.y ${CMAKE_BINARY_DIR}/gyoji.y.cpp
+             DEFINES_FILE ${CMAKE_BINARY_DIR}/gyoji.y.hpp)
+FLEX_TARGET(gyoji_l gyoji.l ${CMAKE_BINARY_DIR}/gyoji.l.cpp
+            DEFINES_FILE ${CMAKE_BINARY_DIR}/gyoji.l.hpp)
 
-add_library(jlang-frontend ${FRONTEND_SOURCES} ${BISON_jlang_y_OUTPUTS} ${FLEX_jlang_l_OUTPUTS})
-target_include_directories(jlang-frontend
+add_library(gyoji-frontend ${FRONTEND_SOURCES} ${BISON_gyoji_y_OUTPUTS} ${FLEX_gyoji_l_OUTPUTS})
+target_include_directories(gyoji-frontend
     PUBLIC
         ${FRONTEND_INCLUDES}
 )
 
 install(
     TARGETS
-        jlang-frontend
+        gyoji-frontend
         LIBRARY DESTINATION lib
 )
 install(
@@ -65,37 +65,37 @@ install(
 install(
     FILES
         ${FRONTEND_PUBLIC_HEADERS_BOTTOM}
-        DESTINATION include/jlang-frontend
+        DESTINATION include/gyoji-frontend
 )
 
 
 add_executable(test_namespace test_namespace.cpp)
 target_include_directories(test_namespace PUBLIC ${FRONTEND_INCLUDES})
 target_link_libraries(test_namespace
-    jlang-frontend
-    jlang-mir
-    jlang-context
-    jlang-misc
+    gyoji-frontend
+    gyoji-mir
+    gyoji-context
+    gyoji-misc
 )
 add_test(NAME test_namespace COMMAND test_namespace)
 
 add_executable(test_syntax test_syntax.cpp)
 target_include_directories(test_syntax PUBLIC ${FRONTEND_INCLUDES})
 target_link_libraries(test_syntax
-    jlang-frontend
-    jlang-mir
-    jlang-context
-    jlang-misc
+    gyoji-frontend
+    gyoji-mir
+    gyoji-context
+    gyoji-misc
 )
 add_test(NAME test_syntax COMMAND test_syntax ${CMAKE_SOURCE_DIR})
 
 add_executable(test_scope test_scope.cpp)
 target_include_directories(test_scope PUBLIC ${FRONTEND_INCLUDES})
 target_link_libraries(test_scope
-    jlang-frontend
-    jlang-mir
-    jlang-context
-    jlang-misc
+    gyoji-frontend
+    gyoji-mir
+    gyoji-context
+    gyoji-misc
 )
 add_test(NAME test_scope COMMAND test_scope ${CMAKE_SOURCE_DIR})
 
@@ -103,14 +103,14 @@ add_test(NAME test_scope COMMAND test_scope ${CMAKE_SOURCE_DIR})
 add_executable(test_token_stream test_token_stream.cpp)
 target_include_directories(test_token_stream PUBLIC ${FRONTEND_INCLUDES})
 target_link_libraries(test_token_stream
-    jlang-frontend
-    jlang-mir
-    jlang-context
-    jlang-misc
+    gyoji-frontend
+    gyoji-mir
+    gyoji-context
+    gyoji-misc
 )
 
 add_executable(test_types test_types.cpp)
 target_include_directories(test_types PUBLIC ${PROJECT_SOURCE_DIR}/types)
-target_link_libraries(test_types jlang-frontend jlang-mir jlang-context jlang-misc)
+target_link_libraries(test_types gyoji-frontend gyoji-mir gyoji-context gyoji-misc)
 add_test(NAME test_types COMMAND test_types ${CMAKE_SOURCE_DIR})
 

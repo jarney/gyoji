@@ -1,17 +1,17 @@
-#include <jlang-frontend/type-resolver.hpp>
+#include <gyoji-frontend/type-resolver.hpp>
 #include <variant>
 #include <stdio.h>
-#include <jlang-misc/jstring.hpp>
+#include <gyoji-misc/jstring.hpp>
 
-using namespace JLang::mir;
-using namespace JLang::context;
-using namespace JLang::frontend;
-using namespace JLang::frontend::tree;
+using namespace Gyoji::mir;
+using namespace Gyoji::context;
+using namespace Gyoji::frontend;
+using namespace Gyoji::frontend::tree;
 
 TypeResolver::TypeResolver(
-    JLang::context::CompilerContext & _compiler_context,
-    const JLang::frontend::tree::TranslationUnit & _translation_unit,
-    JLang::mir::MIR & _mir)
+    Gyoji::context::CompilerContext & _compiler_context,
+    const Gyoji::frontend::tree::TranslationUnit & _translation_unit,
+    Gyoji::mir::MIR & _mir)
     : mir(_mir)
     , compiler_context(_compiler_context)
     , translation_unit(_translation_unit)
@@ -30,7 +30,7 @@ void TypeResolver::resolve()
 void
 TypeResolver::extract_from_class_declaration(const ClassDeclaration & declaration)
 {
-    JLang::owned<Type> type = std::make_unique<Type>(declaration.get_name(), Type::TYPE_COMPOSITE, false, declaration.get_name_source_ref());
+    Gyoji::owned<Type> type = std::make_unique<Type>(declaration.get_name(), Type::TYPE_COMPOSITE, false, declaration.get_name_source_ref());
     mir.get_types().define_type(std::move(type));
 }
 
@@ -42,7 +42,7 @@ TypeResolver::get_or_create(std::string pointer_name, Type::TypeType type_type, 
 	return pointer_type;
     }
     else {
-	JLang::owned<Type> pointer_type_created = std::make_unique<Type>(pointer_name, type_type, complete, source_ref);
+	Gyoji::owned<Type> pointer_type_created = std::make_unique<Type>(pointer_name, type_type, complete, source_ref);
 	pointer_type = pointer_type_created.get();
 	mir.get_types().define_type(std::move(pointer_type_created));
 	return pointer_type;
@@ -54,7 +54,7 @@ TypeResolver::extract_from_type_specifier_simple(const TypeSpecifierSimple & typ
 {
     const auto & type_name = type_specifier.get_type_name();
     if (type_name.is_expression()) {
-	auto error = std::make_unique<JLang::context::Error>("Could not resolve type");
+	auto error = std::make_unique<Gyoji::context::Error>("Could not resolve type");
 	error->add_message(type_name.get_name_source_ref(), "Specifying types from expressions is not yet supported.");
 	compiler_context.get_errors().add_error(std::move(error));
 	return nullptr;
@@ -145,7 +145,7 @@ TypeResolver::extract_from_type_specifier_array(const TypeSpecifierArray & type_
 	return nullptr;
     }
     
-    JLang::frontend::integers::ParseLiteralIntResult parse_result;
+    Gyoji::frontend::integers::ParseLiteralIntResult parse_result;
     bool parsed = parse_literal_int(compiler_context, mir.get_types(), type_specifier.get_literal_int_token(), parse_result);
     if (!parsed || parse_result.parsed_type == nullptr) {
 	compiler_context
@@ -173,29 +173,29 @@ const Type *
 TypeResolver::extract_from_type_specifier(const TypeSpecifier & type_specifier)
 {
     const auto & type_specifier_type = type_specifier.get_type();
-    if (std::holds_alternative<JLang::owned<TypeSpecifierSimple>>(type_specifier_type)) {
-	const auto & type_specifier = std::get<JLang::owned<TypeSpecifierSimple>>(type_specifier_type);
+    if (std::holds_alternative<Gyoji::owned<TypeSpecifierSimple>>(type_specifier_type)) {
+	const auto & type_specifier = std::get<Gyoji::owned<TypeSpecifierSimple>>(type_specifier_type);
 	return extract_from_type_specifier_simple(*type_specifier);
     }
-    else if (std::holds_alternative<JLang::owned<TypeSpecifierTemplate>>(type_specifier_type)) {
-	const auto & type_specifier = std::get<JLang::owned<TypeSpecifierTemplate>>(type_specifier_type);
+    else if (std::holds_alternative<Gyoji::owned<TypeSpecifierTemplate>>(type_specifier_type)) {
+	const auto & type_specifier = std::get<Gyoji::owned<TypeSpecifierTemplate>>(type_specifier_type);
 	return extract_from_type_specifier_template(*type_specifier);
     }
-    else if (std::holds_alternative<JLang::owned<TypeSpecifierFunctionPointer>>(type_specifier_type)) {
-	const auto & type_specifier = std::get<JLang::owned<TypeSpecifierFunctionPointer>>(type_specifier_type);
+    else if (std::holds_alternative<Gyoji::owned<TypeSpecifierFunctionPointer>>(type_specifier_type)) {
+	const auto & type_specifier = std::get<Gyoji::owned<TypeSpecifierFunctionPointer>>(type_specifier_type);
 	return extract_from_type_specifier_function_pointer(*type_specifier);
     }
-    else if (std::holds_alternative<JLang::owned<TypeSpecifierPointerTo>>(type_specifier_type)) {
-	const auto & type_specifier = std::get<JLang::owned<TypeSpecifierPointerTo>>(type_specifier_type);
+    else if (std::holds_alternative<Gyoji::owned<TypeSpecifierPointerTo>>(type_specifier_type)) {
+	const auto & type_specifier = std::get<Gyoji::owned<TypeSpecifierPointerTo>>(type_specifier_type);
 	return extract_from_type_specifier_pointer_to(*type_specifier);
     }
-    else if (std::holds_alternative<JLang::owned<TypeSpecifierReferenceTo>>(type_specifier_type)) {
-	const auto & type_specifier = std::get<JLang::owned<TypeSpecifierReferenceTo>>(type_specifier_type);
+    else if (std::holds_alternative<Gyoji::owned<TypeSpecifierReferenceTo>>(type_specifier_type)) {
+	const auto & type_specifier = std::get<Gyoji::owned<TypeSpecifierReferenceTo>>(type_specifier_type);
 	return extract_from_type_specifier_reference_to(*type_specifier);
 	
     }
-    else if (std::holds_alternative<JLang::owned<TypeSpecifierArray>>(type_specifier_type)) {
-	const auto & type_specifier = std::get<JLang::owned<TypeSpecifierArray>>(type_specifier_type);
+    else if (std::holds_alternative<Gyoji::owned<TypeSpecifierArray>>(type_specifier_type)) {
+	const auto & type_specifier = std::get<Gyoji::owned<TypeSpecifierArray>>(type_specifier_type);
 	return extract_from_type_specifier_array(*type_specifier);
 	
     }
@@ -219,8 +219,8 @@ TypeResolver::extract_from_class_members(Type & type, const ClassDefinition & de
     size_t member_id = 0;
     for (const auto & class_member : class_members) {
 	const auto & class_member_type = class_member->get_member();
-	if (std::holds_alternative<JLang::owned<ClassMemberDeclarationVariable>>(class_member_type)) {
-	    const auto & member_variable = std::get<JLang::owned<ClassMemberDeclarationVariable>>(class_member_type);
+	if (std::holds_alternative<Gyoji::owned<ClassMemberDeclarationVariable>>(class_member_type)) {
+	    const auto & member_variable = std::get<Gyoji::owned<ClassMemberDeclarationVariable>>(class_member_type);
 	    
 	    const Type *member_type = extract_from_type_specifier(member_variable->get_type_specifier());
 	    if (member_type == nullptr) {
@@ -253,7 +253,7 @@ TypeResolver::extract_from_class_definition(const ClassDefinition & definition)
     if (it == mir.get_types().get_types().end()) {
 	// Case 1: No forward declaration exists, fill in the definition
 	// from the class.
-	JLang::owned<Type> type = std::make_unique<Type>(definition.get_name(), Type::TYPE_COMPOSITE, true, definition.get_name_source_ref());
+	Gyoji::owned<Type> type = std::make_unique<Type>(definition.get_name(), Type::TYPE_COMPOSITE, true, definition.get_name_source_ref());
 	extract_from_class_members(*type, definition);
 	mir.get_types().define_type(std::move(type));
     }
@@ -266,7 +266,7 @@ TypeResolver::extract_from_class_definition(const ClassDefinition & definition)
 	else {
 	    // Case 3: Class is declared and complete, but does not match our current definition,
 	    // so this is a duplicate.  Raise an error to avoid ambiguity.
-	    std::unique_ptr<JLang::context::Error> error = std::make_unique<JLang::context::Error>(std::string("Duplicate class definition: ") + definition.get_name());
+	    std::unique_ptr<Gyoji::context::Error> error = std::make_unique<Gyoji::context::Error>(std::string("Duplicate class definition: ") + definition.get_name());
 	    error->add_message(type.get_defined_source_ref(),
 			       "Originally defined here"
 		);
@@ -287,7 +287,7 @@ TypeResolver::extract_from_enum_definition(const EnumDefinition & enum_definitio
     const auto it = mir.get_types().get_types().find(enum_definition.get_name());
     if (it == mir.get_types().get_types().end()) {
 	// No definition exists, create it.
-	JLang::owned<Type> type = std::make_unique<Type>(enum_definition.get_name(), Type::TYPE_ENUM, true, enum_definition.get_name_source_ref());
+	Gyoji::owned<Type> type = std::make_unique<Type>(enum_definition.get_name(), Type::TYPE_ENUM, true, enum_definition.get_name_source_ref());
 	mir.get_types().define_type(std::move(type));
 
 	for (const auto & ev : enum_definition.get_value_list().get_values()) {
@@ -305,7 +305,7 @@ TypeResolver::extract_from_enum_definition(const EnumDefinition & enum_definitio
 	// Case 3: Class is declared and complete, but does not match our current definition,
 	// so this is a duplicate.  Raise an error to avoid ambiguity.
 	auto & type = *it->second;
-	std::unique_ptr<JLang::context::Error> error = std::make_unique<JLang::context::Error>(std::string("Duplicate enum definition: ") + enum_definition.get_name());
+	std::unique_ptr<Gyoji::context::Error> error = std::make_unique<Gyoji::context::Error>(std::string("Duplicate enum definition: ") + enum_definition.get_name());
 	error->add_message(type.get_defined_source_ref(),
 			   "Originally defined here"
 	    );
@@ -331,7 +331,7 @@ TypeResolver::extract_from_type_definition(const TypeDefinition & type_definitio
 	// so that we can later modify the type by "instantiating"
 	// it as a generic with specific type parameters
 	// when we get to that point.
-	JLang::owned<Type> type = std::make_unique<Type>(
+	Gyoji::owned<Type> type = std::make_unique<Type>(
 	    type_definition.get_name(),
 	    type_definition.get_type_specifier().get_source_ref(),
 	    *defined_type
@@ -343,7 +343,7 @@ TypeResolver::extract_from_type_definition(const TypeDefinition & type_definitio
 	// Case 3: Class is declared and complete, but does not match our current definition,
 	// so this is a duplicate.  Raise an error to avoid ambiguity.
 	auto & type = *it->second;
-	std::unique_ptr<JLang::context::Error> error = std::make_unique<JLang::context::Error>(std::string("Duplicate enum definition: ") + type_definition.get_name());
+	std::unique_ptr<Gyoji::context::Error> error = std::make_unique<Gyoji::context::Error>(std::string("Duplicate enum definition: ") + type_definition.get_name());
 	error->add_message(type.get_defined_source_ref(),
 			   "Originally defined here"
 	    );
@@ -392,7 +392,7 @@ TypeResolver::extract_from_function_specifications(
 	    Argument(t, function_definition_arg->get_type_specifier().get_source_ref())
 	    );
     }
-    std::string arg_string = JLang::misc::join(arg_list, ",");
+    std::string arg_string = Gyoji::misc::join(arg_list, ",");
     std::string pointer_name = type->get_name() + std::string("(*)") + std::string("(") + arg_string + std::string(")");
     Type *pointer_type = get_or_create(pointer_name, Type::TYPE_FUNCTION_POINTER, false, name.get_source_ref());
 
@@ -442,35 +442,35 @@ TypeResolver::extract_from_namespace(const FileStatementNamespace & namespace_de
 }
 
 void
-TypeResolver::extract_types(const std::vector<JLang::owned<FileStatement>> & statements)
+TypeResolver::extract_types(const std::vector<Gyoji::owned<FileStatement>> & statements)
 {
     for (const auto & statement : statements) {
 	const auto & file_statement = statement->get_statement();
-	if (std::holds_alternative<JLang::owned<FileStatementFunctionDeclaration>>(file_statement)) {
-	    extract_from_function_declaration(*std::get<JLang::owned<FileStatementFunctionDeclaration>>(file_statement));
+	if (std::holds_alternative<Gyoji::owned<FileStatementFunctionDeclaration>>(file_statement)) {
+	    extract_from_function_declaration(*std::get<Gyoji::owned<FileStatementFunctionDeclaration>>(file_statement));
 	}
-	else if (std::holds_alternative<JLang::owned<FileStatementFunctionDefinition>>(file_statement)) {
-	    extract_from_function_definition(*std::get<JLang::owned<FileStatementFunctionDefinition>>(file_statement));
+	else if (std::holds_alternative<Gyoji::owned<FileStatementFunctionDefinition>>(file_statement)) {
+	    extract_from_function_definition(*std::get<Gyoji::owned<FileStatementFunctionDefinition>>(file_statement));
 	}
-	else if (std::holds_alternative<JLang::owned<FileStatementGlobalDefinition>>(file_statement)) {
+	else if (std::holds_alternative<Gyoji::owned<FileStatementGlobalDefinition>>(file_statement)) {
 	    // Nothing, no statements can be declared inside here.
 	}
-	else if (std::holds_alternative<JLang::owned<ClassDeclaration>>(file_statement)) {
-	    extract_from_class_declaration(*std::get<JLang::owned<ClassDeclaration>>(file_statement));
+	else if (std::holds_alternative<Gyoji::owned<ClassDeclaration>>(file_statement)) {
+	    extract_from_class_declaration(*std::get<Gyoji::owned<ClassDeclaration>>(file_statement));
 	}
-	else if (std::holds_alternative<JLang::owned<ClassDefinition>>(file_statement)) {
-	    extract_from_class_definition(*std::get<JLang::owned<ClassDefinition>>(file_statement));
+	else if (std::holds_alternative<Gyoji::owned<ClassDefinition>>(file_statement)) {
+	    extract_from_class_definition(*std::get<Gyoji::owned<ClassDefinition>>(file_statement));
 	}
-	else if (std::holds_alternative<JLang::owned<EnumDefinition>>(file_statement)) {
-	    extract_from_enum_definition(*std::get<JLang::owned<EnumDefinition>>(file_statement));
+	else if (std::holds_alternative<Gyoji::owned<EnumDefinition>>(file_statement)) {
+	    extract_from_enum_definition(*std::get<Gyoji::owned<EnumDefinition>>(file_statement));
 	}
-	else if (std::holds_alternative<JLang::owned<TypeDefinition>>(file_statement)) {
-	    extract_from_type_definition(*std::get<JLang::owned<TypeDefinition>>(file_statement));
+	else if (std::holds_alternative<Gyoji::owned<TypeDefinition>>(file_statement)) {
+	    extract_from_type_definition(*std::get<Gyoji::owned<TypeDefinition>>(file_statement));
 	}
-	else if (std::holds_alternative<JLang::owned<FileStatementNamespace>>(file_statement)) {
-	    extract_from_namespace(*std::get<JLang::owned<FileStatementNamespace>>(file_statement));
+	else if (std::holds_alternative<Gyoji::owned<FileStatementNamespace>>(file_statement)) {
+	    extract_from_namespace(*std::get<Gyoji::owned<FileStatementNamespace>>(file_statement));
 	}
-	else if (std::holds_alternative<JLang::owned<FileStatementUsing>>(file_statement)) {
+	else if (std::holds_alternative<Gyoji::owned<FileStatementUsing>>(file_statement)) {
 	    // Nothing, no statements can be declared inside here.
 	}
 	else {

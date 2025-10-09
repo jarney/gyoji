@@ -1,9 +1,9 @@
 #include <algorithm>
-#include <jlang-misc/jstring.hpp>
+#include <gyoji-misc/jstring.hpp>
 
-using namespace JLang::misc;
+using namespace Gyoji::misc;
 
-std::vector<std::string> JLang::misc::string_split(const std::string &str, const std::string &delimiter)
+std::vector<std::string> Gyoji::misc::string_split(const std::string &str, const std::string &delimiter)
 {
     std::vector<std::string> ret;
     size_t pos = 0;
@@ -24,7 +24,7 @@ std::vector<std::string> JLang::misc::string_split(const std::string &str, const
 }
 
 std::string
-JLang::misc::join_nonempty(const std::string &a, const std::string & b, const std::string delimiter)
+Gyoji::misc::join_nonempty(const std::string &a, const std::string & b, const std::string delimiter)
 {
     std::string ret;
     if (a.size() == 0) {
@@ -35,7 +35,7 @@ JLang::misc::join_nonempty(const std::string &a, const std::string & b, const st
     }
 }
 
-std::string JLang::misc::join(const std::vector<std::string> & list, std::string delimiter)
+std::string Gyoji::misc::join(const std::vector<std::string> & list, std::string delimiter)
 {
     std::string ret;
 
@@ -51,7 +51,7 @@ std::string JLang::misc::join(const std::vector<std::string> & list, std::string
     return ret;
 }
 
-bool JLang::misc::startswith(const std::string & s, const std::string & prefix)
+bool Gyoji::misc::startswith(const std::string & s, const std::string & prefix)
 {
     size_t found_pos = s.find(prefix);
     if (found_pos == 0) {
@@ -59,7 +59,7 @@ bool JLang::misc::startswith(const std::string & s, const std::string & prefix)
     }
     return false;
 }
-bool JLang::misc::endswith(const std::string & s, const std::string & suffix)
+bool Gyoji::misc::endswith(const std::string & s, const std::string & suffix)
 {
     size_t found_pos = s.find(suffix);
     if (found_pos != std::string::npos && found_pos == s.size() - suffix.size()) {
@@ -69,7 +69,7 @@ bool JLang::misc::endswith(const std::string & s, const std::string & suffix)
 }
 
 std::string
-JLang::misc::string_remove(const std::string & str, const std::string & remove)
+Gyoji::misc::string_remove(const std::string & str, const std::string & remove)
 {
     std::string ret(str);
     while (true) {
@@ -86,7 +86,7 @@ JLang::misc::string_remove(const std::string & str, const std::string & remove)
 }
 
 std::string
-JLang::misc::string_replace_start(std::string str, const std::string from, const std::string to)
+Gyoji::misc::string_replace_start(std::string str, const std::string from, const std::string to)
 {
     std::string ret(str);
     size_t start_pos = str.find(from);
@@ -109,7 +109,7 @@ JLang::misc::string_replace_start(std::string str, const std::string from, const
 // must guarantee that they are reversible
 // in all cases.
 
-bool JLang::misc::string_c_escape(std::string & escaped_string, const std::string & unescaped_string, bool is_char)
+bool Gyoji::misc::string_c_escape(std::string & escaped_string, const std::string & unescaped_string, bool is_char)
 {
     // Take an un-escaped string and insert the \n, \r, \e
     // escapes exactly as if it were a string literal expressed
@@ -177,7 +177,7 @@ bool JLang::misc::string_c_escape(std::string & escaped_string, const std::strin
 }
 
 bool
-JLang::misc::string_c_unescape(std::string & unescaped_string, size_t & location, const std::string & escaped_string, bool is_char)
+Gyoji::misc::string_c_unescape(std::string & unescaped_string, size_t & location, const std::string & escaped_string, bool is_char)
 {
     // Take the 'traditional' C escape sequences
     // and turn them into their 'traditional' counterparts.

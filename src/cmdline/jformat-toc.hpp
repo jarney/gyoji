@@ -9,13 +9,13 @@
 //! Backend formatting the output as C syntax.
 /*!
  * The purpose of this code is to provide a way
- * to compile a JLang source-file into a
+ * to compile a Gyoji source-file into a
  * C source-file, providing a quick way to
  * cross-compile to C or to debug the syntax
  * and ensure that it correctly represents the
- * intent of the source in JLang.
+ * intent of the source in Gyoji.
  */
-namespace JLang::backend::toc {
+namespace Gyoji::backend::toc {
     
     class Statement {
     };

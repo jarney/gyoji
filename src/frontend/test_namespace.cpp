@@ -1,7 +1,7 @@
-#include <jlang-frontend/namespace.hpp>
-#include <jlang-misc/test.hpp>
+#include <gyoji-frontend/namespace.hpp>
+#include <gyoji-misc/test.hpp>
 
-using namespace JLang::frontend::namespaces;
+using namespace Gyoji::frontend::namespaces;
 
 int main(int argc, char **argv)
 {

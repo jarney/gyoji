@@ -1,9 +1,9 @@
 #include "jformat-identity.hpp"
 #include <iostream>
 
-using namespace JLang::frontend::ast;
-using namespace JLang::frontend::tree;
-using namespace JLang::cmdline;
+using namespace Gyoji::frontend::ast;
+using namespace Gyoji::frontend::tree;
+using namespace Gyoji::cmdline;
 
 JFormatIdentity::JFormatIdentity()
 {}

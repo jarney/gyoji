@@ -1,13 +1,13 @@
-#include <jlang-frontend.hpp>
-#include <jlang-misc/input-source-file.hpp>
-#include <jlang-analysis.hpp>
-#include <jlang-codegen.hpp>
+#include <gyoji-frontend.hpp>
+#include <gyoji-misc/input-source-file.hpp>
+#include <gyoji-analysis.hpp>
+#include <gyoji-codegen.hpp>
 
-using namespace JLang::codegen;
-using namespace JLang::context;
-using namespace JLang::frontend;
-using namespace JLang::mir;
-using namespace JLang::analysis;
+using namespace Gyoji::codegen;
+using namespace Gyoji::context;
+using namespace Gyoji::frontend;
+using namespace Gyoji::mir;
+using namespace Gyoji::analysis;
 
 int main(int argc, char **argv)
 {
@@ -27,9 +27,9 @@ int main(int argc, char **argv)
     std::string output_filename(argv[2]);
     
     CompilerContext context(input_filename);
-    JLang::misc::InputSourceFile input_source(input);
+    Gyoji::misc::InputSourceFile input_source(input);
     
-    JLang::owned<MIR> mir =
+    Gyoji::owned<MIR> mir =
 	Parser::parse_to_mir(
 	    context,
 	    input_source
@@ -57,7 +57,7 @@ int main(int argc, char **argv)
 
     // Make sure that all types that are used in functions
     // actually have 'complete' definitions.
-    std::vector<JLang::owned<AnalysisPass>> analysis_passes;
+    std::vector<Gyoji::owned<AnalysisPass>> analysis_passes;
     
     analysis_passes.push_back(std::make_unique<AnalysisPassTypeResolution>(context));
     analysis_passes.push_back(std::make_unique<AnalysisPassUnreachable>(context));

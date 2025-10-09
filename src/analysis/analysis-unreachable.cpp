@@ -1,9 +1,9 @@
-#include <jlang-analysis.hpp>
+#include <gyoji-analysis.hpp>
 #include <stdio.h>
 
-using namespace JLang::mir;
-using namespace JLang::context;
-using namespace JLang::analysis;
+using namespace Gyoji::mir;
+using namespace Gyoji::context;
+using namespace Gyoji::analysis;
 
 AnalysisPassUnreachable::AnalysisPassUnreachable(CompilerContext & _compiler_context)
     : AnalysisPass(_compiler_context, "unreachable analysis")
@@ -24,7 +24,7 @@ void AnalysisPassUnreachable::check(const Function & function) const
     const auto & blocks = function.get_blocks();
     for (const auto & block_it : blocks) {
 	const BasicBlock & block = *block_it.second;
-	const std::vector<JLang::owned<Operation>> & operations = block.get_operations();
+	const std::vector<Gyoji::owned<Operation>> & operations = block.get_operations();
 
 	bool terminated = false;
 	for (const auto & operation_it : operations) {

@@ -1,4 +1,4 @@
-#include <jlang-analysis.hpp>
+#include <gyoji-analysis.hpp>
 
 int main(int argc, char **argv)
 {

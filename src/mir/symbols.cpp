@@ -1,6 +1,6 @@
-#include <jlang-mir/symbols.hpp>
+#include <gyoji-mir/symbols.hpp>
 
-using namespace JLang::mir;
+using namespace Gyoji::mir;
 
 Symbol::Symbol(std::string _name, const Type *_type)
     : name(_name)
@@ -40,7 +40,7 @@ void
 Symbols::dump(FILE *out) const
 {
     for (const auto & symbol : symbols) {
-	const JLang::owned<Symbol> & sym = symbol.second;
+	const Gyoji::owned<Symbol> & sym = symbol.second;
         fprintf(out, "    %s : %s\n",
 		sym->get_name().c_str(),
 		sym->get_type()->get_name().c_str());

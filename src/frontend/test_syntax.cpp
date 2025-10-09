@@ -1,14 +1,14 @@
-#include <jlang-frontend.hpp>
-#include <jlang-misc/input-source-file.hpp>
-#include <jlang-misc/test.hpp>
+#include <gyoji-frontend.hpp>
+#include <gyoji-misc/input-source-file.hpp>
+#include <gyoji-misc/test.hpp>
 
-using namespace JLang::context;
-using namespace JLang::frontend;
-using namespace JLang::frontend::tree;
-using namespace JLang::frontend::namespaces;
+using namespace Gyoji::context;
+using namespace Gyoji::frontend;
+using namespace Gyoji::frontend::tree;
+using namespace Gyoji::frontend::namespaces;
 
 static
-JLang::owned<ParseResult>
+Gyoji::owned<ParseResult>
 parse(std::string & path, CompilerContext & compiler_context, std::string base_filename)
 {
     std::string filename = path + std::string("/") + base_filename;
@@ -18,8 +18,8 @@ parse(std::string & path, CompilerContext & compiler_context, std::string base_f
 	fprintf(stderr, "Cannot open file %s\n", base_filename.c_str());
 	return nullptr;
     }
-    JLang::misc::InputSourceFile input_source(input);
-    JLang::owned<ParseResult> parse_result =
+    Gyoji::misc::InputSourceFile input_source(input);
+    Gyoji::owned<ParseResult> parse_result =
 	Parser::parse(compiler_context,
 		      input_source
 	    );
@@ -79,9 +79,9 @@ int main(int argc, char **argv)
 	ASSERT_INT_EQUAL(4, parse_result->get_translation_unit().get_statements().size(), "This should have 4 typedefs");
 	{    
 	    const auto & statement_type = parse_result->get_translation_unit().get_statements().at(0)->get_statement();
-	    ASSERT_TRUE(std::holds_alternative<JLang::owned<TypeDefinition>>(statement_type), "This should be a typedef");
+	    ASSERT_TRUE(std::holds_alternative<Gyoji::owned<TypeDefinition>>(statement_type), "This should be a typedef");
 	    
-	    const auto & type_definition = std::get<JLang::owned<TypeDefinition>>(statement_type);
+	    const auto & type_definition = std::get<Gyoji::owned<TypeDefinition>>(statement_type);
 	    ASSERT("char", type_definition->get_name(), "We expect that we are defining 'char'");
 	    
 	    const auto & access_modifier = type_definition->get_access_modifier();
@@ -89,9 +89,9 @@ int main(int argc, char **argv)
 	}
 	{
 	    const auto & statement_type = parse_result->get_translation_unit().get_statements().at(1)->get_statement();
-	    ASSERT_TRUE(std::holds_alternative<JLang::owned<TypeDefinition>>(statement_type), "This should be a typedef");
+	    ASSERT_TRUE(std::holds_alternative<Gyoji::owned<TypeDefinition>>(statement_type), "This should be a typedef");
 	    
-	    const auto & type_definition = std::get<JLang::owned<TypeDefinition>>(statement_type);
+	    const auto & type_definition = std::get<Gyoji::owned<TypeDefinition>>(statement_type);
 	    ASSERT("public_char", type_definition->get_name(), "We expect that we are defining 'char'");
 	    
 	    const auto & access_modifier = type_definition->get_access_modifier();
@@ -99,9 +99,9 @@ int main(int argc, char **argv)
 	}
 	{
 	    const auto & statement_type = parse_result->get_translation_unit().get_statements().at(2)->get_statement();
-	    ASSERT_TRUE(std::holds_alternative<JLang::owned<TypeDefinition>>(statement_type), "This should be a typedef");
+	    ASSERT_TRUE(std::holds_alternative<Gyoji::owned<TypeDefinition>>(statement_type), "This should be a typedef");
 	    
-	    const auto & type_definition = std::get<JLang::owned<TypeDefinition>>(statement_type);
+	    const auto & type_definition = std::get<Gyoji::owned<TypeDefinition>>(statement_type);
 	    ASSERT("protected_char", type_definition->get_name(), "We expect that we are defining 'char'");
 	    
 	    const auto & access_modifier = type_definition->get_access_modifier();
@@ -109,9 +109,9 @@ int main(int argc, char **argv)
 	}
 	{
 	    const auto & statement_type = parse_result->get_translation_unit().get_statements().at(3)->get_statement();
-	    ASSERT_TRUE(std::holds_alternative<JLang::owned<TypeDefinition>>(statement_type), "This should be a typedef");
+	    ASSERT_TRUE(std::holds_alternative<Gyoji::owned<TypeDefinition>>(statement_type), "This should be a typedef");
 	    
-	    const auto & type_definition = std::get<JLang::owned<TypeDefinition>>(statement_type);
+	    const auto & type_definition = std::get<Gyoji::owned<TypeDefinition>>(statement_type);
 	    ASSERT("private_char", type_definition->get_name(), "We expect that we are defining 'char'");
 	    
 	    const auto & access_modifier = type_definition->get_access_modifier();
@@ -129,17 +129,17 @@ int main(int argc, char **argv)
 	
 	{
 	    const auto & statement_type = parse_result->get_translation_unit().get_statements().at(0)->get_statement();
-	    ASSERT_TRUE(std::holds_alternative<JLang::owned<FileStatementGlobalDefinition>>(statement_type), "This should be a global definition");
+	    ASSERT_TRUE(std::holds_alternative<Gyoji::owned<FileStatementGlobalDefinition>>(statement_type), "This should be a global definition");
 	    
-	    const auto & global_definition = std::get<JLang::owned<FileStatementGlobalDefinition>>(statement_type);
+	    const auto & global_definition = std::get<Gyoji::owned<FileStatementGlobalDefinition>>(statement_type);
 	    ASSERT("x", global_definition->get_name(), "We expect that we are defining the variable 'x'");
 	    
 	    const auto & access_modifier = global_definition->get_access_modifier();
 	    ASSERT_INT_EQUAL(AccessModifier::PUBLIC, access_modifier.get_type(), "We expect this to be public by default");
 	    
 	    const auto & type_specifier = global_definition->get_type_specifier();
-	    ASSERT_TRUE(std::holds_alternative<JLang::owned<TypeSpecifierSimple>>(type_specifier.get_type()), "Expect a simple type.");
-	    const auto & type_specifier_simple = std::get<JLang::owned<TypeSpecifierSimple>>(type_specifier.get_type());
+	    ASSERT_TRUE(std::holds_alternative<Gyoji::owned<TypeSpecifierSimple>>(type_specifier.get_type()), "Expect a simple type.");
+	    const auto & type_specifier_simple = std::get<Gyoji::owned<TypeSpecifierSimple>>(type_specifier.get_type());
 	    const auto & access_qualifier = type_specifier_simple->get_access_qualifier();
 	    ASSERT_INT_EQUAL(AccessQualifier::CONST, access_qualifier.get_type(), "Expect this to be const qualified");
 	    
@@ -150,17 +150,17 @@ int main(int argc, char **argv)
 	}
 	{
 	    const auto & statement_type = parse_result->get_translation_unit().get_statements().at(1)->get_statement();
-	    ASSERT_TRUE(std::holds_alternative<JLang::owned<FileStatementGlobalDefinition>>(statement_type), "This should be a global definition");
+	    ASSERT_TRUE(std::holds_alternative<Gyoji::owned<FileStatementGlobalDefinition>>(statement_type), "This should be a global definition");
 	    
-	    const auto & global_definition = std::get<JLang::owned<FileStatementGlobalDefinition>>(statement_type);
+	    const auto & global_definition = std::get<Gyoji::owned<FileStatementGlobalDefinition>>(statement_type);
 	    ASSERT("p", global_definition->get_name(), "We expect that we are defining the variable 'p'");
 	    
 	    const auto & access_modifier = global_definition->get_access_modifier();
 	    ASSERT_INT_EQUAL(AccessModifier::PUBLIC, access_modifier.get_type(), "We expect this to be public by default");
 	    
 	    const auto & type_specifier = global_definition->get_type_specifier();
-	    ASSERT_TRUE(std::holds_alternative<JLang::owned<TypeSpecifierSimple>>(type_specifier.get_type()), "Expect a simple type.");
-	    const auto & type_specifier_simple = std::get<JLang::owned<TypeSpecifierSimple>>(type_specifier.get_type());
+	    ASSERT_TRUE(std::holds_alternative<Gyoji::owned<TypeSpecifierSimple>>(type_specifier.get_type()), "Expect a simple type.");
+	    const auto & type_specifier_simple = std::get<Gyoji::owned<TypeSpecifierSimple>>(type_specifier.get_type());
 	    const auto & access_qualifier = type_specifier_simple->get_access_qualifier();
 	    ASSERT_INT_EQUAL(AccessQualifier::VOLATILE, access_qualifier.get_type(), "Expect this to be const qualified");
 	    
@@ -181,44 +181,44 @@ int main(int argc, char **argv)
 	
 	{
 	    const auto & statement_type = parse_result->get_translation_unit().get_statements().at(0)->get_statement();
-	    ASSERT_TRUE(std::holds_alternative<JLang::owned<FileStatementGlobalDefinition>>(statement_type), "This should be a global definition");
+	    ASSERT_TRUE(std::holds_alternative<Gyoji::owned<FileStatementGlobalDefinition>>(statement_type), "This should be a global definition");
 	    
-	    const auto & global_definition = std::get<JLang::owned<FileStatementGlobalDefinition>>(statement_type);
+	    const auto & global_definition = std::get<Gyoji::owned<FileStatementGlobalDefinition>>(statement_type);
 	    ASSERT("p", global_definition->get_name(), "We expect that we are defining the variable 'x'");
 	    
 	    const auto & type_specifier = global_definition->get_type_specifier();
 	    
-	    ASSERT_TRUE(std::holds_alternative<JLang::owned<TypeSpecifierPointerTo>>(type_specifier.get_type()), "Expect a pointer to another type.");
-	    const auto & type_specifier_pointer_to = std::get<JLang::owned<TypeSpecifierPointerTo>>(type_specifier.get_type());
+	    ASSERT_TRUE(std::holds_alternative<Gyoji::owned<TypeSpecifierPointerTo>>(type_specifier.get_type()), "Expect a pointer to another type.");
+	    const auto & type_specifier_pointer_to = std::get<Gyoji::owned<TypeSpecifierPointerTo>>(type_specifier.get_type());
 	    
 	    const auto & access_qualifier = type_specifier_pointer_to->get_access_qualifier();
 	    ASSERT_INT_EQUAL(AccessQualifier::VOLATILE, access_qualifier.get_type(), "Expect this to be const qualified");
 	    
 	    const auto & type_referred_to = type_specifier_pointer_to->get_type_specifier();
-	    ASSERT_TRUE(std::holds_alternative<JLang::owned<TypeSpecifierSimple>>(type_referred_to.get_type()), "Expect a simple type we're referring to.");
-	    const auto & type_specifier_referred_to_simple = std::get<JLang::owned<TypeSpecifierSimple>>(type_referred_to.get_type());
+	    ASSERT_TRUE(std::holds_alternative<Gyoji::owned<TypeSpecifierSimple>>(type_referred_to.get_type()), "Expect a simple type we're referring to.");
+	    const auto & type_specifier_referred_to_simple = std::get<Gyoji::owned<TypeSpecifierSimple>>(type_referred_to.get_type());
 	    
 	    const auto & access_qualifier_referred_to = type_specifier_referred_to_simple->get_access_qualifier();
 	    ASSERT_INT_EQUAL(AccessQualifier::CONST, access_qualifier_referred_to.get_type(), "Expect this to be const qualified");
 	}
 	{
 	    const auto & statement_type = parse_result->get_translation_unit().get_statements().at(1)->get_statement();
-	    ASSERT_TRUE(std::holds_alternative<JLang::owned<FileStatementGlobalDefinition>>(statement_type), "This should be a global definition");
+	    ASSERT_TRUE(std::holds_alternative<Gyoji::owned<FileStatementGlobalDefinition>>(statement_type), "This should be a global definition");
 	    
-	    const auto & global_definition = std::get<JLang::owned<FileStatementGlobalDefinition>>(statement_type);
+	    const auto & global_definition = std::get<Gyoji::owned<FileStatementGlobalDefinition>>(statement_type);
 	    ASSERT("q", global_definition->get_name(), "We expect that we are defining the variable 'p'");
 	    
 	    const auto & type_specifier = global_definition->get_type_specifier();
 	    
-	    ASSERT_TRUE(std::holds_alternative<JLang::owned<TypeSpecifierReferenceTo>>(type_specifier.get_type()), "Expect a pointer to another type.");
-	    const auto & type_specifier_reference_to = std::get<JLang::owned<TypeSpecifierReferenceTo>>(type_specifier.get_type());
+	    ASSERT_TRUE(std::holds_alternative<Gyoji::owned<TypeSpecifierReferenceTo>>(type_specifier.get_type()), "Expect a pointer to another type.");
+	    const auto & type_specifier_reference_to = std::get<Gyoji::owned<TypeSpecifierReferenceTo>>(type_specifier.get_type());
 	    
 	    const auto & access_qualifier = type_specifier_reference_to->get_access_qualifier();
 	    ASSERT_INT_EQUAL(AccessQualifier::CONST, access_qualifier.get_type(), "Expect this to be const qualified");
 	    
 	    const auto & type_referred_to = type_specifier_reference_to->get_type_specifier();
-	    ASSERT_TRUE(std::holds_alternative<JLang::owned<TypeSpecifierSimple>>(type_referred_to.get_type()), "Expect a simple type we're referring to.");
-	    const auto & type_specifier_referred_to_simple = std::get<JLang::owned<TypeSpecifierSimple>>(type_referred_to.get_type());
+	    ASSERT_TRUE(std::holds_alternative<Gyoji::owned<TypeSpecifierSimple>>(type_referred_to.get_type()), "Expect a simple type we're referring to.");
+	    const auto & type_specifier_referred_to_simple = std::get<Gyoji::owned<TypeSpecifierSimple>>(type_referred_to.get_type());
 	    
 	    const auto & access_qualifier_referred_to = type_specifier_referred_to_simple->get_access_qualifier();
 	    ASSERT_INT_EQUAL(AccessQualifier::VOLATILE, access_qualifier_referred_to.get_type(), "Expect this to be const qualified");
@@ -235,9 +235,9 @@ int main(int argc, char **argv)
 	
 	{
 	    const auto & statement_type = parse_result->get_translation_unit().get_statements().at(0)->get_statement();
-	    ASSERT_TRUE(std::holds_alternative<JLang::owned<FileStatementFunctionDeclaration>>(statement_type), "This should be a function declaration");
+	    ASSERT_TRUE(std::holds_alternative<Gyoji::owned<FileStatementFunctionDeclaration>>(statement_type), "This should be a function declaration");
 	    
-	    const auto & function_declaration = std::get<JLang::owned<FileStatementFunctionDeclaration>>(statement_type);
+	    const auto & function_declaration = std::get<Gyoji::owned<FileStatementFunctionDeclaration>>(statement_type);
 	    const auto & unsafe_modifier = function_declaration->get_unsafe_modifier();
 	    ASSERT_FALSE(unsafe_modifier.is_unsafe(), "This one should be safe.");
 	    
@@ -247,9 +247,9 @@ int main(int argc, char **argv)
 	
 	{
 	    const auto & statement_type = parse_result->get_translation_unit().get_statements().at(1)->get_statement();
-	    ASSERT_TRUE(std::holds_alternative<JLang::owned<FileStatementFunctionDeclaration>>(statement_type), "This should be a function declaration");
+	    ASSERT_TRUE(std::holds_alternative<Gyoji::owned<FileStatementFunctionDeclaration>>(statement_type), "This should be a function declaration");
 	    
-	    const auto & function_declaration = std::get<JLang::owned<FileStatementFunctionDeclaration>>(statement_type);
+	    const auto & function_declaration = std::get<Gyoji::owned<FileStatementFunctionDeclaration>>(statement_type);
 	    const auto & unsafe_modifier = function_declaration->get_unsafe_modifier();
 	    ASSERT_TRUE(unsafe_modifier.is_unsafe(), "This one should be unsafe.");
 	    
@@ -268,7 +268,7 @@ int main(int argc, char **argv)
 	
 	{
 	    const auto & statement_type = parse_result->get_translation_unit().get_statements().at(0)->get_statement();
-	    ASSERT_TRUE(std::holds_alternative<JLang::owned<FileStatementFunctionDefinition>>(statement_type), "This should be a function definition");
+	    ASSERT_TRUE(std::holds_alternative<Gyoji::owned<FileStatementFunctionDefinition>>(statement_type), "This should be a function definition");
 	}
     }
     
@@ -283,15 +283,15 @@ int main(int argc, char **argv)
 	
 	{
 	    const auto & statement_type = parse_result->get_translation_unit().get_statements().at(0)->get_statement();
-	    ASSERT_TRUE(std::holds_alternative<JLang::owned<FileStatementFunctionDefinition>>(statement_type), "This should be a function definition");
+	    ASSERT_TRUE(std::holds_alternative<Gyoji::owned<FileStatementFunctionDefinition>>(statement_type), "This should be a function definition");
 	    
-	    const auto & function_definition = std::get<JLang::owned<FileStatementFunctionDefinition>>(statement_type);
+	    const auto & function_definition = std::get<Gyoji::owned<FileStatementFunctionDefinition>>(statement_type);
 	    const auto & scope_body = function_definition->get_scope_body();
 	    ASSERT_INT_EQUAL(2, scope_body.get_statements().get_statements().size(), "There should be 2 statements in this function");
 	    
 	    const auto & statement_2 = scope_body.get_statements().get_statements().at(1)->get_statement();
-	    ASSERT_TRUE(std::holds_alternative<JLang::owned<StatementBlock>>(statement_2), "This should be a block statement.");
-	    const auto & statement_block = std::get<JLang::owned<StatementBlock>>(statement_2);
+	    ASSERT_TRUE(std::holds_alternative<Gyoji::owned<StatementBlock>>(statement_2), "This should be a block statement.");
+	    const auto & statement_block = std::get<Gyoji::owned<StatementBlock>>(statement_2);
 	    const auto & unsafe_block = statement_block->get_scope_body();
 	    ASSERT_INT_EQUAL(1, unsafe_block.get_statements().get_statements().size(), "This unsafe block should have a single statement");
 	    

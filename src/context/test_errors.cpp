@@ -1,7 +1,7 @@
-#include <jlang-context/errors.hpp>
-#include <jlang-context/token-stream.hpp>
+#include <gyoji-context/errors.hpp>
+#include <gyoji-context/token-stream.hpp>
 
-using namespace JLang::context;
+using namespace Gyoji::context;
 
 int main(int argc, char **argv)
 {

@@ -1,10 +1,10 @@
-#include <jlang-backend/jbackend-format-pretty.hpp>
-#include <jlang.l.hpp>
-#include <jlang.y.hpp>
+#include <gyoji-backend/jbackend-format-pretty.hpp>
+#include <gyoji.l.hpp>
+#include <gyoji.y.hpp>
 #include <iostream>
 
-using namespace JLang::frontend::ast;
-using namespace JLang::backend;
+using namespace Gyoji::frontend::ast;
+using namespace Gyoji::backend;
 
 JBackendFormatPretty::JBackendFormatPretty()
 {}
@@ -158,7 +158,7 @@ std::string JBackendFormatPretty::break_multiline_comment(std::string str)
 void JBackendFormatPretty::print_node(ASTNode::ptr node)
 {
     switch (node->type) {
-    case jlang::Parser::symbol_kind_type::S_file_statement_function_definition:
+    case gyoji::Parser::symbol_kind_type::S_file_statement_function_definition:
 	print_node_function_def(node);
 	break;
     default:

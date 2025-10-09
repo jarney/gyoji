@@ -1,7 +1,7 @@
-#include <jlang-misc/xml.hpp>
-#include <jlang-misc/test.hpp>
+#include <gyoji-misc/xml.hpp>
+#include <gyoji-misc/test.hpp>
 
-using namespace JLang::misc;
+using namespace Gyoji::misc;
 
 int main(int argc, char **argv)
 {

@@ -1,8 +1,8 @@
-#include <jlang-mir/functions.hpp>
+#include <gyoji-mir/functions.hpp>
 #include <variant>
 #include <stdio.h>
 
-using namespace JLang::mir;
+using namespace Gyoji::mir;
 
 /////////////////////////////////////
 // Functions
@@ -15,12 +15,12 @@ Functions::~Functions()
 {}
 
 void
-Functions::add_function(JLang::owned<Function> _function)
+Functions::add_function(Gyoji::owned<Function> _function)
 {
     functions.push_back(std::move(_function));
 }
 
-const std::vector<JLang::owned<Function>> &
+const std::vector<Gyoji::owned<Function>> &
 Functions::get_functions() const
 { return functions; }
 
@@ -39,7 +39,7 @@ Function::Function(
     std::string _name,
     const Type *_return_type,
     const std::vector<FunctionArgument> & _arguments,
-    const JLang::context::SourceReference & _source_ref
+    const Gyoji::context::SourceReference & _source_ref
     )
     : name(_name)
     , return_type(_return_type)
@@ -64,7 +64,7 @@ const std::vector<FunctionArgument> &
 Function::get_arguments() const
 { return arguments; }
 
-const JLang::context::SourceReference &
+const Gyoji::context::SourceReference &
 Function::get_source_ref() const
 { return source_ref; }
 
@@ -90,7 +90,7 @@ Function::add_block()
     return blockid_created;
 }
 
-const std::map<size_t, JLang::owned<BasicBlock>> &
+const std::map<size_t, Gyoji::owned<BasicBlock>> &
 Function::get_blocks() const
 { return blocks; }
 
@@ -144,7 +144,7 @@ BasicBlock::~BasicBlock()
 {}
 
 void
-BasicBlock::add_operation(JLang::owned<Operation> _operation)
+BasicBlock::add_operation(Gyoji::owned<Operation> _operation)
 {
     operations.push_back(std::move(_operation));
 }
@@ -156,7 +156,7 @@ BasicBlock::dump(FILE *out) const
 	operation->dump(out);
     }
 }
-const std::vector<JLang::owned<Operation>> &
+const std::vector<Gyoji::owned<Operation>> &
 BasicBlock::get_operations() const
 { return operations; }
 

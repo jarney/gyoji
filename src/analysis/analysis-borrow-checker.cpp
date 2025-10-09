@@ -1,9 +1,9 @@
-#include <jlang-analysis.hpp>
+#include <gyoji-analysis.hpp>
 #include <stdio.h>
 
-using namespace JLang::mir;
-using namespace JLang::context;
-using namespace JLang::analysis;
+using namespace Gyoji::mir;
+using namespace Gyoji::context;
+using namespace Gyoji::analysis;
 
 /**
  * This class indicates an operation
@@ -93,7 +93,7 @@ void AnalysisPassBorrowChecker::check(const Function & function) const
     
     for (const auto & block_it : blocks) {
 	const BasicBlock & block = *block_it.second;
-	const std::vector<JLang::owned<Operation>> & operations = block.get_operations();
+	const std::vector<Gyoji::owned<Operation>> & operations = block.get_operations();
 
 	// Each basic block must have at least one operation.
 	if (operations.size() == 0) {

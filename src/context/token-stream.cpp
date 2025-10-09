@@ -1,6 +1,6 @@
-#include <jlang-context/token-stream.hpp>
+#include <gyoji-context/token-stream.hpp>
 
-using namespace JLang::context;
+using namespace Gyoji::context;
 
 static const SourceReference zero_source_ref("internal", 1, 0, 0);
 
@@ -16,7 +16,7 @@ TokenStream::TokenStream()
 TokenStream::~TokenStream()
 {}
 
-const std::vector<JLang::owned<Token>> &
+const std::vector<Gyoji::owned<Token>> &
 TokenStream::get_tokens() const
 {
   return tokens;
@@ -76,7 +76,7 @@ TokenStream::add_token(
     size_t _column
     )
 {
-    JLang::owned<Token> token = std::make_unique<Token>(_typestr, _value, _filename, _line, _column, _value.size());
+    Gyoji::owned<Token> token = std::make_unique<Token>(_typestr, _value, _filename, _line, _column, _value.size());
     const Token & token_ref = *token;
     tokens_by_lineno[_line].push_back(token.get());
     tokens.push_back(std::move(token));

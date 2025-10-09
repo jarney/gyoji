@@ -1,10 +1,10 @@
-#include <jlang-mir/types.hpp>
+#include <gyoji-mir/types.hpp>
 #include <variant>
 #include <stdio.h>
-#include <jlang-misc/jstring.hpp>
+#include <gyoji-misc/jstring.hpp>
 
-using namespace JLang::context;
-using namespace JLang::mir;
+using namespace Gyoji::context;
+using namespace Gyoji::mir;
 
 ////////////////////////////////////////
 // Type
@@ -244,7 +244,7 @@ Type::complete_pointer_definition(const Type *_type, const SourceReference & _so
 }
 
 void
-Type::complete_array_definition(const Type *_type, size_t _array_length, const JLang::context::SourceReference & _source_ref)
+Type::complete_array_definition(const Type *_type, size_t _array_length, const Gyoji::context::SourceReference & _source_ref)
 {
     complete = true;
     pointer_or_ref = _type;
@@ -264,7 +264,7 @@ void
 Type::complete_function_pointer_definition(
     const Type *_return_type,
     const std::vector<Argument> & _argument_types,
-    const JLang::context::SourceReference & _source_ref
+    const Gyoji::context::SourceReference & _source_ref
     )
 {
     complete = true;
@@ -314,7 +314,7 @@ Type::dump(FILE *out) const
 	    arglist.push_back(arg.get_type()->get_name());
 	}
 	desc = desc + std::string("(*)");
-	desc = desc + std::string("(") + JLang::misc::join(arglist, ",") + std::string(")");
+	desc = desc + std::string("(") + Gyoji::misc::join(arglist, ",") + std::string(")");
 	type_desc = std::string("function-pointer ") + desc;
     }
     else if (is_array()) {
@@ -345,7 +345,7 @@ Type::dump(FILE *out) const
 /////////////////////////
 Argument::Argument(
     const Type *_argument_type,
-    const JLang::context::SourceReference & _source_ref
+    const Gyoji::context::SourceReference & _source_ref
     )
     : argument_type(_argument_type)
     , source_ref(&_source_ref)
@@ -360,7 +360,7 @@ const Type*
 Argument::get_type() const
 { return argument_type; }
 
-const JLang::context::SourceReference &
+const Gyoji::context::SourceReference &
 Argument::get_source_ref()
 { return *source_ref; }
 

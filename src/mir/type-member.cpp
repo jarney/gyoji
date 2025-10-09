@@ -1,9 +1,9 @@
-#include <jlang-mir/types.hpp>
+#include <gyoji-mir/types.hpp>
 #include <variant>
 #include <stdio.h>
 
-using namespace JLang::context;
-using namespace JLang::mir;
+using namespace Gyoji::context;
+using namespace Gyoji::mir;
 
 TypeMember::TypeMember(
     std::string _member_name,
@@ -32,7 +32,7 @@ TypeMember::get_name() const
 const Type *
 TypeMember::get_type() const
 { return member_type; }
-const JLang::context::SourceReference &
+const Gyoji::context::SourceReference &
 TypeMember::get_source_ref() const
 { return *source_ref; }
 size_t

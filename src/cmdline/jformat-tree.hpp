@@ -1,11 +1,11 @@
 #pragma once
 
-#include <jlang-frontend.hpp>
+#include <gyoji-frontend.hpp>
 
-namespace JLang::cmdline {
-    using namespace JLang::context;
-    using namespace JLang::frontend::ast;
-    using namespace JLang::frontend::tree;
+namespace Gyoji::cmdline {
+    using namespace Gyoji::context;
+    using namespace Gyoji::frontend::ast;
+    using namespace Gyoji::frontend::tree;
     /**
      * This is the identity transformation that should always
      * format the code exactly as it appeared in the input,

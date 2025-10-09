@@ -1,9 +1,9 @@
 #pragma once
 
-#include <jlang-frontend.hpp>
+#include <gyoji-frontend.hpp>
 
-namespace JLang::cmdline {
-    using namespace JLang::frontend::ast;
+namespace Gyoji::cmdline {
+    using namespace Gyoji::frontend::ast;
     
     /**
      * This is the identity transformation that should always

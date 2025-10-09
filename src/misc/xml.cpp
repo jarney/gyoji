@@ -1,10 +1,10 @@
 #include <string>
-#include <jlang-misc/xml.hpp>
-#include <jlang-misc/jstring.hpp>
+#include <gyoji-misc/xml.hpp>
+#include <gyoji-misc/jstring.hpp>
 
-using namespace JLang::misc;
+using namespace Gyoji::misc;
 
-std::string JLang::misc::xml_to_cdata(const std::string & str)
+std::string Gyoji::misc::xml_to_cdata(const std::string & str)
 {
     std::string output;
     std::vector<std::string> split = string_split(str, "]]>");
@@ -39,12 +39,12 @@ static std::string replace_all(const std::string& source, const std::string& fro
     return newString;
 }
 
-std::string JLang::misc::xml_escape_attribute(const std::string & str)
+std::string Gyoji::misc::xml_escape_attribute(const std::string & str)
 {
     return replace_all(replace_all(str, "\'", "&apos;"), "\"", "&quot;");
 }
 
-std::string JLang::misc::xml_escape_whitespace(const std::string & str)
+std::string Gyoji::misc::xml_escape_whitespace(const std::string & str)
 {
     return replace_all(
 	replace_all(

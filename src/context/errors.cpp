@@ -1,7 +1,7 @@
-#include <jlang-context/errors.hpp>
-#include <jlang-context/token-stream.hpp>
+#include <gyoji-context/errors.hpp>
+#include <gyoji-context/token-stream.hpp>
 
-using namespace JLang::context;
+using namespace Gyoji::context;
 
 //////////////////////////////////////////////////
 Errors::Errors(TokenStream & _token_stream)
@@ -22,7 +22,7 @@ Errors::print() const
 }
 
 void
-Errors::add_error(JLang::owned<Error> error)
+Errors::add_error(Gyoji::owned<Error> error)
 {
     // TODO: Iterate the messages and resolve the context.
     for (const auto & message : error->get_messages()) {
@@ -60,7 +60,7 @@ Error::print()
 {
     const std::string filename = messages.size() > 0 ? messages.back()->get_source_ref().get_filename() : std::string("unknown filename");
     fprintf(stderr, "%s: Error: %s\n", filename.c_str(), error_message.c_str());
-    for (const JLang::owned<ErrorMessage> & msg : messages) {
+    for (const Gyoji::owned<ErrorMessage> & msg : messages) {
 	msg->print();
     }
 }
@@ -70,7 +70,7 @@ Error::add_message(
     const SourceReference & _src_ref,
     std::string _errormsg)
 {
-    JLang::owned<ErrorMessage> message = std::make_unique<ErrorMessage>(
+    Gyoji::owned<ErrorMessage> message = std::make_unique<ErrorMessage>(
 	_src_ref,
 	_errormsg
 	);
@@ -85,12 +85,12 @@ Errors::add_simple_error(
     std::string _error_message
     )
 {
-    auto error = std::make_unique<JLang::context::Error>(_error_title);
+    auto error = std::make_unique<Gyoji::context::Error>(_error_title);
     error->add_message(_src_ref, _error_message);
     add_error(std::move(error));
 }
 
-const std::vector<JLang::owned<ErrorMessage>> &
+const std::vector<Gyoji::owned<ErrorMessage>> &
 Error::get_messages() const
 { return messages; }
 

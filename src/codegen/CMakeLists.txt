@@ -1,15 +1,15 @@
 set(CODEGEN_PUBLIC_HEADERS
-         jlang-codegen.hpp
+         gyoji-codegen.hpp
 )
 
 set(CODEGEN_SOURCES
         codegen.cpp
-        jlang-codegen-llvm.cpp
+        gyoji-codegen-llvm.cpp
         ${CODEGEN_PUBLIC_HEADERS}
 )
 
-add_library(jlang-codegen ${CODEGEN_SOURCES})
-target_include_directories(jlang-codegen
+add_library(gyoji-codegen ${CODEGEN_SOURCES})
+target_include_directories(gyoji-codegen
     PUBLIC
         ${PROJECT_SOURCE_DIR}/src/misc
         ${PROJECT_SOURCE_DIR}/src/mir
@@ -22,12 +22,12 @@ target_include_directories(jlang-codegen
 )
 install(
     TARGETS
-        jlang-codegen
+        gyoji-codegen
         LIBRARY DESTINATION lib
 )
 install(
     FILES
         ${CODEGEN_PUBLIC_HEADERS}
-        DESTINATION include/jlang-codegen
+        DESTINATION include/gyoji-codegen
 )
 

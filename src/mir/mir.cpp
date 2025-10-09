@@ -1,6 +1,6 @@
-#include <jlang-mir.hpp>
+#include <gyoji-mir.hpp>
 
-using namespace JLang::mir;
+using namespace Gyoji::mir;
 
 MIR::MIR()
 {}
