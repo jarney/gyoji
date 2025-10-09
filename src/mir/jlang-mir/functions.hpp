@@ -238,86 +238,6 @@ namespace JLang::mir {
 	const Type * type;
     };
 
-#if 0
-    /**
-     * @brief Local Variable
-     *
-     * @details
-     * Local variables are named variables defined in the
-     * source-code.  Each of them carries a name and a type
-     * associated with them along with the source reference
-     * where it was defined in the code.
-     */
-    class LocalVariable {
-    public:
-	/**
-	 * @brief Create a new local variable
-	 *
-	 * @details
-	 * A local variable is created from a name and a type
-	 * along with a reference to the source location
-	 * where it was declared.
-	 */
-	LocalVariable(
-	    std::string _name,
-	    const Type * _type,
-	    const JLang::context::SourceReference & _src_ref
-	    );
-	/**
-	 * @brief Copy constructor
-	 *
-	 * @details
-	 * The copy constructor is provided in order to
-	 * allow this to be placed into a std::vector
-	 * and allows the elements of the vector to be
-	 * created and moved around.
-	 */
-	LocalVariable(const LocalVariable & _other);
-
-	/**
-	 * @brief Move along, nothing to see here.
-	 *
-	 * @details
-	 * Move along, nothing to see here.
-	 */
-	~LocalVariable();
-
-	/**
-	 * @brief Name of local variable
-	 *
-	 * @details
-	 * Returns the name of the local variable.
-	 */
-	std::string get_name() const;
-
-	/**
-	 * @brief Type of local variable.
-	 *
-	 * @details
-	 * The type is returned as a pointer to
-	 * an immutable type.  It is guaranteed to last
-	 * as long as the MIR object because it is
-	 * owned by the Types container inside the MIR.
-	 */
-	const Type* get_type() const;
-
-	/**
-	 * @brief Source reference where local was declared.
-	 *
-	 * @details
-	 * The source reference is returned as an immutable
-	 * reference.  It is owned by the CompilerContext
-	 * which outlives the MIR, so it is guaranteed
-	 * to live at least as long as the MIR.
-	 */
-	const JLang::context::SourceReference & get_source_ref() const;
-    private:
-	std::string name;
-	const Type* type;
-	const JLang::context::SourceReference & src_ref;
-    };
-#endif
-    
     /**
      * @brief A named label inside a scope.
      *
@@ -468,36 +388,6 @@ namespace JLang::mir {
 	 */
 	const std::map<size_t, JLang::owned<BasicBlock>> & get_blocks() const;
 
-#if 0
-	/**
-	 * @brief Get a local variable.
-	 *
-	 * @details
-	 * This returns a local variable consisting of the
-	 * variable name, its type, and a reference to the
-	 * source where it was declared.
-	 */
-	const LocalVariable * get_local(std::string local_name);
-
-	/**
-	 * @brief Define a new local variable.
-	 *
-	 * @details
-	 * Defines a new local variable from the name, type, and source-reference.
-	 */
-	bool add_local(const LocalVariable & local);
-
-	/**
-	 * @brief Remove a local variable from scope.
-	 *
-	 * @details
-	 * Un-define a local variable.  This happens when, for example,
-	 * a variable goes out of scope in a scope block.  This allows
-	 * variables to go into and out of scope inside the body
-	 * of functions based on the lexical scopes inside the function.
-	 */
-	void remove_local(std::string local_name);
-#endif
 	/**
 	 * @brief Dump a function to the given file handle for debugging.
 	 *
@@ -571,9 +461,6 @@ namespace JLang::mir {
 	// as we build them.
 	size_t blockid;
 	std::map<size_t, JLang::owned<BasicBlock>> blocks;
-#if 0	
-	std::map<std::string, LocalVariable> in_scope_locals;
-#endif
 	std::vector<const Type*> tmpvars;
     };
 };

@@ -32,37 +32,6 @@ Functions::dump(FILE *out) const
     }
 }
 
-#if 0
-/////////////////////////////////////
-// LocalVariable
-/////////////////////////////////////
-LocalVariable::LocalVariable(std::string _name, const Type *_type, const JLang::context::SourceReference & _src_ref)
-    : name(_name)
-    , type(_type)
-    , src_ref(_src_ref)
-     
-{}
-LocalVariable::LocalVariable(const LocalVariable & _other)
-    : name(_other.name)
-    , type(_other.type)
-    , src_ref(_other.src_ref)
-{}
-LocalVariable::~LocalVariable()
-{}
-
-std::string
-LocalVariable::get_name() const
-{ return name; }
-
-const Type*
-LocalVariable::get_type() const
-{ return type; }
-
-const JLang::context::SourceReference &
-LocalVariable::get_source_ref() const
-{ return src_ref; }
-#endif
-
 /////////////////////////////////////
 // Function
 /////////////////////////////////////
@@ -78,11 +47,6 @@ Function::Function(
     , source_ref(_source_ref)
     , blockid(0)
 {
-#if 0
-    for (const auto & arg : arguments) {
-	add_local(LocalVariable(arg.get_name(), arg.get_type(), _source_ref));
-    }
-#endif
 }
 
 Function::~Function()
@@ -129,33 +93,6 @@ Function::add_block()
 const std::map<size_t, JLang::owned<BasicBlock>> &
 Function::get_blocks() const
 { return blocks; }
-
-#if 0
-const LocalVariable *
-Function::get_local(std::string local_name)
-{
-    const auto & it = in_scope_locals.find(local_name);
-    if (it != in_scope_locals.end()) {
-	return &it->second;
-    }
-    return nullptr;
-}
-
-bool
-Function::add_local(const LocalVariable & local)
-{
-    if (get_local(local.get_name()) != nullptr) {
-	return false;
-    }
-    in_scope_locals.insert(std::pair(local.get_name(), local));
-    return true;
-}
-void
-Function::remove_local(std::string local_name)
-{
-    in_scope_locals.erase(local_name);
-}
-#endif
 
 const Type *
 Function::tmpvar_get(size_t tmpvar_id) const
