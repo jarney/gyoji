@@ -133,6 +133,7 @@ FunctionDefinitionResolver::FunctionDefinitionResolver(
     , function_definition(_function_definition)
     , mir(_mir)
     , type_resolver(_type_resolver)
+    , scope_tracker(_compiler_context)
 {}
 FunctionDefinitionResolver::~FunctionDefinitionResolver()
 {}
@@ -140,13 +141,62 @@ FunctionDefinitionResolver::~FunctionDefinitionResolver()
 bool
 FunctionDefinitionResolver::resolve()
 {
-    return extract_from_function_definition(function_definition);
+    std::string fully_qualified_function_name = 
+	function_definition.get_name().get_fully_qualified_name();
+    
+    fprintf(stderr, " - Extracting function %s\n",
+	    fully_qualified_function_name.c_str());
+    
+    const TypeSpecifier & type_specifier = function_definition.get_return_type();
+    const Type *return_type = type_resolver.extract_from_type_specifier(type_specifier);
+    
+    if (return_type == nullptr) {
+	fprintf(stderr, "Could not find return type\n");
+	return false;
+	
+    }
+    std::vector<FunctionArgument> arguments;
+    const auto & function_argument_list = function_definition.get_arguments();
+    const auto & function_definition_args = function_argument_list.get_arguments();
+    for (const auto & function_definition_arg : function_definition_args) {
+       std::string name = function_definition_arg->get_name();
+       const JLang::mir::Type * mir_type = type_resolver.extract_from_type_specifier(function_definition_arg->get_type_specifier());
+       
+       FunctionArgument arg(name, mir_type);
+       arguments.push_back(arg);
+       fprintf(stderr, "Function argument %s\n", name.c_str());
+       if (!scope_tracker.add_variable(name, mir_type, function_definition_arg->get_source_ref())) {
+	   fprintf(stderr, "Existing, stopping process\n");
+	   return false;
+       }
+    }
+    
+    function = std::make_unique<Function>(
+	fully_qualified_function_name,
+	return_type,
+	arguments,
+	function_definition.get_source_ref());
+
+    
+    // Create a new basic block for the start
+    
+    current_block = function->add_block();
+    
+    std::map<std::string, FunctionLabel> labels;
+
+    if (!extract_from_statement_list(
+	    labels,
+	    function_definition.get_scope_body().get_statements())) {
+	return false;
+    }
+    
+    mir.get_functions().add_function(std::move(function));
+
+    return true;
 }
 
 bool
 FunctionDefinitionResolver::extract_from_expression_primary_identifier(
-    JLang::mir::Function & function,
-    size_t & current_block,
     size_t & returned_tmpvar,
     const JLang::frontend::tree::ExpressionPrimaryIdentifier & expression
     )
@@ -170,18 +220,18 @@ FunctionDefinitionResolver::extract_from_expression_primary_identifier(
     // * Maybe we really should 'flatten' our access here.
     
     if (expression.get_identifier().get_identifier_type() == Terminal::IDENTIFIER_LOCAL_SCOPE) {
-	const LocalVariable *localvar = function.get_local(
+	const JLang::frontend::LocalVariable *localvar = scope_tracker.get_variable(
 	    expression.get_identifier().get_value()
 	    );
 	if (localvar != nullptr) {
-	    returned_tmpvar = function.tmpvar_define(localvar->get_type());
+	    returned_tmpvar = function->tmpvar_define(localvar->get_type());
 	    auto operation = std::make_unique<OperationLocalVariable>(
 		expression.get_identifier().get_source_ref(),
 		returned_tmpvar,
 		expression.get_identifier().get_value(),
 		localvar->get_type()
 		);
-	    function.get_basic_block(current_block).add_operation(std::move(operation));
+	    function->get_basic_block(current_block).add_operation(std::move(operation));
 
 	    return true;
 	}
@@ -229,14 +279,14 @@ FunctionDefinitionResolver::extract_from_expression_primary_identifier(
 		    );
 	    return false;
 	}
-	returned_tmpvar = function.tmpvar_define(symbol->get_type());
+	returned_tmpvar = function->tmpvar_define(symbol->get_type());
 
 	auto operation = std::make_unique<OperationSymbol>(
 	    expression.get_identifier().get_source_ref(),
 	    returned_tmpvar,
 	    expression.get_identifier().get_fully_qualified_name()
 	    );
-	function.get_basic_block(current_block).add_operation(std::move(operation));
+	function->get_basic_block(current_block).add_operation(std::move(operation));
 	return true;
     }
     return false;
@@ -244,15 +294,11 @@ FunctionDefinitionResolver::extract_from_expression_primary_identifier(
 
 bool
 FunctionDefinitionResolver::extract_from_expression_primary_nested(
-    JLang::mir::Function & function,
-    size_t & current_block,
     size_t & returned_tmpvar,
     const JLang::frontend::tree::ExpressionPrimaryNested & expression)
 {
     // Nested expressions don't emit blocks on their own, just run whatever is nested.
     return extract_from_expression(
-	function,
-	current_block,
 	returned_tmpvar,
 	expression.get_expression()
 	);
@@ -260,8 +306,6 @@ FunctionDefinitionResolver::extract_from_expression_primary_nested(
 
 bool
 FunctionDefinitionResolver::extract_from_expression_primary_literal_char(
-    JLang::mir::Function & function,
-    size_t & current_block,
     size_t & returned_tmpvar,
     const JLang::frontend::tree::ExpressionPrimaryLiteralChar & expression)
 {
@@ -299,7 +343,7 @@ FunctionDefinitionResolver::extract_from_expression_primary_literal_char(
     }
 
     
-    returned_tmpvar = function.tmpvar_define(mir.get_types().get_type("u8"));
+    returned_tmpvar = function->tmpvar_define(mir.get_types().get_type("u8"));
     auto operation = std::make_unique<OperationLiteralChar>(
 	expression.get_source_ref(),
 	returned_tmpvar,
@@ -307,15 +351,13 @@ FunctionDefinitionResolver::extract_from_expression_primary_literal_char(
 	);
 
     function
-	.get_basic_block(current_block)
+	->get_basic_block(current_block)
 	.add_operation(std::move(operation));
     return true;
 }
 
 bool
 FunctionDefinitionResolver::extract_from_expression_primary_literal_string(
-    JLang::mir::Function & function,
-    size_t & current_block,
     size_t & returned_tmpvar,
     const JLang::frontend::tree::ExpressionPrimaryLiteralString & expression)
 {
@@ -344,22 +386,20 @@ FunctionDefinitionResolver::extract_from_expression_primary_literal_string(
 
     
     
-    returned_tmpvar = function.tmpvar_define(mir.get_types().get_type("u8*"));
+    returned_tmpvar = function->tmpvar_define(mir.get_types().get_type("u8*"));
     auto operation = std::make_unique<OperationLiteralString>(
 	expression.get_source_ref(),
 	returned_tmpvar,
 	string_unescaped
 	);
     function
-	.get_basic_block(current_block)
+	->get_basic_block(current_block)
 	.add_operation(std::move(operation));
     return true;
 }
 
 bool
 FunctionDefinitionResolver::create_constant_integer_one(
-    JLang::mir::Function & function,
-    size_t & current_block,
     const JLang::mir::Type *type,
     size_t & returned_tmpvar,
     const JLang::context::SourceReference & _src_ref
@@ -403,20 +443,18 @@ FunctionDefinitionResolver::create_constant_integer_one(
 		);
 	return false;
     }
-    return create_constant_integer(function, current_block, parse_result, returned_tmpvar, _src_ref);
+    return create_constant_integer(parse_result, returned_tmpvar, _src_ref);
 }
 
 bool
 FunctionDefinitionResolver::create_constant_integer(
-    JLang::mir::Function & function,
-    size_t & current_block,
     const JLang::frontend::integers::ParseLiteralIntResult & parse_result,
     size_t & returned_tmpvar,
     const JLang::context::SourceReference & _src_ref
     )
 {
     const Type *type_part = parse_result.parsed_type;
-    returned_tmpvar = function.tmpvar_define(type_part);
+    returned_tmpvar = function->tmpvar_define(type_part);
     
     JLang::owned<JLang::mir::Operation> operation;
     switch (type_part->get_type()) {
@@ -512,7 +550,7 @@ FunctionDefinitionResolver::create_constant_integer(
 	return false;
     }
     function
-	.get_basic_block(current_block)
+	->get_basic_block(current_block)
 	.add_operation(std::move(operation));
 
     return true;
@@ -542,8 +580,6 @@ FunctionDefinitionResolver::create_constant_integer(
 // SO many error messages so that the user knows PRECISELY what they did wrong and where.
 bool
 FunctionDefinitionResolver::extract_from_expression_primary_literal_int(
-    JLang::mir::Function & function,
-    size_t & current_block,
     size_t & returned_tmpvar,
     const JLang::frontend::tree::ExpressionPrimaryLiteralInt & expression)
 {
@@ -555,8 +591,6 @@ FunctionDefinitionResolver::extract_from_expression_primary_literal_int(
     }
 
     return create_constant_integer(
-	    function,
-	    current_block,
 	    parse_result,
 	    returned_tmpvar,
 	    literal_int_token.get_source_ref());
@@ -564,13 +598,11 @@ FunctionDefinitionResolver::extract_from_expression_primary_literal_int(
 
 bool
 FunctionDefinitionResolver::extract_from_expression_primary_literal_float(
-    JLang::mir::Function & function,
-    size_t & current_block,
     size_t & returned_tmpvar,
     const JLang::frontend::tree::ExpressionPrimaryLiteralFloat & expression)
 {
     std::string literal_type_name = expression.get_type();
-    returned_tmpvar = function.tmpvar_define(mir.get_types().get_type(literal_type_name));
+    returned_tmpvar = function->tmpvar_define(mir.get_types().get_type(literal_type_name));
     JLang::owned<OperationLiteralFloat> operation;
     char *endptr;
     const char *source_cstring = expression.get_value().c_str();
@@ -634,28 +666,26 @@ FunctionDefinitionResolver::extract_from_expression_primary_literal_float(
 	    );
     }
     function
-	.get_basic_block(current_block)
+	->get_basic_block(current_block)
 	.add_operation(std::move(operation));
     return true;
 }
 
 bool
 FunctionDefinitionResolver::extract_from_expression_postfix_array_index(
-    JLang::mir::Function & function,
-    size_t & current_block,
     size_t & returned_tmpvar,
     const ExpressionPostfixArrayIndex & expression)
 {
     size_t array_tmpvar;
     size_t index_tmpvar;
-    if (!extract_from_expression(function, current_block, array_tmpvar, expression.get_array())) {
+    if (!extract_from_expression(array_tmpvar, expression.get_array())) {
 	return false;
     }
-    if (!extract_from_expression(function, current_block, index_tmpvar, expression.get_index())) {
+    if (!extract_from_expression(index_tmpvar, expression.get_index())) {
 	return false;
     }
 
-    const Type *array_type = function.tmpvar_get(array_tmpvar);
+    const Type *array_type = function->tmpvar_get(array_tmpvar);
     if (!array_type->is_array()) {
 	compiler_context
 	    .get_errors()
@@ -667,7 +697,7 @@ FunctionDefinitionResolver::extract_from_expression_postfix_array_index(
 	return false;
     }
 
-    const Type *index_type = function.tmpvar_get(index_tmpvar);
+    const Type *index_type = function->tmpvar_get(index_tmpvar);
     if (index_type->get_type() != Type::TYPE_PRIMITIVE_u32) {
 	compiler_context
 	    .get_errors()
@@ -679,7 +709,7 @@ FunctionDefinitionResolver::extract_from_expression_postfix_array_index(
 	return false;
     }
     
-    returned_tmpvar = function.tmpvar_define(array_type->get_pointer_target());
+    returned_tmpvar = function->tmpvar_define(array_type->get_pointer_target());
     auto operation = std::make_unique<OperationArrayIndex>(
 	expression.get_source_ref(),
 	returned_tmpvar,
@@ -687,7 +717,7 @@ FunctionDefinitionResolver::extract_from_expression_postfix_array_index(
 	index_tmpvar
 	);
     function
-	.get_basic_block(current_block)
+	->get_basic_block(current_block)
 	.add_operation(std::move(operation));
 
     return true;
@@ -695,14 +725,12 @@ FunctionDefinitionResolver::extract_from_expression_postfix_array_index(
 
 bool
 FunctionDefinitionResolver::extract_from_expression_postfix_function_call(
-    JLang::mir::Function & function,
-    size_t & current_block,
     size_t & returned_tmpvar,
     const ExpressionPostfixFunctionCall & expression)
 {
     // Extract the expression itself from the arguments.
     size_t function_type_tmpvar;
-    if (!extract_from_expression(function, current_block, function_type_tmpvar, expression.get_function())) {
+    if (!extract_from_expression(function_type_tmpvar, expression.get_function())) {
 	fprintf(stderr, "Not extracting function early return\n");
 	return false;
     }
@@ -710,14 +738,14 @@ FunctionDefinitionResolver::extract_from_expression_postfix_function_call(
     std::vector<size_t> arg_types;
     for (const auto & arg_expr : expression.get_arguments().get_arguments()) {
 	size_t arg_returned_value;
-	if (!extract_from_expression(function, current_block, arg_returned_value, *arg_expr)) {
+	if (!extract_from_expression(arg_returned_value, *arg_expr)) {
 	    fprintf(stderr, "Not extracting function arg expression\n");
 	    return false;
 	}
 	arg_types.push_back(arg_returned_value);
     }
 
-    const Type *function_pointer_type = function.tmpvar_get(function_type_tmpvar);
+    const Type *function_pointer_type = function->tmpvar_get(function_type_tmpvar);
     if (function_pointer_type->get_type() != Type::TYPE_FUNCTION_POINTER) {
 	fprintf(stderr, "Not extracting function invalid type\n");
 	compiler_context
@@ -732,7 +760,7 @@ FunctionDefinitionResolver::extract_from_expression_postfix_function_call(
 	
     // We declare that we return the vale that the function
     // will return.
-    returned_tmpvar = function.tmpvar_define(function_pointer_type->get_return_type());
+    returned_tmpvar = function->tmpvar_define(function_pointer_type->get_return_type());
     
     auto operation = std::make_unique<OperationFunctionCall>(
 	expression.get_source_ref(),
@@ -742,7 +770,7 @@ FunctionDefinitionResolver::extract_from_expression_postfix_function_call(
 	);
     
     function
-	.get_basic_block(current_block)
+	->get_basic_block(current_block)
 	.add_operation(std::move(operation));
 
     return true;
@@ -750,17 +778,15 @@ FunctionDefinitionResolver::extract_from_expression_postfix_function_call(
 
 bool
 FunctionDefinitionResolver::extract_from_expression_postfix_dot(
-    JLang::mir::Function & function,
-    size_t & current_block,
     size_t & returned_tmpvar,
     const ExpressionPostfixDot & expression)
 {
     size_t class_tmpvar;
-    if (!extract_from_expression(function, current_block, class_tmpvar, expression.get_expression())) {
+    if (!extract_from_expression(class_tmpvar, expression.get_expression())) {
 	return false;
     }
 
-    const Type *class_type = function.tmpvar_get(class_tmpvar);
+    const Type *class_type = function->tmpvar_get(class_tmpvar);
     if (class_type->get_type() != Type::TYPE_COMPOSITE) {
 	compiler_context
 	    .get_errors()
@@ -784,7 +810,7 @@ FunctionDefinitionResolver::extract_from_expression_postfix_dot(
 		);
     }
 
-    returned_tmpvar = function.tmpvar_define(member->get_type());
+    returned_tmpvar = function->tmpvar_define(member->get_type());
     auto operation = std::make_unique<OperationDot>(
 	expression.get_source_ref(),
 	returned_tmpvar,
@@ -792,24 +818,22 @@ FunctionDefinitionResolver::extract_from_expression_postfix_dot(
 	member_name
 	);
     function
-	.get_basic_block(current_block)
+	->get_basic_block(current_block)
 	.add_operation(std::move(operation));
     return true;
 }
 
 bool
 FunctionDefinitionResolver::extract_from_expression_postfix_arrow(
-    JLang::mir::Function & function,
-    size_t & current_block,
     size_t & returned_tmpvar,
     const ExpressionPostfixArrow & expression)
 {
     size_t classptr_tmpvar;
-    if (!extract_from_expression(function, current_block, classptr_tmpvar, expression.get_expression())) {
+    if (!extract_from_expression(classptr_tmpvar, expression.get_expression())) {
 	return false;
     }
 
-    const Type *classptr_type = function.tmpvar_get(classptr_tmpvar);
+    const Type *classptr_type = function->tmpvar_get(classptr_tmpvar);
     if (classptr_type->get_type() != Type::TYPE_POINTER) {
 	compiler_context
 	    .get_errors()
@@ -835,7 +859,7 @@ FunctionDefinitionResolver::extract_from_expression_postfix_arrow(
 
     // First takes 'operand' as a pointer
     // and de-references it into an lvalue.
-    size_t class_reference_tmpvar = function.tmpvar_define(class_type);
+    size_t class_reference_tmpvar = function->tmpvar_define(class_type);
     auto dereference_operation = std::make_unique<OperationUnary>(
 	    Operation::OP_DEREFERENCE,
 	    expression.get_source_ref(),
@@ -843,13 +867,13 @@ FunctionDefinitionResolver::extract_from_expression_postfix_arrow(
 	    classptr_tmpvar
 	    );
 	function
-	    .get_basic_block(current_block)
+	    ->get_basic_block(current_block)
 	    .add_operation(std::move(dereference_operation));
     
     const std::string & member_name = expression.get_identifier();
     const TypeMember *member = class_type->member_get(member_name);
     
-    returned_tmpvar = function.tmpvar_define(member->get_type());
+    returned_tmpvar = function->tmpvar_define(member->get_type());
     auto dot_operation = std::make_unique<OperationDot>(
 	expression.get_source_ref(),
 	returned_tmpvar,
@@ -857,7 +881,7 @@ FunctionDefinitionResolver::extract_from_expression_postfix_arrow(
 	member_name
 	);
     function
-	.get_basic_block(current_block)
+	->get_basic_block(current_block)
 	.add_operation(std::move(dot_operation));
     return true;
 
@@ -865,19 +889,15 @@ FunctionDefinitionResolver::extract_from_expression_postfix_arrow(
 
 bool
 FunctionDefinitionResolver::extract_from_expression_postfix_incdec(
-    JLang::mir::Function & function,
-    size_t & current_block,
     size_t & returned_tmpvar,
     const ExpressionPostfixIncDec & expression)
 {
     size_t operand_tmpvar;
-    if (!extract_from_expression(function, current_block, operand_tmpvar, expression.get_expression())) {
+    if (!extract_from_expression(operand_tmpvar, expression.get_expression())) {
 	return false;
     }
 
     return create_incdec_operation(
-	function,
-	current_block,
 	expression.get_source_ref(),
 	returned_tmpvar,
 	operand_tmpvar,
@@ -888,8 +908,6 @@ FunctionDefinitionResolver::extract_from_expression_postfix_incdec(
 
 bool
 FunctionDefinitionResolver::create_incdec_operation(
-    JLang::mir::Function & function,
-    size_t & current_block,
     const JLang::context::SourceReference & src_ref,
     size_t & returned_tmpvar,
     const size_t & operand_tmpvar,
@@ -905,11 +923,9 @@ FunctionDefinitionResolver::create_incdec_operation(
     //         _4 = <==== This will be either _1 or _3 depending on is_postfix.
     //
     
-    const Type *operand_type = function.tmpvar_get(operand_tmpvar);
+    const Type *operand_type = function->tmpvar_get(operand_tmpvar);
     size_t constant_one_tmpvar;
     if (!create_constant_integer_one(
-	    function,
-	    current_block,
 	    operand_type,
 	    constant_one_tmpvar,
 	    src_ref
@@ -918,7 +934,7 @@ FunctionDefinitionResolver::create_incdec_operation(
     }
     
     
-    size_t addresult_tmpvar = function.tmpvar_duplicate(operand_tmpvar);
+    size_t addresult_tmpvar = function->tmpvar_duplicate(operand_tmpvar);
     if (is_increment) {
 	auto operation = std::make_unique<OperationBinary>(
 	    Operation::OP_ADD,
@@ -928,7 +944,7 @@ FunctionDefinitionResolver::create_incdec_operation(
 	    constant_one_tmpvar
 	    );
 	function
-	    .get_basic_block(current_block)
+	    ->get_basic_block(current_block)
 	    .add_operation(std::move(operation));
     }
     else {
@@ -940,13 +956,13 @@ FunctionDefinitionResolver::create_incdec_operation(
 	    constant_one_tmpvar
 	    );
 	function
-	    .get_basic_block(current_block)
+	    ->get_basic_block(current_block)
 	    .add_operation(std::move(operation));
     }
 
     // We perform a 'store' to store
     // the value back into the variable.
-    size_t ignore_tmpvar = function.tmpvar_duplicate(operand_tmpvar);
+    size_t ignore_tmpvar = function->tmpvar_duplicate(operand_tmpvar);
     auto operation_store = std::make_unique<OperationBinary>(
 	Operation::OP_ASSIGN,
 	src_ref,
@@ -955,7 +971,7 @@ FunctionDefinitionResolver::create_incdec_operation(
 	addresult_tmpvar
 	);
     function
-	.get_basic_block(current_block)
+	->get_basic_block(current_block)
 	.add_operation(std::move(operation_store));
     
     // This is a post-decrement, so we return
@@ -967,8 +983,6 @@ FunctionDefinitionResolver::create_incdec_operation(
 
 bool
 FunctionDefinitionResolver::extract_from_expression_unary_prefix(
-    JLang::mir::Function & function,
-    size_t & current_block,
     size_t & returned_tmpvar,
     const ExpressionUnaryPrefix & expression)
 {
@@ -979,15 +993,13 @@ FunctionDefinitionResolver::extract_from_expression_unary_prefix(
     // same type as the operand.
     size_t operand_tmpvar;
     if (!extract_from_expression(
-	    function,
-	    current_block,
 	    operand_tmpvar,
 	    expression.get_expression()
 	    )) {
 	return false;
     }
     
-    const Type *operand_type = function.tmpvar_get(operand_tmpvar);
+    const Type *operand_type = function->tmpvar_get(operand_tmpvar);
     if (operand_type == nullptr) {
 	compiler_context
 	    .get_errors()
@@ -1003,8 +1015,6 @@ FunctionDefinitionResolver::extract_from_expression_unary_prefix(
     case ExpressionUnaryPrefix::INCREMENT:
         {
 	    return create_incdec_operation(
-		function,
-		current_block,
 		expression.get_source_ref(),
 		returned_tmpvar,
 		operand_tmpvar,
@@ -1016,8 +1026,6 @@ FunctionDefinitionResolver::extract_from_expression_unary_prefix(
     case ExpressionUnaryPrefix::DECREMENT:
         {
 	    return create_incdec_operation(
-		function,
-		current_block,
 		expression.get_source_ref(),
 		returned_tmpvar,
 		operand_tmpvar,
@@ -1029,7 +1037,7 @@ FunctionDefinitionResolver::extract_from_expression_unary_prefix(
     case ExpressionUnaryPrefix::ADDRESSOF:
         {
 	const Type * pointer_to_operand_type = mir.get_types().get_pointer_to(operand_type, expression.get_source_ref());
-	returned_tmpvar = function.tmpvar_define(pointer_to_operand_type);
+	returned_tmpvar = function->tmpvar_define(pointer_to_operand_type);
 	auto operation = std::make_unique<OperationUnary>(
 	    Operation::OP_ADDRESSOF,
 	    expression.get_source_ref(),
@@ -1037,7 +1045,7 @@ FunctionDefinitionResolver::extract_from_expression_unary_prefix(
 	    operand_tmpvar
 	    );
 	function
-	    .get_basic_block(current_block)
+	    ->get_basic_block(current_block)
 	    .add_operation(std::move(operation));
 	}
         break;
@@ -1053,7 +1061,7 @@ FunctionDefinitionResolver::extract_from_expression_unary_prefix(
 		    );
 	    return false;
 	}
-	returned_tmpvar = function.tmpvar_define(operand_type->get_pointer_target());
+	returned_tmpvar = function->tmpvar_define(operand_type->get_pointer_target());
 	auto operation = std::make_unique<OperationUnary>(
 	    Operation::OP_DEREFERENCE,
 	    expression.get_source_ref(),
@@ -1061,7 +1069,7 @@ FunctionDefinitionResolver::extract_from_expression_unary_prefix(
 	    operand_tmpvar
 	    );
 	function
-	    .get_basic_block(current_block)
+	    ->get_basic_block(current_block)
 	    .add_operation(std::move(operation));
         }
         break;
@@ -1075,7 +1083,7 @@ FunctionDefinitionResolver::extract_from_expression_unary_prefix(
     break;
     case ExpressionUnaryPrefix::MINUS:
         {
-	returned_tmpvar = function.tmpvar_duplicate(operand_tmpvar);
+	returned_tmpvar = function->tmpvar_duplicate(operand_tmpvar);
 	auto operation = std::make_unique<OperationUnary>(
 	    Operation::OP_NEGATE,
 	    expression.get_source_ref(),	    
@@ -1083,13 +1091,13 @@ FunctionDefinitionResolver::extract_from_expression_unary_prefix(
 	    operand_tmpvar
 	    );
 	function
-	    .get_basic_block(current_block)
+	    ->get_basic_block(current_block)
 	    .add_operation(std::move(operation));
         }
         break;
     case ExpressionUnaryPrefix::BITWISE_NOT:
         {
-	returned_tmpvar = function.tmpvar_duplicate(operand_tmpvar);
+	returned_tmpvar = function->tmpvar_duplicate(operand_tmpvar);
 	auto operation = std::make_unique<OperationUnary>(
 	    Operation::OP_BITWISE_NOT,
 	    expression.get_source_ref(),	    
@@ -1097,22 +1105,22 @@ FunctionDefinitionResolver::extract_from_expression_unary_prefix(
 	    operand_tmpvar
 	    );
 	function
-	    .get_basic_block(current_block)
+	    ->get_basic_block(current_block)
 	    .add_operation(std::move(operation));
         }
         break;
     case ExpressionUnaryPrefix::LOGICAL_NOT:
         {
-	if (!function.tmpvar_get(operand_tmpvar)->is_bool()) {
+	if (!function->tmpvar_get(operand_tmpvar)->is_bool()) {
 	    compiler_context
 		.get_errors()
 		.add_simple_error(
 		    expression.get_expression().get_source_ref(),
 		    "Logical not (!) must operate on 'bool' expressions.",
-		    std::string("Type of condition expression should be 'bool' and was ") + function.tmpvar_get(operand_tmpvar)->get_name()
+		    std::string("Type of condition expression should be 'bool' and was ") + function->tmpvar_get(operand_tmpvar)->get_name()
 		    );
 	}
-	returned_tmpvar = function.tmpvar_duplicate(operand_tmpvar);
+	returned_tmpvar = function->tmpvar_duplicate(operand_tmpvar);
 	auto operation = std::make_unique<OperationUnary>(
 	    Operation::OP_LOGICAL_NOT,
 	    expression.get_source_ref(),	    
@@ -1120,7 +1128,7 @@ FunctionDefinitionResolver::extract_from_expression_unary_prefix(
 	    operand_tmpvar
 	    );
 	function
-	    .get_basic_block(current_block)
+	    ->get_basic_block(current_block)
 	    .add_operation(std::move(operation));
 	}
         break;
@@ -1138,29 +1146,25 @@ FunctionDefinitionResolver::extract_from_expression_unary_prefix(
 }
 bool
 FunctionDefinitionResolver::extract_from_expression_unary_sizeof_type(
-    JLang::mir::Function & function,
-    size_t & current_block,
     size_t & returned_tmpvar,
     const ExpressionUnarySizeofType & expression)
 {
     const Type * operand_type = type_resolver.extract_from_type_specifier(expression.get_type_specifier());
     const Type * u64_type = mir.get_types().get_type("u64");
-    returned_tmpvar = function.tmpvar_define(u64_type);
+    returned_tmpvar = function->tmpvar_define(u64_type);
     auto operation = std::make_unique<OperationSizeofType>(
 	expression.get_source_ref(),	    
 	returned_tmpvar,
 	operand_type
 	);
     function
-	.get_basic_block(current_block)
+	->get_basic_block(current_block)
 	.add_operation(std::move(operation));
     return true;
 }
 
 bool
 FunctionDefinitionResolver::numeric_widen(
-    JLang::mir::Function & function,
-    size_t & current_block,
     const JLang::context::SourceReference & _src_ref,
     size_t & _widen_var,
     const Type *widen_to
@@ -1183,7 +1187,7 @@ FunctionDefinitionResolver::numeric_widen(
 	return false;
     }
     
-    size_t widened_var = function.tmpvar_define(widen_to);
+    size_t widened_var = function->tmpvar_define(widen_to);
     auto operation = std::make_unique<OperationCast>(
 	widen_type,
 	_src_ref,
@@ -1192,15 +1196,13 @@ FunctionDefinitionResolver::numeric_widen(
 	widen_to
 	);
     function
-	.get_basic_block(current_block)
+	->get_basic_block(current_block)
 	.add_operation(std::move(operation));
     _widen_var = widened_var;
     return true;
 }
 bool
 FunctionDefinitionResolver::numeric_widen_binary_operation(
-    JLang::mir::Function &function,
-    size_t current_block,
     const JLang::context::SourceReference & _src_ref,
     size_t & a_tmpvar,
     size_t & b_tmpvar,
@@ -1213,13 +1215,13 @@ FunctionDefinitionResolver::numeric_widen_binary_operation(
 	// Deal with signed-ness.  We can't mix signed and unsigned.
 	if (atype->is_signed() && btype->is_signed()) {
 	    if (atype->get_primitive_size() > btype->get_primitive_size()) {
-		if (!numeric_widen(function, current_block, _src_ref, b_tmpvar, atype)) {
+		if (!numeric_widen(_src_ref, b_tmpvar, atype)) {
 		    return false;
 		}
 		*widened = atype;
 	    }
 	    else if (atype->get_primitive_size() < btype->get_primitive_size()) {
-		if (!numeric_widen(function, current_block, _src_ref, a_tmpvar, btype)) {
+		if (!numeric_widen(_src_ref, a_tmpvar, btype)) {
 		    return false;
 		}
 		*widened = btype;
@@ -1232,13 +1234,13 @@ FunctionDefinitionResolver::numeric_widen_binary_operation(
 	}
 	else if (atype->is_unsigned() && btype->is_unsigned()) {
 	    if (atype->get_primitive_size() > btype->get_primitive_size()) {
-		if (!numeric_widen(function, current_block, _src_ref, b_tmpvar, atype)) {
+		if (!numeric_widen(_src_ref, b_tmpvar, atype)) {
 		    return false;
 		}
 		*widened = atype;
 	    }
 	    else if (atype->get_primitive_size() < btype->get_primitive_size()) {
-		if (!numeric_widen(function, current_block, _src_ref, a_tmpvar, btype)) {
+		if (!numeric_widen(_src_ref, a_tmpvar, btype)) {
 		    return false;
 		}
 		*widened = btype;
@@ -1265,13 +1267,13 @@ FunctionDefinitionResolver::numeric_widen_binary_operation(
     // know that we have a float in the else.
     else {
 	if (atype->get_primitive_size() > btype->get_primitive_size()) {
-	    if (!numeric_widen(function, current_block, _src_ref, b_tmpvar, atype)) {
+	    if (!numeric_widen(_src_ref, b_tmpvar, atype)) {
 		return false;
 	    }
 	    *widened = atype;
 	}
 	else if (atype->get_primitive_size() < btype->get_primitive_size()) {
-	    if (!numeric_widen(function, current_block, _src_ref, a_tmpvar, btype)) {
+	    if (!numeric_widen(_src_ref, a_tmpvar, btype)) {
 		return false;
 	    }
 	    *widened = btype;
@@ -1285,17 +1287,15 @@ FunctionDefinitionResolver::numeric_widen_binary_operation(
 
 bool
 FunctionDefinitionResolver::handle_binary_operation_arithmetic(
-    JLang::mir::Function & function,
     const JLang::context::SourceReference & _src_ref,
     Operation::OperationType type,
-    size_t & current_block,
     size_t & returned_tmpvar,
     size_t a_tmpvar,
     size_t b_tmpvar
     )
 {
-    const Type *atype = function.tmpvar_get(a_tmpvar);
-    const Type *btype = function.tmpvar_get(b_tmpvar);
+    const Type *atype = function->tmpvar_get(a_tmpvar);
+    const Type *btype = function->tmpvar_get(b_tmpvar);
     // Check that both operands are numeric.
     if (!atype->is_numeric() ||	!btype->is_numeric()) {
 	compiler_context
@@ -1341,13 +1341,13 @@ FunctionDefinitionResolver::handle_binary_operation_arithmetic(
     // Now, both of them are either int or float, so we need to handle each separately
     // so that we can choose the appropriate cast type.
     const Type *widened = nullptr;
-    if (!numeric_widen_binary_operation(function, current_block, _src_ref, a_tmpvar, b_tmpvar, atype, btype, &widened)) {
+    if (!numeric_widen_binary_operation(_src_ref, a_tmpvar, b_tmpvar, atype, btype, &widened)) {
 	return false;
     }
 
     // The return type is whatever
     // we widened the add to be.
-    returned_tmpvar = function.tmpvar_define(widened);
+    returned_tmpvar = function->tmpvar_define(widened);
     
     // We emit the appropriate operation as either an integer or
     // floating-point add depending on which one it was.
@@ -1362,7 +1362,7 @@ FunctionDefinitionResolver::handle_binary_operation_arithmetic(
 	b_tmpvar
 	);
     function
-	.get_basic_block(current_block)
+	->get_basic_block(current_block)
 	.add_operation(std::move(operation));
     
     return true;
@@ -1370,17 +1370,15 @@ FunctionDefinitionResolver::handle_binary_operation_arithmetic(
 
 bool
 FunctionDefinitionResolver::handle_binary_operation_logical(
-    JLang::mir::Function & function,
     const JLang::context::SourceReference & _src_ref,
     Operation::OperationType type,
-    size_t & current_block,
     size_t & returned_tmpvar,
     size_t a_tmpvar,
     size_t b_tmpvar
     )
 {
-    const Type *atype = function.tmpvar_get(a_tmpvar);
-    const Type *btype = function.tmpvar_get(b_tmpvar);
+    const Type *atype = function->tmpvar_get(a_tmpvar);
+    const Type *btype = function->tmpvar_get(b_tmpvar);
     // Check that both operands are numeric.
     if (!atype->is_bool() || !btype->is_bool()) {
 	compiler_context
@@ -1400,24 +1398,22 @@ FunctionDefinitionResolver::handle_binary_operation_logical(
 	b_tmpvar
 	);
     function
-	.get_basic_block(current_block)
+	->get_basic_block(current_block)
 	.add_operation(std::move(operation));
     return true;
 }
 
 bool
 FunctionDefinitionResolver::handle_binary_operation_bitwise(
-    JLang::mir::Function & function,
     const JLang::context::SourceReference & _src_ref,
     Operation::OperationType type,
-    size_t & current_block,
     size_t & returned_tmpvar,
     size_t a_tmpvar,
     size_t b_tmpvar
     )
 {
-    const Type *atype = function.tmpvar_get(a_tmpvar);
-    const Type *btype = function.tmpvar_get(b_tmpvar);
+    const Type *atype = function->tmpvar_get(a_tmpvar);
+    const Type *btype = function->tmpvar_get(b_tmpvar);
     // Check that both operands are numeric.
     if (!atype->is_unsigned() || !btype->is_unsigned()) {
 	compiler_context
@@ -1431,13 +1427,13 @@ FunctionDefinitionResolver::handle_binary_operation_bitwise(
     }
     // Now widen them to the appropriate sizes.
     const Type *widened = nullptr;
-    if (!numeric_widen_binary_operation(function, current_block, _src_ref, a_tmpvar, b_tmpvar, atype, btype, &widened)) {
+    if (!numeric_widen_binary_operation(_src_ref, a_tmpvar, b_tmpvar, atype, btype, &widened)) {
 	return false;
     }
 
     // The return type is whatever
     // we widened the add to be.
-    returned_tmpvar = function.tmpvar_define(widened);
+    returned_tmpvar = function->tmpvar_define(widened);
     
     // We emit the appropriate operation as either an integer or
     // floating-point add depending on which one it was.
@@ -1452,7 +1448,7 @@ FunctionDefinitionResolver::handle_binary_operation_bitwise(
 	b_tmpvar
 	);
     function
-	.get_basic_block(current_block)
+	->get_basic_block(current_block)
 	.add_operation(std::move(operation));
     
     return true;
@@ -1461,17 +1457,15 @@ FunctionDefinitionResolver::handle_binary_operation_bitwise(
 
 bool
 FunctionDefinitionResolver::handle_binary_operation_shift(
-    JLang::mir::Function & function,
     const JLang::context::SourceReference & _src_ref,
     Operation::OperationType type,
-    size_t & current_block,
     size_t & returned_tmpvar,
     size_t a_tmpvar,
     size_t b_tmpvar
     )
 {
-    const Type *atype = function.tmpvar_get(a_tmpvar);
-    const Type *btype = function.tmpvar_get(b_tmpvar);
+    const Type *atype = function->tmpvar_get(a_tmpvar);
+    const Type *btype = function->tmpvar_get(b_tmpvar);
     // Check that both operands are numeric.
     if (!atype->is_unsigned() || !btype->is_unsigned()) {
 	compiler_context
@@ -1491,7 +1485,7 @@ FunctionDefinitionResolver::handle_binary_operation_shift(
     // shift happens if it's any bigger.
 
     // We always return the same size that the LHS is.
-    returned_tmpvar = function.tmpvar_define(atype);
+    returned_tmpvar = function->tmpvar_define(atype);
     
     // We emit the appropriate operation as either an integer or
     // floating-point add depending on which one it was.
@@ -1506,7 +1500,7 @@ FunctionDefinitionResolver::handle_binary_operation_shift(
 	b_tmpvar
 	);
     function
-	.get_basic_block(current_block)
+	->get_basic_block(current_block)
 	.add_operation(std::move(operation));
     
     return true;
@@ -1514,17 +1508,15 @@ FunctionDefinitionResolver::handle_binary_operation_shift(
 
 bool
 FunctionDefinitionResolver::handle_binary_operation_compare(
-    JLang::mir::Function & function,
     const JLang::context::SourceReference & _src_ref,
     Operation::OperationType type,
-    size_t & current_block,
     size_t & returned_tmpvar,
     size_t a_tmpvar,
     size_t b_tmpvar
     )
 {
-    const Type *atype = function.tmpvar_get(a_tmpvar);
-    const Type *btype = function.tmpvar_get(b_tmpvar);
+    const Type *atype = function->tmpvar_get(a_tmpvar);
+    const Type *btype = function->tmpvar_get(b_tmpvar);
     // Check that both operands are the same type.
     if (atype->get_name() != btype->get_name()) {
 	compiler_context
@@ -1580,7 +1572,7 @@ FunctionDefinitionResolver::handle_binary_operation_compare(
     // shift happens if it's any bigger.
 
     // We always return the same size that the LHS is.
-    returned_tmpvar = function.tmpvar_define(mir.get_types().get_type("bool"));
+    returned_tmpvar = function->tmpvar_define(mir.get_types().get_type("bool"));
     
     // We emit the appropriate operation as either an integer or
     // floating-point add depending on which one it was.
@@ -1595,7 +1587,7 @@ FunctionDefinitionResolver::handle_binary_operation_compare(
 	b_tmpvar
 	);
     function
-	.get_basic_block(current_block)
+	->get_basic_block(current_block)
 	.add_operation(std::move(operation));
     
     return true;
@@ -1603,17 +1595,15 @@ FunctionDefinitionResolver::handle_binary_operation_compare(
 
 bool
 FunctionDefinitionResolver::handle_binary_operation_assignment(
-    JLang::mir::Function & function,
     const JLang::context::SourceReference & _src_ref,
     Operation::OperationType type,
-    size_t & current_block,
     size_t & returned_tmpvar,
     size_t a_tmpvar,
     size_t b_tmpvar
     )
 {
-    const Type *atype = function.tmpvar_get(a_tmpvar);
-    const Type *btype = function.tmpvar_get(b_tmpvar);
+    const Type *atype = function->tmpvar_get(a_tmpvar);
+    const Type *btype = function->tmpvar_get(b_tmpvar);
     // Check that both operands are the same type.
     if (atype->get_name() != btype->get_name()) {
 	compiler_context
@@ -1653,7 +1643,7 @@ FunctionDefinitionResolver::handle_binary_operation_assignment(
     // shift happens if it's any bigger.
 
     // We always return the same size that the LHS is.
-    returned_tmpvar = function.tmpvar_define(atype);
+    returned_tmpvar = function->tmpvar_define(atype);
     
     // We emit the appropriate operation as either an integer or
     // floating-point add depending on which one it was.
@@ -1668,7 +1658,7 @@ FunctionDefinitionResolver::handle_binary_operation_assignment(
 	b_tmpvar
 	);
     function
-	.get_basic_block(current_block)
+	->get_basic_block(current_block)
 	.add_operation(std::move(operation));
     
     return true;
@@ -1676,18 +1666,16 @@ FunctionDefinitionResolver::handle_binary_operation_assignment(
 
 bool
 FunctionDefinitionResolver::extract_from_expression_binary(
-    JLang::mir::Function & function,
-    size_t & current_block,
     size_t & returned_tmpvar,
     const ExpressionBinary & expression)
 {
     size_t a_tmpvar;
     size_t b_tmpvar;
     
-    if (!extract_from_expression(function, current_block, a_tmpvar, expression.get_a())) {
+    if (!extract_from_expression(a_tmpvar, expression.get_a())) {
 	return false;
     }
-    if (!extract_from_expression(function, current_block, b_tmpvar, expression.get_b())) {
+    if (!extract_from_expression(b_tmpvar, expression.get_b())) {
 	return false;
     }
 
@@ -1696,10 +1684,8 @@ FunctionDefinitionResolver::extract_from_expression_binary(
 
     if (op_type == ExpressionBinary::ADD) {
 	if (!handle_binary_operation_arithmetic(
-	    function,
 	    expression.get_source_ref(),
 	    Operation::OP_ADD,
-	    current_block,
 	    returned_tmpvar,
 	    a_tmpvar,
 	    b_tmpvar)) {
@@ -1708,10 +1694,8 @@ FunctionDefinitionResolver::extract_from_expression_binary(
     }	
     else if (op_type == ExpressionBinary::SUBTRACT) {
 	if (!handle_binary_operation_arithmetic(
-	    function,
 	    expression.get_source_ref(),
 	    Operation::OP_SUBTRACT,
-	    current_block,
 	    returned_tmpvar,
 	    a_tmpvar,
 	    b_tmpvar)) {
@@ -1720,10 +1704,8 @@ FunctionDefinitionResolver::extract_from_expression_binary(
     }
     else if (op_type == ExpressionBinary::MULTIPLY) {
 	if (!handle_binary_operation_arithmetic(
-	    function,
 	    expression.get_source_ref(),
 	    Operation::OP_MULTIPLY,
-	    current_block,
 	    returned_tmpvar,
 	    a_tmpvar,
 	    b_tmpvar)) {
@@ -1732,10 +1714,8 @@ FunctionDefinitionResolver::extract_from_expression_binary(
     }
     else if (op_type == ExpressionBinary::DIVIDE) {
 	if (!handle_binary_operation_arithmetic(
-	    function,
 	    expression.get_source_ref(),
 	    Operation::OP_DIVIDE,
-	    current_block,
 	    returned_tmpvar,
 	    a_tmpvar,
 	    b_tmpvar)) {
@@ -1744,10 +1724,8 @@ FunctionDefinitionResolver::extract_from_expression_binary(
     }
     else if (op_type == ExpressionBinary::MODULO) {
 	if (!handle_binary_operation_arithmetic(
-	    function,
 	    expression.get_source_ref(),
 	    Operation::OP_MODULO,
-	    current_block,
 	    returned_tmpvar,
 	    a_tmpvar,
 	    b_tmpvar)) {
@@ -1756,10 +1734,8 @@ FunctionDefinitionResolver::extract_from_expression_binary(
     }
     else if (op_type == ExpressionBinary::LOGICAL_AND) {
 	if (!handle_binary_operation_logical(
-	    function,
 	    expression.get_source_ref(),
 	    Operation::OP_LOGICAL_AND,
-	    current_block,
 	    returned_tmpvar,
 	    a_tmpvar,
 	    b_tmpvar)) {
@@ -1768,10 +1744,8 @@ FunctionDefinitionResolver::extract_from_expression_binary(
     }
     else if (op_type == ExpressionBinary::LOGICAL_OR) {
 	if (!handle_binary_operation_logical(
-	    function,
 	    expression.get_source_ref(),
 	    Operation::OP_LOGICAL_OR,
-	    current_block,
 	    returned_tmpvar,
 	    a_tmpvar,
 	    b_tmpvar)) {
@@ -1780,10 +1754,8 @@ FunctionDefinitionResolver::extract_from_expression_binary(
     }
     else if (op_type == ExpressionBinary::BITWISE_AND) {
 	if (!handle_binary_operation_bitwise(
-	    function,
 	    expression.get_source_ref(),
 	    Operation::OP_BITWISE_AND,
-	    current_block,
 	    returned_tmpvar,
 	    a_tmpvar,
 	    b_tmpvar)) {
@@ -1792,10 +1764,8 @@ FunctionDefinitionResolver::extract_from_expression_binary(
     }
     else if (op_type == ExpressionBinary::BITWISE_OR) {
 	if (!handle_binary_operation_bitwise(
-	    function,
 	    expression.get_source_ref(),
 	    Operation::OP_BITWISE_OR,
-	    current_block,
 	    returned_tmpvar,
 	    a_tmpvar,
 	    b_tmpvar
@@ -1805,10 +1775,8 @@ FunctionDefinitionResolver::extract_from_expression_binary(
     }
     else if (op_type == ExpressionBinary::BITWISE_XOR) {
 	if (!handle_binary_operation_bitwise(
-	    function,
 	    expression.get_source_ref(),
 	    Operation::OP_BITWISE_XOR,
-	    current_block,
 	    returned_tmpvar,
 	    a_tmpvar,
 	    b_tmpvar
@@ -1818,10 +1786,8 @@ FunctionDefinitionResolver::extract_from_expression_binary(
     }
     else if (op_type == ExpressionBinary::SHIFT_LEFT) {
 	if (!handle_binary_operation_shift(
-	    function,
 	    expression.get_source_ref(),
 	    Operation::OP_SHIFT_LEFT,
-	    current_block,
 	    returned_tmpvar,
 	    a_tmpvar,
 	    b_tmpvar
@@ -1831,10 +1797,8 @@ FunctionDefinitionResolver::extract_from_expression_binary(
     }
     else if (op_type == ExpressionBinary::SHIFT_RIGHT) {
 	if (!handle_binary_operation_shift(
-	    function,
 	    expression.get_source_ref(),
 	    Operation::OP_SHIFT_RIGHT,
-	    current_block,
 	    returned_tmpvar,
 	    a_tmpvar,
 	    b_tmpvar
@@ -1844,10 +1808,8 @@ FunctionDefinitionResolver::extract_from_expression_binary(
     }
     else if (op_type == ExpressionBinary::COMPARE_LESS) {
 	if (!handle_binary_operation_compare(
-		function,
 		expression.get_source_ref(),
 		Operation::OP_COMPARE_LESS,
-		current_block,
 		returned_tmpvar,
 		a_tmpvar,
 		b_tmpvar
@@ -1857,10 +1819,8 @@ FunctionDefinitionResolver::extract_from_expression_binary(
     }
     else if (op_type == ExpressionBinary::COMPARE_GREATER) {
 	if (!handle_binary_operation_compare(
-		function,
 		expression.get_source_ref(),
 		Operation::OP_COMPARE_GREATER,
-		current_block,
 		returned_tmpvar,
 		a_tmpvar,
 		b_tmpvar
@@ -1870,10 +1830,8 @@ FunctionDefinitionResolver::extract_from_expression_binary(
     }
     else if (op_type == ExpressionBinary::COMPARE_LESS_EQUAL) {
 	if (!handle_binary_operation_compare(
-		function,
 		expression.get_source_ref(),
 		Operation::OP_COMPARE_LESS_EQUAL,
-		current_block,
 		returned_tmpvar,
 		a_tmpvar,
 		b_tmpvar
@@ -1883,10 +1841,8 @@ FunctionDefinitionResolver::extract_from_expression_binary(
     }
     else if (op_type == ExpressionBinary::COMPARE_GREATER_EQUAL) {
 	if (!handle_binary_operation_compare(
-		function,
 		expression.get_source_ref(),
 		Operation::OP_COMPARE_GREATER_EQUAL,
-		current_block,
 		returned_tmpvar,
 		a_tmpvar,
 		b_tmpvar
@@ -1896,10 +1852,8 @@ FunctionDefinitionResolver::extract_from_expression_binary(
     }
     else if (op_type == ExpressionBinary::COMPARE_EQUAL) {
 	if (!handle_binary_operation_compare(
-		function,
 		expression.get_source_ref(),
 		Operation::OP_COMPARE_EQUAL,
-		current_block,
 		returned_tmpvar,
 		a_tmpvar,
 		b_tmpvar
@@ -1909,10 +1863,8 @@ FunctionDefinitionResolver::extract_from_expression_binary(
     }
     else if (op_type == ExpressionBinary::COMPARE_NOT_EQUAL) {
 	if (!handle_binary_operation_compare(
-		function,
 		expression.get_source_ref(),
 		Operation::OP_COMPARE_NOT_EQUAL,
-		current_block,
 		returned_tmpvar,
 		a_tmpvar,
 		b_tmpvar
@@ -1922,10 +1874,8 @@ FunctionDefinitionResolver::extract_from_expression_binary(
     }
     else if (op_type == ExpressionBinary::ASSIGNMENT) {
 	if (!handle_binary_operation_assignment(
-		function,
 		expression.get_source_ref(),
 		Operation::OP_ASSIGN,
-		current_block,
 		returned_tmpvar,
 		a_tmpvar,
 		b_tmpvar
@@ -1937,10 +1887,8 @@ FunctionDefinitionResolver::extract_from_expression_binary(
 	// This is just syntax sugar for * followed by =
 	size_t arithmetic_tmpvar;
 	if (!handle_binary_operation_arithmetic(
-		function,
 		expression.get_source_ref(),
 		Operation::OP_MULTIPLY,
-		current_block,
 		arithmetic_tmpvar,
 		a_tmpvar,
 		b_tmpvar
@@ -1948,10 +1896,8 @@ FunctionDefinitionResolver::extract_from_expression_binary(
 	    return false;
 	}
 	if (!handle_binary_operation_assignment(
-		function,
 		expression.get_source_ref(),
 		Operation::OP_ASSIGN,
-		current_block,
 		returned_tmpvar,
 		a_tmpvar,
 		arithmetic_tmpvar
@@ -1963,10 +1909,8 @@ FunctionDefinitionResolver::extract_from_expression_binary(
 	// This is just syntax sugar for / followed by =
 	size_t arithmetic_tmpvar;
 	if (!handle_binary_operation_arithmetic(
-		function,
 		expression.get_source_ref(),
 		Operation::OP_DIVIDE,
-		current_block,
 		arithmetic_tmpvar,
 		a_tmpvar,
 		b_tmpvar
@@ -1974,10 +1918,8 @@ FunctionDefinitionResolver::extract_from_expression_binary(
 	    return false;
 	}
 	if (!handle_binary_operation_assignment(
-		function,
 		expression.get_source_ref(),
 		Operation::OP_ASSIGN,
-		current_block,
 		returned_tmpvar,
 		a_tmpvar,
 		arithmetic_tmpvar
@@ -1989,10 +1931,8 @@ FunctionDefinitionResolver::extract_from_expression_binary(
 	// This is just syntax sugar for % followed by =
 	size_t arithmetic_tmpvar;
 	if (!handle_binary_operation_arithmetic(
-		function,
 		expression.get_source_ref(),
 		Operation::OP_MODULO,
-		current_block,
 		arithmetic_tmpvar,
 		a_tmpvar,
 		b_tmpvar
@@ -2000,10 +1940,8 @@ FunctionDefinitionResolver::extract_from_expression_binary(
 	    return false;
 	}
 	if (!handle_binary_operation_assignment(
-		function,
 		expression.get_source_ref(),
 		Operation::OP_ASSIGN,
-		current_block,
 		returned_tmpvar,
 		a_tmpvar,
 		arithmetic_tmpvar
@@ -2015,10 +1953,8 @@ FunctionDefinitionResolver::extract_from_expression_binary(
 	// This is just syntax sugar for + followed by =
 	size_t arithmetic_tmpvar;
 	if (!handle_binary_operation_arithmetic(
-		function,
 		expression.get_source_ref(),
 		Operation::OP_ADD,
-		current_block,
 		arithmetic_tmpvar,
 		a_tmpvar,
 		b_tmpvar
@@ -2026,10 +1962,8 @@ FunctionDefinitionResolver::extract_from_expression_binary(
 	    return false;
 	}
 	if (!handle_binary_operation_assignment(
-		function,
 		expression.get_source_ref(),
 		Operation::OP_ASSIGN,
-		current_block,
 		returned_tmpvar,
 		a_tmpvar,
 		arithmetic_tmpvar
@@ -2041,10 +1975,8 @@ FunctionDefinitionResolver::extract_from_expression_binary(
 	// This is just syntax sugar for - followed by =
 	size_t arithmetic_tmpvar;
 	if (!handle_binary_operation_arithmetic(
-		function,
 		expression.get_source_ref(),
 		Operation::OP_SUBTRACT,
-		current_block,
 		arithmetic_tmpvar,
 		a_tmpvar,
 		b_tmpvar
@@ -2052,10 +1984,8 @@ FunctionDefinitionResolver::extract_from_expression_binary(
 	    return false;
 	}
 	if (!handle_binary_operation_assignment(
-		function,
 		expression.get_source_ref(),
 		Operation::OP_ASSIGN,
-		current_block,
 		returned_tmpvar,
 		a_tmpvar,
 		arithmetic_tmpvar
@@ -2067,10 +1997,8 @@ FunctionDefinitionResolver::extract_from_expression_binary(
 	// This is just syntax sugar for << followed by =
 	size_t arithmetic_tmpvar;
 	if (!handle_binary_operation_shift(
-		function,
 		expression.get_source_ref(),
 		Operation::OP_SHIFT_LEFT,
-		current_block,
 		arithmetic_tmpvar,
 		a_tmpvar,
 		b_tmpvar
@@ -2078,10 +2006,8 @@ FunctionDefinitionResolver::extract_from_expression_binary(
 	    return false;
 	}
 	if (!handle_binary_operation_assignment(
-		function,
 		expression.get_source_ref(),
 		Operation::OP_ASSIGN,
-		current_block,
 		returned_tmpvar,
 		a_tmpvar,
 		arithmetic_tmpvar
@@ -2093,10 +2019,8 @@ FunctionDefinitionResolver::extract_from_expression_binary(
 	// This is just syntax sugar for >> followed by =
 	size_t arithmetic_tmpvar;
 	if (!handle_binary_operation_shift(
-		function,
 		expression.get_source_ref(),
 		Operation::OP_SHIFT_RIGHT,
-		current_block,
 		arithmetic_tmpvar,
 		a_tmpvar,
 		b_tmpvar
@@ -2104,10 +2028,8 @@ FunctionDefinitionResolver::extract_from_expression_binary(
 	    return false;
 	}
 	if (!handle_binary_operation_assignment(
-		function,
 		expression.get_source_ref(),
 		Operation::OP_ASSIGN,
-		current_block,
 		returned_tmpvar,
 		a_tmpvar,
 		arithmetic_tmpvar
@@ -2119,10 +2041,8 @@ FunctionDefinitionResolver::extract_from_expression_binary(
 	// This is just syntax sugar for & followed by =
 	size_t arithmetic_tmpvar;
 	if (!handle_binary_operation_bitwise(
-		function,
 		expression.get_source_ref(),
 		Operation::OP_BITWISE_AND,
-		current_block,
 		arithmetic_tmpvar,
 		a_tmpvar,
 		b_tmpvar
@@ -2130,10 +2050,8 @@ FunctionDefinitionResolver::extract_from_expression_binary(
 	    return false;
 	}
 	if (!handle_binary_operation_assignment(
-		function,
 		expression.get_source_ref(),
 		Operation::OP_ASSIGN,
-		current_block,
 		returned_tmpvar,
 		a_tmpvar,
 		arithmetic_tmpvar
@@ -2145,10 +2063,8 @@ FunctionDefinitionResolver::extract_from_expression_binary(
 	// This is just syntax sugar for | followed by =
 	size_t arithmetic_tmpvar;
 	if (!handle_binary_operation_bitwise(
-		function,
 		expression.get_source_ref(),
 		Operation::OP_BITWISE_OR,
-		current_block,
 		arithmetic_tmpvar,
 		a_tmpvar,
 		b_tmpvar
@@ -2156,10 +2072,8 @@ FunctionDefinitionResolver::extract_from_expression_binary(
 	    return false;
 	}
 	if (!handle_binary_operation_assignment(
-		function,
 		expression.get_source_ref(),
 		Operation::OP_ASSIGN,
-		current_block,
 		returned_tmpvar,
 		a_tmpvar,
 		arithmetic_tmpvar
@@ -2171,10 +2085,8 @@ FunctionDefinitionResolver::extract_from_expression_binary(
 	// This is just syntax sugar for ^ followed by =
 	size_t arithmetic_tmpvar;
 	if (!handle_binary_operation_bitwise(
-		function,
 		expression.get_source_ref(),
 		Operation::OP_BITWISE_XOR,
-		current_block,
 		arithmetic_tmpvar,
 		a_tmpvar,
 		b_tmpvar
@@ -2182,10 +2094,8 @@ FunctionDefinitionResolver::extract_from_expression_binary(
 	    return false;
 	}
 	if (!handle_binary_operation_assignment(
-		function,
 		expression.get_source_ref(),
 		Operation::OP_ASSIGN,
-		current_block,
 		returned_tmpvar,
 		a_tmpvar,
 		arithmetic_tmpvar
@@ -2207,25 +2117,21 @@ FunctionDefinitionResolver::extract_from_expression_binary(
 }
 bool
 FunctionDefinitionResolver::extract_from_expression_trinary(
-    JLang::mir::Function & function,
-    size_t & current_block,
     size_t & returned_tmpvar,
     const ExpressionTrinary & expression)
 {
 //    function
-//	.get_basic_block(current_block)
+//	->get_basic_block(current_block)
 //	.add_operation(std::string("trinary operator "));
     return false;
 }
 bool
 FunctionDefinitionResolver::extract_from_expression_cast(
-    JLang::mir::Function & function,
-    size_t & current_block,
     size_t & returned_tmpvar,
     const ExpressionCast & expression)
 {
 //    function
-//	.get_basic_block(current_block)
+//	->get_basic_block(current_block)
 //	.add_operation(std::string("cast"));
     return false;
 }
@@ -2233,8 +2139,6 @@ FunctionDefinitionResolver::extract_from_expression_cast(
 
 bool
 FunctionDefinitionResolver::extract_from_expression(
-    JLang::mir::Function & function,
-    size_t & current_block,
     size_t & returned_tmpvar,
     const Expression & expression_container)
 {
@@ -2242,67 +2146,67 @@ FunctionDefinitionResolver::extract_from_expression(
 
   if (std::holds_alternative<JLang::owned<ExpressionPrimaryIdentifier>>(expression_type)) {
     const auto & expression = std::get<JLang::owned<ExpressionPrimaryIdentifier>>(expression_type);
-    return extract_from_expression_primary_identifier(function, current_block, returned_tmpvar, *expression);
+    return extract_from_expression_primary_identifier(returned_tmpvar, *expression);
   }
   else if (std::holds_alternative<JLang::owned<ExpressionPrimaryNested>>(expression_type)) {
     const auto & expression = std::get<JLang::owned<ExpressionPrimaryNested>>(expression_type);
-    return extract_from_expression_primary_nested(function, current_block, returned_tmpvar, *expression);
+    return extract_from_expression_primary_nested(returned_tmpvar, *expression);
   }
   else if (std::holds_alternative<JLang::owned<ExpressionPrimaryLiteralChar>>(expression_type)) {
     const auto & expression = std::get<JLang::owned<ExpressionPrimaryLiteralChar>>(expression_type);
-    return extract_from_expression_primary_literal_char(function, current_block, returned_tmpvar, *expression);
+    return extract_from_expression_primary_literal_char(returned_tmpvar, *expression);
   }
   else if (std::holds_alternative<JLang::owned<ExpressionPrimaryLiteralString>>(expression_type)) {
     const auto & expression = std::get<JLang::owned<ExpressionPrimaryLiteralString>>(expression_type);
-    return extract_from_expression_primary_literal_string(function, current_block, returned_tmpvar, *expression);
+    return extract_from_expression_primary_literal_string(returned_tmpvar, *expression);
   }
   else if (std::holds_alternative<JLang::owned<ExpressionPrimaryLiteralInt>>(expression_type)) {
     const auto & expression = std::get<JLang::owned<ExpressionPrimaryLiteralInt>>(expression_type);
-    return extract_from_expression_primary_literal_int(function, current_block, returned_tmpvar, *expression);
+    return extract_from_expression_primary_literal_int(returned_tmpvar, *expression);
   }
   else if (std::holds_alternative<JLang::owned<ExpressionPrimaryLiteralFloat>>(expression_type)) {
     const auto & expression = std::get<JLang::owned<ExpressionPrimaryLiteralFloat>>(expression_type);
-    return extract_from_expression_primary_literal_float(function, current_block, returned_tmpvar, *expression);
+    return extract_from_expression_primary_literal_float(returned_tmpvar, *expression);
   }
   else if (std::holds_alternative<JLang::owned<ExpressionPostfixArrayIndex>>(expression_type)) {
     const auto & expression = std::get<JLang::owned<ExpressionPostfixArrayIndex>>(expression_type);
-    return extract_from_expression_postfix_array_index(function, current_block, returned_tmpvar, *expression);
+    return extract_from_expression_postfix_array_index(returned_tmpvar, *expression);
   }
   else if (std::holds_alternative<JLang::owned<ExpressionPostfixFunctionCall>>(expression_type)) {
     const auto & expression = std::get<JLang::owned<ExpressionPostfixFunctionCall>>(expression_type);
-    return extract_from_expression_postfix_function_call(function, current_block, returned_tmpvar, *expression);
+    return extract_from_expression_postfix_function_call(returned_tmpvar, *expression);
   }
   else if (std::holds_alternative<JLang::owned<ExpressionPostfixDot>>(expression_type)) {
     const auto & expression = std::get<JLang::owned<ExpressionPostfixDot>>(expression_type);
-    return extract_from_expression_postfix_dot(function, current_block, returned_tmpvar, *expression);
+    return extract_from_expression_postfix_dot(returned_tmpvar, *expression);
   }
   else if (std::holds_alternative<JLang::owned<ExpressionPostfixArrow>>(expression_type)) {
     const auto & expression = std::get<JLang::owned<ExpressionPostfixArrow>>(expression_type);
-    return extract_from_expression_postfix_arrow(function, current_block, returned_tmpvar, *expression);
+    return extract_from_expression_postfix_arrow(returned_tmpvar, *expression);
   }
   else if (std::holds_alternative<JLang::owned<ExpressionPostfixIncDec>>(expression_type)) {
     const auto & expression = std::get<JLang::owned<ExpressionPostfixIncDec>>(expression_type);
-    return extract_from_expression_postfix_incdec(function, current_block, returned_tmpvar, *expression);
+    return extract_from_expression_postfix_incdec(returned_tmpvar, *expression);
   }
   else if (std::holds_alternative<JLang::owned<ExpressionUnaryPrefix>>(expression_type)) {
     const auto & expression = std::get<JLang::owned<ExpressionUnaryPrefix>>(expression_type);
-    return extract_from_expression_unary_prefix(function, current_block, returned_tmpvar, *expression);
+    return extract_from_expression_unary_prefix(returned_tmpvar, *expression);
   }
   else if (std::holds_alternative<JLang::owned<ExpressionUnarySizeofType>>(expression_type)) {
     const auto & expression = std::get<JLang::owned<ExpressionUnarySizeofType>>(expression_type);
-    return extract_from_expression_unary_sizeof_type(function, current_block, returned_tmpvar, *expression);
+    return extract_from_expression_unary_sizeof_type(returned_tmpvar, *expression);
   }
   else if (std::holds_alternative<JLang::owned<ExpressionBinary>>(expression_type)) {
     const auto & expression = std::get<JLang::owned<ExpressionBinary>>(expression_type);
-    return extract_from_expression_binary(function, current_block, returned_tmpvar, *expression);
+    return extract_from_expression_binary(returned_tmpvar, *expression);
   }
   else if (std::holds_alternative<JLang::owned<ExpressionTrinary>>(expression_type)) {
     const auto & expression = std::get<JLang::owned<ExpressionTrinary>>(expression_type);
-    return extract_from_expression_trinary(function, current_block, returned_tmpvar, *expression);
+    return extract_from_expression_trinary(returned_tmpvar, *expression);
   }
   else if (std::holds_alternative<JLang::owned<ExpressionCast>>(expression_type)) {
     const auto & expression = std::get<JLang::owned<ExpressionCast>>(expression_type);
-    return extract_from_expression_cast(function, current_block, returned_tmpvar, *expression);
+    return extract_from_expression_cast(returned_tmpvar, *expression);
   }
   else {
     fprintf(stderr, "Compiler bug, invalid expression type\n");
@@ -2312,21 +2216,17 @@ FunctionDefinitionResolver::extract_from_expression(
 
 bool
 FunctionDefinitionResolver::local_declare_or_error(
-    JLang::mir::Function & function,
-    size_t & current_block,
-    std::vector<std::string> & unwind,
     const JLang::mir::Type *mir_type,
     const std::string & name,
     const SourceReference & source_ref
     )
 {
-    LocalVariable local(name, mir_type, source_ref);
-    const LocalVariable *maybe_existing = function.get_local(name);
-    
+    const JLang::frontend::LocalVariable *maybe_existing = scope_tracker.get_variable(name);
+	
     if (maybe_existing != nullptr) {
 	std::unique_ptr<JLang::context::Error> error = std::make_unique<JLang::context::Error>("Duplicate Local Variable.");
 	error->add_message(source_ref,
-			   std::string("Variable with name ") + local.get_name() + " is already in scope and cannot be duplicated.");
+			   std::string("Variable with name ") + name + " is already in scope and cannot be duplicated.");
 	error->add_message(maybe_existing->get_source_ref(),
 			   "First declared here.");
 	
@@ -2335,24 +2235,20 @@ FunctionDefinitionResolver::local_declare_or_error(
 	    .add_error(std::move(error));
 	return false;
     }
-    function.add_local(local);
+    scope_tracker.add_variable(name, mir_type, source_ref);
     
     auto operation = std::make_unique<OperationLocalDeclare>(
 	source_ref,
 	name,
 	mir_type
 	);
-    function.get_basic_block(current_block).add_operation(std::move(operation));
-    unwind.push_back(name);
+    function->get_basic_block(current_block).add_operation(std::move(operation));
 
     return true;
 }
 
 bool
 FunctionDefinitionResolver::extract_from_statement_variable_declaration(
-    JLang::mir::Function & function,
-    size_t & current_block,
-    std::vector<std::string> & unwind,
     const StatementVariableDeclaration & statement
     )
 {
@@ -2366,9 +2262,6 @@ FunctionDefinitionResolver::extract_from_statement_variable_declaration(
     const JLang::mir::Type * mir_type = type_resolver.extract_from_type_specifier(statement.get_type_specifier());
     
     if (!local_declare_or_error(
-	    function,
-	    current_block,
-	    unwind,
 	    mir_type,
 	    statement.get_name(),
 	    statement.get_name_source_ref()
@@ -2382,26 +2275,24 @@ FunctionDefinitionResolver::extract_from_statement_variable_declaration(
 	// 1) call LocalVariable
 	// 2) Evaluate the expression
 	// 3) Perform an assignment.
-	size_t variable_tmpvar = function.tmpvar_define(mir_type);
+	size_t variable_tmpvar = function->tmpvar_define(mir_type);
 	auto operation = std::make_unique<OperationLocalVariable>(
 	    statement.get_source_ref(),
 	    variable_tmpvar,
 	    statement.get_name(),
 	    mir_type
 	    );
-	function.get_basic_block(current_block).add_operation(std::move(operation));
+	function->get_basic_block(current_block).add_operation(std::move(operation));
 
 	size_t initial_value_tmpvar;
-	if (!extract_from_expression(function, current_block, initial_value_tmpvar, initializer_expression.get_expression())) {
+	if (!extract_from_expression(initial_value_tmpvar, initializer_expression.get_expression())) {
 	    return false;
 	}
 
 	size_t returned_tmpvar; // We don't save the returned val because nobody wants it.
 	if (!handle_binary_operation_assignment(
-		function,
 		initializer_expression.get_source_ref(),
 		Operation::OP_ASSIGN,
-		current_block,
 		returned_tmpvar,
 		variable_tmpvar,
 		initial_value_tmpvar
@@ -2425,45 +2316,40 @@ FunctionDefinitionResolver::extract_from_statement_variable_declaration(
 
 bool
 FunctionDefinitionResolver::extract_from_statement_ifelse(
-    JLang::mir::Function & function,
-    size_t & current_block,
-    bool & in_loop,
-    size_t & loop_break_blockid,
-    size_t & loop_continue_blockid,
     std::map<std::string, FunctionLabel> & labels,
     const StatementIfElse & statement
     )
 {
     size_t condition_tmpvar;
-    if (!extract_from_expression(function, current_block, condition_tmpvar, statement.get_expression())) {
+    if (!extract_from_expression(condition_tmpvar, statement.get_expression())) {
 	return false;
     }
     // First, evaluate the expression to get our condition.
-    if (!function.tmpvar_get(condition_tmpvar)->is_bool()) {
+    if (!function->tmpvar_get(condition_tmpvar)->is_bool()) {
 	compiler_context
 	    .get_errors()
 	    .add_simple_error(
 		statement.get_expression().get_source_ref(),
 		"Invalid condition in if statement.",
-		std::string("Type of condition expression should be 'bool' and was ") + function.tmpvar_get(condition_tmpvar)->get_name()
+		std::string("Type of condition expression should be 'bool' and was ") + function->tmpvar_get(condition_tmpvar)->get_name()
 		);
 	return false;
     }
     
-    size_t blockid_if = function.add_block();
-    size_t blockid_done = function.add_block();
+    size_t blockid_if = function->add_block();
+    size_t blockid_done = function->add_block();
     size_t blockid_else = -1;
     if (statement.has_else() || statement.has_else_if()) {
 	// If we have an 'else', then
 	// dump to it based on the condition.
-	blockid_else = function.add_block();
+	blockid_else = function->add_block();
 	auto operation = std::make_unique<OperationJumpConditional>(
 	    statement.get_source_ref(),
 	    condition_tmpvar,
 	    blockid_if,
 	    blockid_else
 	    );
-	function.get_basic_block(current_block).add_operation(std::move(operation));
+	function->get_basic_block(current_block).add_operation(std::move(operation));
     }
     else {
 	// Otherwise, jump to done
@@ -2474,65 +2360,57 @@ FunctionDefinitionResolver::extract_from_statement_ifelse(
 	    blockid_if,
 	    blockid_done
 	    );
-	function.get_basic_block(current_block).add_operation(std::move(operation));
+	function->get_basic_block(current_block).add_operation(std::move(operation));
     }
     
     current_block = blockid_if;
 
     // Perform the stuff inside the 'if' block.
+    scope_tracker.scope_push();
     if (!extract_from_statement_list(
-	function,
-	current_block,
-	in_loop,
-	loop_break_blockid,
-	loop_continue_blockid,
 	labels,
 	statement.get_if_scope_body().get_statements()
 	    )) {
 	return false;
     }
+    scope_tracker.scope_pop();
     
     // Unconditionally jump to done
     // unless the block is alreayd terminated by
     // another jump or a return.
-    if (!function.get_basic_block(current_block).contains_terminator()) {
+    if (!function->get_basic_block(current_block).contains_terminator()) {
 	auto operation = std::make_unique<OperationJump>(
 	    statement.get_source_ref(),
 	    blockid_done
 	    );
-	function.get_basic_block(current_block).add_operation(std::move(operation));
+	function->get_basic_block(current_block).add_operation(std::move(operation));
     }
     
     if (statement.has_else()) {
 	// Perform the stuff in the 'else' block.
+	scope_tracker.scope_push();
+	size_t blockid_tmp = current_block;
+	current_block = blockid_else;
 	if (!extract_from_statement_list(
-	    function,
-	    blockid_else,
-	    in_loop,
-	    loop_break_blockid,
-	    loop_continue_blockid,
 	    labels,
 	    statement.get_else_scope_body().get_statements()
 		)) {
 	    return false;
 	}
+	current_block = blockid_tmp;
+	scope_tracker.scope_pop();
 	// Jump to the 'done' block when the 'else' block is finished
 	// unless it has terminated already.
-	if (!function.get_basic_block(blockid_else).contains_terminator()) {
+	if (!function->get_basic_block(blockid_else).contains_terminator()) {
 	    auto operation = std::make_unique<OperationJump>(
 		statement.get_source_ref(),
 		blockid_done
 		);
-	    function.get_basic_block(blockid_else).add_operation(std::move(operation));
+	    function->get_basic_block(blockid_else).add_operation(std::move(operation));
 	}
     }
     else if (statement.has_else_if()) {
 	if (!extract_from_statement_ifelse(
-	    function,
-	    current_block,
-	    in_loop,
-	    loop_break_blockid,
-	    loop_continue_blockid,
 	    labels,
 	    statement.get_else_if()
 		)) {
@@ -2545,30 +2423,29 @@ FunctionDefinitionResolver::extract_from_statement_ifelse(
 
 bool
 FunctionDefinitionResolver::extract_from_statement_while(
-    JLang::mir::Function & function,
-    size_t & current_block,
-    bool & in_loop,
-    size_t & loop_break_blockid,
-    size_t & loop_continue_blockid,
     std::map<std::string, JLang::mir::FunctionLabel> & labels,
     const JLang::frontend::tree::StatementWhile & statement
     )
 {
     size_t condition_tmpvar;
 
-    size_t blockid_evaluate_expression = function.add_block();
-    size_t blockid_if = function.add_block();
-    size_t blockid_done = function.add_block();
+    size_t blockid_evaluate_expression = function->add_block();
+    size_t blockid_if = function->add_block();
+    size_t blockid_done = function->add_block();
 
     auto operation_jump_initial = std::make_unique<OperationJump>(
 	statement.get_source_ref(),
 	blockid_evaluate_expression
 	);
-    function.get_basic_block(current_block).add_operation(std::move(operation_jump_initial));
+    function->get_basic_block(current_block).add_operation(std::move(operation_jump_initial));
+
+    size_t blockid_tmp = current_block;
+    current_block = blockid_evaluate_expression;
     
-    if (!extract_from_expression(function, blockid_evaluate_expression, condition_tmpvar, statement.get_expression())) {
+    if (!extract_from_expression(condition_tmpvar, statement.get_expression())) {
 	return false;
     }
+    current_block = blockid_tmp;
 
     auto operation_jump_conditional = std::make_unique<OperationJumpConditional>(
 	statement.get_source_ref(),
@@ -2576,31 +2453,28 @@ FunctionDefinitionResolver::extract_from_statement_while(
 	blockid_if,
 	blockid_done
 	);
-    function.get_basic_block(blockid_evaluate_expression).add_operation(std::move(operation_jump_conditional));
+    function->get_basic_block(blockid_evaluate_expression).add_operation(std::move(operation_jump_conditional));
 
-    in_loop = true;
-    loop_break_blockid = blockid_done;
-    loop_continue_blockid = blockid_evaluate_expression;
-    
-    extract_from_statement_list(
-	function,
-	blockid_if,
-	in_loop,
-	loop_break_blockid,
-	loop_continue_blockid,
+    // Push a loop scope.
+    scope_tracker.scope_push_loop(blockid_done, blockid_evaluate_expression);
+    size_t blockid_tmp_if = current_block;
+    current_block = blockid_if;
+    if (!extract_from_statement_list(
 	labels,
 	statement.get_scope_body().get_statements()
-	);
-
-    in_loop = false;
-    loop_break_blockid = 0;
-    loop_continue_blockid = 0;
+	    )) {
+	return false;
+    }
+    current_block = blockid_tmp_if;
+    
+    // Pop back from the scope.
+    scope_tracker.scope_pop();
     
     auto operation_jump_to_evaluate = std::make_unique<OperationJump>(
 	statement.get_source_ref(),
 	blockid_evaluate_expression
 	);
-    function.get_basic_block(blockid_if).add_operation(std::move(operation_jump_to_evaluate));
+    function->get_basic_block(blockid_if).add_operation(std::move(operation_jump_to_evaluate));
     
     current_block = blockid_done;
     
@@ -2609,30 +2483,20 @@ FunctionDefinitionResolver::extract_from_statement_while(
 
 bool
 FunctionDefinitionResolver::extract_from_statement_for(
-    JLang::mir::Function & function,
-    size_t & current_block,
-    bool & in_loop,
-    size_t & loop_break_blockid,
-    size_t & loop_continue_blockid,
     std::map<std::string, JLang::mir::FunctionLabel> & labels,
     const JLang::frontend::tree::StatementFor & statement
     )
 {
     size_t condition_tmpvar;
 
-    size_t blockid_evaluate_expression_termination = function.add_block();
-    size_t blockid_if = function.add_block();
-    size_t blockid_done = function.add_block();
+    size_t blockid_evaluate_expression_termination = function->add_block();
+    size_t blockid_if = function->add_block();
+    size_t blockid_done = function->add_block();
 
-    std::vector<std::string> unwind;
-    
     if (statement.is_declaration()) {
 	const JLang::mir::Type * mir_type = type_resolver.extract_from_type_specifier(statement.get_type_specifier());
 	
 	if (!local_declare_or_error(
-		function,
-		current_block,
-		unwind,
 		mir_type,
 		statement.get_identifier(),
 		statement.get_identifier_source_ref()
@@ -2642,7 +2506,7 @@ FunctionDefinitionResolver::extract_from_statement_for(
     }
     
     // Evaluate the initialization expression
-    if (!extract_from_expression(function, current_block, condition_tmpvar, statement.get_expression_initial())) {
+    if (!extract_from_expression(condition_tmpvar, statement.get_expression_initial())) {
 	return false;
     }
     
@@ -2650,12 +2514,15 @@ FunctionDefinitionResolver::extract_from_statement_for(
 	statement.get_source_ref(),
 	blockid_evaluate_expression_termination
 	);
-    function.get_basic_block(current_block).add_operation(std::move(operation_jump_initial));
+    function->get_basic_block(current_block).add_operation(std::move(operation_jump_initial));
 
     // Evaluate the termination condition.
-    if (!extract_from_expression(function, blockid_evaluate_expression_termination, condition_tmpvar, statement.get_expression_termination())) {
+    size_t blockid_tmp = current_block;
+    current_block = blockid_evaluate_expression_termination;
+    if (!extract_from_expression(condition_tmpvar, statement.get_expression_termination())) {
 	return false;
     }
+    current_block = blockid_tmp;
 
     auto operation_jump_conditional = std::make_unique<OperationJumpConditional>(
 	statement.get_source_ref(),
@@ -2663,41 +2530,37 @@ FunctionDefinitionResolver::extract_from_statement_for(
 	blockid_if,
 	blockid_done
 	);
-    function.get_basic_block(blockid_evaluate_expression_termination).add_operation(std::move(operation_jump_conditional));
+    function->get_basic_block(blockid_evaluate_expression_termination).add_operation(std::move(operation_jump_conditional));
 
-    in_loop = true;
-    loop_break_blockid = blockid_done;
-    loop_continue_blockid = blockid_evaluate_expression_termination;
+    scope_tracker.scope_push_loop(blockid_done, blockid_evaluate_expression_termination);
     
-    extract_from_statement_list(
-	function,
-	blockid_if,
-	in_loop,
-	loop_break_blockid,
-	loop_continue_blockid,
+    size_t blockid_tmp_if = current_block;
+    current_block = blockid_if;
+    if (!extract_from_statement_list(
 	labels,
 	statement.get_scope_body().get_statements()
-	);
-
-    // Evaluate the 'increment' expression
-    if (!extract_from_expression(function, blockid_if, condition_tmpvar, statement.get_expression_increment())) {
+	    )) {
 	return false;
     }
     
-    in_loop = false;
-    loop_break_blockid = 0;
-    loop_continue_blockid = 0;
+    scope_tracker.scope_pop();
+
+    // Evaluate the 'increment' expression
+    if (!extract_from_expression(condition_tmpvar, statement.get_expression_increment())) {
+	return false;
+    }
+    current_block = blockid_tmp_if;
     
     auto operation_jump_to_evaluate = std::make_unique<OperationJump>(
 	statement.get_source_ref(),
 	blockid_evaluate_expression_termination
 	);
-    function.get_basic_block(blockid_if).add_operation(std::move(operation_jump_to_evaluate));
+    function->get_basic_block(blockid_if).add_operation(std::move(operation_jump_to_evaluate));
     
     current_block = blockid_done;
 
     // Un-declare the variable we declared.
-    leave_scope(function, current_block, statement.get_source_ref(), unwind);
+//    leave_scope(function, current_block, statement.get_source_ref(), unwind);
     
     return true;
 }
@@ -2706,16 +2569,11 @@ FunctionDefinitionResolver::extract_from_statement_for(
 
 bool
 FunctionDefinitionResolver::extract_from_statement_break(
-    JLang::mir::Function & function,
-    size_t & current_block,
-    bool & in_loop,
-    size_t & loop_break_blockid,
     std::map<std::string, JLang::mir::FunctionLabel> & labels,
-    std::vector<std::string> & unwind,
     const JLang::frontend::tree::StatementBreak & statement
     )
 {
-    if (!in_loop) {
+    if (!scope_tracker.is_in_loop()) {
 	compiler_context
 	    .get_errors()
 	    .add_simple_error(statement.get_source_ref(),
@@ -2724,28 +2582,27 @@ FunctionDefinitionResolver::extract_from_statement_break(
 		);
 	return true;
     }
+
+    std::vector<std::string> unwind_break = scope_tracker.get_variables_to_unwind_for_break();
+    leave_scope(statement.get_source_ref(), unwind_break);
+    
     auto operation_jump_to_break = std::make_unique<OperationJump>(
 	statement.get_source_ref(),
-	loop_break_blockid
+	scope_tracker.get_loop_break_blockid()
 	);
-    function.get_basic_block(current_block).add_operation(std::move(operation_jump_to_break));
-    current_block = function.add_block();
+    function->get_basic_block(current_block).add_operation(std::move(operation_jump_to_break));
+    current_block = function->add_block();
     
     return true;
 }
 
 bool
 FunctionDefinitionResolver::extract_from_statement_continue(
-    JLang::mir::Function & function,
-    size_t & current_block,
-    bool & in_loop,
-    size_t & loop_continue_blockid,
     std::map<std::string, JLang::mir::FunctionLabel> & labels,
-    std::vector<std::string> & unwind,
     const JLang::frontend::tree::StatementContinue & statement
     )
 {
-    if (!in_loop) {
+    if (!scope_tracker.is_in_loop()) {
 	compiler_context
 	    .get_errors()
 	    .add_simple_error(statement.get_source_ref(),
@@ -2756,10 +2613,10 @@ FunctionDefinitionResolver::extract_from_statement_continue(
     }
     auto operation_jump_to_continue = std::make_unique<OperationJump>(
 	statement.get_source_ref(),
-	loop_continue_blockid
+	scope_tracker.get_loop_continue_blockid()
 	);
-    function.get_basic_block(current_block).add_operation(std::move(operation_jump_to_continue));
-    current_block = function.add_block();
+    function->get_basic_block(current_block).add_operation(std::move(operation_jump_to_continue));
+    current_block = function->add_block();
     
     return true;
 }
@@ -2767,10 +2624,7 @@ FunctionDefinitionResolver::extract_from_statement_continue(
 
 bool
 FunctionDefinitionResolver::extract_from_statement_label(
-    JLang::mir::Function & function,
-    size_t & current_block,
     std::map<std::string, FunctionLabel> & labels,
-    std::vector<std::string> & unwind,
     const JLang::frontend::tree::StatementLabel & statement
     )
 {
@@ -2782,7 +2636,7 @@ FunctionDefinitionResolver::extract_from_statement_label(
     const auto & it = labels.find(label_name);
     size_t label_block;
     if (it == labels.end()) {
-	label_block = function.add_block();
+	label_block = function->add_block();
 	FunctionLabel label_desc(label_name, label_block);
 	label_desc.set_label(statement.get_name_source_ref());
 	labels.insert(std::pair(label_name, label_desc));
@@ -2813,7 +2667,7 @@ FunctionDefinitionResolver::extract_from_statement_label(
 	statement.get_source_ref(),
 	label_block
 	);
-    function.get_basic_block(current_block).add_operation(std::move(operation));
+    function->get_basic_block(current_block).add_operation(std::move(operation));
     // Then whatever we add next will be in this new block.
     current_block = label_block;
     
@@ -2822,10 +2676,7 @@ FunctionDefinitionResolver::extract_from_statement_label(
 
 bool
 FunctionDefinitionResolver::extract_from_statement_goto(
-    JLang::mir::Function & function,
-    size_t & current_block,
     std::map<std::string, FunctionLabel> & labels,
-    std::vector<std::string> & unwind,
     const JLang::frontend::tree::StatementGoto & statement
     )
 {
@@ -2836,7 +2687,7 @@ FunctionDefinitionResolver::extract_from_statement_goto(
     // but we can't resolve it yet because we don't
     // yet know the ID of the target.
     if (it == labels.end()) {
-	size_t label_block = function.add_block();
+	size_t label_block = function->add_block();
 	FunctionLabel label_desc(label_name, label_block);
 	labels.insert(std::pair(label_name, label_desc));
     }
@@ -2845,9 +2696,9 @@ FunctionDefinitionResolver::extract_from_statement_goto(
 	    statement.get_source_ref(),
 	    it->second.get_block()
 	    );
-	function.get_basic_block(current_block).add_operation(std::move(operation));
+	function->get_basic_block(current_block).add_operation(std::move(operation));
 	// This jump ends the basic block, so we start a new one.
-	size_t next_block = function.add_block();
+	size_t next_block = function->add_block();
 	current_block = next_block;
     }
     return true;
@@ -2855,86 +2706,69 @@ FunctionDefinitionResolver::extract_from_statement_goto(
 	
 bool
 FunctionDefinitionResolver::extract_from_statement_return(
-    JLang::mir::Function & function,
-    size_t & current_block,
-    std::vector<std::string> & unwind,
     const StatementReturn & statement
     )
 {
     size_t expression_tmpvar;
-    if (!extract_from_expression(function, current_block, expression_tmpvar, statement.get_expression())) {
+    if (!extract_from_expression(expression_tmpvar, statement.get_expression())) {
 	return false;
     }
 
-    leave_scope(function, current_block, statement.get_source_ref(), unwind);
+    std::vector<std::string> unwind_root = scope_tracker.get_variables_to_unwind_for_root();
+    leave_scope(statement.get_source_ref(), unwind_root);
     
     auto operation = std::make_unique<OperationReturn>(
 	statement.get_source_ref(),
 	expression_tmpvar
 	);
-    function.get_basic_block(current_block).add_operation(std::move(operation));
+    function->get_basic_block(current_block).add_operation(std::move(operation));
     return true;
 }
 
 
 void
 FunctionDefinitionResolver::leave_scope(
-    JLang::mir::Function & function,
-    size_t & current_block,
     const SourceReference & src_ref,
     std::vector<std::string> & unwind)
 {
+    
     for (const auto & undecl : unwind) {
-	function.remove_local(undecl);
 	auto operation = std::make_unique<OperationLocalUndeclare>(
 	    src_ref,
 	    undecl);
-	function.get_basic_block(current_block).add_operation(std::move(operation));
+	function->get_basic_block(current_block).add_operation(std::move(operation));
     }
     unwind.clear();
 }
 	    
 bool
 FunctionDefinitionResolver::extract_from_statement_list(
-    JLang::mir::Function & function,
-    size_t & start_block,
-    bool & in_loop,
-    size_t & loop_break_blockid,
-    size_t & loop_continue_blockid,
     std::map<std::string, FunctionLabel> & labels,
     const StatementList & statement_list)
 {
-    std::vector<std::string> unwind;
     
-    size_t current_block = start_block;
-
     for (const auto & statement_el : statement_list.get_statements()) {
 	const auto & statement_type = statement_el->get_statement();
 	if (std::holds_alternative<JLang::owned<StatementVariableDeclaration>>(statement_type)) {
 	    const auto & statement = std::get<JLang::owned<StatementVariableDeclaration>>(statement_type);
-	    if (!extract_from_statement_variable_declaration(function, current_block, unwind, *statement)) {
+	    if (!extract_from_statement_variable_declaration(*statement)) {
 		return false;
 	    }
 	}
 	else if (std::holds_alternative<JLang::owned<StatementBlock>>(statement_type)) {
 	    const auto & statement = std::get<JLang::owned<StatementBlock>>(statement_type);
+	    scope_tracker.scope_push();
 	    if (!extract_from_statement_list(
-		    function,
-		    current_block,
-		    in_loop,
-		    loop_break_blockid,
-		    loop_continue_blockid,
 		    labels,
 		    statement->get_scope_body().get_statements())) {
 		return false;
 	    }
+	    scope_tracker.scope_pop();
 	}
 	else if (std::holds_alternative<JLang::owned<StatementExpression>>(statement_type)) {
 	    const auto & statement = std::get<JLang::owned<StatementExpression>>(statement_type);
 	    size_t returned_tmpvar;
 	    if (!extract_from_expression(
-		    function,
-		    current_block,
 		    returned_tmpvar,
 		    statement->get_expression())) {
 		return false;
@@ -2943,11 +2777,6 @@ FunctionDefinitionResolver::extract_from_statement_list(
 	else if (std::holds_alternative<JLang::owned<StatementIfElse>>(statement_type)) {
 	    const auto & statement = std::get<JLang::owned<StatementIfElse>>(statement_type);
 	    if (!extract_from_statement_ifelse(
-		    function,
-		    current_block,
-		    in_loop,
-		    loop_break_blockid,
-		    loop_continue_blockid,
 		    labels,
 		    *statement)) {
 		return false;
@@ -2956,11 +2785,6 @@ FunctionDefinitionResolver::extract_from_statement_list(
 	else if (std::holds_alternative<JLang::owned<StatementWhile>>(statement_type)) {
 	    const auto & statement = std::get<JLang::owned<StatementWhile>>(statement_type);
 	    if (!extract_from_statement_while(
-		    function,
-		    current_block,
-		    in_loop,
-		    loop_break_blockid,
-		    loop_continue_blockid,
 		    labels,
 		    *statement)) {
 		return false;
@@ -2969,11 +2793,6 @@ FunctionDefinitionResolver::extract_from_statement_list(
 	else if (std::holds_alternative<JLang::owned<StatementFor>>(statement_type)) {
 	    const auto & statement = std::get<JLang::owned<StatementFor>>(statement_type);
 	    if (!extract_from_statement_for(
-		    function,
-		    current_block,
-		    in_loop,
-		    loop_break_blockid,
-		    loop_continue_blockid,
 		    labels,
 		    *statement)) {
 		return false;
@@ -2981,25 +2800,20 @@ FunctionDefinitionResolver::extract_from_statement_list(
 	}
 	else if (std::holds_alternative<JLang::owned<StatementLabel>>(statement_type)) {
 	    const auto & statement = std::get<JLang::owned<StatementLabel>>(statement_type);
-	    if (!extract_from_statement_label(function, current_block, labels, unwind, *statement)) {
+	    if (!extract_from_statement_label(labels, *statement)) {
 		return false;
 	    }
 	}
 	else if (std::holds_alternative<JLang::owned<StatementGoto>>(statement_type)) {
 	    const auto & statement = std::get<JLang::owned<StatementGoto>>(statement_type);
-	    if (!extract_from_statement_goto(function, current_block, labels, unwind, *statement)) {
+	    if (!extract_from_statement_goto(labels, *statement)) {
 		return false;
 	    }
 	}
 	else if (std::holds_alternative<JLang::owned<StatementBreak>>(statement_type)) {
 	    const auto & statement = std::get<JLang::owned<StatementBreak>>(statement_type);
 	    if (!extract_from_statement_break(
-		    function,
-		    current_block,
-		    in_loop,
-		    loop_break_blockid,
 		    labels,
-		    unwind,
 		    *statement)) {
 		return false;
 	    }
@@ -3007,12 +2821,7 @@ FunctionDefinitionResolver::extract_from_statement_list(
 	else if (std::holds_alternative<JLang::owned<StatementContinue>>(statement_type)) {
 	    const auto & statement = std::get<JLang::owned<StatementContinue>>(statement_type);
 	    if (!extract_from_statement_continue(
-		    function,
-		    current_block,
-		    in_loop,
-		    loop_continue_blockid,
 		    labels,
-		    unwind,
 		    *statement)) {
 		return false;
 	    }
@@ -3021,7 +2830,7 @@ FunctionDefinitionResolver::extract_from_statement_list(
 	    const auto & statement = std::get<JLang::owned<StatementReturn>>(statement_type);
 	    // The return may need to unwind local declarations
 	    // and ensure destructors are called.
-	    if (!extract_from_statement_return(function, current_block, unwind, *statement)) {
+	    if (!extract_from_statement_return(*statement)) {
 		return false;
 	    }
 	}
@@ -3030,67 +2839,9 @@ FunctionDefinitionResolver::extract_from_statement_list(
 	    return false;
 	}
     }
-    leave_scope(function, current_block, statement_list.get_source_ref(), unwind);
-    start_block = current_block;
-    return true;
-}
-
-
-bool
-FunctionDefinitionResolver::extract_from_function_definition(const FileStatementFunctionDefinition & function_definition)
-{
-    std::string fully_qualified_function_name = 
-	function_definition.get_name().get_fully_qualified_name();
-    
-    fprintf(stderr, " - Extracting function %s\n",
-	    fully_qualified_function_name.c_str());
-    
-    const TypeSpecifier & type_specifier = function_definition.get_return_type();
-    const Type *return_type = type_resolver.extract_from_type_specifier(type_specifier);
-    
-    if (return_type == nullptr) {
-	fprintf(stderr, "Could not find return type\n");
-	return false;
-	
-    }
-    std::vector<FunctionArgument> arguments;
-    const auto & function_argument_list = function_definition.get_arguments();
-    const auto & function_definition_args = function_argument_list.get_arguments();
-    for (const auto & function_definition_arg : function_definition_args) {
-       std::string name = function_definition_arg->get_name();
-       const JLang::mir::Type * mir_type = type_resolver.extract_from_type_specifier(function_definition_arg->get_type_specifier());
-       
-       FunctionArgument arg(name, mir_type);
-       arguments.push_back(arg);
-    }
-    
-    JLang::owned<Function> fn = std::make_unique<Function>(
-	fully_qualified_function_name,
-	return_type,
-	arguments,
-	function_definition.get_source_ref());
-    
-    // Create a new basic block for the start
-    
-    size_t start_block = fn->add_block();
-    
-    std::map<std::string, FunctionLabel> labels;
-
-    bool in_loop = false;
-    size_t loop_break_blockid = 0;
-    size_t loop_continue_blockid = 0;
-    if (!extract_from_statement_list(
-	    *fn,
-	    start_block,
-	    in_loop,
-	    loop_break_blockid,
-	    loop_continue_blockid,
-	    labels,
-	    function_definition.get_scope_body().get_statements())) {
-	return false;
-    }
-    
-    mir.get_functions().add_function(std::move(fn));
+    std::vector<std::string> unwind_scope = scope_tracker.get_variables_to_unwind_for_scope();
+    leave_scope(statement_list.get_source_ref(), unwind_scope);
 
     return true;
 }
+

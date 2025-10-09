@@ -31,24 +31,26 @@ ScopeOperation::get_child() const
 { return child.get(); }
 
 JLang::owned<ScopeOperation>
-ScopeOperation::createVariable(std::string _variable_name)
+ScopeOperation::create_variable(std::string _variable_name, const JLang::mir::Type *_variable_type)
 {
     auto op = JLang::owned<ScopeOperation>(new ScopeOperation());
     op->type = ScopeOperation::VAR_DECL;
     op->variable_name = _variable_name;
+    op->variable_type = _variable_type;
     return op;
 }
 JLang::owned<ScopeOperation>
-ScopeOperation::createLabel(std::string _label_name)
+ScopeOperation::create_label(std::string _label_name, size_t _label_blockid)
 {
     auto op = JLang::owned<ScopeOperation>(new ScopeOperation());
     op->type = ScopeOperation::LABEL_DEFINITION;
     op->label_name = _label_name;
+    op->label_blockid = _label_blockid;
     return op;
 }
 
 JLang::owned<ScopeOperation>
-ScopeOperation::createGoto(std::string _goto_label)
+ScopeOperation::create_goto(std::string _goto_label)
 {
     auto op = JLang::owned<ScopeOperation>(new ScopeOperation());
     op->type = ScopeOperation::GOTO_DEFINITION;
@@ -57,7 +59,7 @@ ScopeOperation::createGoto(std::string _goto_label)
 }
 
 JLang::owned<ScopeOperation>
-ScopeOperation::createChild(JLang::owned<Scope> _child)
+ScopeOperation::create_child(JLang::owned<Scope> _child)
 {
     auto op = JLang::owned<ScopeOperation>(new ScopeOperation());
     op->type = ScopeOperation::CHILD_SCOPE;
@@ -66,6 +68,21 @@ ScopeOperation::createChild(JLang::owned<Scope> _child)
 }
 
 Scope::Scope()
+    : parent(nullptr)
+    , scope_is_loop(false)
+    , loop_break_blockid(0)
+    , loop_continue_blockid(0)
+{}
+
+Scope::Scope(
+    bool _is_loop,
+    size_t _loop_break_blockid,
+    size_t _loop_continue_blockid
+    )
+    : parent(nullptr)
+    , scope_is_loop(_is_loop)
+    , loop_break_blockid(_loop_break_blockid)
+    , loop_continue_blockid(_loop_continue_blockid)
 {}
 
 Scope::~Scope()
@@ -77,8 +94,45 @@ Scope::add_operation(JLang::owned<ScopeOperation> op)
     operations.push_back(std::move(op));
 }
 
-ScopeTracker::ScopeTracker()
+void
+Scope::add_variable(std::string name, const JLang::mir::Type *type, const JLang::context::SourceReference & source_ref)
+{
+    JLang::owned<LocalVariable> local_variable = std::make_unique<LocalVariable>(name, type, source_ref);
+    variables.insert(std::pair(name, std::move(local_variable)));
+    auto local_var_op = ScopeOperation::create_variable(name, type);
+    operations.push_back(std::move(local_var_op));
+}
+
+const LocalVariable *
+Scope::get_variable(std::string name) const
+{
+    const auto & it = variables.find(name);
+    if (it == variables.end()) {
+	return nullptr;
+    }
+    return it->second.get();
+}
+
+bool
+Scope::is_loop() const
+{
+    return scope_is_loop;
+}
+size_t
+Scope::get_loop_break_blockid() const
+{ return loop_break_blockid; }
+
+size_t
+Scope::get_loop_continue_blockid() const
+{ return loop_continue_blockid; }
+
+const std::map<std::string, JLang::owned<LocalVariable>> &
+Scope::get_variables() const
+{ return variables; }
+
+ScopeTracker::ScopeTracker(const JLang::context::CompilerContext & _compiler_context)
     : root(std::make_unique<Scope>())
+    , compiler_context(_compiler_context)
 {
     current = root.get();
 }
@@ -94,9 +148,19 @@ ScopeTracker::scope_push()
     auto child_scope = std::make_unique<Scope>();
     Scope *new_current = child_scope.get();
     child_scope->parent = current;
-    auto child_op = ScopeOperation::createChild(std::move(child_scope));
+    auto child_op = ScopeOperation::create_child(std::move(child_scope));
     current->add_operation(std::move(child_op));
     current = new_current;
+}
+void
+ScopeTracker::scope_push_loop(size_t _loop_break_blockid, size_t _loop_continue_blockid)
+{
+    auto child_scope = std::make_unique<Scope>(true, _loop_break_blockid, _loop_continue_blockid);
+    Scope *new_current = child_scope.get();
+    child_scope->parent = current;
+    auto child_op = ScopeOperation::create_child(std::move(child_scope));
+    current->add_operation(std::move(child_op));
+    current = new_current;    
 }
 
 
@@ -108,22 +172,105 @@ ScopeTracker::scope_pop()
 
 
 void
-ScopeTracker::add_label(std::string label_name)
+ScopeTracker::add_label(std::string label_name, size_t label_blockid)
 {
-    add_operation(ScopeOperation::createLabel(label_name));
+    // TODO:
+    // Check if this label was declared in a goto and
+    // use that blockid instead if it was found, removing it from
+    // the 'forward declared' labels.
+    add_operation(ScopeOperation::create_label(label_name, label_blockid));
     labels.insert(std::pair(label_name, current));
 }
 
 void
 ScopeTracker::add_goto(std::string goto_label)
 {
-    add_operation(ScopeOperation::createGoto(goto_label));
+    // TODO:
+    // Check if this label exists and jump to that
+    // label if it does.  If it doesn't, forward declare it.
+    // and put it in the 'forward declared' labels list.
+    add_operation(ScopeOperation::create_goto(goto_label));
 }
 
-void
-ScopeTracker::add_variable(std::string variable_name)
+const LocalVariable *
+ScopeTracker::get_variable(std::string variable_name) const
 {
-    add_operation(ScopeOperation::createVariable(variable_name));
+    // Walk up from the current scope up to the root and
+    // see if this variable is defined anywhere.
+    const Scope *s = current;
+    while (s) {
+	const LocalVariable *existing_local_variable = s->get_variable(variable_name);
+	if (existing_local_variable != nullptr) {
+	    return existing_local_variable;
+	}
+	s = s->parent;
+    }
+    return nullptr;
+}
+
+std::vector<std::string>
+ScopeTracker::get_variables_to_unwind_for_root() const
+{
+    std::vector<std::string> variables_to_unwind;
+    const Scope *s = current;
+    while (s) {
+	for (const auto & it : s->get_variables()) {
+	    variables_to_unwind.push_back(it.first);
+	}
+	s = s->parent;
+    }
+    return variables_to_unwind;
+}
+
+std::vector<std::string>
+ScopeTracker::get_variables_to_unwind_for_scope() const
+{
+    std::vector<std::string> variables_to_unwind;
+    const Scope *s = current;
+    for (const auto & it : s->get_variables()) {
+	variables_to_unwind.push_back(it.first);
+    }
+    return variables_to_unwind;
+}
+
+std::vector<std::string>
+ScopeTracker::get_variables_to_unwind_for_break() const
+{
+    std::vector<std::string> variables_to_unwind;
+    const Scope *s = current;
+    while (s && s->is_loop()) {
+	for (const auto & it : s->get_variables()) {
+	    variables_to_unwind.push_back(it.first);
+	}
+	s = s->parent;
+    }
+    return variables_to_unwind;
+
+}
+
+bool
+ScopeTracker::add_variable(std::string variable_name, const JLang::mir::Type *mir_type, const JLang::context::SourceReference & source_ref)
+{
+    // Walk up from the current scope up to the root and
+    // see if this variable is defined anywhere.
+    const Scope *s = current;
+    while (s) {
+	const LocalVariable *existing_local_variable = s->get_variable(variable_name);
+	if (existing_local_variable != nullptr) {
+	    compiler_context
+		.get_errors()
+		.add_simple_error(
+		    existing_local_variable->get_source_ref(),
+		    "Already declared",
+		    "Already declared here");
+	    return false;
+	}
+	s = s->parent;
+    }
+    // Variable was not declared earlier, so we add it to
+    // the current scope.
+    current->add_variable(variable_name, mir_type, source_ref);
+    return true;
 }
 
 
@@ -157,6 +304,45 @@ ScopeTracker::label_find(std::string label_name) const
 	return nullptr;
     }
     return it->second;
+}
+
+bool
+ScopeTracker::is_in_loop() const
+{
+    const Scope *s = current;
+    while (s) {
+	if (s->is_loop()) {
+	    return true;
+	}
+	s = s->parent;
+    }
+    return false;
+}
+
+size_t
+ScopeTracker::get_loop_break_blockid() const
+{
+    const Scope *s = current;
+    while (s) {
+	if (s->is_loop()) {
+	    return s->get_loop_break_blockid();
+	}
+	s = s->parent;
+    }
+    return 0;
+}
+
+size_t
+ScopeTracker::get_loop_continue_blockid() const
+{
+    const Scope *s = current;
+    while (s) {
+	if (s->is_loop()) {
+	    return s->get_loop_continue_blockid();
+	}
+	s = s->parent;
+    }
+    return 0;
 }
 
 bool
@@ -275,3 +461,29 @@ Scope::dump(int indent) const
     }
 }
 
+///////////////////////////////////////////
+LocalVariable::LocalVariable(
+    std::string _name,
+    const JLang::mir::Type *_type,
+    const JLang::context::SourceReference & _source_ref
+    )
+    : name(_name)
+    , type(_type)
+    , source_ref(_source_ref)
+{}
+
+LocalVariable::~LocalVariable()
+{}
+
+const std::string &
+LocalVariable::get_name() const
+{ return name; }
+
+const JLang::mir::Type *
+LocalVariable::get_type() const
+{ return type; }
+
+const JLang::context::SourceReference &
+LocalVariable::get_source_ref() const
+{ return source_ref; }
+ 

@@ -238,6 +238,7 @@ namespace JLang::mir {
 	const Type * type;
     };
 
+#if 0
     /**
      * @brief Local Variable
      *
@@ -315,7 +316,8 @@ namespace JLang::mir {
 	const Type* type;
 	const JLang::context::SourceReference & src_ref;
     };
-
+#endif
+    
     /**
      * @brief A named label inside a scope.
      *
@@ -466,6 +468,7 @@ namespace JLang::mir {
 	 */
 	const std::map<size_t, JLang::owned<BasicBlock>> & get_blocks() const;
 
+#if 0
 	/**
 	 * @brief Get a local variable.
 	 *
@@ -494,7 +497,7 @@ namespace JLang::mir {
 	 * of functions based on the lexical scopes inside the function.
 	 */
 	void remove_local(std::string local_name);
-
+#endif
 	/**
 	 * @brief Dump a function to the given file handle for debugging.
 	 *
@@ -568,9 +571,9 @@ namespace JLang::mir {
 	// as we build them.
 	size_t blockid;
 	std::map<size_t, JLang::owned<BasicBlock>> blocks;
-	
+#if 0	
 	std::map<std::string, LocalVariable> in_scope_locals;
-
+#endif
 	std::vector<const Type*> tmpvars;
     };
 };

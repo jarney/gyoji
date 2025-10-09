@@ -32,6 +32,7 @@ Functions::dump(FILE *out) const
     }
 }
 
+#if 0
 /////////////////////////////////////
 // LocalVariable
 /////////////////////////////////////
@@ -60,6 +61,7 @@ LocalVariable::get_type() const
 const JLang::context::SourceReference &
 LocalVariable::get_source_ref() const
 { return src_ref; }
+#endif
 
 /////////////////////////////////////
 // Function
@@ -76,9 +78,11 @@ Function::Function(
     , source_ref(_source_ref)
     , blockid(0)
 {
+#if 0
     for (const auto & arg : arguments) {
 	add_local(LocalVariable(arg.get_name(), arg.get_type(), _source_ref));
     }
+#endif
 }
 
 Function::~Function()
@@ -126,6 +130,7 @@ const std::map<size_t, JLang::owned<BasicBlock>> &
 Function::get_blocks() const
 { return blocks; }
 
+#if 0
 const LocalVariable *
 Function::get_local(std::string local_name)
 {
@@ -145,6 +150,12 @@ Function::add_local(const LocalVariable & local)
     in_scope_locals.insert(std::pair(local.get_name(), local));
     return true;
 }
+void
+Function::remove_local(std::string local_name)
+{
+    in_scope_locals.erase(local_name);
+}
+#endif
 
 const Type *
 Function::tmpvar_get(size_t tmpvar_id) const
@@ -160,11 +171,6 @@ size_t
 Function::tmpvar_duplicate(size_t tempvar_id)
 {
     return tmpvar_define(tmpvar_get(tempvar_id));
-}
-void
-Function::remove_local(std::string local_name)
-{
-    in_scope_locals.erase(local_name);
 }
 
 void
