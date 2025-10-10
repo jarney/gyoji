@@ -367,7 +367,7 @@ ScopeTracker::dump() const
 
 void
 Scope::dump_flat(
-    std::vector<ScopeFlatElement> & flat,
+    std::vector<const ScopeOperation*> & flat,
     std::map<std::string, size_t> & label_locations,
     std::map<size_t, std::string> & goto_labels_at,
     size_t prior_point,
@@ -427,45 +427,19 @@ Scope::dump_flat(
 	    break;
 	}
 	if (op->get_type() != ScopeOperation::CHILD_SCOPE) {
-	    ScopeFlatElement flatel;
-	    flatel.scopes = scopes;
-	    flatel.operation = op.get();
-	    flat.push_back(flatel);
+	    flat.push_back(op.get());
 	}
     }
 }
 
-static std::string elements_to_string(const std::vector<const Scope *> & scopes)
-{
-    std::string prefix;
-    for (const auto & s : scopes) {
-	std::stringstream ss;
-	ss << std::hex << ((unsigned long)(void*)s) << std::string(" ");
-	prefix = ss.str() + prefix;
-    }
-    return prefix;
-}
-
-#if 0
-static void get_points_prior_to(const std::vector<ScopeFlatElement> & flat, size_t point, std::vector<size_t> & prior_points)
-{
-    while (true) {
-	const ScopeFlatElement & el = flat.at(point);
-	prior_points.push_back(point);
-	if (point == 0) {
-	    break;
-	}
-	point--;
-    }
-}
-#endif
-
+#ifdef DEBUG_GOTO_SCOPES
 static void dump_priors(const std::map<size_t, size_t> & points)
 {
     for (const auto & s : points) {
 	fprintf(stderr, "   %ld\n", s);
     }
 }
+#endif
 
 static void walk_priors(
     const std::map<size_t, size_t> & backward_edges,
@@ -486,34 +460,40 @@ static void walk_priors(
     }
 }
 
-void skipped_initializations(
-    const std::vector<ScopeFlatElement> & flat,
+void evaluate_scope_changes(
+    const std::vector<const ScopeOperation*> & flat,
     const std::map<size_t, size_t> & prior_to_goto,
-    const std::map<size_t, size_t> & prior_to_label)
+    const std::map<size_t, size_t> & prior_to_label,
+    std::vector<const ScopeOperation*> & skipped_initializations,
+    std::vector<const ScopeOperation*> & unwind_variables
+    )
 {
     for (const auto & lp : prior_to_label) {
 	if (prior_to_goto.find(lp.first) == prior_to_goto.end()) {
-	    const ScopeFlatElement & fp = flat.at(lp.first);
-	    if (fp.operation->get_type() == ScopeOperation::VAR_DECL) {
-		fprintf(stderr, "Skipped initialization at %ld : %s\n", lp.first, fp.operation->get_variable_name().c_str());
+	    const ScopeOperation *op = flat.at(lp.first);
+	    if (op->get_type() == ScopeOperation::VAR_DECL) {
+		skipped_initializations.push_back(op);
 	    }
 	}
     }
     for (const auto & gp : prior_to_goto) {
 	if (prior_to_label.find(gp.first) == prior_to_label.end()) {
-	    const ScopeFlatElement & fp = flat.at(gp.first);
-	    if (fp.operation->get_type() == ScopeOperation::VAR_DECL) {
-		fprintf(stderr, "Unwind variable at %ld : %s\n", gp.first, fp.operation->get_variable_name().c_str());
+	    const ScopeOperation *op = flat.at(gp.first);
+	    if (op->get_type() == ScopeOperation::VAR_DECL) {
+		unwind_variables.push_back(op);
 	    }
 	}
     }
-
+    // We reverse the list because
+    // we should unwind the variables
+    // in the reverse order they were declared in.
+    std::reverse(unwind_variables.begin(), unwind_variables.end());
 }
 
 void
 ScopeTracker::dump_flat() const
 {
-    std::vector<ScopeFlatElement> flat;
+    std::vector<const ScopeOperation*> flat;
     std::map<std::string, size_t> label_locations;
     std::map<size_t, std::string> goto_labels_at;
     size_t prior_point = -1;
@@ -521,56 +501,51 @@ ScopeTracker::dump_flat() const
     std::map<size_t, size_t> backward_edges;
     root->dump_flat(flat, label_locations, goto_labels_at, prior_point, backward_edges);
 
+#ifdef DEBUG_GOTO_SCOPES
     for (const auto & e : backward_edges) {
 	fprintf(stderr, "Edge %ld %ld\n", e.first, e.second);
     }
+#endif
     
     fprintf(stderr, "Doing real check for skipped\n");
     for (const auto & goto_point : goto_labels_at) {
+//#ifdef DEBUG_GOTO_SCOPES
 	fprintf(stderr, "Checking goto point %ld to label %s\n", goto_point.first, goto_point.second.c_str());
+//#endif
 	std::map<size_t, size_t> prior_to_goto;
 	walk_priors(backward_edges, goto_point.first, prior_to_goto);
 	
-	fprintf(stderr, "Points prior to goto:\n");
-	dump_priors(prior_to_goto);
-	
 	std::map<size_t, size_t> prior_to_label;
 	size_t label_point = label_locations[goto_point.second];
+	
 	walk_priors(backward_edges, label_point, prior_to_label);
 	
-	fprintf(stderr, "Points prior to label:\n");
-	dump_priors(prior_to_label);
-
-	skipped_initializations(flat, prior_to_goto, prior_to_label);
-	
-    }
-    
-#if 0
-    for (const auto & goto_point : goto_labels_at) {
-	// For each goto point, walk backward to get
-	// statements prior to it.
-	std::vector<size_t> prior_to_goto;
-	std::vector<size_t> prior_to_label;
-
-	get_points_prior_to(flat, goto_point.first, prior_to_goto);
+#ifdef DEBUG_GOTO_SCOPES
 	fprintf(stderr, "Points prior to goto:\n");
 	dump_priors(prior_to_goto);
-
-	size_t label_point = label_locations[goto_point.second];
-	get_points_prior_to(flat, label_point, prior_to_label);
-	fprintf(stderr, "Points prior to label\n");
+	fprintf(stderr, "Points prior to label:\n");
 	dump_priors(prior_to_label);
-
-    }
 #endif
+	std::vector<const ScopeOperation*> skipped_initializations;
+	std::vector<const ScopeOperation*> unwind_variables;
+	
+	evaluate_scope_changes(flat, prior_to_goto, prior_to_label, skipped_initializations, unwind_variables);
+
+//#ifdef DEBUG_GOTO_SCOPES
+	for (const auto & s : skipped_initializations) {
+	    fprintf(stderr, "Skipped initialization %s\n", s->get_variable_name().c_str());
+	}
+	for (const auto & s : unwind_variables) {
+	    fprintf(stderr, "Unwind %s\n", s->get_variable_name().c_str());
+	}
+//#endif
+    }
     
+#ifdef DEBUG_GOTO_SCOPES
     fprintf(stderr, "Actual flat representation\n");
     for (size_t i = 0; i < flat.size(); i++) {
-	const auto & el = flat.at(i);
-//	std::string scopes = elements_to_string(el.scopes);
-//	std::string prefix = std::to_string(i) + std::string(" ") + scopes + std::string(" ");
+	const ScopeOperation *op = flat.at(i);
 	std::string prefix = std::to_string(i) + std::string(" ");
-	const ScopeOperation *op = el.operation;
 	switch (op->get_type()) {
 	case ScopeOperation::VAR_DECL:
 	{
@@ -593,7 +568,7 @@ ScopeTracker::dump_flat() const
 
 	}
     }
-
+#endif
 }
 
 bool

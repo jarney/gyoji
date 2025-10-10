@@ -106,10 +106,13 @@ int test_jump_backward_skip_initialization()
     tracker.scope_pop();
     tracker.scope_pop();
     tracker.add_variable("three", nullptr, zero_source_ref);    
+    tracker.add_variable("three_1", nullptr, zero_source_ref);    
     tracker.add_goto("label1", zero_source_ref);
     tracker.add_goto("label2", zero_source_ref);
+    tracker.add_variable("five", nullptr, zero_source_ref);
 
     tracker.scope_push(zero_source_ref);
+    tracker.add_variable("six", nullptr, zero_source_ref);
     
     tracker.scope_push(zero_source_ref);
     tracker.add_variable("four", nullptr, zero_source_ref);

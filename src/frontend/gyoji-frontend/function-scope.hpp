@@ -8,7 +8,6 @@ namespace Gyoji::frontend::lowering {
     class ScopeOperation;
     class ScopeTracker;
     class LocalVariable;
-    class ScopeFlatElement;
 
     /**
      * @brief Primitive operation in a scope
@@ -164,7 +163,7 @@ namespace Gyoji::frontend::lowering {
 	void add_operation(Gyoji::owned<ScopeOperation> op);
 	void dump(int indent) const;
 	void dump_flat(
-	    std::vector<ScopeFlatElement> & flat,
+	    std::vector<const ScopeOperation*> & flat,
 	    std::map<std::string, size_t> & label_locations,
 	    std::map<size_t, std::string> & goto_labels_at,
 	    size_t prior_point,
@@ -426,13 +425,6 @@ namespace Gyoji::frontend::lowering {
 	
     };
     
-    class ScopeFlatElement {
-    public:
-	std::vector<const Scope*> scopes;
-	ScopeOperation *operation;
-    };
-
-
     
 	// We want a 'minimal' mir to represent what's
 	// going on here.
