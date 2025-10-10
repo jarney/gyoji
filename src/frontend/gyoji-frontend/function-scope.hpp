@@ -162,25 +162,8 @@ namespace Gyoji::frontend::lowering {
 	~Scope();
 	void add_operation(Gyoji::owned<ScopeOperation> op);
 	void dump(int indent) const;
-	void dump_flat(
-	    std::vector<const ScopeOperation*> & flat,
-	    std::map<std::string, size_t> & label_locations,
-	    std::map<size_t, std::string> & goto_labels_at,
-	    size_t prior_point,
-	    std::map<size_t, size_t> & edges
-	    ) const;
 	bool skips_initialization(std::string label) const;
 
-	bool is_ancestor(const Scope *other) const;
-
-	/**
-	 * Adds a variable to the current scope.  It is assumed
-	 * that the caller has previously verified that
-	 * the variable is not already defined in scope using the
-	 * 'get_variable' to look for it.
-	 */
-	void add_variable(std::string name, const Gyoji::mir::Type *type, const Gyoji::context::SourceReference & source_ref);
-	
 	/**
 	 * If the given variable is defined in this scope, return
 	 * the type of it.  If no such variable is defined, returns
@@ -349,7 +332,6 @@ namespace Gyoji::frontend::lowering {
 	    const Gyoji::context::SourceReference & _source_ref
 	    );
 		      
-
 	const FunctionLabel * get_label(std::string name) const;
 
 	/**
@@ -358,7 +340,7 @@ namespace Gyoji::frontend::lowering {
 	bool add_variable(std::string variable_name, const Gyoji::mir::Type *mir_type, const Gyoji::context::SourceReference & source_ref);
 	
 	void dump() const;
-	void dump_flat() const;
+	void dump_flat2() const;
 
 	// Evaluate the rules
 	// to make sure all jumps are legal.
@@ -408,10 +390,12 @@ namespace Gyoji::frontend::lowering {
 	const Scope *get_current() const;
 	
     private:
-	const Scope*find_common_ancestor(const Scope *goto_scope, const Scope *label_scope) const;
-	
-	bool check_scope(const Scope *s) const;
+	void add_flat_op(const ScopeOperation *op);
+
 	void add_operation(Gyoji::owned<ScopeOperation> op);
+
+
+	
 	Gyoji::owned<Scope> root;
 	Scope *current;
 	const Gyoji::context::CompilerContext & compiler_context;
@@ -422,7 +406,13 @@ namespace Gyoji::frontend::lowering {
 	// Labels that have been referenced in a 'goto'
 	// but not yet defined in a scope.
 	std::map<std::string, Gyoji::owned<FunctionLabel>> notfound_labels;
+
+	std::vector<size_t> tracker_prior_point;
+	std::map<size_t, size_t> tracker_backward_edges;
+	std::vector<const ScopeOperation*> tracker_flat;
 	
+	std::map<std::string, size_t> tracker_label_locations;
+	std::map<size_t, std::string> tracker_goto_labels_at;
     };
     
     

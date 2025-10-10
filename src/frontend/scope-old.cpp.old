@@ -1,0 +1,277 @@
+	void dump_flat(
+	    std::vector<const ScopeOperation*> & flat,
+	    std::map<std::string, size_t> & label_locations,
+	    std::map<size_t, std::string> & goto_labels_at,
+	    size_t prior_point,
+	    std::map<size_t, size_t> & edges
+	    ) const;
+
+void
+Scope::dump_flat(
+    std::vector<const ScopeOperation*> & flat,
+    std::map<std::string, size_t> & label_locations,
+    std::map<size_t, std::string> & goto_labels_at,
+    size_t prior_point,
+    std::map<size_t, size_t> & edges
+    ) const
+{
+    const Scope *s = this;
+    std::string prefix;
+
+    std::vector<const Scope*> scopes;
+
+    while (s) {
+	std::stringstream ss;
+	ss << std::hex << ((unsigned long)(void*)s) << std::string(" ");
+	prefix = ss.str() + prefix;
+	scopes.push_back(s);
+	s = s->parent;
+    }
+    for (const auto & op : operations) {
+	switch (op->get_type()) {
+	case ScopeOperation::VAR_DECL:	    
+	{
+	    std::string s = prefix + std::string("var ") + op->get_variable_name();
+	    fprintf(stderr, "%s\n", s.c_str());
+
+	    size_t point = flat.size();
+	    edges.insert(std::pair(point, prior_point));
+	    prior_point = point;
+	}
+	break;
+	case ScopeOperation::LABEL_DEFINITION:
+	{
+	    label_locations.insert(std::pair(op->get_label_name(), flat.size()));
+	    std::string s = prefix + std::string("label ") + op->get_label_name();
+	    fprintf(stderr, "%s\n", s.c_str());
+
+	    size_t point = flat.size();
+	    edges.insert(std::pair(point, prior_point));
+	    prior_point = point;
+	}
+	break;
+	case ScopeOperation::GOTO_DEFINITION:
+	{
+	    std::string s = prefix + std::string("goto ") + op->get_goto_label();
+	    fprintf(stderr, "%s\n", s.c_str());
+	    goto_labels_at.insert(std::pair(flat.size(), op->get_goto_label()));
+	    
+	    size_t point = flat.size();
+	    edges.insert(std::pair(point, prior_point));
+	    prior_point = point;
+	}
+	break;
+	case ScopeOperation::CHILD_SCOPE:
+	{
+	    op->get_child()->dump_flat(flat, label_locations, goto_labels_at, prior_point, edges);
+        }
+	    break;
+	}
+	if (op->get_type() != ScopeOperation::CHILD_SCOPE) {
+	    flat.push_back(op.get());
+	}
+    }
+}
+
+
+
+/**
+ * Start with the current scope (scope of the label)
+ * and walk it backward looking for variable definitions.
+ * When we get to the top, move to the parent scope and keep looking
+ * until we arrive at the common ancestor.  Don't check
+ * the common ancestor because those will already have been declared
+ * by the goto itself.
+ */
+//check_declared_variables_before_label(function_label->get_name());
+
+	bool check_scope(const Scope *s) const;
+
+
+bool
+ScopeTracker::check_scope(const Scope *s) const
+{
+    // Iterate each operation.
+    bool ok = true;
+    for (const auto & op : s->operations) {
+	if (op->get_type() == ScopeOperation::GOTO_DEFINITION) {
+	    // Check that the label exists.
+	    fprintf(stderr, "Evaluting goto label %s\n", op->get_goto_label().c_str());
+	    const FunctionLabel *function_label = get_label(op->get_goto_label());
+	    if (function_label == nullptr || function_label->get_scope() == nullptr) {
+		    std::unique_ptr<Gyoji::context::Error> error = std::make_unique<Gyoji::context::Error>("Goto for an un-defined label.");
+		    error->add_message(op->get_source_ref(),
+				       std::string("Goto label ") + op->get_goto_label() + " had an undefined destination.");
+		    compiler_context
+			.get_errors()
+			.add_error(std::move(error));
+		    ok = false;
+		ok = false;
+		continue;
+	    }
+	    fprintf(stderr, "Checking for common ancestor of goto and label\n");
+	    if (!root->is_ancestor(function_label->get_scope())) {
+		fprintf(stderr, "This is nonsense, the root is an ancestor for everyone\n");
+		exit(1);
+	    }
+	    // Find the common scope where the 'goto' and the 'label'
+	    // both derive from ultimately.
+	    const Scope *common_ancestor = find_common_ancestor(s, function_label->get_scope());
+	    // Find any variables declared between the common ancestor and the label.
+//	    check_declared_variables_before_label(function_label->get_name());
+	    
+	    if (!s->is_ancestor(function_label->get_scope())) {
+		if (function_label->get_scope()->skips_initialization(op->get_goto_label())) {
+		    std::unique_ptr<Gyoji::context::Error> error = std::make_unique<Gyoji::context::Error>("Goto would skip initialization.");
+		    error->add_message(op->get_source_ref(),
+				       std::string("Goto label ") + op->get_goto_label() + " would skip initialization of variables in destination scope.");
+		    error->add_message(function_label->get_source_ref(),
+				       "Label declared here.");
+		    compiler_context
+			.get_errors()
+			.add_error(std::move(error));
+		    ok = false;
+		}
+	    }
+	}
+	else if (op->get_type() == ScopeOperation::CHILD_SCOPE) {
+	    if (!check_scope(op->get_child())) {
+		ok = false;
+	    }
+	}
+    }    
+    return ok;
+}
+
+
+const Scope*find_common_ancestor(const Scope *goto_scope, const Scope *label_scope) const;
+	
+
+const Scope *
+ScopeTracker::find_common_ancestor(const Scope *goto_scope, const Scope *label_scope) const
+{
+    const Scope *goto_scope_parent = goto_scope;
+    while (true) {
+	if (goto_scope_parent == nullptr) {
+	    fprintf(stderr, "We made it up to the root\n");
+	    break;
+	}
+	fprintf(stderr, "Checking to see if label scope\n");
+	label_scope->dump(1);
+	fprintf(stderr, "is an ancestor of goto scope\n");
+	goto_scope_parent->dump(1);
+	if (!label_scope->is_ancestor(goto_scope_parent)) {
+	    break;
+	}
+	goto_scope_parent = goto_scope_parent->parent;
+    }
+    if (goto_scope_parent != nullptr) {
+	fprintf(stderr, "Found common ancestor\n");
+	goto_scope_parent->dump(1);
+	return goto_scope_parent;
+    }
+    else {
+	fprintf(stderr, "No common ancestor found.  This is a bug because they should be in the same tree.\n");
+	return nullptr;
+    }
+}
+
+	bool is_ancestor(const Scope *other) const;
+
+bool
+Scope::is_ancestor(const Scope *other) const
+{
+    const Scope *s = other;
+    while (s) {
+	if (s == this) {
+	    return true;
+	}
+	s = s->parent;
+    }
+    return false;
+}
+
+	void dump_flat() const;
+
+void
+ScopeTracker::dump_flat() const
+{
+    std::vector<const ScopeOperation*> flat;
+    std::map<std::string, size_t> label_locations;
+    std::map<size_t, std::string> goto_labels_at;
+    size_t prior_point = -1;
+
+    std::map<size_t, size_t> backward_edges;
+    root->dump_flat(flat, label_locations, goto_labels_at, prior_point, backward_edges);
+
+#ifdef DEBUG_GOTO_SCOPES
+    for (const auto & e : backward_edges) {
+	fprintf(stderr, "Edge %ld %ld\n", e.first, e.second);
+    }
+#endif
+    
+    fprintf(stderr, "Doing real check for skipped\n");
+    for (const auto & goto_point : goto_labels_at) {
+//#ifdef DEBUG_GOTO_SCOPES
+	fprintf(stderr, "Checking goto point %ld to label %s\n", goto_point.first, goto_point.second.c_str());
+//#endif
+	std::map<size_t, size_t> prior_to_goto;
+	walk_priors(backward_edges, goto_point.first, prior_to_goto);
+	
+	std::map<size_t, size_t> prior_to_label;
+	size_t label_point = label_locations[goto_point.second];
+	
+	walk_priors(backward_edges, label_point, prior_to_label);
+	
+#ifdef DEBUG_GOTO_SCOPES
+	fprintf(stderr, "Points prior to goto:\n");
+	dump_priors(prior_to_goto);
+	fprintf(stderr, "Points prior to label:\n");
+	dump_priors(prior_to_label);
+#endif
+	std::vector<const ScopeOperation*> skipped_initializations;
+	std::vector<const ScopeOperation*> unwind_variables;
+	
+	evaluate_scope_changes(flat, prior_to_goto, prior_to_label, skipped_initializations, unwind_variables);
+
+//#ifdef DEBUG_GOTO_SCOPES
+	for (const auto & s : skipped_initializations) {
+	    fprintf(stderr, "Skipped initialization %s\n", s->get_variable_name().c_str());
+	}
+	for (const auto & s : unwind_variables) {
+	    fprintf(stderr, "Unwind %s\n", s->get_variable_name().c_str());
+	}
+//#endif
+    }
+    
+#ifdef DEBUG_GOTO_SCOPES
+    fprintf(stderr, "Actual flat representation\n");
+    for (size_t i = 0; i < flat.size(); i++) {
+	const ScopeOperation *op = flat.at(i);
+	std::string prefix = std::to_string(i) + std::string(" ");
+	switch (op->get_type()) {
+	case ScopeOperation::VAR_DECL:
+	{
+	    std::string s = prefix + std::string("variable ") + op->get_variable_name();
+	    fprintf(stderr, "%s\n", s.c_str());
+	}
+	    break;
+	case ScopeOperation::LABEL_DEFINITION:
+	{
+	    std::string s = prefix + std::string("label ") + op->get_label_name();
+	    fprintf(stderr, "%s\n", s.c_str());
+	}
+	    break;
+	case ScopeOperation::GOTO_DEFINITION:
+	{
+	    std::string s = prefix + std::string("goto ") + op->get_goto_label();
+	    fprintf(stderr, "%s\n", s.c_str());
+	}
+	    break;
+
+	}
+    }
+#endif
+}
+
+	

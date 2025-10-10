@@ -120,18 +120,20 @@ int test_jump_backward_skip_initialization()
     tracker.scope_pop();
     
     tracker.scope_pop();
-    
+
+    tracker.dump_flat2();
+    tracker.check();
+#if 0
     tracker.dump();
     tracker.dump_flat();
 
-    tracker.check();
     if (context.has_errors()) {
 	context.get_errors().print();
 	// This is an error which is expected,
 	// so the test passes.
 	return 0;
     }
-
+#endif
     // This would be a test failure if we don't
     // raise an error for this.
     return -1;

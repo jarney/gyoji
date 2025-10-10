@@ -5,6 +5,63 @@
 
 using namespace Gyoji::frontend::lowering;
 
+///////////////////////////////////////////////////
+// Graph-theoretic utilities just to walk graphs
+// and find intersections, differences.
+///////////////////////////////////////////////////
+static void walk_priors(
+    const std::map<size_t, size_t> & backward_edges,
+    size_t start_point,
+    std::map<size_t, size_t> & priors)
+{
+    size_t p = start_point;
+    while (p >= 0) {
+	priors.insert(std::pair(p,p));
+	const auto & it = backward_edges.find(p);
+	if (it == backward_edges.end()) {
+	    break;
+	}
+	if (it->second == (size_t)-1) {
+	    break;
+	}
+	p = it->second;
+    }
+}
+
+static void
+evaluate_scope_changes(
+    const std::vector<const ScopeOperation*> & flat,
+    const std::map<size_t, size_t> & prior_to_goto,
+    const std::map<size_t, size_t> & prior_to_label,
+    std::vector<const ScopeOperation*> & skipped_initializations,
+    std::vector<const ScopeOperation*> & unwind_variables
+    )
+{
+    for (const auto & lp : prior_to_label) {
+	if (prior_to_goto.find(lp.first) == prior_to_goto.end()) {
+	    const ScopeOperation *op = flat.at(lp.first);
+	    if (op->get_type() == ScopeOperation::VAR_DECL) {
+		skipped_initializations.push_back(op);
+	    }
+	}
+    }
+    for (const auto & gp : prior_to_goto) {
+	if (prior_to_label.find(gp.first) == prior_to_label.end()) {
+	    const ScopeOperation *op = flat.at(gp.first);
+	    if (op->get_type() == ScopeOperation::VAR_DECL) {
+		unwind_variables.push_back(op);
+	    }
+	}
+    }
+    // We reverse the list because
+    // we should unwind the variables
+    // in the reverse order they were declared in.
+    std::reverse(unwind_variables.begin(), unwind_variables.end());
+}
+
+///////////////////////////////////////////////////
+// ScopeOperation
+///////////////////////////////////////////////////
 ScopeOperation::ScopeOperation(
     ScopeOperationType _type,
     const Gyoji::context::SourceReference & _source_ref
@@ -85,6 +142,9 @@ const Gyoji::context::SourceReference &
 ScopeOperation::get_source_ref() const
 { return source_ref; }
 
+///////////////////////////////////////////////////
+// Scope
+///////////////////////////////////////////////////
 Scope::Scope()
     : parent(nullptr)
     , scope_is_loop(false)
@@ -112,14 +172,12 @@ Scope::add_operation(Gyoji::owned<ScopeOperation> op)
     operations.push_back(std::move(op));
 }
 
+#if 0
 void
 Scope::add_variable(std::string name, const Gyoji::mir::Type *type, const Gyoji::context::SourceReference & source_ref)
 {
-    Gyoji::owned<LocalVariable> local_variable = std::make_unique<LocalVariable>(name, type, source_ref);
-    variables.insert(std::pair(name, std::move(local_variable)));
-    auto local_var_op = ScopeOperation::create_variable(name, type, source_ref);
-    operations.push_back(std::move(local_var_op));
 }
+#endif
 
 const LocalVariable *
 Scope::get_variable(std::string name) const
@@ -148,10 +206,17 @@ const std::map<std::string, Gyoji::owned<LocalVariable>> &
 Scope::get_variables() const
 { return variables; }
 
+///////////////////////////////////////////////////
+// ScopeTracker
+///////////////////////////////////////////////////
 ScopeTracker::ScopeTracker(const Gyoji::context::CompilerContext & _compiler_context)
     : root(std::make_unique<Scope>())
     , compiler_context(_compiler_context)
+    , tracker_prior_point()
+    , tracker_backward_edges()
+    , tracker_flat()
 {
+    tracker_prior_point.push_back((size_t)-1);
     current = root.get();
 }
 
@@ -169,6 +234,7 @@ ScopeTracker::scope_push(const Gyoji::context::SourceReference & _source_ref)
     auto child_op = ScopeOperation::create_child(std::move(child_scope), _source_ref);
     current->add_operation(std::move(child_op));
     current = new_current;
+    tracker_prior_point.push_back(tracker_prior_point.back());
 }
 void
 ScopeTracker::scope_push_loop(const Gyoji::context::SourceReference & _source_ref, size_t _loop_break_blockid, size_t _loop_continue_blockid)
@@ -179,6 +245,7 @@ ScopeTracker::scope_push_loop(const Gyoji::context::SourceReference & _source_re
     auto child_op = ScopeOperation::create_child(std::move(child_scope), _source_ref);
     current->add_operation(std::move(child_op));
     current = new_current;    
+    tracker_prior_point.push_back(tracker_prior_point.back());
 }
 
 
@@ -186,6 +253,7 @@ void
 ScopeTracker::scope_pop()
 {
     current = current->parent;
+    tracker_prior_point.pop_back();
 }
 
 
@@ -218,7 +286,12 @@ ScopeTracker::label_define(
     it_notfound->second->set_scope(current, _source_ref);
     labels.insert(std::pair(label_name, std::move(it_notfound->second)));
     notfound_labels.erase(it_notfound);
-    add_operation(ScopeOperation::create_label(label_name, _source_ref));
+
+    auto op = ScopeOperation::create_label(label_name, _source_ref);
+    tracker_label_locations.insert(std::pair(op->get_label_name(), tracker_flat.size()));
+    add_flat_op(op.get());
+    
+    add_operation(std::move(op));
 }
 
 void
@@ -231,7 +304,11 @@ ScopeTracker::label_define(
     Gyoji::owned<FunctionLabel> new_label = std::make_unique<FunctionLabel>(label_name, label_blockid);
     new_label->set_scope(current, _source_ref);
     labels.insert(std::pair(label_name, std::move(new_label)));
-    add_operation(ScopeOperation::create_label(label_name, _source_ref));
+
+    auto op = ScopeOperation::create_label(label_name, _source_ref);
+    tracker_label_locations.insert(std::pair(op->get_label_name(), tracker_flat.size()));
+    add_flat_op(op.get());
+    add_operation(std::move(op));
 }
     
 // Use this for 'goto' to say we want a label, but we
@@ -242,6 +319,16 @@ ScopeTracker::label_declare(std::string label_name, size_t label_blockid)
 {
     Gyoji::owned<FunctionLabel> new_label = std::make_unique<FunctionLabel>(label_name, label_blockid);
     notfound_labels.insert(std::pair(label_name, std::move(new_label)));
+}
+
+void
+ScopeTracker::add_flat_op(const ScopeOperation *op)
+{
+    if (tracker_prior_point.back() != (size_t)-1) {
+	tracker_backward_edges.insert(std::pair(tracker_flat.size(), tracker_prior_point.back()));
+    }
+    tracker_prior_point.back() = tracker_flat.size();
+    tracker_flat.push_back(op);
 }
 
 
@@ -255,7 +342,10 @@ ScopeTracker::add_goto(
     // Check if this label exists and jump to that
     // label if it does.  If it doesn't, forward declare it.
     // and put it in the 'forward declared' labels list.
-    add_operation(ScopeOperation::create_goto(goto_label, _source_ref));
+    auto op = ScopeOperation::create_goto(goto_label, _source_ref);
+    tracker_goto_labels_at.insert(std::pair(tracker_flat.size(), op->get_goto_label()));
+    add_flat_op(op.get());
+    add_operation(std::move(op));
 }
 
 const LocalVariable *
@@ -339,7 +429,13 @@ ScopeTracker::add_variable(std::string variable_name, const Gyoji::mir::Type *mi
     }
     // Variable was not declared earlier, so we add it to
     // the current scope.
-    current->add_variable(variable_name, mir_type, source_ref);
+    Gyoji::owned<LocalVariable> local_variable = std::make_unique<LocalVariable>(variable_name, mir_type, source_ref);
+    current->variables.insert(std::pair(variable_name, std::move(local_variable)));
+    
+    auto local_var_op = ScopeOperation::create_variable(variable_name, mir_type, source_ref);
+    add_flat_op(local_var_op.get());
+    add_operation(std::move(local_var_op));
+
     return true;
 }
 
@@ -365,211 +461,35 @@ ScopeTracker::dump() const
     fprintf(stderr, "}\n");
 }
 
-void
-Scope::dump_flat(
-    std::vector<const ScopeOperation*> & flat,
-    std::map<std::string, size_t> & label_locations,
-    std::map<size_t, std::string> & goto_labels_at,
-    size_t prior_point,
-    std::map<size_t, size_t> & edges
-    ) const
-{
-    const Scope *s = this;
-    std::string prefix;
-
-    std::vector<const Scope*> scopes;
-
-    while (s) {
-	std::stringstream ss;
-	ss << std::hex << ((unsigned long)(void*)s) << std::string(" ");
-	prefix = ss.str() + prefix;
-	scopes.push_back(s);
-	s = s->parent;
-    }
-    for (const auto & op : operations) {
-	switch (op->get_type()) {
-	case ScopeOperation::VAR_DECL:	    
-	{
-	    std::string s = prefix + std::string("var ") + op->get_variable_name();
-	    fprintf(stderr, "%s\n", s.c_str());
-
-	    size_t point = flat.size();
-	    edges.insert(std::pair(point, prior_point));
-	    prior_point = point;
-	}
-	break;
-	case ScopeOperation::LABEL_DEFINITION:
-	{
-	    label_locations.insert(std::pair(op->get_label_name(), flat.size()));
-	    std::string s = prefix + std::string("label ") + op->get_label_name();
-	    fprintf(stderr, "%s\n", s.c_str());
-
-	    size_t point = flat.size();
-	    edges.insert(std::pair(point, prior_point));
-	    prior_point = point;
-	}
-	break;
-	case ScopeOperation::GOTO_DEFINITION:
-	{
-	    std::string s = prefix + std::string("goto ") + op->get_goto_label();
-	    fprintf(stderr, "%s\n", s.c_str());
-	    goto_labels_at.insert(std::pair(flat.size(), op->get_goto_label()));
-	    
-	    size_t point = flat.size();
-	    edges.insert(std::pair(point, prior_point));
-	    prior_point = point;
-	}
-	break;
-	case ScopeOperation::CHILD_SCOPE:
-	{
-	    op->get_child()->dump_flat(flat, label_locations, goto_labels_at, prior_point, edges);
-        }
-	    break;
-	}
-	if (op->get_type() != ScopeOperation::CHILD_SCOPE) {
-	    flat.push_back(op.get());
-	}
-    }
-}
-
-#ifdef DEBUG_GOTO_SCOPES
 static void dump_priors(const std::map<size_t, size_t> & points)
 {
     for (const auto & s : points) {
-	fprintf(stderr, "   %ld\n", s);
+	fprintf(stderr, "   %ld\n", s.first);
     }
-}
-#endif
-
-static void walk_priors(
-    const std::map<size_t, size_t> & backward_edges,
-    size_t start_point,
-    std::map<size_t, size_t> & priors)
-{
-    size_t p = start_point;
-    while (p >= 0) {
-	priors.insert(std::pair(p,p));
-	const auto & it = backward_edges.find(p);
-	if (it == backward_edges.end()) {
-	    break;
-	}
-	if (it->second == -1) {
-	    break;
-	}
-	p = it->second;
-    }
-}
-
-void evaluate_scope_changes(
-    const std::vector<const ScopeOperation*> & flat,
-    const std::map<size_t, size_t> & prior_to_goto,
-    const std::map<size_t, size_t> & prior_to_label,
-    std::vector<const ScopeOperation*> & skipped_initializations,
-    std::vector<const ScopeOperation*> & unwind_variables
-    )
-{
-    for (const auto & lp : prior_to_label) {
-	if (prior_to_goto.find(lp.first) == prior_to_goto.end()) {
-	    const ScopeOperation *op = flat.at(lp.first);
-	    if (op->get_type() == ScopeOperation::VAR_DECL) {
-		skipped_initializations.push_back(op);
-	    }
-	}
-    }
-    for (const auto & gp : prior_to_goto) {
-	if (prior_to_label.find(gp.first) == prior_to_label.end()) {
-	    const ScopeOperation *op = flat.at(gp.first);
-	    if (op->get_type() == ScopeOperation::VAR_DECL) {
-		unwind_variables.push_back(op);
-	    }
-	}
-    }
-    // We reverse the list because
-    // we should unwind the variables
-    // in the reverse order they were declared in.
-    std::reverse(unwind_variables.begin(), unwind_variables.end());
 }
 
 void
-ScopeTracker::dump_flat() const
+ScopeTracker::dump_flat2() const
 {
-    std::vector<const ScopeOperation*> flat;
-    std::map<std::string, size_t> label_locations;
-    std::map<size_t, std::string> goto_labels_at;
-    size_t prior_point = -1;
-
-    std::map<size_t, size_t> backward_edges;
-    root->dump_flat(flat, label_locations, goto_labels_at, prior_point, backward_edges);
-
-#ifdef DEBUG_GOTO_SCOPES
-    for (const auto & e : backward_edges) {
-	fprintf(stderr, "Edge %ld %ld\n", e.first, e.second);
-    }
-#endif
-    
-    fprintf(stderr, "Doing real check for skipped\n");
-    for (const auto & goto_point : goto_labels_at) {
-//#ifdef DEBUG_GOTO_SCOPES
-	fprintf(stderr, "Checking goto point %ld to label %s\n", goto_point.first, goto_point.second.c_str());
-//#endif
-	std::map<size_t, size_t> prior_to_goto;
-	walk_priors(backward_edges, goto_point.first, prior_to_goto);
-	
-	std::map<size_t, size_t> prior_to_label;
-	size_t label_point = label_locations[goto_point.second];
-	
-	walk_priors(backward_edges, label_point, prior_to_label);
-	
-#ifdef DEBUG_GOTO_SCOPES
-	fprintf(stderr, "Points prior to goto:\n");
-	dump_priors(prior_to_goto);
-	fprintf(stderr, "Points prior to label:\n");
-	dump_priors(prior_to_label);
-#endif
-	std::vector<const ScopeOperation*> skipped_initializations;
-	std::vector<const ScopeOperation*> unwind_variables;
-	
-	evaluate_scope_changes(flat, prior_to_goto, prior_to_label, skipped_initializations, unwind_variables);
-
-//#ifdef DEBUG_GOTO_SCOPES
-	for (const auto & s : skipped_initializations) {
-	    fprintf(stderr, "Skipped initialization %s\n", s->get_variable_name().c_str());
-	}
-	for (const auto & s : unwind_variables) {
-	    fprintf(stderr, "Unwind %s\n", s->get_variable_name().c_str());
-	}
-//#endif
-    }
-    
-#ifdef DEBUG_GOTO_SCOPES
-    fprintf(stderr, "Actual flat representation\n");
-    for (size_t i = 0; i < flat.size(); i++) {
-	const ScopeOperation *op = flat.at(i);
-	std::string prefix = std::to_string(i) + std::string(" ");
+    for (size_t i = 0; i < tracker_flat.size(); i++) {
+	const auto & op = tracker_flat.at(i);
 	switch (op->get_type()) {
 	case ScopeOperation::VAR_DECL:
-	{
-	    std::string s = prefix + std::string("variable ") + op->get_variable_name();
-	    fprintf(stderr, "%s\n", s.c_str());
-	}
+	    fprintf(stderr, "%ld Var decl %s\n", i, op->get_variable_name().c_str());
 	    break;
 	case ScopeOperation::LABEL_DEFINITION:
-	{
-	    std::string s = prefix + std::string("label ") + op->get_label_name();
-	    fprintf(stderr, "%s\n", s.c_str());
-	}
+	    fprintf(stderr, "%ld label %s\n", i, op->get_label_name().c_str());
 	    break;
 	case ScopeOperation::GOTO_DEFINITION:
-	{
-	    std::string s = prefix + std::string("goto ") + op->get_goto_label();
-	    fprintf(stderr, "%s\n", s.c_str());
-	}
+	    fprintf(stderr, "%ld goto %s\n", i, op->get_goto_label().c_str());
 	    break;
-
+	case ScopeOperation::CHILD_SCOPE:
+	    fprintf(stderr, "This should not be here\n");
+	    exit(1);
 	}
     }
-#endif
 }
+
 
 bool
 ScopeTracker::is_in_loop() const
@@ -610,20 +530,6 @@ ScopeTracker::get_loop_continue_blockid() const
     return 0;
 }
 
-bool
-Scope::is_ancestor(const Scope *other) const
-{
-    const Scope *s = other;
-    while (s) {
-	if (s == this) {
-	    return true;
-	}
-	s = s->parent;
-    }
-    return false;
-}
-
-
 // This needs to be much more sophisticated
 // so that it can walk backward through the
 // operations and up the scope until it finds
@@ -648,106 +554,72 @@ Scope::skips_initialization(std::string label) const
 }
 
 
-const Scope *
-ScopeTracker::find_common_ancestor(const Scope *goto_scope, const Scope *label_scope) const
-{
-    const Scope *goto_scope_parent = goto_scope;
-    while (true) {
-	if (goto_scope_parent == nullptr) {
-	    fprintf(stderr, "We made it up to the root\n");
-	    break;
-	}
-	fprintf(stderr, "Checking to see if label scope\n");
-	label_scope->dump(1);
-	fprintf(stderr, "is an ancestor of goto scope\n");
-	goto_scope_parent->dump(1);
-	if (!label_scope->is_ancestor(goto_scope_parent)) {
-	    break;
-	}
-	goto_scope_parent = goto_scope_parent->parent;
-    }
-    if (goto_scope_parent != nullptr) {
-	fprintf(stderr, "Found common ancestor\n");
-	goto_scope_parent->dump(1);
-	return goto_scope_parent;
-    }
-    else {
-	fprintf(stderr, "No common ancestor found.  This is a bug because they should be in the same tree.\n");
-	return nullptr;
-    }
-}
-
-/**
- * Start with the current scope (scope of the label)
- * and walk it backward looking for variable definitions.
- * When we get to the top, move to the parent scope and keep looking
- * until we arrive at the common ancestor.  Don't check
- * the common ancestor because those will already have been declared
- * by the goto itself.
- */
-//check_declared_variables_before_label(function_label->get_name());
-
-bool
-ScopeTracker::check_scope(const Scope *s) const
-{
-    // Iterate each operation.
-    bool ok = true;
-    for (const auto & op : s->operations) {
-	if (op->get_type() == ScopeOperation::GOTO_DEFINITION) {
-	    // Check that the label exists.
-	    fprintf(stderr, "Evaluting goto label %s\n", op->get_goto_label().c_str());
-	    const FunctionLabel *function_label = get_label(op->get_goto_label());
-	    if (function_label == nullptr || function_label->get_scope() == nullptr) {
-		    std::unique_ptr<Gyoji::context::Error> error = std::make_unique<Gyoji::context::Error>("Goto for an un-defined label.");
-		    error->add_message(op->get_source_ref(),
-				       std::string("Goto label ") + op->get_goto_label() + " had an undefined destination.");
-		    compiler_context
-			.get_errors()
-			.add_error(std::move(error));
-		    ok = false;
-		ok = false;
-		continue;
-	    }
-	    fprintf(stderr, "Checking for common ancestor of goto and label\n");
-	    if (!root->is_ancestor(function_label->get_scope())) {
-		fprintf(stderr, "This is nonsense, the root is an ancestor for everyone\n");
-		exit(1);
-	    }
-	    // Find the common scope where the 'goto' and the 'label'
-	    // both derive from ultimately.
-	    const Scope *common_ancestor = find_common_ancestor(s, function_label->get_scope());
-	    // Find any variables declared between the common ancestor and the label.
-//	    check_declared_variables_before_label(function_label->get_name());
-	    
-	    if (!s->is_ancestor(function_label->get_scope())) {
-		if (function_label->get_scope()->skips_initialization(op->get_goto_label())) {
-		    std::unique_ptr<Gyoji::context::Error> error = std::make_unique<Gyoji::context::Error>("Goto would skip initialization.");
-		    error->add_message(op->get_source_ref(),
-				       std::string("Goto label ") + op->get_goto_label() + " would skip initialization of variables in destination scope.");
-		    error->add_message(function_label->get_source_ref(),
-				       "Label declared here.");
-		    compiler_context
-			.get_errors()
-			.add_error(std::move(error));
-		    ok = false;
-		}
-	    }
-	}
-	else if (op->get_type() == ScopeOperation::CHILD_SCOPE) {
-	    if (!check_scope(op->get_child())) {
-		ok = false;
-	    }
-	}
-    }    
-    return ok;
-}
-
 bool
 ScopeTracker::check(
     ) const
 {
-    Scope *s = root.get();
-    return check_scope(s);
+    bool ok = true;
+    for (const auto & goto_point : tracker_goto_labels_at) {
+	const ScopeOperation *op = tracker_flat.at(goto_point.first);
+	const FunctionLabel *function_label = get_label(op->get_goto_label());
+	if (function_label == nullptr || !function_label->is_resolved()) {
+	    std::unique_ptr<Gyoji::context::Error> error = std::make_unique<Gyoji::context::Error>("Goto for an un-defined label.");
+	    error->add_message(op->get_source_ref(),
+			       std::string("Goto label ") + op->get_goto_label() + " had an undefined destination.");
+	    compiler_context
+		.get_errors()
+		.add_error(std::move(error));
+	    ok = false;
+	    continue;
+	}
+	    
+	std::map<size_t, size_t> prior_to_goto;
+	walk_priors(tracker_backward_edges, goto_point.first, prior_to_goto);
+	
+	std::map<size_t, size_t> prior_to_label;
+	const auto it = tracker_label_locations.find(goto_point.second);
+	if (it == tracker_label_locations.end()) {
+	    fprintf(stderr, "This is a bug, we have a defined label, but no location for it\n");
+	    exit(1);
+	}
+	size_t label_point = it->second;
+	
+	walk_priors(tracker_backward_edges, label_point, prior_to_label);
+	
+#if 0
+	fprintf(stderr, "Points prior to goto:\n");
+	dump_priors(prior_to_goto);
+	fprintf(stderr, "Points prior to label:\n");
+	dump_priors(prior_to_label);
+#endif
+	
+	std::vector<const ScopeOperation*> skipped_initializations;
+	std::vector<const ScopeOperation*> unwind_variables;
+	
+	evaluate_scope_changes(tracker_flat, prior_to_goto, prior_to_label, skipped_initializations, unwind_variables);
+
+	if (skipped_initializations.size() > 0) {
+	    std::unique_ptr<Gyoji::context::Error> error = std::make_unique<Gyoji::context::Error>("Goto would skip initialization.");
+	    error->add_message(op->get_source_ref(),
+			       std::string("Goto label ") + op->get_goto_label() + " would skip initialization of variables in destination scope.");
+	    error->add_message(function_label->get_source_ref(),
+			       "Label declared here.");
+	    error->add_message(skipped_initializations.at(0)->get_source_ref(),
+			       "Skipped initialization occurs here.");
+	    compiler_context
+		.get_errors()
+		.add_error(std::move(error));
+	    ok = false;
+	}
+	    
+	for (const auto & s : skipped_initializations) {
+	    fprintf(stderr, "Skipped initialization %s\n", s->get_variable_name().c_str());
+	}
+	for (const auto & s : unwind_variables) {
+	    fprintf(stderr, "Unwind %s\n", s->get_variable_name().c_str());
+	}
+    }
+    return ok;
 }
 
 void
