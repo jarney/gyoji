@@ -8,6 +8,7 @@ namespace Gyoji::frontend::lowering {
     class ScopeOperation;
     class ScopeTracker;
     class LocalVariable;
+    class ScopeFlatElement;
 
     /**
      * @brief Primitive operation in a scope
@@ -162,6 +163,13 @@ namespace Gyoji::frontend::lowering {
 	~Scope();
 	void add_operation(Gyoji::owned<ScopeOperation> op);
 	void dump(int indent) const;
+	void dump_flat(
+	    std::vector<ScopeFlatElement> & flat,
+	    std::map<std::string, size_t> & label_locations,
+	    std::map<size_t, std::string> & goto_labels_at,
+	    size_t prior_point,
+	    std::map<size_t, size_t> & edges
+	    ) const;
 	bool skips_initialization(std::string label) const;
 
 	bool is_ancestor(const Scope *other) const;
@@ -236,6 +244,7 @@ namespace Gyoji::frontend::lowering {
 	 * Move along, nothing to see here.
 	 */
         ~FunctionLabel();
+	const std::string & get_name() const;
 	size_t get_block() const;
 	bool is_resolved() const;
 	const Scope *get_scope() const;
@@ -350,6 +359,7 @@ namespace Gyoji::frontend::lowering {
 	bool add_variable(std::string variable_name, const Gyoji::mir::Type *mir_type, const Gyoji::context::SourceReference & source_ref);
 	
 	void dump() const;
+	void dump_flat() const;
 
 	// Evaluate the rules
 	// to make sure all jumps are legal.
@@ -399,6 +409,8 @@ namespace Gyoji::frontend::lowering {
 	const Scope *get_current() const;
 	
     private:
+	const Scope*find_common_ancestor(const Scope *goto_scope, const Scope *label_scope) const;
+	
 	bool check_scope(const Scope *s) const;
 	void add_operation(Gyoji::owned<ScopeOperation> op);
 	Gyoji::owned<Scope> root;
@@ -414,6 +426,13 @@ namespace Gyoji::frontend::lowering {
 	
     };
     
+    class ScopeFlatElement {
+    public:
+	std::vector<const Scope*> scopes;
+	ScopeOperation *operation;
+    };
+
+
     
 	// We want a 'minimal' mir to represent what's
 	// going on here.
