@@ -190,7 +190,7 @@ FunctionDefinitionResolver::resolve()
     mir.get_functions().add_function(std::move(function));
 
     scope_tracker.dump();
-    scope_tracker.check(compiler_context);
+    scope_tracker.check();
 
     return true;
 }

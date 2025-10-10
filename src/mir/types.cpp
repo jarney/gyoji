@@ -9,7 +9,8 @@ using namespace Gyoji::mir;
 // Types
 ////////////////////////////////////////
 
-static SourceReference zero_source_ref("builtin", 0, 0, 0);
+const static std::string zero_source_filename("builtin");
+static SourceReference zero_source_ref(zero_source_filename, 0, 0, 0);
 
 Types::Types()
 {

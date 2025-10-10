@@ -1,33 +1,40 @@
 #include <gyoji-frontend.hpp>
 #include <gyoji-frontend/function-scope.hpp>
 
-using namespace Gyoji::frontend;
+using namespace Gyoji::frontend::lowering;
 
-static const Gyoji::context::SourceReference zero_source_ref("internal", 1, 0, 0);
+static const std::string zero_source_filename = "internal";
+static const Gyoji::context::SourceReference zero_source_ref(zero_source_filename, 1, 0, 0);
 
 int main(int argc, char **argv)
 {
-#if 0
-    Gyoji::context::CompilerContext compiler_context("Some name");
+
+    Gyoji::context::CompilerContext context("Some name");
     
-    ScopeTracker tracker(compiler_context);
+    ScopeTracker tracker(context);
 
     tracker.add_variable("argc", nullptr, zero_source_ref);
     tracker.add_variable("argv", nullptr, zero_source_ref);
-    tracker.scope_push();
+
+    tracker.scope_push(zero_source_ref);
     tracker.add_variable("foo", nullptr, zero_source_ref);
-    tracker.add_label("label1", 2);
+    tracker.label_define("label1", 2, zero_source_ref);
     
-    tracker.scope_push();
-    tracker.add_goto("label1");
+    tracker.scope_push(zero_source_ref);
+    tracker.add_goto("label1", zero_source_ref);
     tracker.scope_pop();
     
     tracker.scope_pop();
-//    tracker.add_goto("label1");
+    tracker.add_goto("label1", zero_source_ref);
 
     tracker.dump();
 
     tracker.check();
+    if (context.has_errors()) {
+	context.get_errors().print();
+	return -1;
+    }
+#if 0
 
     // We want to be able to:
     // Detect problems with goto/label

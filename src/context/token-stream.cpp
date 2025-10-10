@@ -2,7 +2,8 @@
 
 using namespace Gyoji::context;
 
-static const SourceReference zero_source_ref("internal", 1, 0, 0);
+static const std::string internal_filename("internal");
+static const SourceReference zero_source_ref(internal_filename, 1, 0, 0);
 
 const SourceReference &
 TokenStream::get_zero_source_ref()

@@ -2,7 +2,7 @@
 all: build/Makefile
 	cd build; $(MAKE)
 
-website: build/Makefile all
+website: build/Makefile test
 	cd build; $(MAKE) website
 
 # Run the tests and report
@@ -22,7 +22,7 @@ realclean: clean
 
 .PHONY: .force
 
-install: .force build/Makefile test website
+install: .force build/Makefile website
 	cd build; $(MAKE) install
 
 build/Makefile: CMakeLists.txt

@@ -441,10 +441,7 @@ Scope::skips_initialization(std::string label) const
 }
 
 bool
-ScopeTracker::check_scope(
-    const Scope *s,
-    const Gyoji::context::CompilerContext & compiler_context
-    ) const
+ScopeTracker::check_scope(const Scope *s) const
 {
     // Iterate each operation.
     bool ok = true;
@@ -479,7 +476,7 @@ ScopeTracker::check_scope(
 	    }
 	}
 	else if (op->get_type() == ScopeOperation::CHILD_SCOPE) {
-	    if (!check_scope(op->get_child(), compiler_context)) {
+	    if (!check_scope(op->get_child())) {
 		ok = false;
 	    }
 	}
@@ -489,11 +486,10 @@ ScopeTracker::check_scope(
 
 bool
 ScopeTracker::check(
-    const Gyoji::context::CompilerContext & compiler_context
     ) const
 {
     Scope *s = root.get();
-    return check_scope(s, compiler_context);
+    return check_scope(s);
 }
 
 

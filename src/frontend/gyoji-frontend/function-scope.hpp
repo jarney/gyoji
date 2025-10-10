@@ -353,7 +353,7 @@ namespace Gyoji::frontend::lowering {
 
 	// Evaluate the rules
 	// to make sure all jumps are legal.
-	bool check(const Gyoji::context::CompilerContext & compiler_context) const;
+	bool check() const;
 	
 	/**
 	 * Returns true if this or any ancestor is a 'loop'
@@ -399,10 +399,7 @@ namespace Gyoji::frontend::lowering {
 	const Scope *get_current() const;
 	
     private:
-	bool check_scope(
-	    const Scope *s,
-	    const Gyoji::context::CompilerContext & compiler_context
-	    ) const;
+	bool check_scope(const Scope *s) const;
 	void add_operation(Gyoji::owned<ScopeOperation> op);
 	Gyoji::owned<Scope> root;
 	Scope *current;
