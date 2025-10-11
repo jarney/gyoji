@@ -81,6 +81,7 @@ void Gyoji::mir::operation_static_init()
     op_type_names.insert(std::pair(Operation::OP_JUMP_CONDITIONAL, "jump-conditional"));
     op_type_names.insert(std::pair(Operation::OP_JUMP, "jump"));
     op_type_names.insert(std::pair(Operation::OP_RETURN, "return"));
+    op_type_names.insert(std::pair(Operation::OP_RETURN_VOID, "return-void"));
 }
 
 Operation::Operation(
@@ -164,7 +165,8 @@ Operation::is_terminating() const
     // would terminate a basic block.
     return (type == OP_JUMP) ||
 	(type == OP_JUMP_CONDITIONAL) ||
-	(type == OP_RETURN);
+	(type == OP_RETURN) ||
+	(type == OP_RETURN_VOID);
 }
 
 Operation::OperationType
@@ -873,6 +875,25 @@ OperationReturn::get_description() const
     desc = desc + std::string(" _") + std::to_string(operands.at(0));
     desc = desc + std::string(" )");
     return desc;
+}
+
+//////////////////////////////////////////////
+// OperationReturnVoid
+//////////////////////////////////////////////
+OperationReturnVoid::OperationReturnVoid(
+    const Gyoji::context::SourceReference & _src_ref
+    )
+    : Operation(OP_RETURN_VOID, _src_ref, 0, 0)
+{}
+OperationReturnVoid::~OperationReturnVoid()
+{}
+
+std::string
+OperationReturnVoid::get_description() const
+{
+    const auto & it = op_type_names.find(type);
+    const std::string & op_name = it->second;
+    return op_name;
 }
 
 //////////////////////////////////////////////

@@ -1448,6 +1448,19 @@ CodeGeneratorLLVMContext::generate_operation_return(
 }
 
 llvm::Value *
+CodeGeneratorLLVMContext::generate_operation_return_void(
+    std::map<size_t, llvm::Value *> & tmp_values,
+    const Gyoji::mir::Function & mir_function,
+    const Gyoji::mir::OperationReturnVoid & operation
+    )
+{
+    fprintf(stderr, "Returning void\n");
+    llvm::Value *value = tmp_values[operation.get_operands().at(0)];
+    Builder->CreateRetVoid();
+    return value;
+}
+
+llvm::Value *
 CodeGeneratorLLVMContext::generate_basic_block(
     const Gyoji::mir::Function & mir_function,
     const Gyoji::mir::BasicBlock & mir_block
@@ -1583,6 +1596,9 @@ CodeGeneratorLLVMContext::generate_basic_block(
 	    break;
 	case Operation::OP_RETURN:
 	    return_value = generate_operation_return(tmp_values, mir_function, (const OperationReturn &)operation);
+	    break;
+	case Operation::OP_RETURN_VOID:
+	    return_value = generate_operation_return_void(tmp_values, mir_function, (const OperationReturnVoid &)operation);
 	    break;
 	}
     }

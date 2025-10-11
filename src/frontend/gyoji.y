@@ -1119,6 +1119,14 @@ statement_return
                                                                                  );
                 PRINT_NONTERMINALS($$);
         }
+        | RETURN SEMICOLON {
+	        $$ = std::make_unique<Gyoji::frontend::tree::StatementReturn>(
+		    std::move($1),
+                    std::move($2)
+		);
+                PRINT_NONTERMINALS($$);
+        }
+	
         ; 
 
 statement_ifelse

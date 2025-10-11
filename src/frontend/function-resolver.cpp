@@ -147,6 +147,16 @@ FunctionDefinitionResolver::resolve()
     fprintf(stderr, " - Extracting function %s\n",
 	    fully_qualified_function_name.c_str());
     
+    // TODO
+    // Here, we should figure out if this is a 'regular' function
+    // or a method of a class.  If it's a regular function, fair enough,
+    // but if it's a class, we should make the 'this' argument the first
+    // implicit argument so that the semantics will act like a method call
+    // instead of just a funtion.  This impacts the variable resolution also
+    // becuase variables found may be 'local' variables or might be 'this->var'
+    // style variables that automatically get de-referenced from the
+    // implicit object 'this' argument.
+    
     const TypeSpecifier & type_specifier = function_definition.get_return_type();
     const Type *return_type = type_resolver.extract_from_type_specifier(type_specifier);
     
@@ -2734,19 +2744,28 @@ FunctionDefinitionResolver::extract_from_statement_return(
     const StatementReturn & statement
     )
 {
-    size_t expression_tmpvar;
-    if (!extract_from_expression(expression_tmpvar, statement.get_expression())) {
-	return false;
-    }
-
     std::vector<std::string> unwind_root = scope_tracker.get_variables_to_unwind_for_root();
-    leave_scope(statement.get_source_ref(), unwind_root);
-    
-    auto operation = std::make_unique<OperationReturn>(
-	statement.get_source_ref(),
-	expression_tmpvar
-	);
-    function->get_basic_block(current_block).add_operation(std::move(operation));
+
+    if (statement.is_void()) {
+	fprintf(stderr, "Extracting return void\n");
+	leave_scope(statement.get_source_ref(), unwind_root);
+	auto operation = std::make_unique<OperationReturnVoid>(
+	    statement.get_source_ref()
+	    );
+	function->get_basic_block(current_block).add_operation(std::move(operation));
+    }
+    else {
+	size_t expression_tmpvar;
+	if (!extract_from_expression(expression_tmpvar, statement.get_expression())) {
+	    return false;
+	}
+	leave_scope(statement.get_source_ref(), unwind_root);
+	auto operation = std::make_unique<OperationReturn>(
+	    statement.get_source_ref(),
+	    expression_tmpvar
+	    );
+	function->get_basic_block(current_block).add_operation(std::move(operation));
+    }
     return true;
 }
 

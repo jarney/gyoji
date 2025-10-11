@@ -777,7 +777,16 @@ namespace Gyoji::mir {
 	     * possible in this basic-block or in this function at all, so
 	     * providing a return-value from this opcode would be meaningless.
 	     */
-	    OP_RETURN
+	    OP_RETURN,
+	    /**
+	     * @brief Return from function without supplying a value.
+	     *
+	     * @details
+	     * This opcode returns from the current function, returning
+	     * the stack and control to the calling function.  A return-value
+	     * is not supplied in this case (or returning the 'void' value).
+	     */
+	    OP_RETURN_VOID
 	} OperationType;
 
 	/**
@@ -1662,7 +1671,7 @@ namespace Gyoji::mir {
     };
 
     /**
-     * @brief Return from a function
+     * @brief Return from a function with a value
      *
      * @details
      * This opcode causes the virtual machine
@@ -1692,6 +1701,28 @@ namespace Gyoji::mir {
 	 * Move along, nothing to see here.
 	 */
 	virtual ~OperationReturn();
+    protected:
+	virtual std::string get_description() const;
+    };
+    /**
+     * @brief Return from a function without a value.
+     *
+     * This returns 'void' from a function (i.e. it
+     * returns control to the caller without supplying
+     * a return value to it.
+     */
+    class OperationReturnVoid : public Operation {
+    public:
+	OperationReturnVoid(
+	    const Gyoji::context::SourceReference & _src_ref
+	    );
+	/**
+	 * @brief Move along, nothing to see here.
+	 *
+	 * @details
+	 * Move along, nothing to see here.
+	 */
+	virtual ~OperationReturnVoid();
     protected:
 	virtual std::string get_description() const;
     };

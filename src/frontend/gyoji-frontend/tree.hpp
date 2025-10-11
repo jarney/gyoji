@@ -1523,18 +1523,30 @@ namespace Gyoji::frontend::tree {
     };
     class StatementReturn : public Gyoji::frontend::ast::SyntaxNode {
     public:
+	/**
+	 * Constructs a return statement with an expression.
+	 */
 	StatementReturn(
 	    Gyoji::owned<Terminal> _return_token,
 	    Gyoji::owned<Expression> _expression,
 	    Gyoji::owned<Terminal> _semicolon_token
 	    );
 	/**
+	 * Constructs a return statement for 'void' functions.
+	 */
+	StatementReturn(
+	    Gyoji::owned<Terminal> _return_token,
+	    Gyoji::owned<Terminal> _semicolon_token
+	    );
+	/**
 	 * Destructor, nothing special.
 	 */
 	~StatementReturn();
+	bool is_void() const;
 	const Expression & get_expression() const;
     private:
 	Gyoji::owned<Terminal> return_token;
+	bool void_return;
 	Gyoji::owned<Expression> expression;
 	Gyoji::owned<Terminal> semicolon_token;
     };

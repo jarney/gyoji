@@ -264,6 +264,11 @@ namespace Gyoji::codegen {
 	    const Gyoji::mir::Function & mir_function,
 	    const Gyoji::mir::OperationReturn & operation
 	    );
+	llvm::Value *generate_operation_return_void(
+	    std::map<size_t, llvm::Value *> & tmp_values,
+	    const Gyoji::mir::Function & mir_function,
+	    const Gyoji::mir::OperationReturnVoid & operation
+	    );
 	
 	llvm::Value *generate_basic_block(
 	    const Gyoji::mir::Function & function,

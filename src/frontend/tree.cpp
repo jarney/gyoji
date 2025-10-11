@@ -1013,6 +1013,7 @@ StatementReturn::StatementReturn(
     )
     : SyntaxNode(NONTERMINAL_statement_return, this, _return_token->get_source_ref())
     , return_token(std::move(_return_token))
+    , void_return(false)
     , expression(std::move(_expression))
     , semicolon_token(std::move(_semicolon_token))
 {
@@ -1020,8 +1021,27 @@ StatementReturn::StatementReturn(
     add_child(*expression);
     add_child(*semicolon_token);
 }
+StatementReturn::StatementReturn(
+    Gyoji::owned<Terminal> _return_token,
+    Gyoji::owned<Terminal> _semicolon_token
+    )
+    : SyntaxNode(NONTERMINAL_statement_return, this, _return_token->get_source_ref())
+    , return_token(std::move(_return_token))
+    , void_return(true)
+    , expression(nullptr)
+    , semicolon_token(std::move(_semicolon_token))
+{
+    add_child(*return_token);
+    add_child(*semicolon_token);
+}
+
 StatementReturn::~StatementReturn()
 {}
+
+bool
+StatementReturn::is_void() const
+{ return void_return; }
+
 const Expression &
 StatementReturn::get_expression() const
 { return *expression; }
