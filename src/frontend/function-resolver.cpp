@@ -2221,20 +2221,6 @@ FunctionDefinitionResolver::local_declare_or_error(
     const SourceReference & source_ref
     )
 {
-    const LocalVariable *maybe_existing = scope_tracker.get_variable(name);
-	
-    if (maybe_existing != nullptr) {
-	std::unique_ptr<Gyoji::context::Error> error = std::make_unique<Gyoji::context::Error>("Duplicate Local Variable.");
-	error->add_message(source_ref,
-			   std::string("Variable with name ") + name + " is already in scope and cannot be duplicated.");
-	error->add_message(maybe_existing->get_source_ref(),
-			   "First declared here.");
-	
-	compiler_context
-	    .get_errors()
-	    .add_error(std::move(error));
-	return false;
-    }
     scope_tracker.add_variable(name, mir_type, source_ref);
     
     auto operation = std::make_unique<OperationLocalDeclare>(
@@ -2634,7 +2620,7 @@ FunctionDefinitionResolver::extract_from_statement_label(
 	scope_tracker.label_define(label_name, label_block, statement.get_name_source_ref());
     }
     else {
-	if (label->get_scope() == nullptr) {
+	if (!label->is_resolved()) {
 	    scope_tracker.label_define(label_name, statement.get_name_source_ref());
 	    label_block = label->get_block();
 	}
@@ -2677,7 +2663,12 @@ FunctionDefinitionResolver::extract_from_statement_goto(
     else {
 	label_block = label->get_block();
     }
-    scope_tracker.add_goto(label_name, statement.get_label_source_ref());
+
+    // We need to track what point
+    // in the MIR the goto appears so that
+    // we can insert the unwindings before that point.
+//    MIRPoint mir_point(current_block, function->get_basic_block().size());
+    scope_tracker.add_goto(label_name, statement.get_label_source_ref()/*, mir_point*/);
     
     auto operation = std::make_unique<OperationJump>(
 	statement.get_source_ref(),

@@ -101,7 +101,6 @@ namespace Gyoji::frontend::lowering {
     class LocalVariable {
     public:
 	LocalVariable(
-	    std::string _name,
 	    const Gyoji::mir::Type *_type,
 	    const Gyoji::context::SourceReference & _source_ref
 	    );
@@ -112,11 +111,9 @@ namespace Gyoji::frontend::lowering {
 	 * Move along, nothing to see here.
 	 */
 	~LocalVariable();
-	const std::string & get_name() const;
 	const Gyoji::mir::Type *get_type() const;
 	const Gyoji::context::SourceReference & get_source_ref() const;
     private:
-	std::string name;
 	const Gyoji::mir::Type *type;
 	const Gyoji::context::SourceReference & source_ref;
     };
@@ -161,8 +158,8 @@ namespace Gyoji::frontend::lowering {
 	 */
 	~Scope();
 	void add_operation(Gyoji::owned<ScopeOperation> op);
+	
 	void dump(int indent) const;
-	bool skips_initialization(std::string label) const;
 
 	/**
 	 * If the given variable is defined in this scope, return
@@ -172,7 +169,9 @@ namespace Gyoji::frontend::lowering {
 	const LocalVariable *get_variable(std::string name) const;
 
 	bool is_loop() const;
+	
 	size_t get_loop_break_blockid() const;
+	
 	size_t get_loop_continue_blockid() const;
 
 	const std::map<std::string, Gyoji::owned<LocalVariable>> & get_variables() const;
@@ -215,10 +214,8 @@ namespace Gyoji::frontend::lowering {
     class FunctionLabel {
     public:
         FunctionLabel(
-	    std::string _name,
 	    size_t _block_id
 	    );
-        FunctionLabel(const FunctionLabel & _other);
 	/**
 	 * @brief Move along, nothing to see here.
 	 *
@@ -226,18 +223,14 @@ namespace Gyoji::frontend::lowering {
 	 * Move along, nothing to see here.
 	 */
         ~FunctionLabel();
-	const std::string & get_name() const;
 	size_t get_block() const;
 	bool is_resolved() const;
-	const Scope *get_scope() const;
-	void set_scope(const Scope *scope, const Gyoji::context::SourceReference & _src_ref);
+	void resolve(const Gyoji::context::SourceReference & _src_ref);
 	const Gyoji::context::SourceReference & get_source_ref() const;
     private:
-	std::string name;
 	bool resolved;
 	size_t block_id;
 	const Gyoji::context::SourceReference * src_ref;
-	const Scope *scope;  // The scope where the label is actually defined.
     };
 
     /**
@@ -340,7 +333,6 @@ namespace Gyoji::frontend::lowering {
 	bool add_variable(std::string variable_name, const Gyoji::mir::Type *mir_type, const Gyoji::context::SourceReference & source_ref);
 	
 	void dump() const;
-	void dump_flat2() const;
 
 	// Evaluate the rules
 	// to make sure all jumps are legal.
@@ -405,7 +397,7 @@ namespace Gyoji::frontend::lowering {
 
 	// Labels that have been referenced in a 'goto'
 	// but not yet defined in a scope.
-	std::map<std::string, Gyoji::owned<FunctionLabel>> notfound_labels;
+	std::map<std::string, Gyoji::owned<FunctionLabel>> labels_forward_declared;
 
 	std::vector<size_t> tracker_prior_point;
 	std::map<size_t, size_t> tracker_backward_edges;
@@ -414,45 +406,4 @@ namespace Gyoji::frontend::lowering {
 	std::map<std::string, size_t> tracker_label_locations;
 	std::map<size_t, std::string> tracker_goto_labels_at;
     };
-    
-    
-	// We want a 'minimal' mir to represent what's
-	// going on here.
-	// Scope {
-	//     std::vector<ScopeOperation>
-	//     Scope *parent;
-	//     std::vector<Gyoji::owned<Scope>> children;
-	// };
-	//
-	// This tells us what's going on in each scope,
-	// but skips things like operations that don't impact
-	// branches, just deals with 'abstractions' of scopes.
-	// An 'if' statement, for example, will simply introduce
-	// two child scopes.
-	// ScopeOperation {
-	//    enum { VARDECL, LABEL, GOTO, CHILDREN}
-        // };
-	// Then once we've extracted the scopes,
-	// we can 'dump' the whole thing and analyze whether
-	// the jumps are legal according to the rules because
-	// we have all the information we need.  We can look
-	// at each goto and find the corresponding
-	// labels and emit errors.  All of this should
-	// happen during the first pass before the MIR
-	// is generated because we'll need all this info
-	// to generate a valid MIR.
-	// Perhaps this can live in the 'type-resolver' although
-	// it's not really related to types.
-	//
-	// With this, we can simply analyze for each goto,
-	// whether there is a corresponding label defined somewhere
-	// and check that it's legal in terms of scope
-	// rules.  If it's not defined anywhere, that's an error.
-	// If it's defined and skips an initialization, that's also
-	// an error.  We also have enough information in the goto
-	// itself to figure out what to unwind to get to the target.
-
-	// At the top-level, we'll want a map of label to scope
-	// so that when we do our analysis, we can find the label
-	// corresponding to a goto.
 };

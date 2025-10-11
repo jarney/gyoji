@@ -21,9 +21,6 @@ static void walk_priors(
 	if (it == backward_edges.end()) {
 	    break;
 	}
-	if (it->second == (size_t)-1) {
-	    break;
-	}
 	p = it->second;
     }
 }
@@ -88,10 +85,6 @@ ScopeOperation::get_goto_label() const
 const std::string &
 ScopeOperation::get_variable_name() const
 { return variable_name; }
-
-const Scope *
-ScopeOperation::get_child() const
-{ return child.get(); }
 
 Gyoji::owned<ScopeOperation>
 ScopeOperation::create_variable(
@@ -260,9 +253,9 @@ ScopeTracker::scope_pop()
 const FunctionLabel *
 ScopeTracker::get_label(std::string name) const
 {
-    const auto & it_notfound = notfound_labels.find(name);
-    if (it_notfound != notfound_labels.end()) {
-	return it_notfound->second.get();
+    const auto & it_forward_declared = labels_forward_declared.find(name);
+    if (it_forward_declared != labels_forward_declared.end()) {
+	return it_forward_declared->second.get();
     }
     const auto & it = labels.find(name);
     if (it != labels.end()) {
@@ -277,15 +270,15 @@ ScopeTracker::label_define(
     const Gyoji::context::SourceReference & _source_ref
     )
 {
-    const auto & it_notfound = notfound_labels.find(label_name);
-    if (it_notfound == notfound_labels.end()) {
-	fprintf(stderr, "This should not happen\n");
+    const auto & it_forward_declared = labels_forward_declared.find(label_name);
+    if (it_forward_declared == labels_forward_declared.end()) {
+	fprintf(stderr, "Compiler Bug!  We are attempting to resolve the definition of a forward-declared label, but it wasn't forward-declared.\n");
 	exit(1);
 	return;
     }
-    it_notfound->second->set_scope(current, _source_ref);
-    labels.insert(std::pair(label_name, std::move(it_notfound->second)));
-    notfound_labels.erase(it_notfound);
+    it_forward_declared->second->resolve(_source_ref);
+    labels.insert(std::pair(label_name, std::move(it_forward_declared->second)));
+    labels_forward_declared.erase(it_forward_declared);
 
     auto op = ScopeOperation::create_label(label_name, _source_ref);
     tracker_label_locations.insert(std::pair(op->get_label_name(), tracker_flat.size()));
@@ -301,8 +294,8 @@ ScopeTracker::label_define(
     const Gyoji::context::SourceReference & _source_ref
     )
 {
-    Gyoji::owned<FunctionLabel> new_label = std::make_unique<FunctionLabel>(label_name, label_blockid);
-    new_label->set_scope(current, _source_ref);
+    Gyoji::owned<FunctionLabel> new_label = std::make_unique<FunctionLabel>(label_blockid);
+    new_label->resolve(_source_ref);
     labels.insert(std::pair(label_name, std::move(new_label)));
 
     auto op = ScopeOperation::create_label(label_name, _source_ref);
@@ -317,8 +310,8 @@ ScopeTracker::label_define(
 void
 ScopeTracker::label_declare(std::string label_name, size_t label_blockid)
 {
-    Gyoji::owned<FunctionLabel> new_label = std::make_unique<FunctionLabel>(label_name, label_blockid);
-    notfound_labels.insert(std::pair(label_name, std::move(new_label)));
+    Gyoji::owned<FunctionLabel> new_label = std::make_unique<FunctionLabel>(label_blockid);
+    labels_forward_declared.insert(std::pair(label_name, std::move(new_label)));
 }
 
 void
@@ -413,23 +406,25 @@ ScopeTracker::add_variable(std::string variable_name, const Gyoji::mir::Type *mi
 {
     // Walk up from the current scope up to the root and
     // see if this variable is defined anywhere.
-    const Scope *s = current;
-    while (s) {
-	const LocalVariable *existing_local_variable = s->get_variable(variable_name);
-	if (existing_local_variable != nullptr) {
-	    compiler_context
-		.get_errors()
-		.add_simple_error(
-		    existing_local_variable->get_source_ref(),
-		    "Already declared",
-		    "Already declared here");
-	    return false;
-	}
-	s = s->parent;
+    const LocalVariable *maybe_existing = get_variable(variable_name);
+
+    if (maybe_existing != nullptr) {
+	std::unique_ptr<Gyoji::context::Error> error = std::make_unique<Gyoji::context::Error>("Duplicate Local Variable.");
+	error->add_message(source_ref,
+			   std::string("Variable with name ") + variable_name + " is already in scope and cannot be duplicated.");
+	error->add_message(maybe_existing->get_source_ref(),
+			   "First declared here.");
+	
+	compiler_context
+	    .get_errors()
+	    .add_error(std::move(error));
+	return false;
     }
+
+    
     // Variable was not declared earlier, so we add it to
     // the current scope.
-    Gyoji::owned<LocalVariable> local_variable = std::make_unique<LocalVariable>(variable_name, mir_type, source_ref);
+    Gyoji::owned<LocalVariable> local_variable = std::make_unique<LocalVariable>(mir_type, source_ref);
     current->variables.insert(std::pair(variable_name, std::move(local_variable)));
     
     auto local_var_op = ScopeOperation::create_variable(variable_name, mir_type, source_ref);
@@ -459,18 +454,6 @@ ScopeTracker::dump() const
     fprintf(stderr, "{\n");
     s->dump(0);
     fprintf(stderr, "}\n");
-}
-
-static void dump_priors(const std::map<size_t, size_t> & points)
-{
-    for (const auto & s : points) {
-	fprintf(stderr, "   %ld\n", s.first);
-    }
-}
-
-void
-ScopeTracker::dump_flat2() const
-{
     for (size_t i = 0; i < tracker_flat.size(); i++) {
 	const auto & op = tracker_flat.at(i);
 	switch (op->get_type()) {
@@ -489,7 +472,6 @@ ScopeTracker::dump_flat2() const
 	}
     }
 }
-
 
 bool
 ScopeTracker::is_in_loop() const
@@ -530,30 +512,6 @@ ScopeTracker::get_loop_continue_blockid() const
     return 0;
 }
 
-// This needs to be much more sophisticated
-// so that it can walk backward through the
-// operations and up the scope until it finds
-// a possible initialization that we've skipped.
-bool
-Scope::skips_initialization(std::string label) const
-{
-    bool initialization_happened = false;
-    for (const auto & op : operations) {
-	if (op->get_type() == ScopeOperation::VAR_DECL) {
-	    initialization_happened = true;
-	}
-	else if (op->get_type() == ScopeOperation::LABEL_DEFINITION) {
-	    if (op->get_label_name() == label) {
-		if (initialization_happened) {
-		    return true;
-		}
-	    }
-	}
-    }
-    return false;
-}
-
-
 bool
 ScopeTracker::check(
     ) const
@@ -586,13 +544,6 @@ ScopeTracker::check(
 	
 	walk_priors(tracker_backward_edges, label_point, prior_to_label);
 	
-#if 0
-	fprintf(stderr, "Points prior to goto:\n");
-	dump_priors(prior_to_goto);
-	fprintf(stderr, "Points prior to label:\n");
-	dump_priors(prior_to_label);
-#endif
-	
 	std::vector<const ScopeOperation*> skipped_initializations;
 	std::vector<const ScopeOperation*> unwind_variables;
 	
@@ -612,9 +563,6 @@ ScopeTracker::check(
 	    ok = false;
 	}
 	    
-	for (const auto & s : skipped_initializations) {
-	    fprintf(stderr, "Skipped initialization %s\n", s->get_variable_name().c_str());
-	}
 	for (const auto & s : unwind_variables) {
 	    fprintf(stderr, "Unwind %s\n", s->get_variable_name().c_str());
 	}
@@ -669,21 +617,15 @@ Scope::dump(int indent) const
 
 ///////////////////////////////////////////
 LocalVariable::LocalVariable(
-    std::string _name,
     const Gyoji::mir::Type *_type,
     const Gyoji::context::SourceReference & _source_ref
     )
-    : name(_name)
-    , type(_type)
+    : type(_type)
     , source_ref(_source_ref)
 {}
 
 LocalVariable::~LocalVariable()
 {}
-
-const std::string &
-LocalVariable::get_name() const
-{ return name; }
 
 const Gyoji::mir::Type *
 LocalVariable::get_type() const
@@ -697,21 +639,11 @@ LocalVariable::get_source_ref() const
 // FunctionLabel
 /////////////////////////////////////
 FunctionLabel::FunctionLabel(
-    std::string _name,
     size_t _block_id
     )
-    : name(_name)
-    , resolved(false)
+    : resolved(false)
     , block_id(_block_id)
     , src_ref(nullptr)
-    , scope(nullptr)
-{}
-FunctionLabel::FunctionLabel(const FunctionLabel & _other)
-    : name(_other.name)
-    , resolved(_other.resolved)
-    , block_id(_other.block_id)
-    , src_ref(_other.src_ref)
-    , scope(_other.scope)
 {}
 FunctionLabel::~FunctionLabel()
 {}
@@ -724,22 +656,13 @@ size_t
 FunctionLabel::get_block() const
 { return block_id; }
 
-const std::string &
-FunctionLabel::get_name() const
-{ return name; }
-
 bool
 FunctionLabel::is_resolved() const
 { return resolved; }
 
-const Scope *
-FunctionLabel::get_scope() const
-{ return scope; }
-
 void
-FunctionLabel::set_scope(const Scope *_scope, const Gyoji::context::SourceReference & _src_ref)
+FunctionLabel::resolve(const Gyoji::context::SourceReference & _src_ref)
 {
-    scope = _scope;
     resolved = true;
     src_ref = &_src_ref;
 }

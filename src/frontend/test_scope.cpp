@@ -7,6 +7,7 @@ static const std::string zero_source_filename = "internal";
 static const Gyoji::context::SourceReference zero_source_ref(zero_source_filename, 1, 0, 0);
 
 int test_jump_backward_ok();
+int test_jump_forward_ok();
 int test_jump_backward_skip_initialization();
 
 int main(int argc, char **argv)
@@ -18,7 +19,6 @@ int main(int argc, char **argv)
 	    return rc;
 	}
     }
-#if 0
     {
 	
 	int rc = test_jump_backward_ok();
@@ -27,7 +27,14 @@ int main(int argc, char **argv)
 	    return rc;
 	}
     }
-#endif
+    {
+	
+	int rc = test_jump_forward_ok();
+	if (rc != 0) {
+	    // Test failure
+	    return rc;
+	}
+    }
     printf("PASSED\n");
     return 0;
 }
@@ -56,13 +63,56 @@ int test_jump_backward_ok()
     tracker.scope_push(zero_source_ref);
     tracker.label_define("label1", 2, zero_source_ref);
     tracker.add_variable("foo", nullptr, zero_source_ref);
+    tracker.scope_pop();
     
     tracker.scope_push(zero_source_ref);
     tracker.add_goto("label1", zero_source_ref);
     tracker.scope_pop();
-    
-    tracker.scope_pop();
+
     tracker.add_goto("label1", zero_source_ref);
+
+    tracker.dump();
+
+    tracker.check();
+    if (context.has_errors()) {
+	context.get_errors().print();
+	// This is an error which is expected,
+	// so the test passes.
+	return -1;
+    }
+
+    // This would be a test failure if we don't
+    // raise an error for this.
+    return 0;
+}
+int test_jump_forward_ok()
+{
+    Gyoji::context::CompilerContext context("Some name");
+    
+    ScopeTracker tracker(context);
+
+    tracker.add_variable("argc", nullptr, zero_source_ref);
+    tracker.add_variable("argv", nullptr, zero_source_ref);
+
+    tracker.scope_push(zero_source_ref);
+    {
+        // Note that the goto and declare must happen together.
+	// I don't like that these aren't atomic, but the caller
+	// is responsible for getting a new basic block, but the
+	// tracker is responsible for consuming it.
+        tracker.add_goto("label1", zero_source_ref);
+        tracker.label_declare("label1", 2);
+    }
+    tracker.scope_pop();
+
+    tracker.scope_push(zero_source_ref);
+    {
+	// This one doesn't need a basic block ID
+	// because it was forward declared with the goto above.
+        tracker.label_define("label1", zero_source_ref);
+    }
+    tracker.add_variable("foo", nullptr, zero_source_ref);
+    tracker.scope_pop();
 
     tracker.dump();
 
@@ -95,13 +145,10 @@ int test_jump_backward_skip_initialization()
 
     tracker.scope_push(zero_source_ref);
     tracker.add_variable("one", nullptr, zero_source_ref);
+    
     tracker.scope_push(zero_source_ref);
     tracker.add_variable("two", nullptr, zero_source_ref);
     tracker.label_define("label1", 2, zero_source_ref);
-    
-//    tracker.scope_push(zero_source_ref);
-//    tracker.add_goto("label1", zero_source_ref);
-//    tracker.scope_pop();
     
     tracker.scope_pop();
     tracker.scope_pop();
@@ -119,13 +166,13 @@ int test_jump_backward_skip_initialization()
     tracker.label_define("label2", 2, zero_source_ref);
     tracker.scope_pop();
     
+    tracker.add_variable("argc", nullptr, zero_source_ref);
+
     tracker.scope_pop();
 
-    tracker.dump_flat2();
     tracker.check();
-#if 0
+
     tracker.dump();
-    tracker.dump_flat();
 
     if (context.has_errors()) {
 	context.get_errors().print();
@@ -133,7 +180,6 @@ int test_jump_backward_skip_initialization()
 	// so the test passes.
 	return 0;
     }
-#endif
     // This would be a test failure if we don't
     // raise an error for this.
     return -1;

@@ -7,9 +7,10 @@ else
 fi
 
 mkdir -p ${CMAKE_BUILD_DIRECTORY}/gcov
-gcovr --exclude ${CMAKE_BUILD_DIRECTORY}/jlang.y.cpp \
-     --exclude ${CMAKE_BUILD_DIRECTORY}/jlang.y.hpp \
-     --exclude ${CMAKE_BUILD_DIRECTORY}/jlang.l.cpp \
+gcovr --exclude ${CMAKE_BUILD_DIRECTORY}/gyoji.y.cpp \
+     --exclude ${CMAKE_BUILD_DIRECTORY}/gyoji.y.hpp \
+     --exclude ${CMAKE_BUILD_DIRECTORY}/gyoji.l.cpp \
+     --exclude ${CMAKE_BUILD_DIRECTORY}/gyoji.l.hpp \
      --exclude 'src/.*/test_.*.cpp' \
      --html ${CMAKE_BUILD_DIRECTORY}/gcov/report.html \
      --html-details
