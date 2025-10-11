@@ -10,6 +10,28 @@ namespace Gyoji::frontend::lowering {
     class LocalVariable;
 
     /**
+     * @brief Location inside a specific basic block.
+     * @details
+     * This class represents a specific location inside a basic block
+     * that we use to reference a location where we can insert
+     * operations.  Note that this is mainly used for inserting
+     * 'undeclare' and destructor calls when a 'goto' statement
+     * is executed so that we can call the appropriate
+     * destructors and such when a goto would change the scope
+     * of what's declared.
+     */
+    class FunctionPoint {
+    public:
+	FunctionPoint(size_t _basic_block_id, size_t _location);
+	~FunctionPoint();
+	size_t get_basic_block_id() const;
+	size_t get_location() const;
+    private:
+	size_t basic_block_id;
+	size_t location;
+    };
+    
+    /**
      * @brief Primitive operation in a scope
      * @details
      * The only types of operations in this scope tracker
@@ -62,6 +84,7 @@ namespace Gyoji::frontend::lowering {
 	    );
 	static Gyoji::owned<ScopeOperation> create_goto(
 	    std::string _goto_label,
+	    Gyoji::owned<FunctionPoint> _goto_point,
 	    const Gyoji::context::SourceReference & _source_ref
 	    );
 	static Gyoji::owned<ScopeOperation> create_child(
@@ -72,7 +95,10 @@ namespace Gyoji::frontend::lowering {
 	void dump(int indent) const;
 	const ScopeOperationType & get_type() const;
 	const std::string & get_label_name() const;
+	
 	const std::string & get_goto_label() const;
+	const FunctionPoint & get_goto_point() const;
+	
 	const std::string & get_variable_name() const;
 	const Scope *get_child() const;
 
@@ -95,6 +121,8 @@ namespace Gyoji::frontend::lowering {
 	std::string label_name;
 	
 	std::string goto_label;
+	Gyoji::owned<FunctionPoint> goto_point;
+	
 	Gyoji::owned<Scope> child;
     };
 
@@ -322,6 +350,7 @@ namespace Gyoji::frontend::lowering {
 	
 	void add_goto(
 	    std::string goto_label,
+	    Gyoji::owned<FunctionPoint> function_point,
 	    const Gyoji::context::SourceReference & _source_ref
 	    );
 		      
@@ -334,9 +363,37 @@ namespace Gyoji::frontend::lowering {
 	
 	void dump() const;
 
-	// Evaluate the rules
-	// to make sure all jumps are legal.
-	bool check() const;
+	/**
+	 * @brief
+	 *
+	 * @details
+	 * This method could definitely use a better name.  It does a few
+	 * things and it's important that they be done together
+	 * even though they are only somewhat related.
+	 *
+	 * The main thing the method does is evaluate the scope
+	 * rules for 'goto' statements and make sure that
+	 * the result of the 'goto' would not skip variable
+	 * declarations or initializations at the target
+	 * label.
+	 *
+	 * As a side-effect of the calculations, it also
+	 * determines which variables would go out of scope
+	 * as a result of the 'goto' statement and thus
+	 * which ones need to be un-declared and the destructors
+	 * called.
+	 *
+	 * The parameter given 'goto_fixups' is an 'out'
+	 * parameter that fills the vector with all of the
+	 * 'goto' statements along with the vector of variables that
+	 * need to be un-declared before the Jump statment of
+	 * the goto.  The vector of variables is in the
+	 * order in which they should be destructed, so order
+	 * is important when processing the fixups to the MIR.
+	 */
+	bool check(
+	    std::vector<std::pair<const ScopeOperation*, std::vector<const ScopeOperation*>>> & goto_fixups
+	    ) const;
 	
 	/**
 	 * Returns true if this or any ancestor is a 'loop'

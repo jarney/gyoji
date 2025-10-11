@@ -135,6 +135,48 @@ namespace Gyoji::mir {
 	void add_operation(Gyoji::owned<Operation> operation);
 
 	/**
+	 * @brief Return the number of operations in this block.
+	 *
+	 * @details
+	 * Returns the number of operations contained
+	 * in this basic block.  This is used to form
+	 * a 'FunctionPoint' where we can insert
+	 * operations at this point.  This is used
+	 * mainly by the 'goto' operation which needs
+	 * to insert instructions that won't be
+	 * determined until after the entire function
+	 * has been processed, so we must 'fix up'
+	 * the goto jump statement in order
+	 * to 'unwind' variables declared in this
+	 * scope that won't be available in the
+	 * scope we're jumping to.
+	 */
+	size_t size() const;
+
+	/**
+	 * @brief Insert operations at a specific point.
+	 *
+	 * @details
+	 * This inserts the given operation at the specific
+	 * position in this block instead of appending
+	 * it to the end.  Note that any other insert points
+	 * will need to have their position shifted down if
+	 * other operations are required to be inserted.
+	 *
+	 * This is mainly used to 'fix up' the 'goto' statement
+	 * which needs to insert the 'undeclare' and possibly
+	 * destructor calls before the goto operation in order
+	 * to ensure that any variables that should be going out
+	 * of scope are removed correctly.
+	 *
+	 * Fortunately in the case of 'goto', this will always
+	 * terminate the basic block, so we don't need to worry
+	 * about shifting insert points because the next goto
+	 * statement will always be in a different basic block.
+	 */
+	void insert_operation(size_t position, Gyoji::owned<Operation> operation);
+	
+	/**
 	 * @brief Access to list of Operation of basic block
 	 *
 	 * @details

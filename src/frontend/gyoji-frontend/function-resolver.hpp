@@ -59,6 +59,7 @@ namespace Gyoji::frontend::lowering {
 	bool resolve();
 
     private:
+	// Private members
 	Gyoji::context::CompilerContext & compiler_context;
 	const Gyoji::frontend::tree::FileStatementFunctionDefinition & function_definition;
 	Gyoji::mir::MIR & mir;
@@ -67,6 +68,13 @@ namespace Gyoji::frontend::lowering {
 	
 	Gyoji::owned<Gyoji::mir::Function> function;
 	size_t current_block;
+
+	// Private Methods
+
+	// Returns the current point in the current block
+	// where the 'unwindings' a 'goto' statement
+	// will be placed.
+	FunctionPoint get_current_point() const;
 	
 	bool numeric_widen(
 	    const Gyoji::context::SourceReference & _src_ref,
@@ -276,7 +284,7 @@ namespace Gyoji::frontend::lowering {
 	    );
 	
     };
-    
+
     /**
      * @brief Resolves all functions found in the MIR.
      * @details

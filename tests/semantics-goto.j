@@ -9,6 +9,7 @@ u32 main(u32 argc, u8**argv)
 label top:
 	if (a < 10) {
 	    u32 b;
+	    u32 c;
 	    b = 1;
             print_value(a);
             a = a + b;

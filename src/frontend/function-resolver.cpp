@@ -187,10 +187,57 @@ FunctionDefinitionResolver::resolve()
 	return false;
     }
     
-    mir.get_functions().add_function(std::move(function));
-
     scope_tracker.dump();
-    scope_tracker.check();
+
+    // This is a list of goto operations (ScopeOperation*)
+    // each with a vector of variable declarations (std::vector<ScopeOperation*>)
+    // that represent variables that should be 'undeclared' just prior to
+    // the Jump instruction of each basic block.  The first element
+    // of the pair will always be a Goto and the second will always be
+    // variable declarations.  The point of this is to collect all of them
+    // here because they aren't known earlier while the funciton is still under
+    // construction so that we can insert the required instructions
+    // now that we know what should be going out of scope
+    // for the goto statements.
+    std::vector<std::pair<const ScopeOperation*, std::vector<const ScopeOperation*>>> goto_fixups;
+    if (!scope_tracker.check(goto_fixups)) {
+	return false;
+    }
+
+    for (const auto & fixup : goto_fixups) {
+	const ScopeOperation *goto_operation = fixup.first;
+	size_t basic_block_id = goto_operation->get_goto_point().get_basic_block_id();
+	size_t location = goto_operation->get_goto_point().get_location();
+	fprintf(stderr, "Processing fixup for goto %s %ld %ld\n",
+		goto_operation->get_goto_label().c_str(),
+		basic_block_id,
+		location
+	    );
+	for (const auto & unwind : fixup.second) {
+	    fprintf(stderr, "Unwinding variable %s\n", unwind->get_variable_name().c_str());
+
+	    // TODO:
+	    // when we implement destructors, they will be called here
+	    // just before we undeclare the variables.
+	    
+	    // Insert the 'undeclare' operation to mark that
+	    // this variable is no longer in scope.
+	    auto unwind_operation = std::make_unique<OperationLocalUndeclare>(
+		goto_operation->get_source_ref(),
+		unwind->get_variable_name());
+	    function->get_basic_block(basic_block_id)
+		.insert_operation(location, std::move(unwind_operation));
+	    
+	    // This increment is what makes sure that
+	    // the unwind operations are emitted in the
+	    // correct order so that variable destructors
+	    // are called in the reverse order as the
+	    // declarations.
+	    location++;
+	}
+    }
+    
+    mir.get_functions().add_function(std::move(function));
 
     return true;
 }
@@ -2667,8 +2714,8 @@ FunctionDefinitionResolver::extract_from_statement_goto(
     // We need to track what point
     // in the MIR the goto appears so that
     // we can insert the unwindings before that point.
-//    MIRPoint mir_point(current_block, function->get_basic_block().size());
-    scope_tracker.add_goto(label_name, statement.get_label_source_ref()/*, mir_point*/);
+    Gyoji::owned<FunctionPoint> function_point = std::make_unique<FunctionPoint>(current_block, function->get_basic_block(current_block).size());
+    scope_tracker.add_goto(label_name, std::move(function_point), statement.get_label_source_ref());
     
     auto operation = std::make_unique<OperationJump>(
 	statement.get_source_ref(),

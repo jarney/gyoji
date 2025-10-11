@@ -82,6 +82,10 @@ const std::string &
 ScopeOperation::get_goto_label() const
 { return goto_label; }
 
+const FunctionPoint &
+ScopeOperation::get_goto_point() const
+{ return *goto_point; }
+
 const std::string &
 ScopeOperation::get_variable_name() const
 { return variable_name; }
@@ -112,11 +116,13 @@ ScopeOperation::create_label(
 Gyoji::owned<ScopeOperation>
 ScopeOperation::create_goto(
     std::string _goto_label,
+    Gyoji::owned<FunctionPoint> _goto_point,
     const Gyoji::context::SourceReference & _source_ref
     )
 {
     auto op = Gyoji::owned<ScopeOperation>(new ScopeOperation(ScopeOperation::GOTO_DEFINITION, _source_ref));
     op->goto_label = _goto_label;
+    op->goto_point = std::move(_goto_point);
     return op;
 }
 
@@ -328,6 +334,7 @@ ScopeTracker::add_flat_op(const ScopeOperation *op)
 void
 ScopeTracker::add_goto(
     std::string goto_label,
+    Gyoji::owned<FunctionPoint> goto_point,
     const Gyoji::context::SourceReference & _source_ref
     )
 {
@@ -335,7 +342,7 @@ ScopeTracker::add_goto(
     // Check if this label exists and jump to that
     // label if it does.  If it doesn't, forward declare it.
     // and put it in the 'forward declared' labels list.
-    auto op = ScopeOperation::create_goto(goto_label, _source_ref);
+    auto op = ScopeOperation::create_goto(goto_label, std::move(goto_point), _source_ref);
     tracker_goto_labels_at.insert(std::pair(tracker_flat.size(), op->get_goto_label()));
     add_flat_op(op.get());
     add_operation(std::move(op));
@@ -514,16 +521,17 @@ ScopeTracker::get_loop_continue_blockid() const
 
 bool
 ScopeTracker::check(
+    std::vector<std::pair<const ScopeOperation*, std::vector<const ScopeOperation*>>> & goto_fixups
     ) const
 {
     bool ok = true;
     for (const auto & goto_point : tracker_goto_labels_at) {
-	const ScopeOperation *op = tracker_flat.at(goto_point.first);
-	const FunctionLabel *function_label = get_label(op->get_goto_label());
+	const ScopeOperation *goto_operation = tracker_flat.at(goto_point.first);
+	const FunctionLabel *function_label = get_label(goto_operation->get_goto_label());
 	if (function_label == nullptr || !function_label->is_resolved()) {
 	    std::unique_ptr<Gyoji::context::Error> error = std::make_unique<Gyoji::context::Error>("Goto for an un-defined label.");
-	    error->add_message(op->get_source_ref(),
-			       std::string("Goto label ") + op->get_goto_label() + " had an undefined destination.");
+	    error->add_message(goto_operation->get_source_ref(),
+			       std::string("Goto label ") + goto_operation->get_goto_label() + " had an undefined destination.");
 	    compiler_context
 		.get_errors()
 		.add_error(std::move(error));
@@ -551,8 +559,8 @@ ScopeTracker::check(
 
 	if (skipped_initializations.size() > 0) {
 	    std::unique_ptr<Gyoji::context::Error> error = std::make_unique<Gyoji::context::Error>("Goto would skip initialization.");
-	    error->add_message(op->get_source_ref(),
-			       std::string("Goto label ") + op->get_goto_label() + " would skip initialization of variables in destination scope.");
+	    error->add_message(goto_operation->get_source_ref(),
+			       std::string("Goto label ") + goto_operation->get_goto_label() + " would skip initialization of variables in destination scope.");
 	    error->add_message(function_label->get_source_ref(),
 			       "Label declared here.");
 	    error->add_message(skipped_initializations.at(0)->get_source_ref(),
@@ -563,6 +571,7 @@ ScopeTracker::check(
 	    ok = false;
 	}
 	    
+	goto_fixups.push_back(std::pair(goto_operation, unwind_variables));
 	for (const auto & s : unwind_variables) {
 	    fprintf(stderr, "Unwind %s\n", s->get_variable_name().c_str());
 	}
@@ -666,3 +675,21 @@ FunctionLabel::resolve(const Gyoji::context::SourceReference & _src_ref)
     resolved = true;
     src_ref = &_src_ref;
 }
+
+////////////////////////////////////////////////
+// FunctionPoint
+////////////////////////////////////////////////
+FunctionPoint::FunctionPoint(size_t _basic_block_id, size_t _location)
+    : basic_block_id(_basic_block_id)
+    , location(_location)
+{}
+FunctionPoint::~FunctionPoint()
+{}
+
+size_t
+FunctionPoint::get_basic_block_id() const
+{ return basic_block_id; }
+
+size_t
+FunctionPoint::get_location() const
+{ return location; }

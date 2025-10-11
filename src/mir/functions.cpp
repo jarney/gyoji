@@ -133,6 +133,7 @@ Function::dump(FILE *out) const
     }
     fprintf(out, "    }\n");
 }
+
 /////////////////////////////////////
 // BasicBlock
 /////////////////////////////////////
@@ -168,6 +169,17 @@ BasicBlock::contains_terminator() const
     }
     return false;
 }
+
+size_t
+BasicBlock::size() const
+{ return operations.size(); }
+
+void
+BasicBlock::insert_operation(size_t position, Gyoji::owned<Operation> operation)
+{
+    operations.insert(operations.begin() + position, std::move(operation));
+}
+
 
 /////////////////////////////////////
 // FunctionArgument

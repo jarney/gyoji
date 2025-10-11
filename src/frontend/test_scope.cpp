@@ -66,14 +66,15 @@ int test_jump_backward_ok()
     tracker.scope_pop();
     
     tracker.scope_push(zero_source_ref);
-    tracker.add_goto("label1", zero_source_ref);
+    tracker.add_goto("label1", std::make_unique<FunctionPoint>(0, 1), zero_source_ref);
     tracker.scope_pop();
 
-    tracker.add_goto("label1", zero_source_ref);
+    tracker.add_goto("label1", std::make_unique<FunctionPoint>(1, 3), zero_source_ref);
 
     tracker.dump();
 
-    tracker.check();
+    std::vector<std::pair<const ScopeOperation*, std::vector<const ScopeOperation*>>> goto_fixups;
+    tracker.check(goto_fixups);
     if (context.has_errors()) {
 	context.get_errors().print();
 	// This is an error which is expected,
@@ -100,7 +101,7 @@ int test_jump_forward_ok()
 	// I don't like that these aren't atomic, but the caller
 	// is responsible for getting a new basic block, but the
 	// tracker is responsible for consuming it.
-        tracker.add_goto("label1", zero_source_ref);
+        tracker.add_goto("label1", std::make_unique<FunctionPoint>(0, 1), zero_source_ref);
         tracker.label_declare("label1", 2);
     }
     tracker.scope_pop();
@@ -116,7 +117,8 @@ int test_jump_forward_ok()
 
     tracker.dump();
 
-    tracker.check();
+    std::vector<std::pair<const ScopeOperation*, std::vector<const ScopeOperation*>>> goto_fixups;
+    tracker.check(goto_fixups);
     if (context.has_errors()) {
 	context.get_errors().print();
 	// This is an error which is expected,
@@ -154,8 +156,8 @@ int test_jump_backward_skip_initialization()
     tracker.scope_pop();
     tracker.add_variable("three", nullptr, zero_source_ref);    
     tracker.add_variable("three_1", nullptr, zero_source_ref);    
-    tracker.add_goto("label1", zero_source_ref);
-    tracker.add_goto("label2", zero_source_ref);
+    tracker.add_goto("label1", std::make_unique<FunctionPoint>(0, 1), zero_source_ref);
+    tracker.add_goto("label2", std::make_unique<FunctionPoint>(1, 1), zero_source_ref);
     tracker.add_variable("five", nullptr, zero_source_ref);
 
     tracker.scope_push(zero_source_ref);
@@ -170,8 +172,8 @@ int test_jump_backward_skip_initialization()
 
     tracker.scope_pop();
 
-    tracker.check();
-
+    std::vector<std::pair<const ScopeOperation*, std::vector<const ScopeOperation*>>> goto_fixups;
+    tracker.check(goto_fixups);
     tracker.dump();
 
     if (context.has_errors()) {
