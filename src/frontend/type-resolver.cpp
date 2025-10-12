@@ -211,12 +211,13 @@ TypeResolver::extract_from_type_specifier(const TypeSpecifier & type_specifier)
 }
 
 void
-TypeResolver::extract_from_class_members(Type & type, const ClassDefinition & definition)
+TypeResolver::extract_from_class_members(Type & type, const ClassDefinition & class_definition)
 {
     std::vector<TypeMember> members;
     std::map<std::string, const TypeMember*> members_by_name;
+    std::map<std::string, TypeMethod> methods;
     
-    const auto & class_members = definition.get_members();
+    const auto & class_members = class_definition.get_members();
     size_t member_id = 0;
     for (const auto & class_member : class_members) {
 	const auto & class_member_type = class_member->get_member();
@@ -240,7 +241,7 @@ TypeResolver::extract_from_class_members(Type & type, const ClassDefinition & de
 				       std::string("Member variable ") +
 				       member_variable->get_name() +
 				       std::string(" in class ") +
-				       definition.get_name() +
+				       class_definition.get_name() +
 				       std::string(" was already defined"));
 		    error->add_message(existing_member_it->second->get_source_ref(),
 				       "Originally defined here.");
@@ -258,7 +259,22 @@ TypeResolver::extract_from_class_members(Type & type, const ClassDefinition & de
 	}
 	else if (std::holds_alternative<Gyoji::owned<ClassMemberDeclarationMethod>>(class_member_type)) {
 	    const auto & member_method = std::get<Gyoji::owned<ClassMemberDeclarationMethod>>(class_member_type);
-	    fprintf(stderr, "Member method %s\n", member_method->get_name().c_str());
+	    fprintf(stderr, "Member method %s in class %s\n",
+		    member_method->get_name().c_str(),
+		    class_definition.get_name().c_str()
+		);
+
+	    std::vector<Argument> arguments;
+	    TypeMethod method(
+		member_method->get_name(),
+		member_method->get_source_ref(),
+		&type,
+		&type,
+		arguments
+		);
+	    methods.insert(std::pair(member_method->get_name(), method));
+	    // TODO: Extract methods into this.
+	    
 	    // Add this to the 'symbol table' and mark it as a method
 	    // of the class we're working on.
 
@@ -267,7 +283,10 @@ TypeResolver::extract_from_class_members(Type & type, const ClassDefinition & de
 	}
     }
     
-    type.complete_composite_definition(members, definition.get_name_source_ref());
+    type.complete_composite_definition(
+	members,
+	methods,
+	class_definition.get_name_source_ref());
 }
 
 void

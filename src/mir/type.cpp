@@ -205,6 +205,10 @@ const std::vector<TypeMember> &
 Type::get_members() const
 { return members; }
 
+const std::map<std::string, TypeMethod> &
+Type::get_methods() const
+{ return methods; }
+
 const TypeMember *
 Type::member_get(const std::string & member_name) const
 {
@@ -252,10 +256,14 @@ Type::complete_array_definition(const Type *_type, size_t _array_length, const G
 }
 
 void
-Type::complete_composite_definition(std::vector<TypeMember> _members, const SourceReference & _source_ref)
+Type::complete_composite_definition(
+    std::vector<TypeMember> _members,
+    std::map<std::string, TypeMethod> _methods,
+    const SourceReference & _source_ref)
 {
     complete = true;
     members = _members;
+    methods = _methods;
     for (const TypeMember & member : members) {
 	members_by_name.insert(std::pair(member.get_name(), &member));
     }
@@ -333,6 +341,9 @@ Type::dump(FILE *out) const
         fprintf(out, "    %s : %s {\n", name.c_str(), type_desc.c_str());
 	for (const auto & m : members) {
 	    fprintf(out, "        %s : %s\n", m.get_name().c_str(), m.get_type()->get_name().c_str());
+	}
+	for (const auto & m : methods) {
+	    fprintf(out, "        %s : %s\n", m.first.c_str(), m.second.get_class_type()->get_name().c_str());
 	}
 	fprintf(out, "    }\n");
     }

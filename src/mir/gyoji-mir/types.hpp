@@ -27,6 +27,7 @@
 namespace Gyoji::mir {
     class Type;
     class Types;
+    class Argument;
     
     /**
      * @brief Set of types extracted from a translation unit.
@@ -117,6 +118,52 @@ namespace Gyoji::mir {
     };
     
     /**
+     * @brief Function argument
+     *
+     * @details
+     * This class represents the argument to a function for
+     * function-pointer types.
+     */
+    class Argument {
+    public:
+	/**
+	 * Creates a new argument with the given type
+	 * based on the type of the argument and a reference
+	 * to the source location where it was declared.
+	 */
+	Argument(
+	    const Type *_argument_type,
+	    const Gyoji::context::SourceReference & _source_ref
+	    );
+	/**
+	 * This makes a copy of the argument.  It is provided
+	 * so that the type class may use a map or array to
+	 * store the members rather than storing them by pointer,
+	 * so a copy and assignment is required.
+	 */
+	Argument(const Argument & _other);
+	/**
+	 * @brief Move along, nothing to see here.
+	 *
+	 * @details
+	 * Move along, nothing to see here.
+	 */
+	~Argument();
+	/**
+	 * Returns the type of argument.
+	 */
+	const Type* get_type() const;
+	/**
+	 * Returns a reference to the source
+	 * where this argument was declared.
+	 */
+	const Gyoji::context::SourceReference & get_source_ref();
+    private:
+	const Type *argument_type;
+	const Gyoji::context::SourceReference *source_ref;
+    };
+    
+    /**
      * @brief This represents a typed member variable of a class.
      *
      * @details
@@ -195,53 +242,40 @@ namespace Gyoji::mir {
     };
 
     /**
-     * @brief Function argument
+     * @brief Method of a class.
      *
      * @details
-     * This class represents the argument to a function for
-     * function-pointer types.
+     * This represents a method inside a class.  A method
+     * is a function that implicitly takes an object of the
+     * class type as its first argument and thereby
+     * provides access to the member variables during the
+     * scope of the method.  It otherwise behaves like an
+     * ordinary function.
      */
-    class Argument {
+    class TypeMethod {
     public:
-	/**
-	 * Creates a new argument with the given type
-	 * based on the type of the argument and a reference
-	 * to the source location where it was declared.
-	 */
-	Argument(
-	    const Type *_argument_type,
-	    const Gyoji::context::SourceReference & _source_ref
+	TypeMethod(
+	    std::string _method_name,
+	    const Gyoji::context::SourceReference & _source_ref,
+	    const Type *_class_type,
+	    const Type *_return_type,
+	    const std::vector<Argument> _arguments
 	    );
-	/**
-	 * This makes a copy of the argument.  It is provided
-	 * so that the type class may use a map or array to
-	 * store the members rather than storing them by pointer,
-	 * so a copy and assignment is required.
-	 */
-	Argument(const Argument & _other);
-	/**
-	 * @brief Move along, nothing to see here.
-	 *
-	 * @details
-	 * Move along, nothing to see here.
-	 */
-	~Argument();
-	/**
-	 * Returns the type of argument.
-	 */
-	const Type* get_type() const;
-	/**
-	 * Returns a reference to the source
-	 * where this argument was declared.
-	 */
-	const Gyoji::context::SourceReference & get_source_ref();
+	~TypeMethod();
+
+	const std::string & get_name() const;
+	const Gyoji::context::SourceReference & get_source_ref() const;
+	const Type *get_class_type() const;
+	const Type *get_return_type() const;
+	const std::vector<Argument> & get_arguments() const;
     private:
-	const Type *argument_type;
-	const Gyoji::context::SourceReference *source_ref;
-	
-	
+	std::string method_name;
+	const Gyoji::context::SourceReference & source_ref;
+	const Type *class_type;
+	const Type *return_type;
+	std::vector<Argument> arguments;
     };
-    
+
     /**
      * @brief This represents a type as declared in a translation unit.
      *
@@ -591,6 +625,12 @@ namespace Gyoji::mir {
 	const std::vector<TypeMember> & get_members() const;
 
 	/**
+	 * Returns a map of the methods available in this class.
+	 * This is ONLY valid for types that are 'is_composite'.
+	 */
+	const std::map<std::string, TypeMethod> & get_methods() const;
+
+	/**
 	 * This returns a pointer to the member indicated by
 	 * the given name.  This is ONLY valid for types
 	 * that are 'is_composite()'.  If the member with the
@@ -630,7 +670,11 @@ namespace Gyoji::mir {
 	/**
 	 * Completes the definition of a composite type.
 	 */
-	void complete_composite_definition(std::vector<TypeMember> _members, const Gyoji::context::SourceReference & _source_ref);
+	void complete_composite_definition(
+	    std::vector<TypeMember> _members,
+	    std::map<std::string, TypeMethod> _methods,
+	    const Gyoji::context::SourceReference & _source_ref
+	    );
 	
 	/**
 	 * Completes the definition of a pointer or reference.
@@ -697,5 +741,8 @@ namespace Gyoji::mir {
 	// Used only for class/composite types.
 	std::vector<TypeMember> members;
 	std::map<std::string, const TypeMember*> members_by_name;
+
+	// Used only for class/composite types.
+	std::map<std::string, TypeMethod> methods;
     };
 };

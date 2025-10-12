@@ -12,6 +12,7 @@ set(TYPES_SOURCES
     types.cpp
     type.cpp
     type-member.cpp
+    type-method.cpp
     symbols.cpp
     operation.cpp
     ${TYPES_PUBLIC_HEADERS}
