@@ -560,7 +560,7 @@ ScopeTracker::check(
 	if (skipped_initializations.size() > 0) {
 	    std::unique_ptr<Gyoji::context::Error> error = std::make_unique<Gyoji::context::Error>("Goto would skip initialization.");
 	    error->add_message(goto_operation->get_source_ref(),
-			       std::string("Goto label ") + goto_operation->get_goto_label() + " would skip initialization of variables in destination scope.");
+			       std::string("Goto label ") + goto_operation->get_goto_label() + std::string(" would skip initialization of variables in destination scope."));
 	    error->add_message(function_label->get_source_ref(),
 			       "Label declared here.");
 	    error->add_message(skipped_initializations.at(0)->get_source_ref(),

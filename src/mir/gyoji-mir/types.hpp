@@ -696,5 +696,6 @@ namespace Gyoji::mir {
 
 	// Used only for class/composite types.
 	std::vector<TypeMember> members;
+	std::map<std::string, const TypeMember*> members_by_name;
     };
 };

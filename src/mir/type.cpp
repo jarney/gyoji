@@ -208,12 +208,11 @@ Type::get_members() const
 const TypeMember *
 Type::member_get(const std::string & member_name) const
 {
-    for (const auto & member : members) {
-	if (member.get_name() == member_name) {
-	    return &member;
-	}
+    const auto it = members_by_name.find(member_name);
+    if (it == members_by_name.end()) {
+	return nullptr;
     }
-    return nullptr;
+    return it->second;
 }
 
 const Type *
@@ -257,6 +256,9 @@ Type::complete_composite_definition(std::vector<TypeMember> _members, const Sour
 {
     complete = true;
     members = _members;
+    for (const TypeMember & member : members) {
+	members_by_name.insert(std::pair(member.get_name(), &member));
+    }
     defined_source_ref = &_source_ref;
 }
 

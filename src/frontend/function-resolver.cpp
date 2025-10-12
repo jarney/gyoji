@@ -197,7 +197,7 @@ FunctionDefinitionResolver::resolve()
 	return false;
     }
     
-    scope_tracker.dump();
+    //scope_tracker.dump();
 
     // This is a list of goto operations (ScopeOperation*)
     // each with a vector of variable declarations (std::vector<ScopeOperation*>)
@@ -2747,7 +2747,6 @@ FunctionDefinitionResolver::extract_from_statement_return(
     std::vector<std::string> unwind_root = scope_tracker.get_variables_to_unwind_for_root();
 
     if (statement.is_void()) {
-	fprintf(stderr, "Extracting return void\n");
 	leave_scope(statement.get_source_ref(), unwind_root);
 	auto operation = std::make_unique<OperationReturnVoid>(
 	    statement.get_source_ref()

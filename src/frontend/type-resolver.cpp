@@ -214,6 +214,7 @@ void
 TypeResolver::extract_from_class_members(Type & type, const ClassDefinition & definition)
 {
     std::vector<TypeMember> members;
+    std::map<std::string, const TypeMember*> members_by_name;
     
     const auto & class_members = definition.get_members();
     size_t member_id = 0;
@@ -232,13 +233,37 @@ TypeResolver::extract_from_class_members(Type & type, const ClassDefinition & de
 			);
 	    }
 	    else {
-		// TODO: There must be a good way to ensure
-		// that the names are unique.  This would allow two
-		// fields with the same name which is clearly bad.
-		TypeMember add_member(member_variable->get_name(), member_id, member_type, class_member->get_source_ref());
-		members.push_back(add_member);
-		member_id++;
+		const auto existing_member_it = members_by_name.find(member_variable->get_name());
+		if (existing_member_it != members_by_name.end()) {
+		    std::unique_ptr<Gyoji::context::Error> error = std::make_unique<Gyoji::context::Error>("Duplicate member variable in class.");
+		    error->add_message(member_variable->get_name_source_ref(),
+				       std::string("Member variable ") +
+				       member_variable->get_name() +
+				       std::string(" in class ") +
+				       definition.get_name() +
+				       std::string(" was already defined"));
+		    error->add_message(existing_member_it->second->get_source_ref(),
+				       "Originally defined here.");
+		    compiler_context
+			.get_errors()
+			.add_error(std::move(error));
+		}
+		else {
+		    TypeMember add_member(member_variable->get_name(), member_id, member_type, member_variable->get_name_source_ref());
+		    members.push_back(add_member);
+		    members_by_name.insert(std::pair(member_variable->get_name(), &members.back()));
+		    member_id++;
+		}
 	    }
+	}
+	else if (std::holds_alternative<Gyoji::owned<ClassMemberDeclarationMethod>>(class_member_type)) {
+	    const auto & member_method = std::get<Gyoji::owned<ClassMemberDeclarationMethod>>(class_member_type);
+	    fprintf(stderr, "Member method %s\n", member_method->get_name().c_str());
+	    // Add this to the 'symbol table' and mark it as a method
+	    // of the class we're working on.
+
+	    // When we declare the function, we should find it in the symbol
+	    // table and generate it with method arguments, etc.
 	}
     }
     
