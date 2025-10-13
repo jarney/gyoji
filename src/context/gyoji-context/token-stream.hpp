@@ -13,6 +13,9 @@ namespace Gyoji::context {
     typedef unsigned int TokenID;
     
     /**
+     * @brief Represents a token read from the input stream.
+     *
+     * @details
      * A token represents the result of the lexical
      * analysis and contains the line number and column
      * number of where the token was found as well as
@@ -20,6 +23,20 @@ namespace Gyoji::context {
      * token from the input.  Some tokens participate
      * in the grammar such as language keywords
      * while others represent whitespace or comments.
+     *
+     * While it might seem that this belongs in the lex/parse
+     * code of the front-end, this token is less concrete in the
+     * sense that it is actually agnostic of the way the
+     * data is broken up and parsed.  This token stream can actually
+     * be re-used for multiple different lexical and syntactical structures.
+     *
+     * It also carries the source location where the token was read
+     * from so that its source-reference can be used to derive
+     * and report the location of any errors.  It is declared
+     * in the compiler context because the token stream must
+     * have a lifetime at least as long as the error reporting
+     * system because the errors hold references to the tokens
+     * and their source references.
      */
     class Token {
     public:
@@ -50,7 +67,6 @@ namespace Gyoji::context {
 	 * the input and bypassing the grammar
 	 * entirely.
 	 */
-//	const std::string & get_type() const;
 	const TokenID & get_type() const;
 	/**
 	 * This is the literal value that was
@@ -74,6 +90,11 @@ namespace Gyoji::context {
     };
 
     /**
+     * @brief Stream of tokens read by the parser to provide context
+     *        for errors.
+     *
+     * @details
+     *
      * The token stream represents the list of all tokens that were encountered
      * while parsing the input file.  Each token corresponds to a match rule
      * in the lexical analysis stage (gyoji.l).  The tokens also contain metadata

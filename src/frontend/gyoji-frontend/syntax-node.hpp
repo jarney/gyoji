@@ -8,8 +8,10 @@
  *  @{
  */
 
-//! Abstract syntax tree
-/*!
+/**
+ * @brief Abstract syntax tree
+ *
+ * @details
  * Weakly-typed representation of the parse tree
  * resulting from reading and parsing an input file.
  * While the interface to the data is weakly typed,
@@ -20,6 +22,9 @@
 namespace Gyoji::frontend::ast {
     
     /**
+     * @brief Weakly-typed syntax node
+     *
+     * @details
      * The syntax tree can be viewed as a tree of nodes
      * that follow the structure of the parsed grammar.
      * 

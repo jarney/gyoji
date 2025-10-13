@@ -4,6 +4,9 @@
 
 namespace Gyoji::context {
     /**
+     * @brief References a location in the source-file
+     *
+     * @details
      * This is a reference to a point in the source
      * file and is used as a way to mark portions
      * of the code so that the error handler has
@@ -19,6 +22,9 @@ namespace Gyoji::context {
 	    size_t _length
 	    );
 	SourceReference(const SourceReference & _other);
+	/**
+	 * Move along, nothing to see here.
+	 */
 	~SourceReference();
 	const std::string & get_filename() const;
 	size_t get_line() const;

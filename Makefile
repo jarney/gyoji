@@ -5,6 +5,9 @@ all: build/Makefile
 website: build/Makefile test
 	cd build; $(MAKE) website
 
+docs: build/Makefile
+	cd build; $(MAKE) docs
+
 # Run the tests and report
 # code-coverage.  Note that we only
 # cover our source, not generated code

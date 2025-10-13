@@ -3,7 +3,7 @@
 #include <gyoji-context.hpp>
 
 /**
- * @breif Analysis pass performs checks to ensure semantic consistency.
+ * @brief Analysis pass performs checks to ensure semantic consistency.
  *
  * @details
  * The analysis passes each guarantee an aspect of semantics consistency.
