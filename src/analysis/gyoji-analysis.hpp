@@ -2,8 +2,50 @@
 #include <gyoji-mir.hpp>
 #include <gyoji-context.hpp>
 
+/**
+ * @breif Analysis pass performs checks to ensure semantic consistency.
+ *
+ * @details
+ * The analysis passes each guarantee an aspect of semantics consistency.
+ * The borrow checker is one of these analysis passes.
+ *
+ * Things that should be checked in the analysis passes:
+ * * Initialization: Every variable is written (initialized) BEFORE it is read
+ *    from.
+ *
+ * * Type Resolution: Ensures that each variable has a type that has been
+ *   fully resolved (i.e. that there are no forward-declared classes that
+ *   are being used before being fully declared).
+ *
+ * * Borrow Semantics: That access to variables through references always point
+ *   to a valid location and have unique access to it at any point in time.
+ *
+ * * Pairing of const/dest: Every local variable constructor is paired
+ *   with a destructor.  No path through the code allows a variable
+ *   to be declared and constructed without a corresponding destructor
+ *   and de-allocation.
+ *
+ * * Unreachable code: There is no code after the end of any basic block
+ *   which would become unreachable because a branch has occurred before
+ *   that code is executed.
+ *
+ * * Return semantics: Every path through the code returns a value that
+ *   matches the return-value of the function (or void).
+ *
+ */
 namespace Gyoji::analysis {
 
+    /**
+     * @brief Abstract interface to analysis passes.
+     *
+     * @details
+     * An analysis pass is constructed with access to the compiler context
+     * so that it can report errors.  The 'check' method performs
+     * the specific analysis needed.  The 'check' method is a virtual
+     * abstract method implemented by each concrete class that
+     * inherits from it to perform the specific analysis needed by that
+     * pass.
+     */
     class AnalysisPass {
     public:
 	AnalysisPass(Gyoji::context::CompilerContext & _compiler_context, std::string _name);
@@ -16,7 +58,17 @@ namespace Gyoji::analysis {
 	Gyoji::context::CompilerContext & compiler_context;
 	std::string name;
     };
-    
+
+    /**
+     * @brief Check that all types have been fully declared before use.
+     * 
+     * @details
+     * This analysis ensures that all types have been fully declared
+     * before they are used in code.  Essentially, this looks for
+     * the existence of 'forward-declared' variables that are in use
+     * by code which doesn't yet know the full definition/size of the
+     * object.
+     */
     class AnalysisPassTypeResolution : public AnalysisPass {
     public:
 	AnalysisPassTypeResolution(Gyoji::context::CompilerContext & _compiler_context);
@@ -28,6 +80,9 @@ namespace Gyoji::analysis {
     };
 
     /**
+     * @brief Checks for the existence of unreachable code.
+     *
+     * @details
      * This pass is intended to uncover basic blocks which
      * contain instructions after the terminating instruction
      * (most commonly after a jump, or return statement).
@@ -51,6 +106,13 @@ namespace Gyoji::analysis {
 	void check(const Gyoji::mir::Function & function) const;
     };
 
+    /**
+     * @brief Performs the borrow-checker algorithm
+     *
+     * @details
+     * The borrow-checker is modelled after the 'polonius'
+     * borrow checker from Rust.
+     */
     class AnalysisPassBorrowChecker : public AnalysisPass {
     public:
 	AnalysisPassBorrowChecker(Gyoji::context::CompilerContext & _compiler_context);
@@ -58,6 +120,39 @@ namespace Gyoji::analysis {
 	virtual void check(const Gyoji::mir::MIR & mir) const;
     private:
 	void check(const Gyoji::mir::Function & function) const;
+    };
+
+    /**
+     * @brief Performs checks for return-value consistency
+     *
+     * @details
+     * This analysis pass checks that every code path eventually
+     * leads to a 'return' statement that ends the function.  It also
+     * checks that all return statements return values that are
+     * consistent with the return type of that function.
+     */
+    class AnalysisPassReturnValues : public AnalysisPass {
+    public:
+	AnalysisPassReturnValues();
+	~AnalysisPassReturnValues();
+	virtual void check(const Gyoji::mir::MIR & mir) const;
+    };
+
+    /**
+     * @brief This pass ensures that every variable that has been declared is also paired with an un-declare.
+     *
+     * @details
+     * This analysis pass checks to make sure that for every path through
+     * the code, if a variable is declared, it is also un-declared and
+     * also guarantees that each of the constructors called for local variables
+     * is matched with a destructor, guaranteeing that it is safe to use
+     * constructor/destructor pairs in a way that matches the lexical scopes.
+     */
+    class AnalysisPassVariableScopePairing : public AnalysisPass {
+    public:
+	AnalysisPassVariableScopePairing();
+	~AnalysisPassVariableScopePairing();
+	virtual void check(const Gyoji::mir::MIR & mir) const;
     };
     
 };
