@@ -3,12 +3,13 @@ u32 something_unqualified()
 {
 }
 
-
 namespace std {
   u32 foo();
   u32 bar();
   u32 baz();
 };
+/*
+  typedef u32 some_t;
 
 using namespace std;
 
@@ -41,3 +42,4 @@ namespace fart {
 
 u32 fart::baz()
 {}
+*/

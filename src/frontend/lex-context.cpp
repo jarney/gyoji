@@ -8,10 +8,10 @@
 using namespace Gyoji::frontend::yacc;
 
 LexContext::LexContext(
-    Gyoji::frontend::namespaces::NamespaceContext &_namespace_context,
+    Gyoji::frontend::namespaces::NS2Context &_ns2_context,
     Gyoji::context::CompilerContext & _compiler_context,
     Gyoji::misc::InputSource &_input_source)
-    : namespace_context(_namespace_context)
+    : ns2_context(_ns2_context)
     , input_source(_input_source)
     , compiler_context(_compiler_context)
     , line(1)

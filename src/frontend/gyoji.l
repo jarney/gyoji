@@ -74,15 +74,9 @@ void move_array(
     PRINT_TERMINALS(#nodetype, yytext)                               \
     RETURN_NODE(nodetype);
 
-#define PROCESS_IDENTIFIER(nodetype, ns_ptr)                         \
+#define PROCESS_IDENTIFIER(nodetype, entity)                         \
     START_NODE(nodetype)                                             \
-    node->set_fully_qualified_name(ns_ptr->fully_qualified());       \
-    PRINT_TERMINALS(#nodetype, yytext)                               \
-    RETURN_NODE(nodetype);
-
-#define PROCESS_IDENTIFIER_ID(nodetype, ns_ptr)                      \
-    START_NODE(nodetype)                                             \
-    node->set_fully_qualified_name(ns_ptr->fully_qualified());       \
+    node->set_ns2_entity(entity);                                    \
     PRINT_TERMINALS(#nodetype, yytext)                               \
     RETURN_NODE(nodetype);
 
@@ -221,28 +215,24 @@ null         {PROCESS_NODE(LITERAL_NULL);}
 {integer} { PROCESS_NODE(LITERAL_INT);}
 (::)*{identifier}({whitespace}*:{whitespace}*:{whitespace}*{identifier})* {
     LexContext *lex_context = (LexContext*)yyget_extra(yyscanner);
-    NamespaceContext & context = lex_context->namespace_context;
-    NamespaceFoundReason::ptr found = context.namespace_lookup(std::string(yytext));
-    if (found->reason == NamespaceFoundReason::REASON_FOUND) {
-        if (found->location->get_type() == Namespace::TYPE_NAMESPACE) {
-            // When processing a namespace, the NAMESPACE_NAME
-            // gives the fully-qualified name of the namespace.
-            PROCESS_IDENTIFIER(NAMESPACE_NAME, found->location);
-        }
-        else {
-            // When processing a TYPE_NAME, the second argument
-            // tells us the actual fully-qualified name of the type.
-            PROCESS_IDENTIFIER(TYPE_NAME, found->location);
-        }
+    NS2Context & ns2_context = lex_context->ns2_context;
+
+    const NS2Entity *entity = ns2_context.namespace_find(std::string(yytext));
+    if (entity == nullptr) {
+        // Not yet known.  We expect the syntax layer to
+        // find a place to put this identifier in a namespace.
+        PROCESS_IDENTIFIER(IDENTIFIER, nullptr);
     }
-    else if (found->reason == NamespaceFoundReason::REASON_NOT_FOUND) {
-        // When declaring an identifier, the second
-        // argument tells us what namespace the identifier
-        // should go into.
-        PROCESS_IDENTIFIER_ID(IDENTIFIER, context.current());
+    if (entity->get_type() == NS2Entity::ENTITY_TYPE_NAMESPACE) {
+        PROCESS_IDENTIFIER(NAMESPACE_NAME, entity);
+    }
+    else if (entity->get_type() == NS2Entity::ENTITY_TYPE_TYPE) {
+        PROCESS_IDENTIFIER(TYPE_NAME, entity);
     }
     else {
-        PROCESS_NODE(YYEOF);
+        // An identifier we've seen before.  It should
+        // already be assigned to a namespace location.
+        PROCESS_IDENTIFIER(IDENTIFIER, entity);
     }
 }
 

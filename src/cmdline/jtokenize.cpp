@@ -23,12 +23,12 @@ int main(int argc, char **argv)
     }
     
     CompilerContext context(argv[1]);
-    Gyoji::frontend::namespaces::NamespaceContext namespace_context;
+    Gyoji::frontend::namespaces::NS2Context ns2_context;
     
     Gyoji::misc::InputSourceFile input_source(input);
     
     LexContext lex_context(
-	namespace_context,
+	ns2_context,
 	context,
 	input_source);
     

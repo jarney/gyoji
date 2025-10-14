@@ -18,17 +18,17 @@ Parser::parse(
     Gyoji::misc::InputSource & _input_source
     )
 {
-    auto namespace_context = std::make_unique<Gyoji::frontend::namespaces::NamespaceContext>();
+    auto ns2_context = std::make_unique<Gyoji::frontend::namespaces::NS2Context>();
     Gyoji::owned<ParseResult> result = std::make_unique<ParseResult>(
 	_compiler_context,
-	std::move(namespace_context)
+	std::move(ns2_context)
 	);
     
     yyscan_t scanner;
     yylex_init(&scanner);
     
     LexContext lex_context(
-	*result->namespace_context,
+	*result->ns2_context,
 	_compiler_context,
 	_input_source);
     yyset_extra(&lex_context, scanner);

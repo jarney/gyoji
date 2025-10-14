@@ -13,6 +13,7 @@ Terminal::Terminal(const Token & _token)
     : SyntaxNode(_token.get_type(), this, _token.get_source_ref())
     , token(_token)
     , identifier_type(IDENTIFIER_UNCATEGORIZED)
+    , ns2_entity(nullptr)
 
 {}
 Terminal::~Terminal()
@@ -26,12 +27,15 @@ Terminal::get_value() const
 const SourceReference &
 Terminal::get_terminal_source_ref() const
 { return token.get_source_ref(); }
-const std::string &
+
+std::string
 Terminal::get_fully_qualified_name() const
-{ return fully_qualified_name; }
-void
-Terminal::set_fully_qualified_name(std::string _name)
-{ fully_qualified_name = _name; }
+{
+    if (identifier_type == IDENTIFIER_GLOBAL_SCOPE) {
+	return ns2_entity->get_fully_qualified_name();
+    }
+    return token.get_value();
+}
 
 const Terminal::IdentifierType &
 Terminal::get_identifier_type() const
@@ -40,6 +44,17 @@ Terminal::get_identifier_type() const
 void
 Terminal::set_identifier_type(IdentifierType _identifier_type)
 { identifier_type = _identifier_type; }
+
+void
+Terminal::set_ns2_entity(const Gyoji::frontend::namespaces::NS2Entity *_ns2_entity)
+{
+    identifier_type = IDENTIFIER_GLOBAL_SCOPE;
+    ns2_entity = _ns2_entity;
+}
+
+const Gyoji::frontend::namespaces::NS2Entity *
+Terminal::get_ns2_entity() const
+{ return ns2_entity; }
 
 ///////////////////////////////////////////////////
 // TerminalNonSyntax
@@ -181,7 +196,7 @@ TypeName::~TypeName()
 bool
 TypeName::is_expression() const
 { return m_is_expression; }
-const std::string &
+std::string 
 TypeName::get_name() const
 { return type_name->get_fully_qualified_name(); }
 const SourceReference &
@@ -446,31 +461,60 @@ FunctionDefinitionArgList::add_comma(Gyoji::owned<Terminal> _comma)
 
 
 ///////////////////////////////////////////////////
-
-FileStatementFunctionDeclaration::FileStatementFunctionDeclaration(
+FileStatementFunctionDeclStart::FileStatementFunctionDeclStart(
     Gyoji::owned<AccessModifier> _access_modifier,
     Gyoji::owned<UnsafeModifier> _unsafe_modifier,
     Gyoji::owned<TypeSpecifier> _type_specifier,
-    Gyoji::owned<Terminal> _name,
-    Gyoji::owned<Terminal> _paren_l,
-    Gyoji::owned<FunctionDefinitionArgList> _arguments,
-    Gyoji::owned<Terminal> _paren_r,
-    Gyoji::owned<Terminal> _semicolon
+    Gyoji::owned<Terminal> _name
     )
-    : SyntaxNode(NONTERMINAL_file_statement_function_declaration, this, _access_modifier->get_source_ref())
+    : SyntaxNode(NONTERMINAL_function_decl_start, this, _name->get_source_ref())
     , access_modifier(std::move(_access_modifier))
     , unsafe_modifier(std::move(_unsafe_modifier))
     , type_specifier(std::move(_type_specifier))
     , name(std::move(_name))
-    , paren_l(std::move(_paren_l))
-    , arguments(std::move(_arguments))
-    , paren_r(std::move(_paren_r))
-    , semicolon(std::move(_semicolon))
 {
     add_child(*access_modifier);
     add_child(*unsafe_modifier);
     add_child(*type_specifier);
     add_child(*name);
+}
+
+FileStatementFunctionDeclStart::~FileStatementFunctionDeclStart()
+{}
+
+const AccessModifier &
+FileStatementFunctionDeclStart::get_access_modifier() const
+{ return *access_modifier; }
+
+const UnsafeModifier &
+FileStatementFunctionDeclStart::get_unsafe_modifier() const
+{ return *unsafe_modifier; }
+
+const TypeSpecifier &
+FileStatementFunctionDeclStart::get_type_specifier() const
+{ return *type_specifier;}
+
+const Terminal &
+FileStatementFunctionDeclStart::get_name() const
+{ return *name; }
+
+///////////////////////////////////////////////////
+
+FileStatementFunctionDeclaration::FileStatementFunctionDeclaration(
+    Gyoji::owned<FileStatementFunctionDeclStart> _start,
+    Gyoji::owned<Terminal> _paren_l,
+    Gyoji::owned<FunctionDefinitionArgList> _arguments,
+    Gyoji::owned<Terminal> _paren_r,
+    Gyoji::owned<Terminal> _semicolon
+    )
+    : SyntaxNode(NONTERMINAL_file_statement_function_declaration, this, _start->get_source_ref())
+    , start(std::move(_start))
+    , paren_l(std::move(_paren_l))
+    , arguments(std::move(_arguments))
+    , paren_r(std::move(_paren_r))
+    , semicolon(std::move(_semicolon))
+{
+    add_child(*start);
     add_child(*paren_l);
     add_child(*arguments);
     add_child(*paren_r);
@@ -480,16 +524,16 @@ FileStatementFunctionDeclaration::~FileStatementFunctionDeclaration()
 {}
 const AccessModifier &
 FileStatementFunctionDeclaration::get_access_modifier() const
-{ return *access_modifier; }
+{ return start->get_access_modifier(); }
 const UnsafeModifier &
 FileStatementFunctionDeclaration::get_unsafe_modifier() const
-{ return *unsafe_modifier; }
+{ return start->get_unsafe_modifier(); }
 const TypeSpecifier &
 FileStatementFunctionDeclaration::get_return_type() const
-{ return *type_specifier; }
+{ return start->get_type_specifier(); }
 const Terminal &
 FileStatementFunctionDeclaration::get_name() const
-{ return *name; }
+{ return start->get_name(); }
 const FunctionDefinitionArgList &
 FileStatementFunctionDeclaration::get_arguments() const
 { return *arguments; }
@@ -539,7 +583,6 @@ StatementVariableDeclaration::StatementVariableDeclaration(
     , initializer(std::move(_initializer))
     , semicolon_token(std::move(_semicolon_token))
 {
-    identifier_token->set_fully_qualified_name("");
     add_child(*type_specifier);
     add_child(*identifier_token);
     add_child(*initializer);
@@ -1096,29 +1139,20 @@ ScopeBody::get_statements() const
 { return *statement_list; }
 ///////////////////////////////////////////////////
 FileStatementFunctionDefinition::FileStatementFunctionDefinition(
-    Gyoji::owned<AccessModifier> _access_modifier,
-    Gyoji::owned<UnsafeModifier> _unsafe_modifier,
-    Gyoji::owned<TypeSpecifier> _type_specifier,
-    Gyoji::owned<Terminal> _name,
+    Gyoji::owned<FileStatementFunctionDeclStart> _start,
     Gyoji::owned<Terminal> _paren_l,
     Gyoji::owned<FunctionDefinitionArgList> _arguments,
     Gyoji::owned<Terminal> _paren_r,
     Gyoji::owned<ScopeBody> _scope_body
     )
-    : SyntaxNode(NONTERMINAL_file_statement_function_declaration, this, _access_modifier->get_source_ref())
-    , access_modifier(std::move(_access_modifier))
-    , unsafe_modifier(std::move(_unsafe_modifier))
-    , type_specifier(std::move(_type_specifier))
-    , name(std::move(_name))
+    : SyntaxNode(NONTERMINAL_file_statement_function_declaration, this, _start->get_source_ref())
+    , start(std::move(_start))
     , paren_l(std::move(_paren_l))
     , arguments(std::move(_arguments))
     , paren_r(std::move(_paren_r))
     , scope_body(std::move(_scope_body))
 {
-    add_child(*access_modifier);
-    add_child(*unsafe_modifier);
-    add_child(*type_specifier);
-    add_child(*name);
+    add_child(*start);
     add_child(*paren_l);
     add_child(*arguments);
     add_child(*paren_r);
@@ -1126,23 +1160,22 @@ FileStatementFunctionDefinition::FileStatementFunctionDefinition(
 }
 FileStatementFunctionDefinition::~FileStatementFunctionDefinition()
 {}
+
 const AccessModifier &
 FileStatementFunctionDefinition::get_access_modifier() const
-{
-    return *access_modifier;
-}
+{ return start->get_access_modifier(); }
+
 const UnsafeModifier &
 FileStatementFunctionDefinition::get_unsafe_modifier() const
-{
-    return *unsafe_modifier;
-}
+{ return start->get_unsafe_modifier(); }
+
 const TypeSpecifier &
 FileStatementFunctionDefinition::get_return_type() const
-{
-    return *type_specifier;
-}
+{ return start->get_type_specifier(); }
+
 const Terminal &
-FileStatementFunctionDefinition::get_name() const { return *name; }
+FileStatementFunctionDefinition::get_name() const
+{ return start->get_name(); }
 
 const FunctionDefinitionArgList &
 FileStatementFunctionDefinition::get_arguments() const
@@ -2471,7 +2504,7 @@ FileStatementUsing::~FileStatementUsing()
 const AccessModifier &
 FileStatementUsing::get_access_modifier() const
 { return *access_modifier; }
-const std::string &
+std::string
 FileStatementUsing::get_namespace() const
 { return namespace_name_token->get_fully_qualified_name(); }
 const UsingAs &

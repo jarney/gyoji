@@ -30,8 +30,6 @@
 #define PRINT_NONTERMINALS(s) /**/
 #endif
 
-int visibility_from_modifier(Gyoji::frontend::tree::AccessModifier::AccessModifierType visibility_ast);
-
 #define YY_DECL                                                         \
    int yylex(Gyoji::frontend::yacc::YaccParser::semantic_type *yylval, yyscan_t yyscanner)
     YY_DECL;
@@ -153,6 +151,7 @@ int visibility_from_modifier(Gyoji::frontend::tree::AccessModifier::AccessModifi
 %nterm <Gyoji::owned<Gyoji::frontend::tree::FileStatementList>> opt_file_statement_list;
 %nterm <Gyoji::owned<Gyoji::frontend::tree::FileStatementList>> file_statement_list;
 %nterm <Gyoji::owned<Gyoji::frontend::tree::FileStatement>> file_statement;
+%nterm <Gyoji::owned<Gyoji::frontend::tree::FileStatementFunctionDeclStart>> function_decl_start;
 %nterm <Gyoji::owned<Gyoji::frontend::tree::FileStatementFunctionDefinition>> file_statement_function_definition;
 %nterm <Gyoji::owned<Gyoji::frontend::tree::FileStatementFunctionDeclaration>> file_statement_function_declaration;
 %nterm <Gyoji::owned<Gyoji::frontend::tree::TypeDefinition>> type_definition;
@@ -420,13 +419,10 @@ file_statement
 
 file_statement_global_definition
         : opt_access_modifier opt_unsafe type_specifier IDENTIFIER opt_global_initializer SEMICOLON {
-	        // This is the point at which we need to fully-qualify our symbol name
-	        // because it may be in a namespace and we need to find it unambiguously
-	        // in a possibly large namespace.  We don't want the MIR or code-gen layers
-	        // to have to care about how we name functions.
-	        // In future, we may support name mangling, but again, that's not the concern of the
-	        // back-end layers.
 	        std::string global_name = $4->get_value();
+		NS2Entity *ns2_entity = return_data.identifier_get_or_create($4->get_value(), true, $4->get_source_ref());
+		$4->set_ns2_entity(ns2_entity);
+	
 	        $$ = std::make_unique<Gyoji::frontend::tree::FileStatementGlobalDefinition>(
                                                                                       std::move($1),
                                                                                       std::move($2),
@@ -521,13 +517,8 @@ struct_initializer_list
 
 struct_initializer
         : DOT IDENTIFIER global_initializer SEMICOLON {
-	        // This is the point at which we need to fully-qualify our symbol name
-	        // because it may be in a namespace and we need to find it unambiguously
-	        // in a possibly large namespace.  We don't want the MIR or code-gen layers
-	        // to have to care about how we name functions.
-	        // In future, we may support name mangling, but again, that's not the concern of the
-	        // back-end layers.
-		$2->set_identifier_type(Gyoji::frontend::tree::Terminal::IDENTIFIER_LOCAL_SCOPE);
+	        $2->set_identifier_type(Gyoji::frontend::tree::Terminal::IDENTIFIER_LOCAL_SCOPE);
+		
                 $$ = std::make_unique<Gyoji::frontend::tree::StructInitializer>(
                                                                                    std::move($1),
                                                                                    std::move($2),
@@ -568,27 +559,27 @@ access_modifier
 
 namespace_declaration
         : opt_access_modifier NAMESPACE IDENTIFIER {
-                Gyoji::frontend::tree::AccessModifier::AccessModifierType access_modifier = $1->get_type();
-                std::string namespace_name = $3->get_value();
+		Gyoji::frontend::namespaces::NS2Entity *ns = return_data.namespace_get_or_create($3->get_value(), $3->get_source_ref());
+		$3->set_ns2_entity(ns);
+		return_data.ns2_context->namespace_push(ns);
+		
                 $$ = std::make_unique<Gyoji::frontend::tree::NamespaceDeclaration>(
                                                                                       std::move($1),
                                                                                       std::move($2),
                                                                                       std::move($3)
                                                                                       );
-                return_data.namespace_context->namespace_new(namespace_name, Namespace::TYPE_NAMESPACE, visibility_from_modifier(access_modifier));
-                return_data.namespace_context->namespace_push(namespace_name);
+
                 PRINT_NONTERMINALS($$);
         }
         | opt_access_modifier NAMESPACE NAMESPACE_NAME {
-                Gyoji::frontend::tree::AccessModifier::AccessModifierType access_modifier = $1->get_type();
-                std::string namespace_name = $3->get_value();
+		Gyoji::frontend::namespaces::NS2Entity *ns = return_data.ns2_context->namespace_find($3->get_value());
+		return_data.ns2_context->namespace_push(ns);
+		
                 $$ = std::make_unique<Gyoji::frontend::tree::NamespaceDeclaration>(
                                                                                       std::move($1),
                                                                                       std::move($2),
                                                                                       std::move($3)
                                                                                       );
-                return_data.namespace_context->namespace_new(namespace_name, Namespace::TYPE_NAMESPACE, visibility_from_modifier(access_modifier));
-                return_data.namespace_context->namespace_push(namespace_name);
                 PRINT_NONTERMINALS($$);
         }
         ;
@@ -602,7 +593,7 @@ file_statement_namespace
                                                                                         std::move($4),
                                                                                         std::move($5)
                                                                                         );
-                return_data.namespace_context->namespace_pop();
+		return_data.ns2_context->namespace_pop();
                 PRINT_NONTERMINALS($$);
         }
         ;
@@ -633,17 +624,6 @@ file_statement_using
                                                                                     std::move($5),
                                                                                     std::move($6)
                                                                                     );
-                NamespaceFoundReason::ptr found_std = return_data.namespace_context->namespace_lookup(namespace_name);
-                if (!found_std) {
-                  fprintf(stderr, "Error: no such namespace %s in using statement\n", namespace_name.c_str());
-                  exit(1);
-                }
-                if (as_name.size() > 0) {
-                  return_data.namespace_context->namespace_using(as_name, found_std->location);
-                }
-                else {
-                  return_data.namespace_context->namespace_using("", found_std->location);
-                }
                 PRINT_NONTERMINALS($$);
         }
         | opt_access_modifier USING NAMESPACE TYPE_NAME opt_as SEMICOLON {
@@ -657,17 +637,6 @@ file_statement_using
                                                                                     std::move($5),
                                                                                     std::move($6)
                                                                                     );
-                NamespaceFoundReason::ptr found_std = return_data.namespace_context->namespace_lookup(namespace_name);
-                if (!found_std) {
-                  fprintf(stderr, "Error: no such namespace %s in using statement\n", namespace_name.c_str());
-                  exit(1);
-                }
-                if (as_name.size() > 0) {
-                  return_data.namespace_context->namespace_using(as_name, found_std->location);
-                }
-                else {
-                  return_data.namespace_context->namespace_using("", found_std->location);
-                }
                 PRINT_NONTERMINALS($$);
         }
         ;
@@ -678,13 +647,9 @@ file_statement_using
 // a type instead of an identifier.
 class_decl_start
         : opt_access_modifier CLASS IDENTIFIER opt_class_argument_list {
-	        std::string function_name = $3->get_value();
-		const Symbol *sym = return_data.symbol_get_or_create(function_name, $3->get_source_ref());
-		$3->set_fully_qualified_name(sym->name);
-		$3->set_identifier_type(Gyoji::frontend::tree::Terminal::IDENTIFIER_GLOBAL_SCOPE);
-		
-                std::string class_name = $3->get_value();
-                Gyoji::frontend::tree::AccessModifier::AccessModifierType visibility_modifier = $1->get_type();
+		NS2Entity *ns2_entity = return_data.class_get_or_create($3->get_value(), $3->get_source_ref());
+		$3->set_ns2_entity(ns2_entity);
+		return_data.ns2_context->namespace_push(ns2_entity);
                 $$ = std::make_unique<Gyoji::frontend::tree::ClassDeclStart>(
                                                                          std::move($1),
                                                                          std::move($2),
@@ -692,13 +657,11 @@ class_decl_start
                                                                          std::move($4),
                                                                          true // is_identifier
                                                                          );
-                return_data.namespace_context->namespace_new(class_name, Namespace::TYPE_CLASS, visibility_from_modifier(visibility_modifier));
-                return_data.namespace_context->namespace_push(class_name);
+
+		
                 PRINT_NONTERMINALS($$);
         }
         | opt_access_modifier CLASS TYPE_NAME opt_class_argument_list {
-                std::string class_name = $3->get_value();
-                Gyoji::frontend::tree::AccessModifier::AccessModifierType visibility_modifier = $1->get_type();
                 $$ = std::make_unique<Gyoji::frontend::tree::ClassDeclStart>(
                                                                          std::move($1),
                                                                          std::move($2),
@@ -706,8 +669,6 @@ class_decl_start
                                                                          std::move($4),
                                                                          false // is_identifier
                                                                          );
-                return_data.namespace_context->namespace_new(class_name, Namespace::TYPE_CLASS, visibility_from_modifier(visibility_modifier));
-                return_data.namespace_context->namespace_push(class_name);
         }
         ;
 
@@ -729,12 +690,16 @@ opt_class_argument_list
 // types scoped private in the class.
 class_argument_list
         : IDENTIFIER {
+                NS2Entity *ns2_entity = return_data.identifier_get_or_create($1->get_value(), true, $1->get_source_ref());
+		$1->set_ns2_entity(ns2_entity);
                 $$ = std::make_unique<Gyoji::frontend::tree::ClassArgumentList>(
                                                                                   std::move($1)
                                                                                   );
                 PRINT_NONTERMINALS($$);
         }
         | class_argument_list COMMA IDENTIFIER {
+                NS2Entity *ns2_entity = return_data.identifier_get_or_create($3->get_value(), true, $3->get_source_ref());
+		$3->set_ns2_entity(ns2_entity);
                 $$ = std::move($1);
                 $$->add_argument(std::move($2), std::move($3));
                 PRINT_NONTERMINALS($$);
@@ -747,7 +712,7 @@ class_declaration
                 $$ = std::make_unique<Gyoji::frontend::tree::ClassDeclaration>(std::move($1),
                                                                          std::move($2)
                                                                          );
-                return_data.namespace_context->namespace_pop();
+                return_data.ns2_context->namespace_pop();
                 PRINT_NONTERMINALS($$);
         }
         ;
@@ -761,15 +726,15 @@ class_definition
                                                                                  std::move($4),
                                                                                  std::move($5)
                                                                                  );
-                return_data.namespace_context->namespace_pop();
+                return_data.ns2_context->namespace_pop();
                 PRINT_NONTERMINALS($$);
         }
         ;
 
 type_definition
         : opt_access_modifier TYPEDEF type_specifier IDENTIFIER SEMICOLON {
-                Gyoji::frontend::tree::AccessModifier::AccessModifierType visibility_modifier = $1->get_type();
-                std::string type_name = $4->get_value();
+                Gyoji::frontend::namespaces::NS2Entity *ns2_entity = return_data.type_get_or_create($4->get_value(), $4->get_source_ref());
+                $4->set_ns2_entity(ns2_entity);
                 $$ = std::make_unique<Gyoji::frontend::tree::TypeDefinition>(
                                                                                std::move($1),
                                                                                std::move($2),
@@ -777,15 +742,16 @@ type_definition
                                                                                std::move($4),
                                                                                std::move($5)
                                                                                );
-                return_data.namespace_context->namespace_new(type_name, Namespace::TYPE_TYPEDEF, visibility_from_modifier(visibility_modifier));
+
+		
                 PRINT_NONTERMINALS($$);
         }
         ;
 
 enum_definition
         : opt_access_modifier ENUM TYPE_NAME IDENTIFIER BRACE_L opt_enum_value_list BRACE_R SEMICOLON {
-                Gyoji::frontend::tree::AccessModifier::AccessModifierType visibility_modifier = $1->get_type();
-                std::string type_name = $4->get_value();
+                Gyoji::frontend::namespaces::NS2Entity *ns2_entity = return_data.type_get_or_create($4->get_value(), $4->get_source_ref());
+		$4->set_ns2_entity(ns2_entity);
                 $$ = std::make_unique<Gyoji::frontend::tree::EnumDefinition>(
                                                                                 std::move($1),
                                                                                 std::move($2),
@@ -796,7 +762,6 @@ enum_definition
                                                                                 std::move($7),
                                                                                 std::move($8)
                                                                                 );
-                return_data.namespace_context->namespace_new(type_name, Namespace::TYPE_TYPEDEF, visibility_from_modifier(visibility_modifier));
                 PRINT_NONTERMINALS($$);
         }
         ;
@@ -827,7 +792,8 @@ enum_value_list
 
 enum_value
         : IDENTIFIER ASSIGNMENT expression_primary SEMICOLON {
-	        $1->set_identifier_type(Gyoji::frontend::tree::Terminal::IDENTIFIER_LOCAL_SCOPE);
+                Gyoji::frontend::namespaces::NS2Entity *ns2_entity = return_data.type_get_or_create($1->get_value(), $1->get_source_ref());
+		$1->set_ns2_entity(ns2_entity);
                 $$ = std::make_unique<Gyoji::frontend::tree::EnumDefinitionValue>(
                                                                                     std::move($1),
                                                                                     std::move($2),
@@ -850,54 +816,61 @@ opt_unsafe
         ;
 
 file_statement_function_declaration
-        : opt_access_modifier opt_unsafe type_specifier IDENTIFIER PAREN_L opt_function_definition_arg_list PAREN_R SEMICOLON {
+        : function_decl_start PAREN_L opt_function_definition_arg_list PAREN_R SEMICOLON {
 	        // This is the point at which we need to fully-qualify our symbol name
 	        // because it may be in a namespace and we need to find it unambiguously
 	        // in a possibly large namespace.  We don't want the MIR or code-gen layers
 	        // to have to care about how we name functions.
 	        // In future, we may support name mangling, but again, that's not the concern of the
 	        // back-end layers.
-	        std::string function_name = $4->get_value();
-		const Symbol *sym = return_data.symbol_get_or_create(function_name, $4->get_source_ref());
-		$4->set_fully_qualified_name(sym->name);
-		$4->set_identifier_type(Gyoji::frontend::tree::Terminal::IDENTIFIER_GLOBAL_SCOPE);
-		
                 $$ = std::make_unique<Gyoji::frontend::tree::FileStatementFunctionDeclaration>(
                                                                                                  std::move($1),
                                                                                                  std::move($2),
                                                                                                  std::move($3),
                                                                                                  std::move($4),
-                                                                                                 std::move($5),
-                                                                                                 std::move($6),
-                                                                                                 std::move($7),
-                                                                                                 std::move($8)
+                                                                                                 std::move($5)
                                                                                                  );
+		return_data.ns2_context->namespace_pop();
                 PRINT_NONTERMINALS($$);
         }
         ;
 
+function_decl_start
+        : opt_access_modifier opt_unsafe type_specifier IDENTIFIER {
+                NS2Entity *ns2_entity = return_data.identifier_get_or_create($4->get_value(), true, $4->get_source_ref());
+		$4->set_ns2_entity(ns2_entity);
+		return_data.ns2_context->namespace_push(ns2_entity);
+		$$ = std::make_unique<Gyoji::frontend::tree::FileStatementFunctionDeclStart>(
+                        std::move($1),
+                        std::move($2),
+                        std::move($3),
+                        std::move($4)
+                        );
+        }
+        ;
+
 file_statement_function_definition
-        : opt_access_modifier opt_unsafe type_specifier IDENTIFIER PAREN_L opt_function_definition_arg_list PAREN_R scope_body {
+        : function_decl_start PAREN_L opt_function_definition_arg_list PAREN_R scope_body {
 	        // This is the point at which we need to fully-qualify our symbol name
 	        // because it may be in a namespace and we need to find it unambiguously
 	        // in a possibly large namespace.  We don't want the MIR or code-gen layers
 	        // to have to care about how we name functions.
 	        // In future, we may support name mangling, but again, that's not the concern of the
 	        // back-end layers.
-	        std::string function_name = $4->get_value();
-		const Symbol *sym = return_data.symbol_get_or_create(function_name, $4->get_source_ref());
-		$4->set_fully_qualified_name(sym->name);
+
+		// For a function definition, we may want to also 'push' the namespace
+		// resolution context for a class if the identifier is declared inside
+		// a class' namespace. but that needs to happen before we actually push the scope
+		// and function identifiers.
 
                 $$ = std::make_unique<Gyoji::frontend::tree::FileStatementFunctionDefinition>(
                                                                                                 std::move($1),
                                                                                                 std::move($2),
                                                                                                 std::move($3),
                                                                                                 std::move($4),
-                                                                                                std::move($5),
-                                                                                                std::move($6),
-                                                                                                std::move($7),
-                                                                                                std::move($8)
+                                                                                                std::move($5)
                                                                                                 );
+		return_data.ns2_context->namespace_pop();
                 PRINT_NONTERMINALS($$);
         }
         ;
@@ -928,7 +901,8 @@ function_definition_arg_list
         ;
 function_definition_arg
         : type_specifier IDENTIFIER {
-	        $2->set_identifier_type(Gyoji::frontend::tree::Terminal::IDENTIFIER_LOCAL_SCOPE);
+                NS2Entity *ns2_entity = return_data.identifier_get_or_create($2->get_value(), true, $2->get_source_ref());
+		$2->set_ns2_entity(ns2_entity);
                 $$ = std::make_unique<Gyoji::frontend::tree::FunctionDefinitionArg>(
                                                                                        std::move($1),
                                                                                        std::move($2)
@@ -1039,7 +1013,8 @@ initializer_expression
 
 statement_variable_declaration
         : type_specifier IDENTIFIER initializer_expression SEMICOLON {
-	        $2->set_identifier_type(Gyoji::frontend::tree::Terminal::IDENTIFIER_LOCAL_SCOPE);
+                NS2Entity *ns2_entity = return_data.identifier_get_or_create($2->get_value(), true, $2->get_source_ref());
+		$2->set_ns2_entity(ns2_entity);
                 $$ = std::make_unique<Gyoji::frontend::tree::StatementVariableDeclaration>(
 		    std::move($1),
 		    std::move($2),
@@ -1071,7 +1046,8 @@ statement_expression
         ;
 statement_goto
         : GOTO IDENTIFIER SEMICOLON {
-	        $2->set_identifier_type(Gyoji::frontend::tree::Terminal::IDENTIFIER_LOCAL_SCOPE);
+                NS2Entity *ns2_entity = return_data.identifier_get_or_create($2->get_value(), true, $2->get_source_ref());
+		$2->set_ns2_entity(ns2_entity);
                 $$ = std::make_unique<Gyoji::frontend::tree::StatementGoto>(
                                                                                std::move($1),
                                                                                std::move($2),
@@ -1100,7 +1076,8 @@ statement_continue
         ;
 statement_label
         : LABEL IDENTIFIER COLON {
-	        $2->set_identifier_type(Gyoji::frontend::tree::Terminal::IDENTIFIER_LOCAL_SCOPE);
+                NS2Entity *ns2_entity = return_data.identifier_get_or_create($2->get_value(), true, $2->get_source_ref());
+		$2->set_ns2_entity(ns2_entity);
                 $$ = std::make_unique<Gyoji::frontend::tree::StatementLabel>(
                                                                                 std::move($1),
                                                                                 std::move($2),
@@ -1196,6 +1173,8 @@ statement_for
                 PRINT_NONTERMINALS($$);
         }
         | FOR PAREN_L type_specifier IDENTIFIER ASSIGNMENT expression SEMICOLON expression SEMICOLON expression PAREN_R scope_body {
+                NS2Entity *ns2_entity = return_data.identifier_get_or_create($4->get_value(), true, $4->get_source_ref());
+		$2->set_ns2_entity(ns2_entity);
                 // This variation is a declaration and assignment
                 $$ = std::make_unique<Gyoji::frontend::tree::StatementFor>(
                                                                                 std::move($1),
@@ -1319,16 +1298,8 @@ expression_primary
 
 expression_primary_identifier
         : IDENTIFIER {
-	        std::string function_name = $1->get_value();
-		const Symbol *sym = return_data.symbol_get(function_name, $1->get_source_ref());
-		if (sym == nullptr) {
-		    $1->set_identifier_type(Gyoji::frontend::tree::Terminal::IDENTIFIER_LOCAL_SCOPE);
-		}
-		else {
-		    $1->set_identifier_type(Gyoji::frontend::tree::Terminal::IDENTIFIER_GLOBAL_SCOPE);
-		    $1->set_fully_qualified_name(sym->name);
-		}
-		
+                NS2Entity *ns2_entity = return_data.identifier_get_or_create($1->get_value(), true, $1->get_source_ref());
+		$1->set_ns2_entity(ns2_entity);
                 $$ = std::make_unique<Gyoji::frontend::tree::ExpressionPrimaryIdentifier>(std::move($1));
                 PRINT_NONTERMINALS($$);
         }
@@ -2199,6 +2170,8 @@ class_member_declaration
         : opt_access_modifier type_specifier IDENTIFIER SEMICOLON {
                 // Member Variable
 	        $3->set_identifier_type(Gyoji::frontend::tree::Terminal::IDENTIFIER_LOCAL_SCOPE);
+		NS2Entity *entity = return_data.identifier_get_or_create($3->get_value(), false, $3->get_source_ref());
+		$3->set_ns2_entity(entity);
                 auto expr = std::make_unique<Gyoji::frontend::tree::ClassMemberDeclarationVariable>(
                                                                                                        std::move($1),
                                                                                                        std::move($2),
@@ -2212,6 +2185,8 @@ class_member_declaration
         | opt_access_modifier type_specifier IDENTIFIER PAREN_L opt_function_definition_arg_list PAREN_R SEMICOLON {
                 // Method
 	        $3->set_identifier_type(Gyoji::frontend::tree::Terminal::IDENTIFIER_LOCAL_SCOPE);
+		NS2Entity *entity = return_data.identifier_get_or_create($3->get_value(), false, $3->get_source_ref());
+		$3->set_ns2_entity(entity);
                 auto expr = std::make_unique<Gyoji::frontend::tree::ClassMemberDeclarationMethod>(
                                                                                                      std::move($1),
                                                                                                      std::move($2),
@@ -2342,6 +2317,8 @@ type_specifier
                 PRINT_NONTERMINALS($$);
         }
         | type_specifier PAREN_L STAR IDENTIFIER PAREN_R PAREN_L opt_function_definition_arg_list PAREN_R {
+                NS2Entity *entity = return_data.type_get_or_create($4->get_value(), $4->get_source_ref());
+		$4->set_ns2_entity(entity);
                 auto expr = std::make_unique<Gyoji::frontend::tree::TypeSpecifierFunctionPointer>(
                                                                                       std::move($1),
                                                                                       std::move($2),
@@ -2404,20 +2381,6 @@ argument_expression_list
 
 %%
 
-int visibility_from_modifier(Gyoji::frontend::tree::AccessModifier::AccessModifierType visibility_ast)
-{
-    switch (visibility_ast) {
-    case Gyoji::frontend::tree::AccessModifier::AccessModifierType::PUBLIC:
-      return Namespace::VISIBILITY_PUBLIC;
-    case Gyoji::frontend::tree::AccessModifier::AccessModifierType::PROTECTED:
-      return Namespace::VISIBILITY_PROTECTED;
-    case Gyoji::frontend::tree::AccessModifier::AccessModifierType::PRIVATE:
-      return Namespace::VISIBILITY_PRIVATE;
-    default:
-      return Namespace::VISIBILITY_PUBLIC;
-    }
-}
-
 void Gyoji::frontend::yacc::YaccParser::error(const std::string& msg) {
     LexContext *lex_context = (LexContext*)yyget_extra(scanner);
 
@@ -2431,6 +2394,7 @@ void Gyoji::frontend::yacc::YaccParser::error(const std::string& msg) {
     // We want to consume more context from the next few
     // lines so we can produce a good syntax error with
     // following context.
+#if 0
     size_t error_context_lines = 5;
     while (true) {
 	Gyoji::frontend::yacc::YaccParser::semantic_type lvalue;
@@ -2443,7 +2407,7 @@ void Gyoji::frontend::yacc::YaccParser::error(const std::string& msg) {
 	    break;
 	}
     }
-    
+#endif    
     auto error = std::make_unique<Gyoji::context::Error>("Syntax Error");
     error->add_message(src_ref, msg);
     return_data.compiler_context.get_errors().add_error(std::move(error));

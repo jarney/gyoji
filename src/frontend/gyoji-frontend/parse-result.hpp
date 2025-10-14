@@ -62,7 +62,7 @@ namespace Gyoji::frontend {
 	 */
 	ParseResult(
 	    Gyoji::context::CompilerContext & _compiler_context,
-	    Gyoji::owned<Gyoji::frontend::namespaces::NamespaceContext> _namespace_context
+	    Gyoji::owned<Gyoji::frontend::namespaces::NS2Context> _ns2_context
 	    );
 	/**
 	 * Destructor, nothing special.
@@ -76,9 +76,9 @@ namespace Gyoji::frontend {
 	 * be accessed for as long as this (ParseResult) object is in scope
 	 * since the namespace context is owned by this object.
 	 */
-	const Gyoji::frontend::namespaces::NamespaceContext & get_namespace_context() const;
-	
-	/**
+	const Gyoji::frontend::namespaces::NS2Context & get_ns2_context() const;
+
+        /**
 	 * This returns true if any parse errors occurred during the parse of the
 	 * source-file.
 	 */
@@ -131,10 +131,35 @@ namespace Gyoji::frontend {
 	friend Gyoji::frontend::Parser;
 
 	void symbol_table_dump();
+
+	/**
+	 * Maybe we create it here.  This is where we could look up symbols and
+	 * create new ones when they don't exist and also return error messages
+	 * when they are duplicated.
+	 */
+	Gyoji::frontend::namespaces::NS2Entity *identifier_get_or_create(
+	    std::string name,
+	    bool allow_placement_in_namespace,
+	    const Gyoji::context::SourceReference & _src_ref
+	    );
+	
+	Gyoji::frontend::namespaces::NS2Entity *namespace_get_or_create(
+	    std::string name,
+	    const Gyoji::context::SourceReference & _src_ref
+	    );
+
+	Gyoji::frontend::namespaces::NS2Entity* class_get_or_create(
+	    std::string _name,
+	    const Gyoji::context::SourceReference & _source_ref
+	    );
+
+	Gyoji::frontend::namespaces::NS2Entity* type_get_or_create(
+	    std::string _name,
+	    const Gyoji::context::SourceReference & _source_ref
+	    );
+
 	
 	const Symbol *symbol_get_or_create(std::string symbol, const Gyoji::context::SourceReference & _src_ref);
-	
-	const Symbol *symbol_get(std::string symbol, const Gyoji::context::SourceReference & _src_ref) const;
 	
 	void symbol_define(std::string symbol, const Gyoji::context::SourceReference & _src_ref);
 	/**
@@ -148,16 +173,16 @@ namespace Gyoji::frontend {
 	 * to search for the existence of the symbol.  If found, it will
 	 * return the symbol.  If not found, it will return nullptr.
 	 */
-	const Symbol *symbol_find(std::string name) const;
+	const Symbol *symbol_get(std::string name) const;
     private:
 	/**
 	 * This is used internally by the YACC grammar to return the parse tree.
 	 */
 	void set_translation_unit(Gyoji::owned<Gyoji::frontend::tree::TranslationUnit> tu);
 	
-	Gyoji::owned<Gyoji::frontend::namespaces::NamespaceContext> namespace_context;
-	
 	Gyoji::context::CompilerContext & compiler_context;
+	
+	Gyoji::owned<Gyoji::frontend::namespaces::NS2Context> ns2_context;
 	
 	Gyoji::owned<Gyoji::frontend::tree::TranslationUnit> translation_unit;
 

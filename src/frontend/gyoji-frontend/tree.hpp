@@ -158,12 +158,7 @@ namespace Gyoji::frontend::tree {
 	 * or identifier once namespace resolution has
 	 * identified it.
 	 */
-	const std::string & get_fully_qualified_name() const;
-	/**
-	 * Used by the lexer once the fully-qualified token name
-	 * is resolved for identifier, type, and namespace tokens.
-	 */
-	void set_fully_qualified_name(std::string name);
+	std::string get_fully_qualified_name() const;
 
 	const IdentifierType & get_identifier_type() const;
 	void set_identifier_type(IdentifierType _identifier_type);
@@ -173,10 +168,17 @@ namespace Gyoji::frontend::tree {
 	// but these are owned pointers, so they must only
 	// be de-referenced and never assigned to
 	std::vector<Gyoji::owned<TerminalNonSyntax>> non_syntax;
+
+	void set_ns2_entity(const Gyoji::frontend::namespaces::NS2Entity *_ns_entity);
+	const Gyoji::frontend::namespaces::NS2Entity *get_ns2_entity() const;
+	
+	
     private:
 	const Gyoji::context::Token & token;
 	std::string fully_qualified_name;
 	IdentifierType identifier_type;
+	// Tells us whether this is a namespace name, an entity, or what.
+	const Gyoji::frontend::namespaces::NS2Entity *ns2_entity;
     };
     
     
@@ -455,7 +457,7 @@ namespace Gyoji::frontend::tree {
 	 * being referenced.  Only safe to call when is_expression()
 	 * returns false.
 	 */
-	const std::string & get_name() const;
+	std::string get_name() const;
 	const Gyoji::context::SourceReference & get_name_source_ref() const;
 	/**
 	 * Returns the expression representing the type
@@ -936,10 +938,7 @@ namespace Gyoji::frontend::tree {
     class FileStatementFunctionDeclaration : public Gyoji::frontend::ast::SyntaxNode {
     public:
 	FileStatementFunctionDeclaration(
-	    Gyoji::owned<AccessModifier> _access_modifier,
-	    Gyoji::owned<UnsafeModifier> _unsafe_modifier,
-	    Gyoji::owned<TypeSpecifier> _type_specifier,
-	    Gyoji::owned<Terminal> _name,
+	    Gyoji::owned<FileStatementFunctionDeclStart> _start,
 	    Gyoji::owned<Terminal> _paren_l,
 	    Gyoji::owned<FunctionDefinitionArgList> _arguments,
 	    Gyoji::owned<Terminal> _paren_r,
@@ -973,10 +972,7 @@ namespace Gyoji::frontend::tree {
 	const FunctionDefinitionArgList & get_arguments() const;
 	
     private:
-	Gyoji::owned<AccessModifier> access_modifier;
-	Gyoji::owned<UnsafeModifier> unsafe_modifier;
-	Gyoji::owned<TypeSpecifier> type_specifier;
-	Gyoji::owned<Terminal> name; // function name (IDENTIFIER)
+	Gyoji::owned<FileStatementFunctionDeclStart> start; 
 	Gyoji::owned<Terminal> paren_l; // argument list delimiter PAREN_L
 	Gyoji::owned<FunctionDefinitionArgList> arguments;
 	Gyoji::owned<Terminal> paren_r; // argument list delimiter PAREN_R
@@ -1608,14 +1604,32 @@ namespace Gyoji::frontend::tree {
 	Gyoji::owned<StatementList> statement_list;
 	Gyoji::owned<Terminal> brace_r_token;
     };
+
+    class FileStatementFunctionDeclStart : public Gyoji::frontend::ast::SyntaxNode {
+    public:
+	FileStatementFunctionDeclStart(
+	    Gyoji::owned<AccessModifier> _access_modifier,
+	    Gyoji::owned<UnsafeModifier> _unsafe_modifier,
+	    Gyoji::owned<TypeSpecifier> _type_specifier,
+	    Gyoji::owned<Terminal> _name
+	    );
+	~FileStatementFunctionDeclStart();
+
+	const AccessModifier & get_access_modifier() const;
+	const UnsafeModifier & get_unsafe_modifier() const;
+	const TypeSpecifier & get_type_specifier() const;
+	const Terminal & get_name() const;
+    private:
+	Gyoji::owned<AccessModifier> access_modifier;
+	Gyoji::owned<UnsafeModifier> unsafe_modifier;
+	Gyoji::owned<TypeSpecifier> type_specifier;
+	Gyoji::owned<Terminal> name; // function name (IDENTIFIER)
+    };
     
     class FileStatementFunctionDefinition : public Gyoji::frontend::ast::SyntaxNode {
     public:
 	FileStatementFunctionDefinition(
-	    Gyoji::owned<AccessModifier> _access_modifier,
-	    Gyoji::owned<UnsafeModifier> _unsafe_modifier,
-	    Gyoji::owned<TypeSpecifier> _type_specifier,
-	    Gyoji::owned<Terminal> _name,
+	    Gyoji::owned<FileStatementFunctionDeclStart> _start,
 	    Gyoji::owned<Terminal> _paren_l,
 	    Gyoji::owned<FunctionDefinitionArgList> _arguments,
 	    Gyoji::owned<Terminal> _paren_r,
@@ -1633,10 +1647,7 @@ namespace Gyoji::frontend::tree {
 	const ScopeBody & get_scope_body() const;
 	
     private:
-	Gyoji::owned<AccessModifier> access_modifier;
-	Gyoji::owned<UnsafeModifier> unsafe_modifier;
-	Gyoji::owned<TypeSpecifier> type_specifier;
-	Gyoji::owned<Terminal> name; // function name (IDENTIFIER)
+	Gyoji::owned<FileStatementFunctionDeclStart> start;
 	Gyoji::owned<Terminal> paren_l; // argument list delimiter PAREN_L
 	Gyoji::owned<FunctionDefinitionArgList> arguments;
 	Gyoji::owned<Terminal> paren_r; // argument list delimiter PAREN_R
@@ -2690,7 +2701,7 @@ namespace Gyoji::frontend::tree {
 	~FileStatementUsing();
     private:
 	const AccessModifier & get_access_modifier() const;
-	const std::string & get_namespace() const;
+	std::string get_namespace() const;
 	const Gyoji::context::SourceReference & get_namespace_source_ref() const;
 	const UsingAs &get_using_as() const;
 	

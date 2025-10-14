@@ -6,11 +6,12 @@
 namespace Gyoji::frontend::yacc {
     class LexContext {
     public:
-	LexContext(Gyoji::frontend::namespaces::NamespaceContext &_namespace_context,
-		   Gyoji::context::CompilerContext & _compiler_context,
-		   Gyoji::misc::InputSource &_input_source);
+	LexContext(
+	    Gyoji::frontend::namespaces::NS2Context &_ns2_context,
+	    Gyoji::context::CompilerContext & _compiler_context,
+	    Gyoji::misc::InputSource &_input_source);
 	~LexContext();
-	Gyoji::frontend::namespaces::NamespaceContext& namespace_context;
+	Gyoji::frontend::namespaces::NS2Context& ns2_context;
 	Gyoji::misc::InputSource & input_source;
 	Gyoji::context::CompilerContext & compiler_context;
 	size_t line;

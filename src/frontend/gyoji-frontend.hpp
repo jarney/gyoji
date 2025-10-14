@@ -16,7 +16,7 @@
 #include <gyoji-frontend/forward.hpp>
 #include <gyoji-frontend/tokens.hpp>
 #include <gyoji-frontend/parse-literal-int.hpp>
-#include <gyoji-frontend/namespace.hpp>
+#include <gyoji-frontend/ns2.hpp>
 #include <gyoji-frontend/syntax-node.hpp>
 #include <gyoji-frontend/tree.hpp>
 #include <gyoji-frontend/parse-result.hpp>

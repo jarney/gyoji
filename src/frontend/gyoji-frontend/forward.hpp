@@ -111,6 +111,7 @@ namespace Gyoji::frontend::tree {
   class TranslationUnit;
     class FileStatementList;
       class FileStatement;
+          class FileStatementFunctionDeclStart;
         class FileStatementFunctionDefinition;
           class ScopeBody;
         class FileStatementFunctionDeclaration;
@@ -203,6 +204,7 @@ namespace Gyoji::frontend::tree {
         Gyoji::frontend::tree::TranslationUnit*,                            \
         Gyoji::frontend::tree::  FileStatementList*,                        \
         Gyoji::frontend::tree::    FileStatement*,                          \
+        Gyoji::frontend::tree::      FileStatementFunctionDeclStart*,        \
         Gyoji::frontend::tree::      FileStatementFunctionDefinition*,        \
         Gyoji::frontend::tree::        ScopeBody *,                           \
         Gyoji::frontend::tree::      FileStatementFunctionDeclaration*,       \

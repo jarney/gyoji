@@ -6,16 +6,23 @@ namespace jlang {
         u8* s;
         void set_something();
     };
+    void foo_function();
 };
 
 u32 print_value(u32 number);
+using namespace jlang;
 
 void
 Foo::set_something()
 {
 	return;
 }
-using namespace jlang;
+
+void foo_function()
+{
+    u32 a;
+    return;
+}
 
 u32 main(u32 argc, u8**argv)
 {

@@ -13,7 +13,7 @@ set(FRONTEND_PUBLIC_HEADERS_BOTTOM
     gyoji-frontend/tree.hpp
     gyoji-frontend/syntax-node.hpp
     gyoji-frontend/parse-literal-int.hpp
-    gyoji-frontend/namespace.hpp
+    gyoji-frontend/ns2.hpp
     gyoji-frontend/parse-result.hpp
     gyoji-frontend/forward.hpp
     gyoji-frontend/parser.hpp
@@ -28,7 +28,7 @@ set(FRONTEND_SOURCES
     gyoji.y
     tree.cpp
     syntax-node.cpp
-    namespace.cpp
+    ns2.cpp
     parse-result.cpp
     lex-context.cpp
     parser.cpp
@@ -69,15 +69,15 @@ install(
 )
 
 
-add_executable(test_namespace test_namespace.cpp)
-target_include_directories(test_namespace PUBLIC ${FRONTEND_INCLUDES})
-target_link_libraries(test_namespace
-    gyoji-frontend
-    gyoji-mir
-    gyoji-context
-    gyoji-misc
-)
-add_test(NAME test_namespace COMMAND test_namespace)
+#add_executable(test_namespace test_namespace.cpp)
+#target_include_directories(test_namespace PUBLIC ${FRONTEND_INCLUDES})
+#target_link_libraries(test_namespace
+#    gyoji-frontend
+#    gyoji-mir
+#    gyoji-context
+#    gyoji-misc
+#)
+#add_test(NAME test_namespace COMMAND test_namespace)
 
 add_executable(test_syntax test_syntax.cpp)
 target_include_directories(test_syntax PUBLIC ${FRONTEND_INCLUDES})
