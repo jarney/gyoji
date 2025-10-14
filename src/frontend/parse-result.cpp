@@ -125,7 +125,7 @@ ParseResult::identifier_get_or_create(
     std::vector<std::string> name_components = Gyoji::misc::string_split(name, NS2Context::NAMESPACE_DELIMITER);
     if (name_components.size() != 1) {
 	if (!allow_placement_in_namespace) {
-	    auto error = std::make_unique<Gyoji::context::Error>(std::string("Invalid identifier") + name + std::string("."));
+	    auto error = std::make_unique<Gyoji::context::Error>(std::string("Invalid identifier ") + name + std::string("."));
 	    error->add_message(_src_ref, std::string("Identifier must be a simple identifier ") + name + std::string(" and must not contain '::'."));
 	    compiler_context.get_errors().add_error(std::move(error));
 	    return nullptr;
@@ -134,18 +134,21 @@ ParseResult::identifier_get_or_create(
 	    std::string simple_name = name_components.at(name_components.size()-1);
 	    name_components.pop_back();
 	    std::string namespace_part = Gyoji::misc::join(name_components, NS2Context::NAMESPACE_DELIMITER);
+
 	    NS2Entity *namespace_entity = ns2_context->namespace_find(namespace_part);
 	    if (namespace_entity == nullptr) {
-		namespace_entity = namespace_get_or_create(namespace_part, _src_ref);
-		if (namespace_entity == nullptr) {
-		    return nullptr;
-		}
+		auto error = std::make_unique<Gyoji::context::Error>(std::string("Invalid identifier") + name + std::string("."));
+		error->add_message(_src_ref, std::string("") + namespace_part + std::string(" is not a class or namespace."));
+		compiler_context.get_errors().add_error(std::move(error));
+		return nullptr;
 	    }
 	    if (namespace_entity->get_type() == NS2Entity::ENTITY_TYPE_NAMESPACE ||
 		namespace_entity->get_type() == NS2Entity::ENTITY_TYPE_CLASS) {
+		fprintf(stderr, "Namespace was found and is a namespace or class\n");
 		return namespace_entity->add_identifier(simple_name, _src_ref);
 	    }
 	    else {
+		fprintf(stderr, "Namespace was found but was not suitable to hold our child\n");
 		auto error = std::make_unique<Gyoji::context::Error>(std::string("Invalid identifier") + name + std::string("."));
 		error->add_message(_src_ref, std::string("Identifier must ") + name + std::string(" must be placed inside a namespace or class."));
 		error->add_message(namespace_entity->get_source_ref(), std::string("Namespace is ") + namespace_part + std::string(" is not a namespace or class"));

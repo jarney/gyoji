@@ -48,7 +48,9 @@ Terminal::set_identifier_type(IdentifierType _identifier_type)
 void
 Terminal::set_ns2_entity(const Gyoji::frontend::namespaces::NS2Entity *_ns2_entity)
 {
-    identifier_type = IDENTIFIER_GLOBAL_SCOPE;
+    if (_ns2_entity != nullptr) {
+	identifier_type = IDENTIFIER_GLOBAL_SCOPE;
+    }
     ns2_entity = _ns2_entity;
 }
 
@@ -593,9 +595,9 @@ StatementVariableDeclaration::~StatementVariableDeclaration()
 const TypeSpecifier &
 StatementVariableDeclaration::get_type_specifier() const
 { return *type_specifier;}
-const std::string &
+std::string
 StatementVariableDeclaration::get_name() const
-{ return identifier_token->get_value(); }
+{ return identifier_token->get_fully_qualified_name(); }
 const SourceReference &
 StatementVariableDeclaration::get_name_source_ref() const
 { return identifier_token->get_source_ref(); }

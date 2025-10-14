@@ -616,6 +616,15 @@ file_statement_using
         : opt_access_modifier USING NAMESPACE NAMESPACE_NAME opt_as SEMICOLON {
                 std::string namespace_name = $4->get_value();
                 std::string as_name = $5->get_using_name();
+		NS2Entity *entity = return_data.ns2_context->namespace_find(namespace_name);
+		if (entity == nullptr) {
+		    auto error = std::make_unique<Gyoji::context::Error>(std::string("Invalid identifier") + namespace_name + std::string("."));
+		    error->add_message($4->get_source_ref(), std::string("") + namespace_name + std::string(" is not a namespace."));
+		    return_data.get_compiler_context().get_errors().add_error(std::move(error));
+		    return -1;
+		}
+		return_data.ns2_context->namespace_using(as_name, entity);
+
                 $$ = std::make_unique<Gyoji::frontend::tree::FileStatementUsing>(
                                                                                     std::move($1),
                                                                                     std::move($2),
@@ -629,6 +638,16 @@ file_statement_using
         | opt_access_modifier USING NAMESPACE TYPE_NAME opt_as SEMICOLON {
                 std::string namespace_name = $4->get_value();
                 std::string as_name = $5->get_using_name();
+
+		NS2Entity *entity = return_data.ns2_context->namespace_find(namespace_name);
+		if (entity == nullptr) {
+		    auto error = std::make_unique<Gyoji::context::Error>(std::string("Invalid identifier") + namespace_name + std::string("."));
+		    error->add_message($4->get_source_ref(), std::string("") + namespace_name + std::string(" is not a namespace."));
+		    return_data.get_compiler_context().get_errors().add_error(std::move(error));
+		    return -1;
+		}
+		return_data.ns2_context->namespace_using(as_name, entity);
+		
                 $$ = std::make_unique<Gyoji::frontend::tree::FileStatementUsing>(
                                                                                     std::move($1),
                                                                                     std::move($2),
@@ -838,6 +857,9 @@ file_statement_function_declaration
 function_decl_start
         : opt_access_modifier opt_unsafe type_specifier IDENTIFIER {
                 NS2Entity *ns2_entity = return_data.identifier_get_or_create($4->get_value(), true, $4->get_source_ref());
+		if (ns2_entity == nullptr) {
+		    return -1;
+		}
 		$4->set_ns2_entity(ns2_entity);
 		return_data.ns2_context->namespace_push(ns2_entity);
 		$$ = std::make_unique<Gyoji::frontend::tree::FileStatementFunctionDeclStart>(
@@ -1014,7 +1036,7 @@ initializer_expression
 statement_variable_declaration
         : type_specifier IDENTIFIER initializer_expression SEMICOLON {
                 NS2Entity *ns2_entity = return_data.identifier_get_or_create($2->get_value(), true, $2->get_source_ref());
-		$2->set_ns2_entity(ns2_entity);
+	        $2->set_ns2_entity(ns2_entity);
                 $$ = std::make_unique<Gyoji::frontend::tree::StatementVariableDeclaration>(
 		    std::move($1),
 		    std::move($2),

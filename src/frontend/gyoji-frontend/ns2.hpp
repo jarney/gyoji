@@ -144,6 +144,8 @@ namespace Gyoji::frontend::namespaces {
 	 * as the first name in the aliases that matches.
 	 */
 	NS2Entity *get_name(std::string name);
+
+	const std::vector<std::pair<std::string, NS2Entity*>> & get_aliases() const;
     private:
 	/**
 	 * This is the list of names and associated aliases
@@ -205,11 +207,11 @@ namespace Gyoji::frontend::namespaces {
 	 * Resolve the name in the current namespace
 	 * resolution context.
 	 */
-	NS2Entity * namespace_find(std::string _name) const;
+	NS2Entity* namespace_find_in(NS2Entity* current, std::string _name) const;
+
+        NS2Entity* namespace_find_in(NS2Entity* current, std::vector<std::string> names) const;
 	
-	NS2Entity * namespace_find_in(NS2Entity* current, std::vector<std::string> names) const;
-	
-	NS2Entity* namespace_find(std::vector<std::string> names) const;
+	NS2Entity* namespace_find(std::string name) const;
 
 	NS2Entity *get_current() const;
         /**

@@ -278,14 +278,14 @@ FunctionDefinitionResolver::extract_from_expression_primary_identifier(
     
     if (expression.get_identifier().get_identifier_type() == Terminal::IDENTIFIER_LOCAL_SCOPE) {
 	const LocalVariable *localvar = scope_tracker.get_variable(
-	    expression.get_identifier().get_value()
+	    expression.get_identifier().get_fully_qualified_name()
 	    );
 	if (localvar != nullptr) {
 	    returned_tmpvar = function->tmpvar_define(localvar->get_type());
 	    auto operation = std::make_unique<OperationLocalVariable>(
 		expression.get_identifier().get_source_ref(),
 		returned_tmpvar,
-		expression.get_identifier().get_value(),
+		expression.get_identifier().get_fully_qualified_name(),
 		localvar->get_type()
 		);
 	    function->get_basic_block(current_block).add_operation(std::move(operation));
@@ -311,6 +311,25 @@ FunctionDefinitionResolver::extract_from_expression_primary_identifier(
 	return false;
     }
     else if (expression.get_identifier().get_identifier_type() == Terminal::IDENTIFIER_GLOBAL_SCOPE) {
+	// First, check to see if there is a variable of that name
+	// declared in our current scope.
+	const LocalVariable *localvar = scope_tracker.get_variable(
+	    expression.get_identifier().get_fully_qualified_name()
+	    );
+	if (localvar != nullptr) {
+	    returned_tmpvar = function->tmpvar_define(localvar->get_type());
+	    auto operation = std::make_unique<OperationLocalVariable>(
+		expression.get_identifier().get_source_ref(),
+		returned_tmpvar,
+		expression.get_identifier().get_fully_qualified_name(),
+		localvar->get_type()
+		);
+	    function->get_basic_block(current_block).add_operation(std::move(operation));
+
+	    return true;
+	}
+
+	
 	// Type here should be the type of a function-pointer.
 
 	// Instead of looking in a list of function prototypes (specifically)
@@ -331,7 +350,7 @@ FunctionDefinitionResolver::extract_from_expression_primary_identifier(
 		.get_errors()
 		.add_simple_error(
 		    expression.get_source_ref(),
-		    "Unresolve symbol",
+		    "Unresolved symbol",
 		    std::string("Local variable ") + expression.get_identifier().get_fully_qualified_name() + std::string(" was not found in this scope.")
 		    );
 	    return false;

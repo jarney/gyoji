@@ -1034,7 +1034,7 @@ namespace Gyoji::frontend::tree {
 	/**
 	 * Returns the name of the variable being declared.
 	 */
-	const std::string & get_name() const;
+	std::string get_name() const;
 	const Gyoji::context::SourceReference & get_name_source_ref() const;
 	/**
 	 * Returns the initializer expression, usually a literal,

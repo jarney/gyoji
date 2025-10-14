@@ -221,15 +221,19 @@ null         {PROCESS_NODE(LITERAL_NULL);}
     if (entity == nullptr) {
         // Not yet known.  We expect the syntax layer to
         // find a place to put this identifier in a namespace.
+        //fprintf(stderr, "Name is an unknown identifier %s\n", yytext);
         PROCESS_IDENTIFIER(IDENTIFIER, nullptr);
     }
     if (entity->get_type() == NS2Entity::ENTITY_TYPE_NAMESPACE) {
+        //fprintf(stderr, "Name is a namespace %s\n", yytext);
         PROCESS_IDENTIFIER(NAMESPACE_NAME, entity);
     }
     else if (entity->get_type() == NS2Entity::ENTITY_TYPE_TYPE) {
+        //fprintf(stderr, "Name is a type %s\n", yytext);
         PROCESS_IDENTIFIER(TYPE_NAME, entity);
     }
     else {
+        //fprintf(stderr, "Name is an identifier we've seen before %s\n", yytext);
         // An identifier we've seen before.  It should
         // already be assigned to a namespace location.
         PROCESS_IDENTIFIER(IDENTIFIER, entity);

@@ -208,6 +208,10 @@ NS2SearchPaths::get_name(std::string name)
     return it->second;
 }
 
+const std::vector<std::pair<std::string, NS2Entity*>> &
+NS2SearchPaths::get_aliases() const
+{ return aliases; }
+
 ///////////////////////////////////////////////////
 // NS2Context
 ///////////////////////////////////////////////////
@@ -268,13 +272,13 @@ NS2Context::namespace_using(std::string name, NS2Entity* alias)
 }
 
 NS2Entity*
-NS2Context::namespace_find(std::string _name) const
+NS2Context::namespace_find_in(NS2Entity* current, std::string _name) const
 {
     std::vector<std::string> name_components = Gyoji::misc::string_split(_name, NAMESPACE_DELIMITER);
     // This is the point where we might insert
     // our aliases to search for them under different
     // names.
-    return namespace_find(name_components);
+    return namespace_find_in(current, name_components);
 }
 
 NS2Entity *
@@ -307,21 +311,35 @@ NS2Context::namespace_find_in(NS2Entity* current, std::vector<std::string> names
 }
 
 NS2Entity*
-NS2Context::namespace_find(std::vector<std::string> names) const
+NS2Context::namespace_find(std::string name) const
 {
-    // Try resolving in the current namespace
-    // and then try resolving at every point up the stack.
-    //for (const auto & s : stack) {
-    //    fprintf(stderr, "Stack is %s\n", s.first->get_name().c_str());
-    //}
-    
-    NS2Entity *current = stack.back().first;
-    while (current) {
-	NS2Entity *found = namespace_find_in(current, names);
+    // Iterate the stack in reverse order,
+    // searching at each level.
+    for (size_t i = 0; i < stack.size(); i++) {
+	const auto & it = stack.at(stack.size() - 1 - i);
+
+	// First, check to see if we can find it in the namespace
+	// we're currently operating on.
+	NS2Entity *found = namespace_find_in(it.first, name);
 	if (found != nullptr) {
 	    return found;
 	}
-	current = current->get_parent();
+
+	// Now, try finding the thing in
+	// any relevant alias namespaces from 'using' clauses.
+	for (const auto & alias : it.second->get_aliases()) {
+	    std::string aliasname;
+	    if (alias.first.size() > 0) {
+		aliasname = Gyoji::misc::string_replace_start(name, alias.first + NS2Context::NAMESPACE_DELIMITER, "");
+	    }
+	    else {
+		aliasname = name;
+	    }
+	    found = namespace_find_in(alias.second, aliasname);
+	    if (found != nullptr) {
+		return found;
+	    }
+	}
     }
     return nullptr;
 }

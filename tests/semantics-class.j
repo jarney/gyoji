@@ -10,7 +10,7 @@ namespace jlang {
 };
 
 u32 print_value(u32 number);
-using namespace jlang;
+using namespace jlang as asdf;
 
 void
 Foo::set_something()
