@@ -12,4 +12,5 @@ u32 main(u32 argc, u8** argv)
     str = "ちゃんこ鍋";
 
     str = "\n";
+    return 0;
 }

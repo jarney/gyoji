@@ -169,7 +169,7 @@ FunctionDefinitionResolver::resolve()
     const auto & function_argument_list = function_definition.get_arguments();
     const auto & function_definition_args = function_argument_list.get_arguments();
     for (const auto & function_definition_arg : function_definition_args) {
-	std::string name = function_definition_arg->get_identifier().get_fully_qualified_name();
+	std::string name = function_definition_arg->get_identifier().get_name();
 	const Gyoji::mir::Type * mir_type = type_resolver.extract_from_type_specifier(function_definition_arg->get_type_specifier());
 	
 	FunctionArgument arg(name, mir_type);
@@ -314,14 +314,14 @@ FunctionDefinitionResolver::extract_from_expression_primary_identifier(
 	// First, check to see if there is a variable of that name
 	// declared in our current scope.
 	const LocalVariable *localvar = scope_tracker.get_variable(
-	    expression.get_identifier().get_fully_qualified_name()
+	    expression.get_identifier().get_name()
 	    );
 	if (localvar != nullptr) {
 	    returned_tmpvar = function->tmpvar_define(localvar->get_type());
 	    auto operation = std::make_unique<OperationLocalVariable>(
 		expression.get_identifier().get_source_ref(),
 		returned_tmpvar,
-		expression.get_identifier().get_fully_qualified_name(),
+		expression.get_identifier().get_name(),
 		localvar->get_type()
 		);
 	    function->get_basic_block(current_block).add_operation(std::move(operation));
@@ -873,7 +873,7 @@ FunctionDefinitionResolver::extract_from_expression_postfix_dot(
 		);
 	return false;
     }
-    const std::string & member_name = expression.get_identifier();
+    const std::string & member_name = expression.get_identifier().get_name();
 
     const TypeMember *member = class_type->member_get(member_name);
     if (member == nullptr) {
@@ -942,11 +942,12 @@ FunctionDefinitionResolver::extract_from_expression_postfix_arrow(
 	    class_reference_tmpvar,
 	    classptr_tmpvar
 	    );
-	function
-	    ->get_basic_block(current_block)
-	    .add_operation(std::move(dereference_operation));
     
-    const std::string & member_name = expression.get_identifier();
+    function
+	->get_basic_block(current_block)
+	.add_operation(std::move(dereference_operation));
+    
+    const std::string & member_name = expression.get_identifier().get_name();
     const TypeMember *member = class_type->member_get(member_name);
     
     returned_tmpvar = function->tmpvar_define(member->get_type());
@@ -2323,11 +2324,11 @@ FunctionDefinitionResolver::extract_from_statement_variable_declaration(
     // and assigning the value to something.
     const Gyoji::mir::Type * mir_type = type_resolver.extract_from_type_specifier(statement.get_type_specifier());
     
-    fprintf(stderr, "Defining local variable %s\n", statement.get_identifier().get_fully_qualified_name().c_str());
+    fprintf(stderr, "Defining local variable %s\n", statement.get_identifier().get_name().c_str());
     if (!local_declare_or_error(
 	    mir_type,
-	    statement.get_identifier().get_fully_qualified_name(),
-	    statement.get_name_source_ref()
+	    statement.get_identifier().get_name(),
+	    statement.get_identifier().get_source_ref()
 	    )) {
 	return false;
     }
@@ -2342,7 +2343,7 @@ FunctionDefinitionResolver::extract_from_statement_variable_declaration(
 	auto operation = std::make_unique<OperationLocalVariable>(
 	    statement.get_source_ref(),
 	    variable_tmpvar,
-	    statement.get_identifier().get_fully_qualified_name(),
+	    statement.get_identifier().get_name(),
 	    mir_type
 	    );
 	function->get_basic_block(current_block).add_operation(std::move(operation));
@@ -2554,8 +2555,8 @@ FunctionDefinitionResolver::extract_from_statement_for(
 	
 	if (!local_declare_or_error(
 		mir_type,
-		statement.get_identifier(),
-		statement.get_identifier_source_ref()
+		statement.get_identifier().get_name(),
+		statement.get_identifier().get_source_ref()
 		)) {
 	    return false;
 	}

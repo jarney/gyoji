@@ -8,4 +8,6 @@ u32 main(u32 argc, u8** argv)
 	long_float = 43.2f64;
 
 	long_float = 43.2;
+
+        return 0;
 }

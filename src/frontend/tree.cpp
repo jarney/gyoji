@@ -36,7 +36,14 @@ Terminal::get_fully_qualified_name() const
     }
     return token.get_value();
 }
-
+std::string
+Terminal::get_name() const
+{
+    if (identifier_type == IDENTIFIER_GLOBAL_SCOPE) {
+	return ns2_entity->get_name();
+    }
+    return token.get_value();
+}
 const Terminal::IdentifierType &
 Terminal::get_identifier_type() const
 { return identifier_type; }
@@ -435,9 +442,6 @@ FunctionDefinitionArg::get_type_specifier() const
 const Terminal &
 FunctionDefinitionArg::get_identifier() const
 { return *identifier_token; }
-const SourceReference &
-FunctionDefinitionArg::get_name_source_ref() const
-{ return identifier_token->get_source_ref(); }
 
 ///////////////////////////////////////////////////
 FunctionDefinitionArgList::FunctionDefinitionArgList(const Gyoji::context::SourceReference & _source_ref)
@@ -598,9 +602,6 @@ StatementVariableDeclaration::get_type_specifier() const
 const Terminal & 
 StatementVariableDeclaration::get_identifier() const
 { return *identifier_token; }
-const SourceReference &
-StatementVariableDeclaration::get_name_source_ref() const
-{ return identifier_token->get_source_ref(); }
 const InitializerExpression &
 StatementVariableDeclaration::get_initializer_expression() const
 { return *initializer;}
@@ -859,12 +860,9 @@ StatementFor::is_declaration() const
 const TypeSpecifier &
 StatementFor::get_type_specifier() const
 { return *type_specifier; }
-const std::string &
+const Terminal &
 StatementFor::get_identifier() const
-{ return identifier_token->get_value(); }
-const Gyoji::context::SourceReference &
-StatementFor::get_identifier_source_ref() const
-{ return identifier_token->get_source_ref(); }
+{ return *identifier_token; }
 const Expression &
 StatementFor::get_expression_initial() const
 { return *expression_initial; }
@@ -1988,12 +1986,9 @@ ExpressionPostfixDot::~ExpressionPostfixDot()
 const Expression &
 ExpressionPostfixDot::get_expression() const
 { return *expression; }
-const std::string &
+const Terminal &
 ExpressionPostfixDot::get_identifier() const
-{ return identifier_token->get_value(); }
-const SourceReference &
-ExpressionPostfixDot::get_identifier_source_ref() const
-{ return identifier_token->get_source_ref(); }
+{ return *identifier_token; }
 
 ///////////////////////////////////////////////////
 ExpressionPostfixArrow::ExpressionPostfixArrow(
@@ -2015,12 +2010,9 @@ ExpressionPostfixArrow::~ExpressionPostfixArrow()
 const Expression &
 ExpressionPostfixArrow::get_expression() const
 { return *expression; }
-const std::string &
+const Terminal &
 ExpressionPostfixArrow::get_identifier() const
-{ return identifier_token->get_value(); }
-const SourceReference &
-ExpressionPostfixArrow::get_identifier_source_ref() const
-{ return identifier_token->get_source_ref(); }
+{ return *identifier_token; }
 
 ///////////////////////////////////////////////////
 ExpressionPostfixIncDec::ExpressionPostfixIncDec(

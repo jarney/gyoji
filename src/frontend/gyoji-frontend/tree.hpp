@@ -159,6 +159,11 @@ namespace Gyoji::frontend::tree {
 	 * identified it.
 	 */
 	std::string get_fully_qualified_name() const;
+	
+	/**
+	 * Return the 'leaf node' name.
+	 */
+	std::string get_name() const;
 
 	const IdentifierType & get_identifier_type() const;
 	void set_identifier_type(IdentifierType _identifier_type);
@@ -888,7 +893,6 @@ namespace Gyoji::frontend::tree {
 	 * Represents the name of the argument;
 	 */
 	const Terminal & get_identifier() const;
-	const Gyoji::context::SourceReference & get_name_source_ref() const;
     private:
 	Gyoji::owned<TypeSpecifier> type_specifier;
 	Gyoji::owned<Terminal> identifier_token;
@@ -1035,7 +1039,6 @@ namespace Gyoji::frontend::tree {
 	 * Returns the name of the variable being declared.
 	 */
 	const Terminal & get_identifier() const;
-	const Gyoji::context::SourceReference & get_name_source_ref() const;
 	/**
 	 * Returns the initializer expression, usually a literal,
 	 * that is used to populate the variable with known values.
@@ -1359,8 +1362,7 @@ namespace Gyoji::frontend::tree {
 	/**
 	 * Only valid if is_declaration() returns true.
 	 */
-	const std::string & get_identifier() const;
-	const Gyoji::context::SourceReference & get_identifier_source_ref() const;
+	const Terminal & get_identifier() const;
 	
 	const Expression & get_expression_initial() const;
 	const Expression & get_expression_termination() const;
@@ -2016,8 +2018,6 @@ namespace Gyoji::frontend::tree {
 	 */
 	~ExpressionPrimaryIdentifier();
 	const Terminal & get_identifier() const;
-	//const std::string & get_identifier() const;
-	//const Gyoji::context::SourceReference & get_identifier_source_ref() const;
     private:
 	Gyoji::owned<Terminal> identifier_token;
     };
@@ -2223,8 +2223,7 @@ namespace Gyoji::frontend::tree {
 	 */
 	~ExpressionPostfixDot();
 	const Expression & get_expression() const;
-	const std::string & get_identifier() const;
-	const Gyoji::context::SourceReference & get_identifier_source_ref() const;
+	const Terminal & get_identifier() const;
     private:
 	Gyoji::owned<Expression> expression;
 	Gyoji::owned<Terminal> dot_token;
@@ -2243,8 +2242,7 @@ namespace Gyoji::frontend::tree {
 	 */
 	~ExpressionPostfixArrow();
 	const Expression & get_expression() const;
-	const std::string & get_identifier() const;
-	const Gyoji::context::SourceReference & get_identifier_source_ref() const;
+	const Terminal & get_identifier() const;
     private:
 	Gyoji::owned<Expression> expression;
 	Gyoji::owned<Terminal> arrow_token;

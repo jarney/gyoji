@@ -1667,11 +1667,13 @@ CodeGeneratorLLVMContext::generate_function(const Gyoji::mir::Function & functio
     // enforce this through the analysis layer
     // and reject programs that may return without
     // defining a return value.
+#if 0
     if (return_value == nullptr) {
 	Builder->CreateRet(
 	    Builder->getInt32(0x1000)
 	    );
     }
+#endif
     
     // Validate the generated code, checking for consistency.
     verifyFunction(*TheFunction);

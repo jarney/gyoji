@@ -7,4 +7,5 @@ u32 main(u32 argc, u8** argv)
     c = '\'';
     c = '\n';
 
+    return 0;
 }

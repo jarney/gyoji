@@ -21,4 +21,5 @@ u32 main(u32 argc, u8**argv)
 
 	print_value(c);
 
+	return 0;
 }

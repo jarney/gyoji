@@ -7,6 +7,7 @@ u32 preamble_function_call()
     "abcXXdef"
     "012345"
     , 5);
+    return 0;
 }
 u32 nineteen();
 u32 nineteen_ish();
