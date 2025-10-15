@@ -295,6 +295,7 @@ TypeResolver::extract_from_class_members(Type & type, const ClassDefinition & cl
 	    Type *fptr_type = get_or_create(pointer_name, Type::TYPE_FUNCTION_POINTER, false, member_method->get_source_ref());
 	    
 	    if (!fptr_type->is_complete()) {
+		fprintf(stderr, "Defining function pointer for method %s %p\n", pointer_name.c_str(), ret_type);
 		fptr_type->complete_function_pointer_definition(
 		    ret_type,
 		    fptr_arguments,
@@ -467,6 +468,7 @@ TypeResolver::extract_from_function_specifications(
     Type *pointer_type = get_or_create(pointer_name, Type::TYPE_FUNCTION_POINTER, false, name.get_source_ref());
 
     if (!pointer_type->is_complete()) {
+	fprintf(stderr, "Defining function pointer for regular type %s %p\n", pointer_name.c_str(), type);
 	pointer_type->complete_function_pointer_definition(
 	    type,
 	    fptr_arguments,

@@ -183,6 +183,11 @@ CodeGeneratorLLVMContext::create_type_function_pointer(const Gyoji::mir::Type *f
 {
     const Gyoji::mir::Type *mir_return_type = fptr_type->get_return_type();
     llvm::Type *llvm_return_type = create_type(mir_return_type);
+    fprintf(stderr, "Creating function pointer type\n");
+    fprintf(stderr, "Return type is %p (%s)-> %p\n",
+	    mir_return_type,
+	    mir_return_type->get_name().c_str(),
+	    llvm_return_type);
     
     const std::vector<Gyoji::mir::Argument> & mir_args = fptr_type->get_argument_types();
     
@@ -212,7 +217,10 @@ CodeGeneratorLLVMContext::create_type_method_call(const Gyoji::mir::Type *method
     // 'index' of the member.  Yes, this is a bit
     // of a hacky way to do that.
 
-    members.push_back(types["u32"]);
+    const Gyoji::mir::Type *u32_type = mir.get_types().get_type("u32");
+    members.push_back(create_type(u32_type));
+    fprintf(stderr, "Creating method call type %p\n", method_call_type->get_function_pointer_type());
+
     members.push_back(create_type(method_call_type->get_function_pointer_type()));
     
     llvm::Type *llvm_method_call_type = llvm::StructType::create(*TheContext, members, method_call_type->get_name());
@@ -321,12 +329,14 @@ CodeGeneratorLLVMContext::create_type(const Type * type)
 	return create_type_reference(type);
     }
     else if (type->is_function_pointer()) {
+	fprintf(stderr, "create_type() Creating fptr type %p\n", type);
 	return create_type_function_pointer(type);
     }
     else if (type->is_array()) {
 	return create_type_array(type);
     }
     else if (type->is_method_call()) {
+	fprintf(stderr, "create_type() Creating method call type %p\n", type);
 	return create_type_method_call(type);
     }
     fprintf(stderr, "Compiler BUG!  Unknown type type passed to code generator %s\n", type->get_name().c_str());
