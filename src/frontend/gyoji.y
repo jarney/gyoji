@@ -927,11 +927,11 @@ function_definition_arg_list
 function_definition_arg
         : type_specifier IDENTIFIER {
                 NS2Entity *ns2_entity = return_data.identifier_get_or_create($2->get_value(), true, $2->get_source_ref());
-		$2->set_ns2_entity(ns2_entity);
+	        $2->set_ns2_entity(ns2_entity);
                 $$ = std::make_unique<Gyoji::frontend::tree::FunctionDefinitionArg>(
-                                                                                       std::move($1),
-                                                                                       std::move($2)
-                                                                                       );
+		    std::move($1),
+		    std::move($2)
+		    );
                 PRINT_NONTERMINALS($$);
         }
         ;

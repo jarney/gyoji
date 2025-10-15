@@ -887,7 +887,7 @@ namespace Gyoji::frontend::tree {
 	/**
 	 * Represents the name of the argument;
 	 */
-	const std::string & get_name() const;
+	const Terminal & get_identifier() const;
 	const Gyoji::context::SourceReference & get_name_source_ref() const;
     private:
 	Gyoji::owned<TypeSpecifier> type_specifier;
@@ -1034,7 +1034,7 @@ namespace Gyoji::frontend::tree {
 	/**
 	 * Returns the name of the variable being declared.
 	 */
-	std::string get_name() const;
+	const Terminal & get_identifier() const;
 	const Gyoji::context::SourceReference & get_name_source_ref() const;
 	/**
 	 * Returns the initializer expression, usually a literal,

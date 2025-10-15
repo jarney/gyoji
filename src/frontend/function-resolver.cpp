@@ -169,16 +169,16 @@ FunctionDefinitionResolver::resolve()
     const auto & function_argument_list = function_definition.get_arguments();
     const auto & function_definition_args = function_argument_list.get_arguments();
     for (const auto & function_definition_arg : function_definition_args) {
-       std::string name = function_definition_arg->get_name();
-       const Gyoji::mir::Type * mir_type = type_resolver.extract_from_type_specifier(function_definition_arg->get_type_specifier());
-       
-       FunctionArgument arg(name, mir_type);
-       arguments.push_back(arg);
-       fprintf(stderr, "Function argument %s\n", name.c_str());
-       if (!scope_tracker.add_variable(name, mir_type, function_definition_arg->get_source_ref())) {
-	   fprintf(stderr, "Existing, stopping process\n");
-	   return false;
-       }
+	std::string name = function_definition_arg->get_identifier().get_fully_qualified_name();
+	const Gyoji::mir::Type * mir_type = type_resolver.extract_from_type_specifier(function_definition_arg->get_type_specifier());
+	
+	FunctionArgument arg(name, mir_type);
+	arguments.push_back(arg);
+	fprintf(stderr, "Function argument %s\n", name.c_str());
+	if (!scope_tracker.add_variable(name, mir_type, function_definition_arg->get_source_ref())) {
+	    fprintf(stderr, "Existing, stopping process\n");
+	    return false;
+	}
     }
     
     function = std::make_unique<Function>(
@@ -2323,9 +2323,10 @@ FunctionDefinitionResolver::extract_from_statement_variable_declaration(
     // and assigning the value to something.
     const Gyoji::mir::Type * mir_type = type_resolver.extract_from_type_specifier(statement.get_type_specifier());
     
+    fprintf(stderr, "Defining local variable %s\n", statement.get_identifier().get_fully_qualified_name().c_str());
     if (!local_declare_or_error(
 	    mir_type,
-	    statement.get_name(),
+	    statement.get_identifier().get_fully_qualified_name(),
 	    statement.get_name_source_ref()
 	    )) {
 	return false;
@@ -2341,7 +2342,7 @@ FunctionDefinitionResolver::extract_from_statement_variable_declaration(
 	auto operation = std::make_unique<OperationLocalVariable>(
 	    statement.get_source_ref(),
 	    variable_tmpvar,
-	    statement.get_name(),
+	    statement.get_identifier().get_fully_qualified_name(),
 	    mir_type
 	    );
 	function->get_basic_block(current_block).add_operation(std::move(operation));

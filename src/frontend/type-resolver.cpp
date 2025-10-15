@@ -429,7 +429,7 @@ TypeResolver::extract_from_function_specifications(
     std::vector<Argument> fptr_arguments;
     const auto & function_definition_args = function_argument_list.get_arguments();
     for (const auto & function_definition_arg : function_definition_args) {
-	std::string name = function_definition_arg->get_name();
+	std::string name = function_definition_arg->get_identifier().get_fully_qualified_name();
 	const Type * t = extract_from_type_specifier(function_definition_arg->get_type_specifier());
 	arg_list.push_back(t->get_name());
 	fptr_arguments.push_back(

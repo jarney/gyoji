@@ -432,9 +432,9 @@ FunctionDefinitionArg::~FunctionDefinitionArg()
 const TypeSpecifier &
 FunctionDefinitionArg::get_type_specifier() const
 { return *type_specifier; }
-const std::string &
-FunctionDefinitionArg::get_name() const
-{ return identifier_token->get_value(); }
+const Terminal &
+FunctionDefinitionArg::get_identifier() const
+{ return *identifier_token; }
 const SourceReference &
 FunctionDefinitionArg::get_name_source_ref() const
 { return identifier_token->get_source_ref(); }
@@ -595,9 +595,9 @@ StatementVariableDeclaration::~StatementVariableDeclaration()
 const TypeSpecifier &
 StatementVariableDeclaration::get_type_specifier() const
 { return *type_specifier;}
-std::string
-StatementVariableDeclaration::get_name() const
-{ return identifier_token->get_fully_qualified_name(); }
+const Terminal & 
+StatementVariableDeclaration::get_identifier() const
+{ return *identifier_token; }
 const SourceReference &
 StatementVariableDeclaration::get_name_source_ref() const
 { return identifier_token->get_source_ref(); }
