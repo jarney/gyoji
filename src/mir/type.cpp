@@ -344,6 +344,10 @@ Type::dump(FILE *out) const
 	}
 	for (const auto & m : methods) {
 	    fprintf(out, "        %s : %s\n", m.first.c_str(), m.second.get_class_type()->get_name().c_str());
+	    fprintf(out, "            ret %s\n", m.second.get_return_type()->get_name().c_str());
+	    for (const auto & arg : m.second.get_arguments()) {
+		fprintf(out, "            arg %s\n", arg.get_type()->get_name().c_str());
+	    }
 	}
 	fprintf(out, "    }\n");
     }

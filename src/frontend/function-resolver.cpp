@@ -7,6 +7,7 @@ using namespace Gyoji::mir;
 using namespace Gyoji::context;
 using namespace Gyoji::frontend::tree;
 using namespace Gyoji::frontend::lowering;
+using namespace Gyoji::frontend::namespaces;
 
 FunctionResolver::FunctionResolver(
     Gyoji::context::CompilerContext & _compiler_context,
@@ -143,9 +144,23 @@ FunctionDefinitionResolver::resolve()
 {
     std::string fully_qualified_function_name = 
 	function_definition.get_name().get_fully_qualified_name();
-    
+
     fprintf(stderr, " - Extracting function %s\n",
 	    fully_qualified_function_name.c_str());
+    NS2Entity *entity = function_definition.get_name().get_ns2_entity();
+    fprintf(stderr, " - namespace is %s\n", entity->get_parent()->get_fully_qualified_name().c_str());
+
+    Type *function_method_type = mir.get_types().get_type(entity->get_parent()->get_fully_qualified_name());
+    if (function_method_type != nullptr) {
+	fprintf(stderr, "----- this is a method\n");
+	const auto & method_it = function_method_type->get_methods().find(entity->get_name());
+	if (method_it == function_method_type->get_methods().end()) {
+	    fprintf(stderr, "Method not found\n");
+	}
+	else {
+	    fprintf(stderr, "Method found\n");
+	}
+    }
     
     // TODO
     // Here, we should figure out if this is a 'regular' function
@@ -277,6 +292,7 @@ FunctionDefinitionResolver::extract_from_expression_primary_identifier(
     // * Maybe we really should 'flatten' our access here.
     
     if (expression.get_identifier().get_identifier_type() == Terminal::IDENTIFIER_LOCAL_SCOPE) {
+#if 0
 	const LocalVariable *localvar = scope_tracker.get_variable(
 	    expression.get_identifier().get_fully_qualified_name()
 	    );
@@ -301,11 +317,12 @@ FunctionDefinitionResolver::extract_from_expression_primary_identifier(
 
 	// If all else fails, we could not resolve it and should
 	// emit an error.
+#endif
 	compiler_context
 	    .get_errors()
 	    .add_simple_error(
 		expression.get_source_ref(),
-		"Local variable could not be resolved",
+		"Local variable could not be resolved: should not be reachable.",
 		std::string("Local variable ") + expression.get_identifier().get_value() + std::string(" was not found in this scope.")
 		);
 	return false;
@@ -329,15 +346,12 @@ FunctionDefinitionResolver::extract_from_expression_primary_identifier(
 	    return true;
 	}
 
+	// Next, check for member variable and insert the 'dereference' operation
+	// and then a 'dot' operation to get the actual value of the variable.
+	// temp var for the operation should be an argument that we've defined in the
+	// scope, but only addressable by 'member' name (i.e. there is no 'this' argument
+	// according to the method).
 	
-	// Type here should be the type of a function-pointer.
-
-	// Instead of looking in a list of function prototypes (specifically)
-	// the prior step (type resolution) should also extract a set of global
-	// identifiers like classes, functions, global variables, methods, etc.
-	// along with their associated types.  This will allow us to simply associate
-	// an identifier with a type and move on instead of having to treat each
-	// of these items separately.
 	
 	// Look in the list of functions,
 	// this might be a function pointer assignment or

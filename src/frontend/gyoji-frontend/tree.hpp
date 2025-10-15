@@ -1760,8 +1760,7 @@ namespace Gyoji::frontend::tree {
 	~ClassMemberDeclarationMethod();
 	const AccessModifier & get_access_modifier() const;
 	const TypeSpecifier & get_type_specifier() const;
-	const std::string & get_name() const;
-	const Gyoji::context::SourceReference & get_name_source_ref() const;
+	const Terminal & get_identifier() const;
 	const FunctionDefinitionArgList & get_arguments() const;
     private:
 	Gyoji::owned<AccessModifier> access_modifier;

@@ -1360,12 +1360,9 @@ ClassMemberDeclarationMethod::get_access_modifier() const
 const TypeSpecifier &
 ClassMemberDeclarationMethod::get_type_specifier() const
 { return *type_specifier; }
-const std::string &
-ClassMemberDeclarationMethod::get_name() const
-{ return identifier_token->get_value(); }
-const SourceReference &
-ClassMemberDeclarationMethod::get_name_source_ref() const
-{ return identifier_token->get_source_ref(); }
+const Terminal & 
+ClassMemberDeclarationMethod::get_identifier() const
+{ return *identifier_token; }
 const FunctionDefinitionArgList &
 ClassMemberDeclarationMethod::get_arguments() const
 { return *function_definition_arg_list; }

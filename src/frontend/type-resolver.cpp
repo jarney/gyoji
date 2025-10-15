@@ -260,26 +260,56 @@ TypeResolver::extract_from_class_members(Type & type, const ClassDefinition & cl
 	else if (std::holds_alternative<Gyoji::owned<ClassMemberDeclarationMethod>>(class_member_type)) {
 	    const auto & member_method = std::get<Gyoji::owned<ClassMemberDeclarationMethod>>(class_member_type);
 	    fprintf(stderr, "Member method %s in class %s\n",
-		    member_method->get_name().c_str(),
+		    member_method->get_identifier().get_fully_qualified_name().c_str(),
 		    class_definition.get_name().c_str()
 		);
 
-	    std::vector<Argument> arguments;
+	    std::vector<std::string> arg_list;
+	    std::vector<Argument> fptr_arguments;
+	    // First, pass the 'this' pointer
+	    // to the function.
+	    const Type * this_type = mir.get_types().get_pointer_to(&type, type.get_defined_source_ref());
+	    Argument arg_this(this_type, member_method->get_source_ref());
+	    fptr_arguments.push_back(arg_this);
+	    arg_list.push_back(this_type->get_name());
+
+	    const Type * ret_type = extract_from_type_specifier(member_method->get_type_specifier());
+	    
+	    const FunctionDefinitionArgList & function_definition_arg_list = member_method->get_arguments();
+	    const std::vector<Gyoji::owned<FunctionDefinitionArg>> & function_definition_args = 
+		function_definition_arg_list.get_arguments();
+	    for (const auto & function_definition_arg : function_definition_args) {
+		const Type *argument_type = extract_from_type_specifier(function_definition_arg->get_type_specifier());
+		Argument arg(argument_type, function_definition_arg->get_source_ref());
+		fptr_arguments.push_back(arg);
+		arg_list.push_back(argument_type->get_name());
+	    }
+	    
 	    TypeMethod method(
-		member_method->get_name(),
+		member_method->get_identifier().get_name(),
 		member_method->get_source_ref(),
 		&type,
-		&type,
-		arguments
+		ret_type,
+		fptr_arguments
 		);
-	    methods.insert(std::pair(member_method->get_name(), method));
-	    // TODO: Extract methods into this.
-	    
-	    // Add this to the 'symbol table' and mark it as a method
-	    // of the class we're working on.
+	    methods.insert(std::pair(member_method->get_identifier().get_name(), method));
 
-	    // When we declare the function, we should find it in the symbol
-	    // table and generate it with method arguments, etc.
+	    std::string arg_string = Gyoji::misc::join(arg_list, ",");
+	    std::string pointer_name = ret_type->get_name() + std::string("(*)") + std::string("(") + arg_string + std::string(")");
+	    Type *fptr_type = get_or_create(pointer_name, Type::TYPE_FUNCTION_POINTER, false, member_method->get_source_ref());
+	    
+	    if (!fptr_type->is_complete()) {
+		fptr_type->complete_function_pointer_definition(
+		    ret_type,
+		    fptr_arguments,
+		    member_method->get_source_ref()
+		    );
+	    }
+	    
+	    mir.get_symbols().define_symbol(
+		member_method->get_identifier().get_fully_qualified_name(),
+		fptr_type
+		);
 	}
     }
     

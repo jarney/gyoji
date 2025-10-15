@@ -12,17 +12,17 @@ namespace jlang {
 u32 print_value(u32 number);
 using namespace jlang as asdf;
 
-void
-Foo::set_something()
-{
-	return;
-}
+//void
+//Foo::set_something()
+//{
+//	return;
+//}
 
-void foo_function()
-{
-    u32 a;
-    return;
-}
+//void foo_function()
+//{
+//    u32 a;
+//    return;
+//}
 
 u32 main(u32 argc, u8**argv)
 {
