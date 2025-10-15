@@ -102,16 +102,18 @@ NS2Entity *
 ParseResult::identifier_get_or_create(
     std::string name,
     bool allow_placement_in_namespace,
-    const SourceReference & _src_ref
+    const SourceReference & _source_ref
     )
 {
+    // Check to see if we already have this as an identifier.
+    // If so, just go with it.
     NS2Entity *entity = ns2_context->namespace_find(name);
     if (entity != nullptr) {
 	if (entity->get_type() == NS2Entity::ENTITY_TYPE_IDENTIFIER) {
 	    return entity;
 	}
 	auto error = std::make_unique<Gyoji::context::Error>(std::string("Identifier ") + name + std::string(" is ambiguous"));
-	error->add_message(_src_ref,
+	error->add_message(_source_ref,
 			   std::string("Identifier ") + name + std::string(" was declared as a different type of identifier."));
 	error->add_message(entity->get_source_ref(),
 			   std::string("First declared here"));
@@ -119,60 +121,67 @@ ParseResult::identifier_get_or_create(
 	return nullptr;
     }
 
-    // If the identifier is not
-    // a simple identifier, look for the
-    // namespace by the prefix
+    // Is this a simple name?  If so, go ahead and define
+    // it in the current namespace.
     std::vector<std::string> name_components = Gyoji::misc::string_split(name, NS2Context::NAMESPACE_DELIMITER);
-    if (name_components.size() != 1) {
-	if (!allow_placement_in_namespace) {
-	    auto error = std::make_unique<Gyoji::context::Error>(std::string("Invalid identifier ") + name + std::string("."));
-	    error->add_message(_src_ref, std::string("Identifier must be a simple identifier ") + name + std::string(" and must not contain '::'."));
+    if (name_components.size() == 1) {
+	entity = ns2_context->get_current()->add_identifier(
+	    name,
+	    _source_ref
+	    );
+	return entity;
+    }
+    // Next, try to identify the namespace
+    // it's declared in, then try to define
+    // it inside that namespace (if we're allowed it).
+    
+#if 0
+    if (!allow_placement_in_namespace) {
+	auto error = std::make_unique<Gyoji::context::Error>(std::string("Invalid identifier ") + name + std::string("."));
+	error->add_message(_source_ref, std::string("Identifier must be a simple identifier ") + name + std::string(" and must not contain '::'."));
+	compiler_context.get_errors().add_error(std::move(error));
+	return nullptr;
+    }
+    else {
+#endif
+	std::string simple_name = name_components.at(name_components.size()-1);
+	name_components.pop_back();
+	std::string namespace_part = Gyoji::misc::join(name_components, NS2Context::NAMESPACE_DELIMITER);
+	
+	NS2Entity *namespace_entity = ns2_context->namespace_find(namespace_part);
+	if (namespace_entity == nullptr) {
+	    auto error = std::make_unique<Gyoji::context::Error>(std::string("Invalid identifier") + name + std::string("."));
+	    error->add_message(_source_ref, std::string("") + namespace_part + std::string(" is not a class or namespace."));
 	    compiler_context.get_errors().add_error(std::move(error));
 	    return nullptr;
 	}
-	else {
-	    std::string simple_name = name_components.at(name_components.size()-1);
-	    name_components.pop_back();
-	    std::string namespace_part = Gyoji::misc::join(name_components, NS2Context::NAMESPACE_DELIMITER);
-
-	    NS2Entity *namespace_entity = ns2_context->namespace_find(namespace_part);
-	    if (namespace_entity == nullptr) {
-		auto error = std::make_unique<Gyoji::context::Error>(std::string("Invalid identifier") + name + std::string("."));
-		error->add_message(_src_ref, std::string("") + namespace_part + std::string(" is not a class or namespace."));
-		compiler_context.get_errors().add_error(std::move(error));
-		return nullptr;
-	    }
-	    if (namespace_entity->get_type() == NS2Entity::ENTITY_TYPE_NAMESPACE ||
-		namespace_entity->get_type() == NS2Entity::ENTITY_TYPE_CLASS) {
-		fprintf(stderr, "Namespace was found and is a namespace or class\n");
-		return namespace_entity->add_identifier(simple_name, _src_ref);
-	    }
-	    else {
-		fprintf(stderr, "Namespace was found but was not suitable to hold our child\n");
-		auto error = std::make_unique<Gyoji::context::Error>(std::string("Invalid identifier") + name + std::string("."));
-		error->add_message(_src_ref, std::string("Identifier must ") + name + std::string(" must be placed inside a namespace or class."));
-		error->add_message(namespace_entity->get_source_ref(), std::string("Namespace is ") + namespace_part + std::string(" is not a namespace or class"));
-		compiler_context.get_errors().add_error(std::move(error));
-		return nullptr;
-	    }
+	if (namespace_entity->get_type() == NS2Entity::ENTITY_TYPE_NAMESPACE ||
+	    namespace_entity->get_type() == NS2Entity::ENTITY_TYPE_CLASS) {
+	    fprintf(stderr, "Namespace was found and is a namespace or class\n");
+	    return namespace_entity->add_identifier(simple_name, _source_ref);
 	}
+	else {
+	    fprintf(stderr, "Namespace was found but was not suitable to hold our child\n");
+	    auto error = std::make_unique<Gyoji::context::Error>(std::string("Invalid identifier") + name + std::string("."));
+	    error->add_message(_source_ref, std::string("Identifier must ") + name + std::string(" must be placed inside a namespace or class."));
+	    error->add_message(namespace_entity->get_source_ref(), std::string("Namespace is ") + namespace_part + std::string(" is not a namespace or class"));
+	    compiler_context.get_errors().add_error(std::move(error));
+	    return nullptr;
+	}
+#if 0
     }
-    entity = ns2_context->get_current()->add_identifier(
-	name,
-	_src_ref
-	);
-    return entity;
+#endif
 }
 
 NS2Entity *
 ParseResult::namespace_get_or_create(
-    std::string _name,
+    std::string name,
     const Gyoji::context::SourceReference & _source_ref
     )
 {
     // The _name might be a composite name, so we need to split it and handle
     // each component separately as its own namespace.
-    std::vector<std::string> name_components = Gyoji::misc::string_split(_name, NS2Context::NAMESPACE_DELIMITER);
+    std::vector<std::string> name_components = Gyoji::misc::string_split(name, NS2Context::NAMESPACE_DELIMITER);
 
     // For each component, first try to find it
     // as an entity or namespace name.
@@ -206,30 +215,110 @@ ParseResult::namespace_get_or_create(
 
 NS2Entity*
 ParseResult::type_get_or_create(
-    std::string _name,
+    std::string name,
     const Gyoji::context::SourceReference & _source_ref
     )
 {
-    NS2Entity *current = ns2_context->get_current();
+    // Check to see if we already have this as an identifier.
+    // If so, just go with it.
+    NS2Entity *entity = ns2_context->namespace_find(name);
+    if (entity != nullptr) {
+	if (entity->get_type() == NS2Entity::ENTITY_TYPE_TYPE) {
+	    return entity;
+	}
+	auto error = std::make_unique<Gyoji::context::Error>(std::string("Type name ") + name + std::string(" is ambiguous"));
+	error->add_message(_source_ref,
+			   std::string("Identifier ") + name + std::string(" was declared as a different type of identifier."));
+	error->add_message(entity->get_source_ref(),
+			   std::string("First declared here"));
+	compiler_context.get_errors().add_error(std::move(error));
+	return nullptr;
+    }
     
-    Gyoji::owned<NS2Entity> new_class = std::make_unique<NS2Entity>(_name, NS2Entity::ENTITY_TYPE_TYPE, current, _source_ref);
-    NS2Entity *ret_class = new_class.get();
-    current->add_entity(_name, std::move(new_class));
-    return ret_class;
+    std::vector<std::string> name_components = Gyoji::misc::string_split(name, NS2Context::NAMESPACE_DELIMITER);
+    if (name_components.size() == 1) {
+	entity = ns2_context->get_current()->add_type(
+	    name,
+	    _source_ref
+	    );
+	return entity;
+    }
+
+    std::string simple_name = name_components.at(name_components.size()-1);
+    name_components.pop_back();
+    std::string namespace_part = Gyoji::misc::join(name_components, NS2Context::NAMESPACE_DELIMITER);
+    
+    NS2Entity *namespace_entity = ns2_context->namespace_find(namespace_part);
+    if (namespace_entity == nullptr) {
+	auto error = std::make_unique<Gyoji::context::Error>(std::string("Invalid identifier") + name + std::string("."));
+	error->add_message(_source_ref, std::string("") + namespace_part + std::string(" is not a class or namespace."));
+	compiler_context.get_errors().add_error(std::move(error));
+	return nullptr;
+    }
+    if (namespace_entity->get_type() == NS2Entity::ENTITY_TYPE_NAMESPACE) {
+	return namespace_entity->add_class(simple_name, _source_ref);
+    }
+    else {
+	auto error = std::make_unique<Gyoji::context::Error>(std::string("Invalid identifier") + name + std::string("."));
+	error->add_message(_source_ref, std::string("Identifier must ") + name + std::string(" must be placed inside a namespace."));
+	error->add_message(namespace_entity->get_source_ref(), std::string("Namespace is ") + namespace_part + std::string(" is not a namespace"));
+	compiler_context.get_errors().add_error(std::move(error));
+	return nullptr;
+    }
 }
 
 NS2Entity*
 ParseResult::class_get_or_create(
-    std::string _name,
+    std::string name,
     const Gyoji::context::SourceReference & _source_ref
     )
 {
-    NS2Entity *current = ns2_context->get_current();
+    // Check to see if we already have this as an identifier.
+    // If so, just go with it.
+    NS2Entity *entity = ns2_context->namespace_find(name);
+    if (entity != nullptr) {
+	if (entity->get_type() == NS2Entity::ENTITY_TYPE_CLASS) {
+	    return entity;
+	}
+	auto error = std::make_unique<Gyoji::context::Error>(std::string("Class name ") + name + std::string(" is ambiguous"));
+	error->add_message(_source_ref,
+			   std::string("Identifier ") + name + std::string(" was declared as a different type of identifier."));
+	error->add_message(entity->get_source_ref(),
+			   std::string("First declared here"));
+	compiler_context.get_errors().add_error(std::move(error));
+	return nullptr;
+    }
     
-    Gyoji::owned<NS2Entity> new_class = std::make_unique<NS2Entity>(_name, NS2Entity::ENTITY_TYPE_CLASS, current, _source_ref);
-    NS2Entity *ret_class = new_class.get();
-    current->add_entity(_name, std::move(new_class));
-    return ret_class;
+    std::vector<std::string> name_components = Gyoji::misc::string_split(name, NS2Context::NAMESPACE_DELIMITER);
+    if (name_components.size() == 1) {
+	entity = ns2_context->get_current()->add_class(
+	    name,
+	    _source_ref
+	    );
+	return entity;
+    }
+
+    std::string simple_name = name_components.at(name_components.size()-1);
+    name_components.pop_back();
+    std::string namespace_part = Gyoji::misc::join(name_components, NS2Context::NAMESPACE_DELIMITER);
+    
+    NS2Entity *namespace_entity = ns2_context->namespace_find(namespace_part);
+    if (namespace_entity == nullptr) {
+	auto error = std::make_unique<Gyoji::context::Error>(std::string("Invalid identifier") + name + std::string("."));
+	error->add_message(_source_ref, std::string("") + namespace_part + std::string(" is not a class or namespace."));
+	compiler_context.get_errors().add_error(std::move(error));
+	return nullptr;
+    }
+    if (namespace_entity->get_type() == NS2Entity::ENTITY_TYPE_NAMESPACE) {
+	return namespace_entity->add_class(simple_name, _source_ref);
+    }
+    else {
+	auto error = std::make_unique<Gyoji::context::Error>(std::string("Invalid identifier") + name + std::string("."));
+	error->add_message(_source_ref, std::string("Identifier must ") + name + std::string(" must be placed inside a namespace."));
+	error->add_message(namespace_entity->get_source_ref(), std::string("Namespace is ") + namespace_part + std::string(" is not a namespace"));
+	compiler_context.get_errors().add_error(std::move(error));
+	return nullptr;
+    }
 }
 
 

@@ -217,18 +217,19 @@ null         {PROCESS_NODE(LITERAL_NULL);}
     LexContext *lex_context = (LexContext*)yyget_extra(yyscanner);
     NS2Context & ns2_context = lex_context->ns2_context;
 
-    const NS2Entity *entity = ns2_context.namespace_find(std::string(yytext));
+    //fprintf(stderr, "Looking up in namespace context %s\n", yytext);
+    NS2Entity *entity = ns2_context.namespace_find(std::string(yytext));
     if (entity == nullptr) {
         // Not yet known.  We expect the syntax layer to
         // find a place to put this identifier in a namespace.
         //fprintf(stderr, "Name is an unknown identifier %s\n", yytext);
         PROCESS_IDENTIFIER(IDENTIFIER, nullptr);
     }
-    if (entity->get_type() == NS2Entity::ENTITY_TYPE_NAMESPACE) {
+    else if (entity->get_type() == NS2Entity::ENTITY_TYPE_NAMESPACE) {
         //fprintf(stderr, "Name is a namespace %s\n", yytext);
         PROCESS_IDENTIFIER(NAMESPACE_NAME, entity);
     }
-    else if (entity->get_type() == NS2Entity::ENTITY_TYPE_TYPE) {
+    else if (entity->get_type() == NS2Entity::ENTITY_TYPE_TYPE || entity->get_type() == NS2Entity::ENTITY_TYPE_CLASS) {
         //fprintf(stderr, "Name is a type %s\n", yytext);
         PROCESS_IDENTIFIER(TYPE_NAME, entity);
     }

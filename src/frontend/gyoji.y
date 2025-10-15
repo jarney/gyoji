@@ -681,6 +681,7 @@ class_decl_start
                 PRINT_NONTERMINALS($$);
         }
         | opt_access_modifier CLASS TYPE_NAME opt_class_argument_list {
+	        return_data.ns2_context->namespace_push($3->get_ns2_entity());
                 $$ = std::make_unique<Gyoji::frontend::tree::ClassDeclStart>(
                                                                          std::move($1),
                                                                          std::move($2),
@@ -728,9 +729,10 @@ class_argument_list
 // Forwar-declaration of a class.
 class_declaration
         : class_decl_start SEMICOLON {
-                $$ = std::make_unique<Gyoji::frontend::tree::ClassDeclaration>(std::move($1),
-                                                                         std::move($2)
-                                                                         );
+                $$ = std::make_unique<Gyoji::frontend::tree::ClassDeclaration>(
+		    std::move($1),
+		    std::move($2)
+		    );
                 return_data.ns2_context->namespace_pop();
                 PRINT_NONTERMINALS($$);
         }
@@ -754,6 +756,7 @@ type_definition
         : opt_access_modifier TYPEDEF type_specifier IDENTIFIER SEMICOLON {
                 Gyoji::frontend::namespaces::NS2Entity *ns2_entity = return_data.type_get_or_create($4->get_value(), $4->get_source_ref());
                 $4->set_ns2_entity(ns2_entity);
+		fprintf(stderr, "Defined type %s\n", $4->get_fully_qualified_name().c_str());
                 $$ = std::make_unique<Gyoji::frontend::tree::TypeDefinition>(
                                                                                std::move($1),
                                                                                std::move($2),

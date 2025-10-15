@@ -2,6 +2,7 @@
 // We can define a class without
 // a forward-declaration.
 class WithoutForwardDeclaration {
+  u32 eleven;
 };
 
 class FooClass;
@@ -14,3 +15,4 @@ class FooClass {
 // Another forward declaration
 // should not matter.
 class FooClass;
+

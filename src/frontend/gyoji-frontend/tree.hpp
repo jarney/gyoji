@@ -169,8 +169,8 @@ namespace Gyoji::frontend::tree {
 	// be de-referenced and never assigned to
 	std::vector<Gyoji::owned<TerminalNonSyntax>> non_syntax;
 
-	void set_ns2_entity(const Gyoji::frontend::namespaces::NS2Entity *_ns_entity);
-	const Gyoji::frontend::namespaces::NS2Entity *get_ns2_entity() const;
+	void set_ns2_entity(Gyoji::frontend::namespaces::NS2Entity *_ns_entity);
+	Gyoji::frontend::namespaces::NS2Entity *get_ns2_entity() const;
 	
 	
     private:
@@ -178,7 +178,7 @@ namespace Gyoji::frontend::tree {
 	std::string fully_qualified_name;
 	IdentifierType identifier_type;
 	// Tells us whether this is a namespace name, an entity, or what.
-	const Gyoji::frontend::namespaces::NS2Entity *ns2_entity;
+	Gyoji::frontend::namespaces::NS2Entity *ns2_entity;
     };
     
     

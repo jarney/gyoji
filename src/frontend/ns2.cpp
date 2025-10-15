@@ -296,15 +296,11 @@ NS2Context::namespace_find_in(NS2Entity* current, std::vector<std::string> names
 	if (i == names.size()-1) {
 	    break;
 	}
-	NS2Entity *next_current = current->get_parent();
-	if (next_current == nullptr) {
-	    // We've reached the end of our search
-	    // and we didn't find the leaf node
-	    // of the name;
-	    return nullptr;
+	if (entity_found == nullptr) {
+	    break;
 	}
 	// We have another parent to search, so try that.
-	current = next_current;
+	current = entity_found;
 	i++;
     }
     return entity_found;
@@ -317,7 +313,6 @@ NS2Context::namespace_find(std::string name) const
     // searching at each level.
     for (size_t i = 0; i < stack.size(); i++) {
 	const auto & it = stack.at(stack.size() - 1 - i);
-
 	// First, check to see if we can find it in the namespace
 	// we're currently operating on.
 	NS2Entity *found = namespace_find_in(it.first, name);
@@ -368,6 +363,12 @@ NS2Context::namespace_push(NS2Entity *ns)
 void
 NS2Context::namespace_pop()
 {
+    // Assertion to protect us from popping the end of
+    // the stack.
+    if (stack.size() == 1) {
+	char *p = (char*)0;
+	*p = 0x02;
+    }
     stack.pop_back();
 }
 

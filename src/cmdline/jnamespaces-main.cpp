@@ -37,9 +37,6 @@ int main(int argc, char **argv)
 	return -1;
     }
     
-//    const NamespaceContext & ns = parse_result->get_namespace_context();
-//
-//    ns.namespace_dump();
     parse_result->get_ns2_context().dump();
     
     return 0;

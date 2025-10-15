@@ -46,7 +46,7 @@ Terminal::set_identifier_type(IdentifierType _identifier_type)
 { identifier_type = _identifier_type; }
 
 void
-Terminal::set_ns2_entity(const Gyoji::frontend::namespaces::NS2Entity *_ns2_entity)
+Terminal::set_ns2_entity(Gyoji::frontend::namespaces::NS2Entity *_ns2_entity)
 {
     if (_ns2_entity != nullptr) {
 	identifier_type = IDENTIFIER_GLOBAL_SCOPE;
@@ -54,7 +54,7 @@ Terminal::set_ns2_entity(const Gyoji::frontend::namespaces::NS2Entity *_ns2_enti
     ns2_entity = _ns2_entity;
 }
 
-const Gyoji::frontend::namespaces::NS2Entity *
+Gyoji::frontend::namespaces::NS2Entity *
 Terminal::get_ns2_entity() const
 { return ns2_entity; }
 
