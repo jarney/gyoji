@@ -15,6 +15,9 @@ void Gyoji::mir::operation_static_init()
 
     // Functions and global symbols
     op_type_names.insert(std::pair(Operation::OP_FUNCTION_CALL, "function-call"));
+    op_type_names.insert(std::pair(Operation::OP_GET_METHOD, "get-method"));
+    op_type_names.insert(std::pair(Operation::OP_METHOD_GET_OBJECT, "method-get-object"));
+    op_type_names.insert(std::pair(Operation::OP_METHOD_GET_FUNCTION, "method-get-function"));
     op_type_names.insert(std::pair(Operation::OP_SYMBOL, "symbol"));
     
     // Cast operations.
@@ -264,6 +267,25 @@ size_t
 OperationBinary::get_b() const
 { return operands.at(1); }
 
+
+//////////////////////////////////////////////
+// OperationGetMethod
+//////////////////////////////////////////////
+OperationGetMethod::OperationGetMethod(
+	    const Gyoji::context::SourceReference & _src_ref,
+	    size_t _result,
+	    size_t _object_to_call,
+	    std::string _method_name
+	    )
+    : Operation(OP_GET_METHOD, _src_ref, _result, _object_to_call)
+    , method_name(_method_name)
+{}
+OperationGetMethod::~OperationGetMethod()
+{}
+
+const std::string &
+OperationGetMethod::get_method() const
+{ return method_name; }
 
 //////////////////////////////////////////////
 // OperationFunctionCall

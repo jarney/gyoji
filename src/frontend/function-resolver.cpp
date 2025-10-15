@@ -1057,7 +1057,14 @@ FunctionDefinitionResolver::extract_from_expression_postfix_function_call(
 	fprintf(stderr, "Not extracting function early return\n");
 	return false;
     }
+    // For method calls, function_type_tmpvar must somehow encode
+    // both the type of function pointer to call
+    // as well as another tmpvar for the class value itself.
+    // The value will end up encoding pair of "class_tmpvar" and "function_type_tmpvar".
     
+    
+    // TODO: Check that the values we're passing here
+    // match the function's signature.
     std::vector<size_t> arg_types;
     for (const auto & arg_expr : expression.get_arguments().get_arguments()) {
 	size_t arg_returned_value;
@@ -1069,8 +1076,74 @@ FunctionDefinitionResolver::extract_from_expression_postfix_function_call(
     }
 
     const Type *function_pointer_type = function->tmpvar_get(function_type_tmpvar);
-    if (function_pointer_type->get_type() != Type::TYPE_FUNCTION_POINTER) {
-	fprintf(stderr, "Not extracting function invalid type\n");
+    if (function_pointer_type->get_type() == Type::TYPE_FUNCTION_POINTER) {
+	// We declare that we return the vale that the function
+	// will return.
+	returned_tmpvar = function->tmpvar_define(function_pointer_type->get_return_type());
+	
+	auto operation = std::make_unique<OperationFunctionCall>(
+	    expression.get_source_ref(),
+	    returned_tmpvar,
+	    function_type_tmpvar,
+	    arg_types
+	    );
+	
+	function
+	    ->get_basic_block(current_block)
+	    .add_operation(std::move(operation));
+	
+	return true;
+    }
+    else if (function_pointer_type->get_type() == Type::TYPE_METHOD_CALL) {
+	// First, extract the object from the method call into a tmpvar.
+	// Next, extract the function into another tmpvar.
+	// Finally, put together the arguments and make the call.
+	
+	size_t function_pointer_type_tmpvar = function->tmpvar_define(function_pointer_type->get_function_pointer_type());
+
+	// This is what resolves the method to call.
+	auto operation_get_function = std::make_unique<OperationUnary>(
+	    Operation::OP_METHOD_GET_FUNCTION,
+	    expression.get_source_ref(),
+	    function_pointer_type_tmpvar,
+	    function_type_tmpvar
+	    );
+	function
+	    ->get_basic_block(current_block)
+	    .add_operation(std::move(operation_get_function));
+
+	// This is what resolves the object to make
+	// the functionn call on.  We push it as the
+	// implicit first argument to the call.
+	size_t method_object_tmpvar = function->tmpvar_define(function_pointer_type->get_class_type());
+	auto operation_get_object = std::make_unique<OperationUnary>(
+	    Operation::OP_METHOD_GET_OBJECT,
+	    expression.get_source_ref(),
+	    method_object_tmpvar,
+	    function_type_tmpvar
+	    );
+	arg_types.insert(arg_types.begin(), method_object_tmpvar);
+	function
+	    ->get_basic_block(current_block)
+	    .add_operation(std::move(operation_get_object));
+	
+	// This is what the function pointer type should return.
+	returned_tmpvar = function->tmpvar_define(function_pointer_type->get_function_pointer_type()->get_return_type());
+
+	auto operation = std::make_unique<OperationFunctionCall>(
+	    expression.get_source_ref(),
+	    returned_tmpvar,
+	    function_pointer_type_tmpvar,
+	    arg_types
+	    );
+	
+	function
+	    ->get_basic_block(current_block)
+	    .add_operation(std::move(operation));
+	
+	return true;
+    }
+    else {
 	compiler_context
 	    .get_errors()
 	    .add_simple_error(
@@ -1080,23 +1153,6 @@ FunctionDefinitionResolver::extract_from_expression_postfix_function_call(
 		);
 	return false;
     }
-	
-    // We declare that we return the vale that the function
-    // will return.
-    returned_tmpvar = function->tmpvar_define(function_pointer_type->get_return_type());
-    
-    auto operation = std::make_unique<OperationFunctionCall>(
-	expression.get_source_ref(),
-	returned_tmpvar,
-	function_type_tmpvar,
-	arg_types
-	);
-    
-    function
-	->get_basic_block(current_block)
-	.add_operation(std::move(operation));
-
-    return true;
 }
 
 bool
@@ -1123,27 +1179,59 @@ FunctionDefinitionResolver::extract_from_expression_postfix_dot(
     const std::string & member_name = expression.get_identifier().get_name();
 
     const TypeMember *member = class_type->member_get(member_name);
-    if (member == nullptr) {
-	compiler_context
-	    .get_errors()
-	    .add_simple_error(
-		expression.get_expression().get_source_ref(),
-		"Class does not have this member.",
-		std::string("Class does not have member '") + member_name + std::string("'.")
-		);
+    if (member != nullptr) {
+	returned_tmpvar = function->tmpvar_define(member->get_type());
+	auto operation = std::make_unique<OperationDot>(
+	    expression.get_source_ref(),
+	    returned_tmpvar,
+	    class_tmpvar,
+	    member_name
+	    );
+	function
+	    ->get_basic_block(current_block)
+	    .add_operation(std::move(operation));
+	return true;
     }
+    
+    const TypeMethod *method = class_type->method_get(member_name);
+    if (method != nullptr) {
+	std::string fully_qualified_function_name = class_type->get_name() + NS2Context::NAMESPACE_DELIMITER + member_name;
+	fprintf(stderr, "We have a method here, what value should we push %s?\n", fully_qualified_function_name.c_str());
+	const Gyoji::mir::Symbol *symbol = mir.get_symbols().get_symbol(fully_qualified_function_name);
+	if (symbol == nullptr) {
+	    compiler_context
+		.get_errors()
+		.add_simple_error(
+		    expression.get_expression().get_source_ref(),
+		    "Class method not found.",
+		    std::string("Method ") + fully_qualified_function_name + std::string(" was not found on class ") + class_type->get_name()
+		    );
+	    return false;
+	}
 
-    returned_tmpvar = function->tmpvar_define(member->get_type());
-    auto operation = std::make_unique<OperationDot>(
-	expression.get_source_ref(),
-	returned_tmpvar,
-	class_tmpvar,
-	member_name
-	);
-    function
-	->get_basic_block(current_block)
-	.add_operation(std::move(operation));
-    return true;
+	const Type * method_call_type = mir.get_types().get_method_call(class_type, symbol->get_type(), expression.get_source_ref());
+	returned_tmpvar = function->tmpvar_define(method_call_type);
+
+	auto operation = std::make_unique<OperationGetMethod>(
+	    expression.get_source_ref(),
+	    returned_tmpvar,
+	    class_tmpvar,
+	    member_name
+	    );
+	function
+	    ->get_basic_block(current_block)
+	    .add_operation(std::move(operation));
+	return true;
+    }
+    compiler_context
+	.get_errors()
+	.add_simple_error(
+	    expression.get_expression().get_source_ref(),
+	    "Member or method not found.",
+	    std::string("Class does not have member or method '") + member_name + std::string("'.")
+	    );
+    
+    return false;
 }
 
 bool

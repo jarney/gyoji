@@ -202,6 +202,31 @@ CodeGeneratorLLVMContext::create_type_function_pointer(const Gyoji::mir::Type *f
     return llvm_fptr_type;
 }
 
+llvm::Type *
+CodeGeneratorLLVMContext::create_type_method_call(const Gyoji::mir::Type *method_call_type)
+{
+    std::vector<llvm::Type*> members;
+
+    // Note that this relies on the fact that
+    // the members are in order and equal to the
+    // 'index' of the member.  Yes, this is a bit
+    // of a hacky way to do that.
+
+    members.push_back(types["u32"]);
+    members.push_back(create_type(method_call_type->get_function_pointer_type()));
+    
+    llvm::Type *llvm_method_call_type = llvm::StructType::create(*TheContext, members, method_call_type->get_name());
+
+    types.insert(std::pair<std::string, llvm::Type*>(
+		     method_call_type->get_name(),
+		     llvm_method_call_type
+		     )
+	);
+    return llvm_method_call_type;
+}
+
+
+
 /**
  * These are the truly primitive types.
  * They are defined in the language
@@ -301,6 +326,9 @@ CodeGeneratorLLVMContext::create_type(const Type * type)
     else if (type->is_array()) {
 	return create_type_array(type);
     }
+    else if (type->is_method_call()) {
+	return create_type_method_call(type);
+    }
     fprintf(stderr, "Compiler BUG!  Unknown type type passed to code generator %s\n", type->get_name().c_str());
     exit(1);
     return nullptr;
@@ -363,6 +391,72 @@ CodeGeneratorLLVMContext::generate_operation_function_call(
     Builder->CreateCall((llvm::FunctionType*)llvm_fptr_type, (llvm::Function*)llvm_function, llvm_args);
 
 }
+
+void
+CodeGeneratorLLVMContext::generate_operation_get_method(
+    std::map<size_t, llvm::Value *> & tmp_values,
+    const Gyoji::mir::Function & mir_function,
+    const Gyoji::mir::OperationGetMethod & operation
+    )
+{
+    const Gyoji::mir::Symbol *symbol = mir.get_symbols().get_symbol(operation.get_method());
+    llvm::Type *fptr_type = types[symbol->get_type()->get_name()];
+
+    // This isn't a 'real' value,
+    // it's intended as a way to pass the
+    // value from here into the 'method_get_object'
+    // without putting it on the heap or anything.
+    size_t object_tmpvar = operation.get_operands().at(0);
+    llvm::Constant * object_value = llvm::ConstantInt::get(llvm::Type::getInt32Ty(*TheContext), object_tmpvar);
+    
+    llvm::Function *fptr_value = TheModule->getFunction(operation.get_method());
+    if (fptr_value == nullptr) {
+	fptr_value = llvm::Function::Create((llvm::FunctionType*)fptr_type, llvm::Function::ExternalLinkage, operation.get_method(), TheModule.get());
+	if (fptr_value == nullptr) {
+	    fprintf(stderr, "Could not find function for symbol %s\n", operation.get_method().c_str());
+	    exit(1);
+	}
+    }
+    
+    // What we actually push here is the
+    // tmpvar id of the object and not the object itself.
+    // This is because we don't actually know it yet,
+    // that will be resolved later in the 'method_get_object'
+    // method.
+
+    const Gyoji::mir::Type *mir_struct_type = mir_function.tmpvar_get(operation.get_result());
+    llvm::Type *struct_type = types[mir_struct_type->get_name()];
+    
+    std::vector<llvm::Constant*> struct_values;
+    struct_values.push_back(object_value);
+    struct_values.push_back(fptr_value);
+    llvm::Value *result = llvm::ConstantStruct::get((llvm::StructType*)struct_type, struct_values);
+    
+    tmp_values.insert(std::pair(operation.get_result(), result));
+}
+void
+CodeGeneratorLLVMContext::generate_operation_method_get_object(
+    std::map<size_t, llvm::Value *> & tmp_values,
+    const Gyoji::mir::Function & mir_function,
+    const Gyoji::mir::OperationUnary & operation
+    )
+{
+    // Get the struct and pull out the "object's"
+    // tmpvar.
+//    llvm::Value *value_a = tmp_values[struct_tmpvar];
+//    tmp_values.insert(std::pair(operation.get_result(), result));
+}
+void
+CodeGeneratorLLVMContext::generate_operation_method_get_function(
+    std::map<size_t, llvm::Value *> & tmp_values,
+    const Gyoji::mir::Function & mir_function,
+    const Gyoji::mir::OperationUnary & operation
+    )
+{
+
+}
+
+	
 
 void
 CodeGeneratorLLVMContext::generate_operation_symbol(
@@ -1477,6 +1571,15 @@ CodeGeneratorLLVMContext::generate_basic_block(
         // Global symbols
 	case Operation::OP_FUNCTION_CALL:
 	    generate_operation_function_call(tmp_values, mir_function, (const OperationFunctionCall &)operation);
+	    break;
+	case Operation::OP_GET_METHOD:
+	    generate_operation_get_method(tmp_values, mir_function, (const OperationGetMethod&)operation);
+	    break;
+	case Operation::OP_METHOD_GET_OBJECT:
+	    generate_operation_method_get_object(tmp_values, mir_function, (const OperationUnary&)operation);
+	    break;
+	case Operation::OP_METHOD_GET_FUNCTION:
+	    generate_operation_method_get_function(tmp_values, mir_function, (const OperationUnary&)operation);
 	    break;
 	case Operation::OP_SYMBOL:
 	    generate_operation_symbol(tmp_values, mir_function, (const OperationSymbol &)operation);

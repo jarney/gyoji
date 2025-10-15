@@ -30,18 +30,20 @@ u32 main(u32 a, u8** b);
 u32 main(u32 argc, u8**argv)
 {
 	Foo cl;
-	Foo* pcl;
-	pcl = &cl;
-	
-	u32 b;
-	cl.a = 10u32;
-	b = cl.a;
-	b = b + 192;
+//	Foo* pcl;
+//	pcl = &cl;
 
-	cl.a = b;
-	cl.a += 100;
-	
-	print_value(cl.a);
-	print_value(pcl->a);
+	cl.set_something(10u32);
+
+//	u32 b;
+//	cl.a = 10u32;
+//	b = cl.a;
+//	b = b + 192;
+//
+//	cl.a = b;
+//	cl.a += 100;
+//	
+//	print_value(cl.a);
+//	print_value(pcl->a);
 	return 0u32;
 }

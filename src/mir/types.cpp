@@ -79,7 +79,10 @@ Types::get_reference_to(const Type *_type, const SourceReference & src_ref)
 }
 
 const Type *
-Types::get_array_of(const Type *_type, size_t _length, const SourceReference & src_ref)
+Types::get_array_of(
+    const Type *_type,
+    size_t _length,
+    const SourceReference & _src_ref)
 {
     std::string array_type_name = _type->get_name() + std::string("[") + std::to_string(_length) + std::string("]");
 
@@ -87,11 +90,30 @@ Types::get_array_of(const Type *_type, size_t _length, const SourceReference & s
     if (array_type != nullptr) {
 	return array_type;
     }
-    Gyoji::owned<Type> array_owned = std::make_unique<Type>(array_type_name, Type::TYPE_ARRAY, false, src_ref);
+    Gyoji::owned<Type> array_owned = std::make_unique<Type>(array_type_name, Type::TYPE_ARRAY, false, _src_ref);
     array_type = array_owned.get();
-    array_owned->complete_array_definition(_type, _length, src_ref);
+    array_owned->complete_array_definition(_type, _length, _src_ref);
     define_type(std::move(array_owned));
     return array_type;
+}
+
+const Type *
+Types::get_method_call(
+    const Type *_class_type,
+    const Type *_method_fptr_type,
+    const SourceReference & _src_ref
+    )
+{
+    std::string method_type_name = std::string("<method>") + _class_type->get_name() + std::string("::") + _method_fptr_type->get_name();
+    const Type* method_type = get_type(method_type_name);
+    if (method_type != nullptr) {
+	return method_type;
+    }
+    Gyoji::owned<Type> method_type_owned = std::make_unique<Type>(method_type_name, Type::TYPE_METHOD_CALL, false, _src_ref);
+    method_type = method_type_owned.get();
+    method_type_owned->complete_method_call_definition(_class_type, _method_fptr_type, _src_ref);
+    define_type(std::move(method_type_owned));
+    return method_type;
 }
 
 void

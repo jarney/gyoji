@@ -95,6 +95,22 @@ namespace Gyoji::mir {
 	     * @endcode
 	     */
 	    OP_FUNCTION_CALL,
+
+	    /**
+	     * @brief Load method call to that it can be called with OP_FUNCTION_CALL later.
+	     *
+	     * @details
+	     * Directs the MIR to load the object to be called
+	     * and the specific method to call so that it can
+	     * be used by the OP_FUNCTION_CALL to make the actual
+	     * function call.
+	     */
+	    OP_GET_METHOD,
+
+	    OP_METHOD_GET_FUNCTION,
+	    
+	    OP_METHOD_GET_OBJECT,
+	    
 	    /**
 	     * @brief Load a symbol from the symbol-table.
 	     *
@@ -1056,6 +1072,37 @@ namespace Gyoji::mir {
 	 * @brief Access the second operand (b).
 	 */
 	size_t get_b() const;
+    };
+
+    /**
+     * @brief Method call (invoke) preparation
+     * @details
+     * This subclass of Operation represents
+     * obtaining the necessary information to
+     * perform a method call.  This consists
+     * of a pair of the specific object to call
+     * the method on and the function-pointer of
+     * the method to call.  This does not
+     * actually perform the method call.  That is left
+     * to the OperationFunctionCall which must come
+     * afterward.  Technically, this isn't necessary
+     * in the VM, but modelling the calls this way
+     * makes the 'lowering' code simpler.
+     */
+    class OperationGetMethod : public Operation {
+    public:
+	OperationGetMethod(
+	    const Gyoji::context::SourceReference & _src_ref,
+	    size_t _result,
+	    size_t _object_to_call,
+	    std::string _method_name
+	    );
+	virtual ~OperationGetMethod();
+
+	const std::string & get_method() const;
+    private:
+	size_t object_to_call;
+	std::string method_name;
     };
 
     /**

@@ -25,6 +25,8 @@ Type::Type(
     , return_type(nullptr)
     , argument_types()
     , members()
+    , class_type(nullptr)
+    , function_pointer_type(nullptr)
 {}
 Type::Type(std::string _name, const SourceReference & _source_ref, const Type & _other)
     : name(_name)
@@ -37,6 +39,8 @@ Type::Type(std::string _name, const SourceReference & _source_ref, const Type & 
     , return_type(_other.return_type)
     , argument_types(_other.argument_types)
     , members(_other.members)
+    , class_type(nullptr)
+    , function_pointer_type(nullptr)
 {
 }
 
@@ -164,6 +168,10 @@ Type::is_function_pointer() const
 { return (type == TYPE_FUNCTION_POINTER); }
 
 bool
+Type::is_method_call() const
+{ return (type == TYPE_METHOD_CALL); }
+
+bool
 Type::is_array() const
 { return (type == TYPE_ARRAY); }
 
@@ -219,6 +227,16 @@ Type::member_get(const std::string & member_name) const
     return it->second;
 }
 
+const TypeMethod *
+Type::method_get(const std::string & method_name) const
+{
+    const auto it = methods.find(method_name);
+    if (it == methods.end()) {
+	return nullptr;
+    }
+    return &it->second;
+}
+
 const Type *
 Type::get_pointer_target() const
 { return pointer_or_ref; }
@@ -236,7 +254,16 @@ Type::get_argument_types() const
 {
     return argument_types;
 }
-
+const Type *
+Type::get_class_type() const
+{
+    return class_type;
+}
+const Type *
+Type::get_function_pointer_type() const
+{
+    return function_pointer_type;
+}
 
 void
 Type::complete_pointer_definition(const Type *_type, const SourceReference & _source_ref)
@@ -283,6 +310,20 @@ Type::complete_function_pointer_definition(
     defined_source_ref = &_source_ref;
 }
 
+void
+Type::complete_method_call_definition(
+    const Type *_class_type,
+    const Type *_function_pointer_type,
+    const Gyoji::context::SourceReference & _source_ref
+    )
+{
+    complete = true;
+    class_type = _class_type;
+    function_pointer_type = _function_pointer_type;
+    defined_source_ref = &_source_ref;
+}
+	
+
 const SourceReference &
 Type::get_declared_source_ref() const
 { return *declared_source_ref; }
@@ -326,6 +367,13 @@ Type::dump(FILE *out) const
 	desc = desc + std::string("(*)");
 	desc = desc + std::string("(") + Gyoji::misc::join(arglist, ",") + std::string(")");
 	type_desc = std::string("function-pointer ") + desc;
+    }
+    else if (is_method_call()) {
+	type_desc =
+	    std::string("method-call ")
+	    + class_type->get_name()
+	    + std::string(" method ")
+	    + function_pointer_type->get_name();
     }
     else if (is_array()) {
 	type_desc = std::string("array ");

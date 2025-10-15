@@ -71,7 +71,7 @@ namespace Gyoji::mir {
 	 * exists, then a pointer to the already existing immutable
 	 * type will be returned.
 	 */
-	const Type * get_pointer_to(const Type *_type, const Gyoji::context::SourceReference & src_ref);
+	const Type * get_pointer_to(const Type *_type, const Gyoji::context::SourceReference & _src_ref);
 	
 	/**
 	 * This returns a type that is a reference to the given type.  The type
@@ -80,7 +80,7 @@ namespace Gyoji::mir {
 	 * exists, then a pointer to the already existing immutable
 	 * type will be returned.
 	 */
-	const Type * get_reference_to(const Type *_type, const Gyoji::context::SourceReference & src_ref);
+	const Type * get_reference_to(const Type *_type, const Gyoji::context::SourceReference & _src_ref);
 	
 	/**
 	 * This returns a type that is an array of _length
@@ -90,8 +90,15 @@ namespace Gyoji::mir {
 	 * exists, then a pointer to the already existing immutable
 	 * type will be returned.
 	 */
-	const Type * get_array_of(const Type *_type, size_t _length, const Gyoji::context::SourceReference & src_ref);
-	
+	const Type * get_array_of(const Type *_type, size_t _length, const Gyoji::context::SourceReference & _src_ref);
+
+	/**
+	 * This creates a method call type which consists of the
+	 * class we are calling (first argument of method) along with the function pointer
+	 * of the method we're calling.
+	 */
+	const Type * get_method_call(const Type *_class_type, const Type *_method_fptr_type, const Gyoji::context::SourceReference & _src_ref);
+
 	/**
 	 * This is used to define a fully-qualified type
 	 * from the definition.  Note that some types
@@ -455,6 +462,15 @@ namespace Gyoji::mir {
 	    TYPE_FUNCTION_POINTER,
 
 	    /**
+	     * This is a pointer to a method call.
+	     * The actual value it encodes is
+	     * the type of the class whose method this is
+	     * and the type of the function pointer we will
+	     * use to call it.
+	     */
+	    TYPE_METHOD_CALL,
+
+	    /**
 	     * This is similar to a pointer and is also stored
 	     * internally as an address in a u64, but carries
 	     * additional semantics used by the borrow checker.
@@ -595,6 +611,13 @@ namespace Gyoji::mir {
 
 	/**
 	 * This returns true if the type is
+	 * a method call to a specific class
+	 * method.
+	 */
+	bool is_method_call() const;
+
+       /**
+	 * This returns true if the type is
 	 * an array of data of a specific type.
 	 */
 	bool is_array() const;
@@ -638,6 +661,8 @@ namespace Gyoji::mir {
 	 */
 	const TypeMember *member_get(const std::string & member_name) const;
 
+	const TypeMethod *method_get(const std::string & member_name) const;
+
 	/**
 	 * This returns a pointer to the type pointed to by
 	 * this type.  It is ONLY valid for types that are 'is_pointer()' or
@@ -666,6 +691,10 @@ namespace Gyoji::mir {
 	 * valid for types that are 'is_function_pointer()'.
 	 */
 	const std::vector<Argument> & get_argument_types() const;
+
+	const Type * get_class_type() const;
+	const Type * get_function_pointer_type() const;
+
 	
 	/**
 	 * Completes the definition of a composite type.
@@ -696,6 +725,12 @@ namespace Gyoji::mir {
 	void complete_function_pointer_definition(
 	    const Type *_return_type,
 	    const std::vector<Argument> & _argument_types,
+	    const Gyoji::context::SourceReference & _source_ref
+	    );
+
+	void complete_method_call_definition(
+	    const Type *_class_type,
+	    const Type *_function_pointer_type,
 	    const Gyoji::context::SourceReference & _source_ref
 	    );
 	
@@ -744,5 +779,10 @@ namespace Gyoji::mir {
 
 	// Used only for class/composite types.
 	std::map<std::string, TypeMethod> methods;
+
+
+	// Used only for class method call types.
+	const Type *class_type;
+	const Type *function_pointer_type;
     };
 };
