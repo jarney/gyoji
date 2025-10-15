@@ -196,7 +196,13 @@ FunctionDefinitionResolver::resolve()
     const Type *return_type = type_resolver.extract_from_type_specifier(type_specifier);
     
     if (return_type == nullptr) {
-	fprintf(stderr, "Could not find return type\n");
+	compiler_context
+	    .get_errors()
+	    .add_simple_error(
+		function_definition.get_source_ref(),
+		"Return-value type not defined",
+		std::string("Return type was not declared")
+		);
 	return false;
 	
     }
@@ -204,9 +210,9 @@ FunctionDefinitionResolver::resolve()
 
     // Add the implicit '<this>' argument if this is a method.
     if (is_method()) {
-	const Type *this_type = mir.get_types().get_pointer_to(class_type, function_definition.get_source_ref());
+	class_pointer_type = mir.get_types().get_pointer_to(class_type, function_definition.get_source_ref());
 	std::string this_arg_name("<this>");
-	FunctionArgument arg(this_arg_name, this_type,
+	FunctionArgument arg(this_arg_name, class_pointer_type,
 			     function_definition.get_source_ref(),
 			     function_definition.get_source_ref());
 	arguments.push_back(arg);
@@ -214,8 +220,32 @@ FunctionDefinitionResolver::resolve()
     
     const auto & function_argument_list = function_definition.get_arguments();
     const auto & function_definition_args = function_argument_list.get_arguments();
+
+    bool member_conflict_errors = false;
     for (const auto & function_definition_arg : function_definition_args) {
 	std::string name = function_definition_arg->get_identifier().get_name();
+
+	// If this is a method, we want to check that the arguments
+	// to the function don't conflict with member variable names.
+	if (is_method()) {
+	    const TypeMember *member = class_type->member_get(name);
+	    if (member != nullptr) {
+		std::unique_ptr<Gyoji::context::Error> error = std::make_unique<Gyoji::context::Error>("Variable Name Conflict");
+		error->add_message(
+		    function_definition_arg->get_identifier().get_source_ref(),
+		    std::string("Method defined argument ") + name + std::string(" which would conflict with class member name.")
+		    );
+		error->add_message(
+		    member->get_source_ref(),
+		    std::string("Member variable declared here.")
+		    );
+		compiler_context
+		    .get_errors()
+		    .add_error(std::move(error));
+		member_conflict_errors = true;
+	    }
+	}
+	    
 	const Gyoji::mir::Type * mir_type = type_resolver.extract_from_type_specifier(function_definition_arg->get_type_specifier());
 	
 	FunctionArgument arg(name, mir_type,
@@ -223,10 +253,13 @@ FunctionDefinitionResolver::resolve()
 			     function_definition_arg->get_type_specifier().get_source_ref());
 	arguments.push_back(arg);
 	fprintf(stderr, "Function argument %s\n", name.c_str());
-	if (!scope_tracker.add_variable(name, mir_type, function_definition_arg->get_source_ref())) {
-	    fprintf(stderr, "Existing, stopping process\n");
+	if (!scope_tracker.add_variable(name, mir_type, function_definition_arg->get_identifier().get_source_ref())) {
 	    return false;
 	}
+    }
+    
+    if (member_conflict_errors) {
+	return false;
     }
 
     // Check that the arguments declared here
@@ -252,6 +285,22 @@ FunctionDefinitionResolver::resolve()
 	    return false;
 	}
 	bool arg_error = false;
+	if (method->get_return_type()->get_name() != return_type->get_name()) {
+	    std::unique_ptr<Gyoji::context::Error> error = std::make_unique<Gyoji::context::Error>("Return-value does not match declaration");
+	    error->add_message(
+		function_definition.get_return_type().get_source_ref(),
+		std::string("Return-value defined as ") + return_type->get_name() + std::string(".")
+		);
+	    error->add_message(
+		method->get_source_ref(),
+		std::string("Does not match declaration ") + method->get_return_type()->get_name()
+		);
+	    compiler_context
+		.get_errors()
+		.add_error(std::move(error));
+	    arg_error = true;
+	}
+	
 	for (size_t i = 0; i < arguments.size(); i++) {
 	    const FunctionArgument & fa = arguments.at(i);
 	    const Argument & ma = method->get_arguments().at(i);
@@ -319,6 +368,23 @@ FunctionDefinitionResolver::resolve()
 		return false;
 	    }
 	    bool arg_error = false;
+
+	    if (symbol_type->get_return_type()->get_name() != return_type->get_name()) {
+		std::unique_ptr<Gyoji::context::Error> error = std::make_unique<Gyoji::context::Error>("Return-value does not match declaration");
+		error->add_message(
+		    function_definition.get_return_type().get_source_ref(),
+		    std::string("Return-value defined as ") + return_type->get_name() + std::string(".")
+		    );
+		error->add_message(
+		    symbol_type->get_defined_source_ref(),
+		    std::string("Does not match declaration ") + symbol_type->get_return_type()->get_name()
+		    );
+		compiler_context
+		    .get_errors()
+		    .add_error(std::move(error));
+		arg_error = true;
+	    }
+
 	    for (size_t i = 0; i < arguments.size(); i++) {
 		const FunctionArgument & fa = arguments.at(i);
 		const Argument & ma = function_arguments.at(i);
@@ -457,15 +523,14 @@ FunctionDefinitionResolver::extract_from_expression_primary_identifier(
     else if (expression.get_identifier().get_identifier_type() == Terminal::IDENTIFIER_GLOBAL_SCOPE) {
 	// First, check to see if there is a variable of that name
 	// declared in our current scope.
-	const LocalVariable *localvar = scope_tracker.get_variable(
-	    expression.get_identifier().get_name()
-	    );
+	std::string local_variable_name = expression.get_identifier().get_name();
+	const LocalVariable *localvar = scope_tracker.get_variable(local_variable_name);
 	if (localvar != nullptr) {
 	    returned_tmpvar = function->tmpvar_define(localvar->get_type());
 	    auto operation = std::make_unique<OperationLocalVariable>(
 		expression.get_identifier().get_source_ref(),
 		returned_tmpvar,
-		expression.get_identifier().get_name(),
+		local_variable_name,
 		localvar->get_type()
 		);
 	    function->get_basic_block(current_block).add_operation(std::move(operation));
@@ -473,6 +538,47 @@ FunctionDefinitionResolver::extract_from_expression_primary_identifier(
 	    return true;
 	}
 
+	if (is_method()) {
+	    const TypeMember *member = class_type->member_get(local_variable_name);
+	    // This is a class member, so we can resolve it
+	    // by dereferencing 'this'.
+	    if (member != nullptr) {
+		fprintf(stderr, "This is a member\n");
+		size_t this_tmpvar = function->tmpvar_define(class_pointer_type);
+		auto this_operation = std::make_unique<OperationLocalVariable>(
+		    expression.get_identifier().get_source_ref(),
+		    this_tmpvar,
+		    "<this>",
+		    class_pointer_type
+		    );
+		function->get_basic_block(current_block).add_operation(std::move(this_operation));
+
+		size_t class_reference_tmpvar = function->tmpvar_define(class_type);
+		auto dereference_operation = std::make_unique<OperationUnary>(
+		    Operation::OP_DEREFERENCE,
+		    expression.get_source_ref(),
+		    class_reference_tmpvar,
+		    this_tmpvar
+		    );
+		
+		function
+		    ->get_basic_block(current_block)
+		    .add_operation(std::move(dereference_operation));
+		
+		returned_tmpvar = function->tmpvar_define(member->get_type());
+		auto operation = std::make_unique<OperationDot>(
+		    expression.get_source_ref(),
+		    returned_tmpvar,
+		    class_reference_tmpvar,
+		    local_variable_name
+		    );
+		function
+		    ->get_basic_block(current_block)
+		    .add_operation(std::move(operation));
+		return true;
+	    }
+	}
+	
 	// Next, check for member variable and insert the 'dereference' operation
 	// and then a 'dot' operation to get the actual value of the variable.
 	// temp var for the operation should be an argument that we've defined in the

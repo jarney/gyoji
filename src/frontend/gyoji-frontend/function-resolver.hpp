@@ -65,7 +65,8 @@ namespace Gyoji::frontend::lowering {
 	Gyoji::mir::MIR & mir;
 	TypeResolver & type_resolver;
         ScopeTracker scope_tracker;
-	Gyoji::mir::Type *class_type;
+	const Gyoji::mir::Type * class_type;
+	const Gyoji::mir::Type * class_pointer_type;
 	const Gyoji::mir::TypeMethod *method;
 
 	bool is_method() const;

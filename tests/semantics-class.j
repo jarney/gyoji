@@ -4,7 +4,7 @@ namespace jlang {
         u32 a;
         u8 b;
         u8* s;
-        void set_something(u32 a);
+        void set_something(u32 a, u8 b);
     };
     void foo_function();
 };
@@ -13,8 +13,9 @@ u32 print_value(u32 number);
 using namespace jlang as asdf;
 
 void
-Foo::set_something(u32 a)
+Foo::set_something(u32 _a, u8 _b)
 {
+    a = _a;
 	return;
 }
 
