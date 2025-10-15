@@ -157,7 +157,7 @@ namespace Gyoji::mir {
 	 * Returns a reference to the source
 	 * where this argument was declared.
 	 */
-	const Gyoji::context::SourceReference & get_source_ref();
+	const Gyoji::context::SourceReference & get_source_ref() const;
     private:
 	const Type *argument_type;
 	const Gyoji::context::SourceReference *source_ref;

@@ -186,15 +186,21 @@ BasicBlock::insert_operation(size_t position, Gyoji::owned<Operation> operation)
 /////////////////////////////////////
 FunctionArgument::FunctionArgument(
     std::string & _name,
-    const Type * _type
+    const Type * _type,
+    const Gyoji::context::SourceReference & _name_source_ref,
+    const Gyoji::context::SourceReference & _type_source_ref
     )
     : name(_name)
     , type(_type)
+    , name_source_ref(_name_source_ref)
+    , type_source_ref(_type_source_ref)
 {}
 
 FunctionArgument::FunctionArgument(const FunctionArgument & _other)
     : name(_other.name)
     , type(_other.type)
+    , name_source_ref(_other.name_source_ref)
+    , type_source_ref(_other.type_source_ref)
 {}
 
 FunctionArgument::~FunctionArgument()
@@ -207,3 +213,11 @@ FunctionArgument::get_name() const
 const Type*
 FunctionArgument::get_type() const
 { return type; }
+
+const Gyoji::context::SourceReference &
+FunctionArgument::get_name_source_ref() const
+{ return name_source_ref; }
+
+const Gyoji::context::SourceReference &
+FunctionArgument::get_type_source_ref() const
+{ return type_source_ref; }

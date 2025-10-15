@@ -203,7 +203,7 @@ TypeResolver::extract_from_type_specifier(const TypeSpecifier & type_specifier)
     compiler_context
 	.get_errors()
 	.add_simple_error(type_specifier.get_source_ref(),
-			  "Compiler bug!  Please report this message",
+			  "Compiler bug!  Please report this message(2)",
 			  "Unknown TypeSpecifier type in variant (compiler bug)"
 	    );
     
@@ -259,10 +259,6 @@ TypeResolver::extract_from_class_members(Type & type, const ClassDefinition & cl
 	}
 	else if (std::holds_alternative<Gyoji::owned<ClassMemberDeclarationMethod>>(class_member_type)) {
 	    const auto & member_method = std::get<Gyoji::owned<ClassMemberDeclarationMethod>>(class_member_type);
-	    fprintf(stderr, "Member method %s in class %s\n",
-		    member_method->get_identifier().get_fully_qualified_name().c_str(),
-		    class_definition.get_name().c_str()
-		);
 
 	    std::vector<std::string> arg_list;
 	    std::vector<Argument> fptr_arguments;
@@ -447,7 +443,7 @@ TypeResolver::extract_from_function_specifications(
 	compiler_context
 	    .get_errors()
 	    .add_simple_error(type_specifier.get_source_ref(),
-			      "Compiler bug!  Please report this message",
+			      "Compiler bug!  Please report this message(3)",
 			      "Function pointer type declared with invalid type"
 		);
 	return;
@@ -551,7 +547,7 @@ TypeResolver::extract_types(const std::vector<Gyoji::owned<FileStatement>> & sta
 	    compiler_context
 		.get_errors()
 		.add_simple_error(statement->get_source_ref(),
-				  "Compiler bug!  Please report this message",
+				  "Compiler bug!  Please report this message(1)",
 				  "Unknown statement type in variant, extracting statements from file (compiler bug)"
 		    );
 	}

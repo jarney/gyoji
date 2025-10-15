@@ -239,7 +239,9 @@ namespace Gyoji::mir {
 	 */
 	FunctionArgument(
 	    std::string & _name,
-	    const Type *_type
+	    const Type *_type,
+	    const Gyoji::context::SourceReference & _name_source_ref,
+	    const Gyoji::context::SourceReference & _type_source_ref
 	    );
 	/**
 	 * @brief copy constructor
@@ -275,9 +277,15 @@ namespace Gyoji::mir {
 	 * type of the argument.
 	 */
 	const Type * get_type() const;
+
+	const Gyoji::context::SourceReference & get_type_source_ref() const;
+	const Gyoji::context::SourceReference & get_name_source_ref() const;
+	
     private:
 	std::string name;
 	const Type * type;
+	const Gyoji::context::SourceReference & name_source_ref;
+	const Gyoji::context::SourceReference & type_source_ref;
     };
 
     /**

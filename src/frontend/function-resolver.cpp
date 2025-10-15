@@ -111,7 +111,7 @@ FunctionResolver::extract_functions(const std::vector<Gyoji::owned<FileStatement
 	    compiler_context
 		.get_errors()
 		.add_simple_error(statement->get_source_ref(),
-				  "Compiler bug!  Please report this message",
+				  "Compiler bug!  Please report this message(5)",
 				  "Unknown statement type in variant, extracting statements from file (compiler bug)"
 		    );
 	    return false;
@@ -135,9 +135,17 @@ FunctionDefinitionResolver::FunctionDefinitionResolver(
     , mir(_mir)
     , type_resolver(_type_resolver)
     , scope_tracker(_compiler_context)
+    , class_type(nullptr)
+    , method(nullptr)
 {}
 FunctionDefinitionResolver::~FunctionDefinitionResolver()
 {}
+
+bool
+FunctionDefinitionResolver::is_method() const
+{
+    return class_type != nullptr;
+}
 
 bool
 FunctionDefinitionResolver::resolve()
@@ -150,15 +158,27 @@ FunctionDefinitionResolver::resolve()
     NS2Entity *entity = function_definition.get_name().get_ns2_entity();
     fprintf(stderr, " - namespace is %s\n", entity->get_parent()->get_fully_qualified_name().c_str());
 
-    Type *function_method_type = mir.get_types().get_type(entity->get_parent()->get_fully_qualified_name());
-    if (function_method_type != nullptr) {
-	fprintf(stderr, "----- this is a method\n");
-	const auto & method_it = function_method_type->get_methods().find(entity->get_name());
-	if (method_it == function_method_type->get_methods().end()) {
-	    fprintf(stderr, "Method not found\n");
+    Type *maybe_class_type = mir.get_types().get_type(entity->get_parent()->get_fully_qualified_name());
+    if (maybe_class_type != nullptr) {
+	const auto & method_it = maybe_class_type->get_methods().find(entity->get_name());
+	if (method_it == maybe_class_type->get_methods().end()) {
+	    compiler_context
+		.get_errors()
+		.add_simple_error(
+		    function_definition.get_source_ref(),
+		    "Member function not declared.",
+		    std::string("Member method ")
+		    + entity->get_name()
+		    + std::string(" was not declared in class ")
+		    + entity->get_parent()->get_fully_qualified_name()
+		    );
+	    return false;
 	}
 	else {
-	    fprintf(stderr, "Method found\n");
+	    // This is a specific member function of a class.
+	    // Mark the class and method here.
+	    class_type = maybe_class_type;
+	    method = &method_it->second;
 	}
     }
     
@@ -181,19 +201,149 @@ FunctionDefinitionResolver::resolve()
 	
     }
     std::vector<FunctionArgument> arguments;
+
+    // Add the implicit '<this>' argument if this is a method.
+    if (is_method()) {
+	const Type *this_type = mir.get_types().get_pointer_to(class_type, function_definition.get_source_ref());
+	std::string this_arg_name("<this>");
+	FunctionArgument arg(this_arg_name, this_type,
+			     function_definition.get_source_ref(),
+			     function_definition.get_source_ref());
+	arguments.push_back(arg);
+    }
+    
     const auto & function_argument_list = function_definition.get_arguments();
     const auto & function_definition_args = function_argument_list.get_arguments();
     for (const auto & function_definition_arg : function_definition_args) {
 	std::string name = function_definition_arg->get_identifier().get_name();
 	const Gyoji::mir::Type * mir_type = type_resolver.extract_from_type_specifier(function_definition_arg->get_type_specifier());
 	
-	FunctionArgument arg(name, mir_type);
+	FunctionArgument arg(name, mir_type,
+			     function_definition_arg->get_identifier().get_source_ref(),
+			     function_definition_arg->get_type_specifier().get_source_ref());
 	arguments.push_back(arg);
 	fprintf(stderr, "Function argument %s\n", name.c_str());
 	if (!scope_tracker.add_variable(name, mir_type, function_definition_arg->get_source_ref())) {
 	    fprintf(stderr, "Existing, stopping process\n");
 	    return false;
 	}
+    }
+
+    // Check that the arguments declared here
+    // match the function (or method) declaration,
+    // otherwise we'll end up with a badly defined
+    // function.
+    if (is_method()) {
+	// Argument mismatch from method.
+	if (arguments.size() != method->get_arguments().size()) {
+		std::unique_ptr<Gyoji::context::Error> error = std::make_unique<Gyoji::context::Error>("Method argument mismatch");
+		error->add_message(
+		    function_definition.get_source_ref(),
+		    std::string("Method has ") + std::to_string(arguments.size()-1) + std::string(" arguments defined")
+		    );
+		error->add_message(
+		    method->get_source_ref(),
+		    std::string("First declared here with ") + std::to_string(method->get_arguments().size()-1)
+		    );
+		compiler_context
+		    .get_errors()
+		    .add_error(std::move(error));
+
+	    return false;
+	}
+	bool arg_error = false;
+	for (size_t i = 0; i < arguments.size(); i++) {
+	    const FunctionArgument & fa = arguments.at(i);
+	    const Argument & ma = method->get_arguments().at(i);
+	    if (fa.get_type()->get_name() != ma.get_type()->get_name()) {
+		std::unique_ptr<Gyoji::context::Error> error = std::make_unique<Gyoji::context::Error>("Method argument mismatch");
+		error->add_message(
+		    fa.get_type_source_ref(),
+		    std::string("Argument defined as ") + fa.get_type()->get_name() + std::string(" does not match declaration.")
+		    );
+		error->add_message(
+		    ma.get_source_ref(),
+		    std::string("First declared here as ") + ma.get_type()->get_name()
+		    );
+		compiler_context
+		    .get_errors()
+		    .add_error(std::move(error));
+		arg_error = true;
+	    }
+	}
+	if (arg_error) {
+	    return false;
+	}
+	
+    }
+    else {
+	// We should to the same check
+	// against the function declaration for a 'plain' function.
+	const Gyoji::mir::Symbol *symbol = mir.get_symbols().get_symbol(fully_qualified_function_name);
+	if (symbol == nullptr) {
+	    // This is perfectly fine.  It just
+	    // means that there was no forward declaration
+	    // for this function.
+	}
+	else {
+	    // If there was a forward declaration, we need to make sure
+	    // it is the correct type and matches the function signature.
+	    const Type *symbol_type = symbol->get_type();
+	    if (symbol_type->get_type() != Type::TYPE_FUNCTION_POINTER) {
+		std::unique_ptr<Gyoji::context::Error> error = std::make_unique<Gyoji::context::Error>("Symbol is not a function");
+		error->add_message(
+		    function_definition.get_source_ref(),
+		    std::string("Symbol ") + fully_qualified_function_name + std::string(" is not declared as a function.")
+		    );
+		compiler_context
+		    .get_errors()
+		    .add_error(std::move(error));
+		return false;
+	    }
+	    const std::vector<Argument> & function_arguments = symbol_type->get_argument_types();
+	    
+	    if (arguments.size() != function_arguments.size()) {
+		std::unique_ptr<Gyoji::context::Error> error = std::make_unique<Gyoji::context::Error>("Method argument mismatch");
+		error->add_message(
+		    function_definition.get_source_ref(),
+		    std::string("Function has ") + std::to_string(arguments.size()) + std::string(" arguments defined")
+		    );
+		error->add_message(
+		    symbol_type->get_defined_source_ref(),
+		    std::string("First declared here with ") + std::to_string(function_arguments.size())
+		    );
+		compiler_context
+		    .get_errors()
+		    .add_error(std::move(error));
+		
+		return false;
+	    }
+	    bool arg_error = false;
+	    for (size_t i = 0; i < arguments.size(); i++) {
+		const FunctionArgument & fa = arguments.at(i);
+		const Argument & ma = function_arguments.at(i);
+		if (fa.get_type()->get_name() != ma.get_type()->get_name()) {
+		    std::unique_ptr<Gyoji::context::Error> error = std::make_unique<Gyoji::context::Error>("Method argument mismatch");
+		    error->add_message(
+			fa.get_type_source_ref(),
+			std::string("Argument defined as ") + fa.get_type()->get_name() + std::string(" does not match declaration.")
+			);
+		    error->add_message(
+			ma.get_source_ref(),
+			std::string("First declared here as ") + ma.get_type()->get_name()
+			);
+		    compiler_context
+			.get_errors()
+			.add_error(std::move(error));
+		    arg_error = true;
+		}
+	}
+	if (arg_error) {
+	    return false;
+	}
+	}
+
+
     }
     
     function = std::make_unique<Function>(
@@ -292,32 +442,9 @@ FunctionDefinitionResolver::extract_from_expression_primary_identifier(
     // * Maybe we really should 'flatten' our access here.
     
     if (expression.get_identifier().get_identifier_type() == Terminal::IDENTIFIER_LOCAL_SCOPE) {
-#if 0
-	const LocalVariable *localvar = scope_tracker.get_variable(
-	    expression.get_identifier().get_fully_qualified_name()
-	    );
-	if (localvar != nullptr) {
-	    returned_tmpvar = function->tmpvar_define(localvar->get_type());
-	    auto operation = std::make_unique<OperationLocalVariable>(
-		expression.get_identifier().get_source_ref(),
-		returned_tmpvar,
-		expression.get_identifier().get_fully_qualified_name(),
-		localvar->get_type()
-		);
-	    function->get_basic_block(current_block).add_operation(std::move(operation));
-
-	    return true;
-	}
-	// TODO: Add enums and class members to the resolution
-	// later when those are handled.
-	
-	// Next, we should check class members (if applicable).
-	
-	// Next, we should check for 'enum' identifiers.
-
-	// If all else fails, we could not resolve it and should
-	// emit an error.
-#endif
+	// This block is obsolete, it should
+	// no longer be possible to get here, so we should
+	// confirm that fact and remove this block altogether.
 	compiler_context
 	    .get_errors()
 	    .add_simple_error(
@@ -1096,7 +1223,7 @@ FunctionDefinitionResolver::extract_from_expression_unary_prefix(
 	    .get_errors()
 	    .add_simple_error(
 		expression.get_source_ref(),
-		"Compiler bug!  Please report this message",
+		"Compiler bug!  Please report this message(4)",
 		"Operand must be a valid type."
 		);
     }

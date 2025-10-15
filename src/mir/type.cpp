@@ -378,6 +378,6 @@ Argument::get_type() const
 { return argument_type; }
 
 const Gyoji::context::SourceReference &
-Argument::get_source_ref()
+Argument::get_source_ref() const
 { return *source_ref; }
 

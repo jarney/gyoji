@@ -100,7 +100,7 @@ void AnalysisPassBorrowChecker::check(const Function & function) const
 	    get_compiler_context()
 		.get_errors()
 		.add_simple_error(function.get_source_ref(),
-				  "Compiler bug!  Please report this message",
+				  "Compiler bug!  Please report this message(borrow)",
 				  std::string("Function ") + function.get_name() + std::string(" found with empty Basic Block")
 		    );
 	    break;
