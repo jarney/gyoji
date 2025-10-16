@@ -2929,7 +2929,6 @@ FunctionDefinitionResolver::extract_from_statement_while(
 	    )) {
 	return false;
     }
-    
     // Pop back from the scope.
     scope_tracker.scope_pop();
     
@@ -3035,8 +3034,124 @@ FunctionDefinitionResolver::extract_from_statement_switch(
     const Gyoji::frontend::tree::StatementSwitch & statement
     )
 {
+
+    // Extract the value of the expression
+    // we will be testing.
+    size_t switch_value_tmpvar;
+    if (!extract_from_expression(switch_value_tmpvar, statement.get_expression())) {
+	return false;
+    }
+    const Type *switch_value_type = function->tmpvar_get(switch_value_tmpvar);
+    fprintf(stderr, "Switch value %ld\n", switch_value_tmpvar);
+
+    size_t blockid_done = function->add_block();
+	
+    bool is_ok = true;
+    const StatementSwitchContent & switch_content = statement.get_switch_content();
+
+    size_t blockid_else;
+
+    const auto & blocks = switch_content.get_blocks();
+    size_t nblocks = blocks.size();
+    size_t i = 0;
+
+    bool has_default = false;
+    for (const auto & block_ptr : blocks) {
+	fprintf(stderr, "Switch block\n");
+	if (block_ptr->is_default()) {
+	    if (i != nblocks-1) {
+		compiler_context
+		    .get_errors()
+		    .add_simple_error(
+			block_ptr->get_source_ref(),
+			"Default clause must be the last clause in a switch statement.",
+			std::string("Default clause must be the last clause in a switch statement.")
+			);
+		return false;
+	    }
+	    has_default = true;
+	    blockid_else = blockid_done;
+	}
+	else {
+	    size_t test_value_tmpvar;
+	    if (!extract_from_expression(test_value_tmpvar, block_ptr->get_expression())) {
+		return false;
+	    }
+	    const Type *test_value_type = function->tmpvar_get(test_value_tmpvar);
+	    if (test_value_type->get_name() != switch_value_type->get_name()) {
+		std::unique_ptr<Gyoji::context::Error> error = std::make_unique<Gyoji::context::Error>("Case must match switch type");
+		error->add_message(
+		    block_ptr->get_source_ref(),
+		    std::string("Case type ") + test_value_type->get_name() + std::string(" must match switch type ") + switch_value_type->get_name()
+		    );
+		error->add_message(
+		    statement.get_expression().get_source_ref(),
+		    "Switch declared here."
+		    );
+		compiler_context
+		    .get_errors()
+		    .add_error(std::move(error));
+		is_ok = false;
+	    }
+	    size_t condition_tmpvar = function->tmpvar_define(mir.get_types().get_type("bool"));
+	    auto operation_compare_equal = std::make_unique<OperationBinary>(
+		Operation::OP_COMPARE_EQUAL,
+		block_ptr->get_source_ref(),
+		condition_tmpvar,
+		test_value_tmpvar,
+		switch_value_tmpvar
+		);
+	    function
+		->get_basic_block(current_block)
+		.add_operation(std::move(operation_compare_equal));
+	    
+	    size_t blockid_if = function->add_block();
+	    blockid_else = function->add_block();
+	    auto operation_jump_if = std::make_unique<OperationJumpConditional>(
+		block_ptr->get_source_ref(),
+		condition_tmpvar,
+		blockid_if,
+		blockid_else
+		);
+	    function
+		->get_basic_block(current_block)
+		.add_operation(std::move(operation_jump_if));
+	    
+	    current_block = blockid_if;
+	}
+	
+	scope_tracker.scope_push(block_ptr->get_scope_body().get_source_ref());
+	if (!extract_from_statement_list(block_ptr->get_scope_body().get_statements())) {
+	    return false;
+	}
+	scope_tracker.scope_pop();
+	
+	auto operation_jump_to_done = std::make_unique<OperationJump>(
+	    block_ptr->get_source_ref(),
+	    blockid_done
+	    );
+	function->get_basic_block(current_block).add_operation(std::move(operation_jump_to_done));
+	current_block = blockid_else;
+
+	i++;
+    }
+
+    // If there is no default clause, we add an 'empty' default
+    // clause that does nothing.
+    current_block = blockid_else;
+    if (!has_default) {
+	// This just handles the end case where there are no more
+	// conditions, so we unconditionaly jump back to done.
+	auto operation_jump_to_done = std::make_unique<OperationJump>(
+	    statement.get_source_ref(),
+	    blockid_done
+	    );
+	function->get_basic_block(current_block).add_operation(std::move(operation_jump_to_done));
+	current_block = blockid_done;
+    }
+    
     fprintf(stderr, "TODO: Switch statement is not yet supported\n");
-    return false;
+    return is_ok;
 }
 
 

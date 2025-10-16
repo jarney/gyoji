@@ -1,5 +1,8 @@
 # TODO list
 
+This is just a big random list of things that I'd still like
+to do with the language.
+
 ## Syntax processing
 * Build more unit-tests to verify that the syntax is what we expect and
   the operator precedence rules work correctly.
@@ -7,9 +10,6 @@
 * Check for various compiler errors and handle recovery a bit better.
   Probably defer this until we have more 'examples' of what goes wrong
   frequently and how to recover better.
-
-* Support const-ness of variables and protect them
-  from assignments.
 
 * Error message context doesn't account for 'tabs' when formatting
   output for error arrows.  This is a bit complicated because we need
@@ -41,14 +41,19 @@
   write the borrow checker in Gyoji itself instead of in C
 
 ## Semantic processing
+  * Support const-ness of variables and protect them
+    from assignments.
+
+  * Analysis for initialization before use to make sure
+    we're not reading data before we assign it somewhere.
+    * Constructors need to assign everything.
+    * Local variables must be written before read (except arguments
+      which are initialized when they are passed in)
+
   * Merge blocks for assignments in control-flow statements.
-    i.e. the PHI operation in LLVM
+    i.e. the PHI operation in LLVM (trinary operations)
 
   * Clean up the interface to basic blocks so it's easier to grok
-
-  * Finish/audit remaining OP_ operations in MIR
-    * Support them in syntax layer
-    * Support them in codegen layer
 
   * Finish/audit syntax tree parsing
     * Global variables, etc.
@@ -61,7 +66,13 @@
     that they behave the way we expect with operator precedence
     and other stuff.  Focus on 'internal' consistency (i.e. we know
     what to expect)
-    
+
+  * Build a global errors table and build out what we need
+    to verify errors by checking whether a particular error
+    is raised in an example fragment so we can verify that we're
+    covering all of the various error conditions both at the semantic
+    and syntax level.
+
   * End result should be a unit-test that compiles a sample
     function, links against it, and runs it to verify its
     behavior for simple if/else and a few basic operations
@@ -70,7 +81,7 @@
     and conditional support for this first pass.
 
   * Support classes and enums since those aren't supported yet.
-    * Class = structure with functions.
+    * Constructors and destructors should be supported.
     * Enum = symbol with constant typed integers.
 
   * Build some tests that verify compatibility with
@@ -97,6 +108,9 @@
   It mostly seems to be "tree.o" which isn't too surprising since
   it's really the biggest cpp file, but it doesn't seem complicated
   so it's a bit of a surprise why the code generated is so big.
+
+* Re-name 'resolver' to 'lowering'.  Also, possibly break up
+  the function resolver because it's gotten too big.
 
 * Factor out the "docs" and valgrind tests so that
   we can make doxygen, graphviz, and gcov into

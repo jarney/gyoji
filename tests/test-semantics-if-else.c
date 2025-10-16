@@ -9,21 +9,6 @@ u32 print_value(u32 number)
     return 0;
 }
 
-typedef struct {
-    u32 a;
-    u8 b;
-    u8* s;
-} Foo;
-
-void jlang_Foo_set_something(Foo *, u32, u32, u32, u32);
-
-int main2(int argc, char **argv)
-{
-    Foo st;
-    jlang_Foo_set_something(&st, 1, 2, 3, 19);
-    return 0;
-}
-
 //u32 preamble_function_call()
 //{
 //    fprintf(stderr, "preamble_function_call\n");

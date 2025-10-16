@@ -386,7 +386,6 @@ CodeGeneratorLLVMContext::generate()
 // Global symbols
 void
 CodeGeneratorLLVMContext::generate_operation_function_call(
-    std::map<size_t, llvm::Value *> & tmp_values,
     const Gyoji::mir::Function & mir_function,
     const Gyoji::mir::OperationFunctionCall & operation
     )
@@ -412,7 +411,6 @@ CodeGeneratorLLVMContext::generate_operation_function_call(
 
 void
 CodeGeneratorLLVMContext::generate_operation_get_method(
-    std::map<size_t, llvm::Value *> & tmp_values,
     const Gyoji::mir::Function & mir_function,
     const Gyoji::mir::OperationGetMethod & operation
     )
@@ -456,8 +454,6 @@ CodeGeneratorLLVMContext::generate_operation_get_method(
 }
 void
 CodeGeneratorLLVMContext::generate_operation_method_get_object(
-    std::map<size_t, llvm::Value *> & tmp_values,
-    std::map<size_t, llvm::Value *> & tmp_lvalues,
     const Gyoji::mir::Function & mir_function,
     const Gyoji::mir::OperationUnary & operation
     )
@@ -478,7 +474,6 @@ CodeGeneratorLLVMContext::generate_operation_method_get_object(
 }
 void
 CodeGeneratorLLVMContext::generate_operation_method_get_function(
-    std::map<size_t, llvm::Value *> & tmp_values,
     const Gyoji::mir::Function & mir_function,
     const Gyoji::mir::OperationUnary & operation
     )
@@ -495,7 +490,6 @@ CodeGeneratorLLVMContext::generate_operation_method_get_function(
 
 void
 CodeGeneratorLLVMContext::generate_operation_symbol(
-    std::map<size_t, llvm::Value *> & tmp_values,
     const Gyoji::mir::Function & mir_function,
     const Gyoji::mir::OperationSymbol & operation
     )
@@ -529,7 +523,6 @@ CodeGeneratorLLVMContext::generate_operation_symbol(
 // Cast operations
 void
 CodeGeneratorLLVMContext::generate_operation_widen_numeric(
-    std::map<size_t, llvm::Value *> & tmp_values,
     const Gyoji::mir::Function & mir_function,
     const Gyoji::mir::OperationCast & operation
     )
@@ -561,8 +554,6 @@ CodeGeneratorLLVMContext::generate_operation_widen_numeric(
 // Indirect access
 void
 CodeGeneratorLLVMContext::generate_operation_array_index(
-    std::map<size_t, llvm::Value *> & tmp_values,
-    std::map<size_t, llvm::Value *> & tmp_lvalues,
     const Gyoji::mir::Function & mir_function,
     const Gyoji::mir::OperationArrayIndex & operation
     )
@@ -589,8 +580,6 @@ CodeGeneratorLLVMContext::generate_operation_array_index(
 }
 void
 CodeGeneratorLLVMContext::generate_operation_dot(
-    std::map<size_t, llvm::Value *> & tmp_values,
-    std::map<size_t, llvm::Value *> & tmp_lvalues,
     const Gyoji::mir::Function & mir_function,
     const Gyoji::mir::OperationDot & operation
     )
@@ -615,8 +604,6 @@ CodeGeneratorLLVMContext::generate_operation_dot(
 // Variable access
 void
 CodeGeneratorLLVMContext::generate_operation_local_variable(
-    std::map<size_t, llvm::Value *> & tmp_values,
-    std::map<size_t, llvm::Value *> & tmp_lvalues,
     const Gyoji::mir::Function & mir_function,
     const Gyoji::mir::OperationLocalVariable & operation
     )
@@ -629,7 +616,6 @@ CodeGeneratorLLVMContext::generate_operation_local_variable(
 }
 void
 CodeGeneratorLLVMContext::generate_operation_local_declare(
-    std::map<size_t, llvm::Value *> & tmp_values,
     const Gyoji::mir::Function & mir_function,
     const Gyoji::mir::OperationLocalDeclare & operation
     )
@@ -640,7 +626,6 @@ CodeGeneratorLLVMContext::generate_operation_local_declare(
 }
 void
 CodeGeneratorLLVMContext::generate_operation_local_undeclare(
-    std::map<size_t, llvm::Value *> & tmp_values,
     const Gyoji::mir::Function & mir_function,
     const Gyoji::mir::OperationLocalUndeclare & operation
     )
@@ -649,7 +634,6 @@ CodeGeneratorLLVMContext::generate_operation_local_undeclare(
 // Literals
 void
 CodeGeneratorLLVMContext::generate_operation_literal_char(
-    std::map<size_t, llvm::Value *> & tmp_values,
     const Gyoji::mir::Function & mir_function,
     const Gyoji::mir::OperationLiteralChar & operation
     )
@@ -660,7 +644,6 @@ CodeGeneratorLLVMContext::generate_operation_literal_char(
 }
 void
 CodeGeneratorLLVMContext::generate_operation_literal_string(
-    std::map<size_t, llvm::Value *> & tmp_values,
     const Gyoji::mir::Function & mir_function,
     const Gyoji::mir::OperationLiteralString & operation
     )
@@ -678,7 +661,6 @@ CodeGeneratorLLVMContext::generate_operation_literal_string(
 }
 void
 CodeGeneratorLLVMContext::generate_operation_literal_int(
-    std::map<size_t, llvm::Value *> & tmp_values,
     const Gyoji::mir::Function & mir_function,
     const Gyoji::mir::OperationLiteralInt & operation
     )
@@ -739,7 +721,6 @@ CodeGeneratorLLVMContext::generate_operation_literal_int(
 }
 void
 CodeGeneratorLLVMContext::generate_operation_literal_float(
-    std::map<size_t, llvm::Value *> & tmp_values,
     const Gyoji::mir::Function & mir_function,
     const Gyoji::mir::OperationLiteralFloat & operation
     )
@@ -773,7 +754,6 @@ CodeGeneratorLLVMContext::generate_operation_literal_float(
 
 void
 CodeGeneratorLLVMContext::generate_operation_literal_bool(
-    std::map<size_t, llvm::Value *> & tmp_values,
     const Gyoji::mir::Function & mir_function,
     const Gyoji::mir::OperationLiteralBool & operation
     )
@@ -783,7 +763,6 @@ CodeGeneratorLLVMContext::generate_operation_literal_bool(
 }
 void
 CodeGeneratorLLVMContext::generate_operation_literal_null(
-    std::map<size_t, llvm::Value *> & tmp_values,
     const Gyoji::mir::Function & mir_function,
     const Gyoji::mir::OperationLiteralNull & operation
     )
@@ -801,8 +780,6 @@ CodeGeneratorLLVMContext::generate_operation_literal_null(
 // Unary operations
 void
 CodeGeneratorLLVMContext::generate_operation_addressof(
-    std::map<size_t, llvm::Value *> & tmp_values,
-    std::map<size_t, llvm::Value *> & tmp_lvalues,
     const Gyoji::mir::Function & mir_function,
     const Gyoji::mir::OperationUnary & operation
     )
@@ -821,8 +798,6 @@ CodeGeneratorLLVMContext::generate_operation_addressof(
 
 void
 CodeGeneratorLLVMContext::generate_operation_dereference(
-    std::map<size_t, llvm::Value *> & tmp_values,
-    std::map<size_t, llvm::Value *> & tmp_lvalues,
     const Gyoji::mir::Function & mir_function,
     const Gyoji::mir::OperationUnary & operation
     )
@@ -847,7 +822,6 @@ CodeGeneratorLLVMContext::generate_operation_dereference(
 
 void
 CodeGeneratorLLVMContext::generate_operation_arithmetic_negate(
-    std::map<size_t, llvm::Value *> & tmp_values,
     const Gyoji::mir::Function & mir_function,
     const Gyoji::mir::OperationUnary & operation
     )
@@ -871,7 +845,6 @@ CodeGeneratorLLVMContext::generate_operation_arithmetic_negate(
 }
 void
 CodeGeneratorLLVMContext::generate_operation_bitwise_not(
-    std::map<size_t, llvm::Value *> & tmp_values,
     const Gyoji::mir::Function & mir_function,
     const Gyoji::mir::OperationUnary & operation
     )
@@ -896,7 +869,6 @@ CodeGeneratorLLVMContext::generate_operation_bitwise_not(
 
 void
 CodeGeneratorLLVMContext::generate_operation_logical_not(
-    std::map<size_t, llvm::Value *> & tmp_values,
     const Gyoji::mir::Function & mir_function,
     const Gyoji::mir::OperationUnary & operation
     )
@@ -921,8 +893,6 @@ CodeGeneratorLLVMContext::generate_operation_logical_not(
 
 void
 CodeGeneratorLLVMContext::generate_operation_sizeof_type(
-    std::map<size_t, llvm::Value *> & tmp_values,
-    std::map<size_t, llvm::Value *> & tmp_lvalues,
     const Gyoji::mir::Function & mir_function,
     const Gyoji::mir::OperationSizeofType & operation
     )
@@ -936,7 +906,6 @@ CodeGeneratorLLVMContext::generate_operation_sizeof_type(
 // Binary operations: arithmetic
 void
 CodeGeneratorLLVMContext::generate_operation_add(
-    std::map<size_t, llvm::Value *> & tmp_values,
     const Gyoji::mir::Function & mir_function,
     const Gyoji::mir::OperationBinary & operation
     )
@@ -980,7 +949,6 @@ CodeGeneratorLLVMContext::generate_operation_add(
 
 void
 CodeGeneratorLLVMContext::generate_operation_subtract(
-    std::map<size_t, llvm::Value *> & tmp_values,
     const Gyoji::mir::Function & mir_function,
     const Gyoji::mir::OperationBinary & operation
     )
@@ -1024,7 +992,6 @@ CodeGeneratorLLVMContext::generate_operation_subtract(
 
 void
 CodeGeneratorLLVMContext::generate_operation_multiply(
-    std::map<size_t, llvm::Value *> & tmp_values,
     const Gyoji::mir::Function & mir_function,
     const Gyoji::mir::OperationBinary & operation
     )
@@ -1068,7 +1035,6 @@ CodeGeneratorLLVMContext::generate_operation_multiply(
 
 void
 CodeGeneratorLLVMContext::generate_operation_divide(
-    std::map<size_t, llvm::Value *> & tmp_values,
     const Gyoji::mir::Function & mir_function,
     const Gyoji::mir::OperationBinary & operation
     )
@@ -1126,7 +1092,6 @@ CodeGeneratorLLVMContext::generate_operation_divide(
 }
 void
 CodeGeneratorLLVMContext::generate_operation_modulo(
-    std::map<size_t, llvm::Value *> & tmp_values,
     const Gyoji::mir::Function & mir_function,
     const Gyoji::mir::OperationBinary & operation
     )
@@ -1171,7 +1136,6 @@ CodeGeneratorLLVMContext::generate_operation_modulo(
 // Binary operations: logical
 void
 CodeGeneratorLLVMContext::generate_operation_logical_and(
-    std::map<size_t, llvm::Value *> & tmp_values,
     const Gyoji::mir::Function & mir_function,
     const Gyoji::mir::OperationBinary & operation
     )
@@ -1200,7 +1164,6 @@ CodeGeneratorLLVMContext::generate_operation_logical_and(
 
 void
 CodeGeneratorLLVMContext::generate_operation_logical_or(
-    std::map<size_t, llvm::Value *> & tmp_values,
     const Gyoji::mir::Function & mir_function,
     const Gyoji::mir::OperationBinary & operation
     )
@@ -1230,7 +1193,6 @@ CodeGeneratorLLVMContext::generate_operation_logical_or(
 // Binary operations: bitwise
 void
 CodeGeneratorLLVMContext::generate_operation_bitwise_and(
-    std::map<size_t, llvm::Value *> & tmp_values,
     const Gyoji::mir::Function & mir_function,
     const Gyoji::mir::OperationBinary & operation
     )
@@ -1258,7 +1220,6 @@ CodeGeneratorLLVMContext::generate_operation_bitwise_and(
 
 void
 CodeGeneratorLLVMContext::generate_operation_bitwise_or(
-    std::map<size_t, llvm::Value *> & tmp_values,
     const Gyoji::mir::Function & mir_function,
     const Gyoji::mir::OperationBinary & operation
     )
@@ -1286,7 +1247,6 @@ CodeGeneratorLLVMContext::generate_operation_bitwise_or(
 
 void
 CodeGeneratorLLVMContext::generate_operation_bitwise_xor(
-    std::map<size_t, llvm::Value *> & tmp_values,
     const Gyoji::mir::Function & mir_function,
     const Gyoji::mir::OperationBinary & operation
     )
@@ -1314,7 +1274,6 @@ CodeGeneratorLLVMContext::generate_operation_bitwise_xor(
 
 void
 CodeGeneratorLLVMContext::generate_operation_shift(
-    std::map<size_t, llvm::Value *> & tmp_values,
     const Gyoji::mir::Function & mir_function,
     const Gyoji::mir::OperationBinary & operation
     )
@@ -1382,7 +1341,6 @@ CodeGeneratorLLVMContext::generate_operation_shift(
 // Binary operations: comparisons
 void
 CodeGeneratorLLVMContext::generate_operation_comparison(
-    std::map<size_t, llvm::Value *> & tmp_values,
     const Gyoji::mir::Function & mir_function,
     const Gyoji::mir::OperationBinary & operation
     )
@@ -1521,8 +1479,6 @@ CodeGeneratorLLVMContext::generate_operation_comparison(
 // Binary operations: assignments
 void
 CodeGeneratorLLVMContext::generate_operation_assign(
-    std::map<size_t, llvm::Value *> & tmp_values,
-    std::map<size_t, llvm::Value *> & tmp_lvalues,
     const Gyoji::mir::Function & mir_function,
     const Gyoji::mir::OperationBinary & operation
     )
@@ -1543,7 +1499,6 @@ CodeGeneratorLLVMContext::generate_operation_assign(
 // Branch and flow control
 void
 CodeGeneratorLLVMContext::generate_operation_jump_conditional(
-    std::map<size_t, llvm::Value *> & tmp_values,
     const Gyoji::mir::Function & mir_function,
     const Gyoji::mir::OperationJumpConditional & operation
     )
@@ -1555,7 +1510,6 @@ CodeGeneratorLLVMContext::generate_operation_jump_conditional(
 }
 void
 CodeGeneratorLLVMContext::generate_operation_jump(
-    std::map<size_t, llvm::Value *> & tmp_values,
     const Gyoji::mir::Function & mir_function,
     const Gyoji::mir::OperationJump & operation
     )
@@ -1566,7 +1520,6 @@ CodeGeneratorLLVMContext::generate_operation_jump(
 
 llvm::Value *
 CodeGeneratorLLVMContext::generate_operation_return(
-    std::map<size_t, llvm::Value *> & tmp_values,
     const Gyoji::mir::Function & mir_function,
     const Gyoji::mir::OperationReturn & operation
     )
@@ -1578,7 +1531,6 @@ CodeGeneratorLLVMContext::generate_operation_return(
 
 llvm::Value *
 CodeGeneratorLLVMContext::generate_operation_return_void(
-    std::map<size_t, llvm::Value *> & tmp_values,
     const Gyoji::mir::Function & mir_function,
     const Gyoji::mir::OperationReturnVoid & operation
     )
@@ -1595,9 +1547,6 @@ CodeGeneratorLLVMContext::generate_basic_block(
     const Gyoji::mir::BasicBlock & mir_block
     )
 {
-    std::map<size_t, llvm::Value *> tmp_values;
-    std::map<size_t, llvm::Value *> tmp_lvalues;
-
     llvm::Value *return_value = nullptr;
 
     for (const auto & operation_el : mir_block.get_operations()) {
@@ -1605,111 +1554,111 @@ CodeGeneratorLLVMContext::generate_basic_block(
 	switch (operation.get_type()) {
         // Global symbols
 	case Operation::OP_FUNCTION_CALL:
-	    generate_operation_function_call(tmp_values, mir_function, (const OperationFunctionCall &)operation);
+	    generate_operation_function_call(mir_function, (const OperationFunctionCall &)operation);
 	    break;
 	case Operation::OP_GET_METHOD:
-	    generate_operation_get_method(tmp_values, mir_function, (const OperationGetMethod&)operation);
+	    generate_operation_get_method(mir_function, (const OperationGetMethod&)operation);
 	    break;
 	case Operation::OP_METHOD_GET_OBJECT:
-	    generate_operation_method_get_object(tmp_values, tmp_lvalues, mir_function, (const OperationUnary&)operation);
+	    generate_operation_method_get_object(mir_function, (const OperationUnary&)operation);
 	    break;
 	case Operation::OP_METHOD_GET_FUNCTION:
-	    generate_operation_method_get_function(tmp_values, mir_function, (const OperationUnary&)operation);
+	    generate_operation_method_get_function(mir_function, (const OperationUnary&)operation);
 	    break;
 	case Operation::OP_SYMBOL:
-	    generate_operation_symbol(tmp_values, mir_function, (const OperationSymbol &)operation);
+	    generate_operation_symbol(mir_function, (const OperationSymbol &)operation);
 	    break;
         // Cast operations
 	case Operation::OP_WIDEN_SIGNED:
 	case Operation::OP_WIDEN_UNSIGNED:
 	case Operation::OP_WIDEN_FLOAT:
-	    generate_operation_widen_numeric(tmp_values, mir_function, (const OperationCast &)operation);
+	    generate_operation_widen_numeric(mir_function, (const OperationCast &)operation);
 	    break;
         // Indirect access
 	case Operation::OP_ARRAY_INDEX:
-	    generate_operation_array_index(tmp_values, tmp_lvalues, mir_function, (const OperationArrayIndex &)operation);
+	    generate_operation_array_index(mir_function, (const OperationArrayIndex &)operation);
 	    break;
 	case Operation::OP_DOT:
-	    generate_operation_dot(tmp_values, tmp_lvalues, mir_function, (const OperationDot &)operation);
+	    generate_operation_dot(mir_function, (const OperationDot &)operation);
 	    break;
 	case Operation::OP_LOCAL_VARIABLE:
-	    generate_operation_local_variable(tmp_values, tmp_lvalues, mir_function, (const OperationLocalVariable &)operation);
+	    generate_operation_local_variable(mir_function, (const OperationLocalVariable &)operation);
 	    break;
 	case Operation::OP_LOCAL_DECLARE:
-	    generate_operation_local_declare(tmp_values, mir_function, (const OperationLocalDeclare &)operation);
+	    generate_operation_local_declare(mir_function, (const OperationLocalDeclare &)operation);
 	    break;
 	case Operation::OP_LOCAL_UNDECLARE:
-	    generate_operation_local_undeclare(tmp_values, mir_function, (const OperationLocalUndeclare &)operation);
+	    generate_operation_local_undeclare(mir_function, (const OperationLocalUndeclare &)operation);
 	    break;
 	case Operation::OP_LITERAL_CHAR:
-	    generate_operation_literal_char(tmp_values, mir_function, (const OperationLiteralChar &)operation);
+	    generate_operation_literal_char(mir_function, (const OperationLiteralChar &)operation);
 	    break;
 	case Operation::OP_LITERAL_STRING:
-	    generate_operation_literal_string(tmp_values, mir_function, (const OperationLiteralString &)operation);
+	    generate_operation_literal_string(mir_function, (const OperationLiteralString &)operation);
 	    break;
 	case Operation::OP_LITERAL_INT:
-	    generate_operation_literal_int(tmp_values, mir_function, (const OperationLiteralInt &)operation);
+	    generate_operation_literal_int(mir_function, (const OperationLiteralInt &)operation);
 	    break;
 	case Operation::OP_LITERAL_FLOAT:
-	    generate_operation_literal_float(tmp_values, mir_function, (const OperationLiteralFloat &)operation);
+	    generate_operation_literal_float(mir_function, (const OperationLiteralFloat &)operation);
 	    break;
 	case Operation::OP_LITERAL_BOOL:
-	    generate_operation_literal_bool(tmp_values, mir_function, (const OperationLiteralBool &)operation);
+	    generate_operation_literal_bool(mir_function, (const OperationLiteralBool &)operation);
 	    break;
 	case Operation::OP_LITERAL_NULL:
-	    generate_operation_literal_null(tmp_values, mir_function, (const OperationLiteralNull &)operation);
+	    generate_operation_literal_null(mir_function, (const OperationLiteralNull &)operation);
 	    break;
 	    
         // Unary operations	    
 	case Operation::OP_ADDRESSOF:
-	    generate_operation_addressof(tmp_values, tmp_lvalues, mir_function, (const OperationUnary &)operation);
+	    generate_operation_addressof(mir_function, (const OperationUnary &)operation);
 	    break;
 	case Operation::OP_DEREFERENCE:
-	    generate_operation_dereference(tmp_values, tmp_lvalues, mir_function, (const OperationUnary &)operation);
+	    generate_operation_dereference(mir_function, (const OperationUnary &)operation);
 	    break;
 	case Operation::OP_NEGATE:
-	    generate_operation_arithmetic_negate(tmp_values, mir_function, (const OperationUnary &)operation);
+	    generate_operation_arithmetic_negate(mir_function, (const OperationUnary &)operation);
 	    break;
 	case Operation::OP_BITWISE_NOT:
-	    generate_operation_bitwise_not(tmp_values, mir_function, (const OperationUnary &)operation);
+	    generate_operation_bitwise_not(mir_function, (const OperationUnary &)operation);
 	    break;
 	case Operation::OP_LOGICAL_NOT:
-	    generate_operation_logical_not(tmp_values, mir_function, (const OperationUnary &)operation);
+	    generate_operation_logical_not(mir_function, (const OperationUnary &)operation);
 	    break;
         // Binary operations
 	case Operation::OP_ADD:
-	    generate_operation_add(tmp_values, mir_function, (const OperationBinary &)operation);
+	    generate_operation_add(mir_function, (const OperationBinary &)operation);
 	    break;
 	case Operation::OP_SUBTRACT:
-	    generate_operation_subtract(tmp_values, mir_function, (const OperationBinary &)operation);
+	    generate_operation_subtract(mir_function, (const OperationBinary &)operation);
 	    break;
 	case Operation::OP_MULTIPLY:
-	    generate_operation_multiply(tmp_values, mir_function, (const OperationBinary &)operation);
+	    generate_operation_multiply(mir_function, (const OperationBinary &)operation);
 	    break;
 	case Operation::OP_DIVIDE:
-	    generate_operation_divide(tmp_values, mir_function, (const OperationBinary &)operation);
+	    generate_operation_divide(mir_function, (const OperationBinary &)operation);
 	    break;
 	case Operation::OP_MODULO:
-	    generate_operation_modulo(tmp_values, mir_function, (const OperationBinary &)operation);
+	    generate_operation_modulo(mir_function, (const OperationBinary &)operation);
 	    break;
 	case Operation::OP_LOGICAL_AND:
-	    generate_operation_logical_and(tmp_values, mir_function, (const OperationBinary &)operation);
+	    generate_operation_logical_and(mir_function, (const OperationBinary &)operation);
 	    break;
 	case Operation::OP_LOGICAL_OR:
-	    generate_operation_logical_or(tmp_values, mir_function, (const OperationBinary &)operation);
+	    generate_operation_logical_or(mir_function, (const OperationBinary &)operation);
 	    break;
 	case Operation::OP_BITWISE_AND:
-	    generate_operation_bitwise_and(tmp_values, mir_function, (const OperationBinary &)operation);
+	    generate_operation_bitwise_and(mir_function, (const OperationBinary &)operation);
 	    break;
 	case Operation::OP_BITWISE_OR:
-	    generate_operation_bitwise_xor(tmp_values, mir_function, (const OperationBinary &)operation);
+	    generate_operation_bitwise_xor(mir_function, (const OperationBinary &)operation);
 	    break;
 	case Operation::OP_BITWISE_XOR:
-	    generate_operation_bitwise_xor(tmp_values, mir_function, (const OperationBinary &)operation);
+	    generate_operation_bitwise_xor(mir_function, (const OperationBinary &)operation);
 	    break;
 	case Operation::OP_SHIFT_LEFT:
 	case Operation::OP_SHIFT_RIGHT:
-	    generate_operation_shift(tmp_values, mir_function, (const OperationBinary &)operation);
+	    generate_operation_shift(mir_function, (const OperationBinary &)operation);
 	    break;
         // Binary operations: comparisons
 	case Operation::OP_COMPARE_LESS:
@@ -1718,25 +1667,25 @@ CodeGeneratorLLVMContext::generate_basic_block(
 	case Operation::OP_COMPARE_GREATER_EQUAL:
 	case Operation::OP_COMPARE_EQUAL:
 	case Operation::OP_COMPARE_NOT_EQUAL:
-	    generate_operation_comparison(tmp_values, mir_function, (const OperationBinary &)operation);
+	    generate_operation_comparison(mir_function, (const OperationBinary &)operation);
 	    break;
 	case Operation::OP_ASSIGN:
-	    generate_operation_assign(tmp_values, tmp_lvalues, mir_function, (const OperationBinary &)operation);
+	    generate_operation_assign(mir_function, (const OperationBinary &)operation);
 	    break;
 	case Operation::OP_SIZEOF_TYPE:
-	    generate_operation_sizeof_type(tmp_values, tmp_lvalues, mir_function, (const OperationSizeofType &)operation);
+	    generate_operation_sizeof_type(mir_function, (const OperationSizeofType &)operation);
 	    break;
 	case Operation::OP_JUMP_CONDITIONAL:
-	    generate_operation_jump_conditional(tmp_values, mir_function, (const OperationJumpConditional &)operation);
+	    generate_operation_jump_conditional(mir_function, (const OperationJumpConditional &)operation);
 	    break;
 	case Operation::OP_JUMP:
-	    generate_operation_jump(tmp_values, mir_function, (const OperationJump &)operation);
+	    generate_operation_jump(mir_function, (const OperationJump &)operation);
 	    break;
 	case Operation::OP_RETURN:
-	    return_value = generate_operation_return(tmp_values, mir_function, (const OperationReturn &)operation);
+	    return_value = generate_operation_return(mir_function, (const OperationReturn &)operation);
 	    break;
 	case Operation::OP_RETURN_VOID:
-	    return_value = generate_operation_return_void(tmp_values, mir_function, (const OperationReturnVoid &)operation);
+	    return_value = generate_operation_return_void(mir_function, (const OperationReturnVoid &)operation);
 	    break;
 	}
     }

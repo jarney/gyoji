@@ -83,3 +83,35 @@ Maybe this is just an old man shouting into the wind,
 but this is a project I have to do and would love
 some help doing it.
 
+## Language Matrix
+
+This language matrix
+
++----------+-------------+-------------------+-------------+------------------+------------+------------+--------+
+| Language | Compiles to | Safe Memory       | Bloated     | Assumes          | Stable ABI | Panic-free | GC     |
+|          | Assembly    | Management        | std library | standard library |            |            | Pause  |
++----------+-------------+-------------------+-------------+------------------+------------+------------+--------+
+| C        | Yes         | No                | No(1)       | No               | Yes        | Yes        | No     |
++----------+-------------+-------------------+-------------+------------------+------------+---------------------+
+| C++      | Yes         | No                | Yes         | Yes              | No(2)      | No         | No     |
++----------+-------------+-------------------+-------------+------------------+------------+---------------------+
+| Rust     | Yes         | Yes               | Yes         | Yes              | No         | No         | No     |
++----------+-------------+-------------------+-------------+------------------+------------+---------------------+
+| Java     | No(3)       | Safe              | Yes         | Yes              | Yes        | Yes        | Yes    |
++----------+-------------+-------------------+-------------+------------------+------------+---------------------+
+| Gyoji    | Yes         | Yes               | No          | No               | Yes(4)     | Yes        | No     |
++----------+-------------+-------------------+-------------+------------------+------------+---------------------+
++----------+-------------+-------------------+-------------+------------------+------------+---------------------+
+|Javascript| No          | Yes               | No          | Yes              | N/A        | Yes-ish    | Yes    |
++----------+-------------+-------------------+-------------+------------------+------------+---------------------+
+| Python   | No          | Yes               | No          | Yes              | N/A        | Yes-ish    | Yes    |
++----------+-------------+-------------------+-------------+------------------+------------+---------------------+
+
+
+(1) Some would argue with this, but as standard libraries go, it's fairly minimal.
+(2) The C++ ABI isn't really standard across compilers because exception semantics differ
+    between MSC++ and GCC/Clang  It's fairly close, but you can't really count on
+    compatibility of exception semantics between compiler vendors.
+(3) Some would argue that the JIT makes this true, but it's not really a binary compiled language.
+(4) The Gyoji ABI is stable because it only uses the C ABI as its base and does not require
+    additional ABI extensions.
