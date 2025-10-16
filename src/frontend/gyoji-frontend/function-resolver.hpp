@@ -281,6 +281,10 @@ namespace Gyoji::frontend::lowering {
 	    const Gyoji::frontend::tree::StatementFor & statement
 	    );
 	
+	bool extract_from_statement_switch(
+	    const Gyoji::frontend::tree::StatementSwitch & statement
+	    );
+	
 	bool extract_from_statement_label(
 	    const Gyoji::frontend::tree::StatementLabel & statement
 	    );

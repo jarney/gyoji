@@ -2607,9 +2607,7 @@ FunctionDefinitionResolver::extract_from_expression_trinary(
     size_t & returned_tmpvar,
     const ExpressionTrinary & expression)
 {
-//    function
-//	->get_basic_block(current_block)
-//	.add_operation(std::string("trinary operator "));
+    fprintf(stderr, "TODO: Trinary expressions are not yet supported.\n");
     return false;
 }
 bool
@@ -2617,9 +2615,7 @@ FunctionDefinitionResolver::extract_from_expression_cast(
     size_t & returned_tmpvar,
     const ExpressionCast & expression)
 {
-//    function
-//	->get_basic_block(current_block)
-//	.add_operation(std::string("cast"));
+    fprintf(stderr, "TODO: Cast expressions are not yet supported.\n");
     return false;
 }
 
@@ -3033,7 +3029,15 @@ FunctionDefinitionResolver::extract_from_statement_for(
     
     return true;
 }
-	
+
+bool	
+FunctionDefinitionResolver::extract_from_statement_switch(
+    const Gyoji::frontend::tree::StatementSwitch & statement
+    )
+{
+    fprintf(stderr, "TODO: Switch statement is not yet supported\n");
+    return false;
+}
 
 
 bool
@@ -3262,6 +3266,13 @@ FunctionDefinitionResolver::extract_from_statement_list(
 	else if (std::holds_alternative<Gyoji::owned<StatementFor>>(statement_type)) {
 	    const auto & statement = std::get<Gyoji::owned<StatementFor>>(statement_type);
 	    if (!extract_from_statement_for(
+		    *statement)) {
+		return false;
+	    }
+	}
+	else if (std::holds_alternative<Gyoji::owned<StatementSwitch>>(statement_type)) {
+	    const auto & statement = std::get<Gyoji::owned<StatementSwitch>>(statement_type);
+	    if (!extract_from_statement_switch(
 		    *statement)) {
 		return false;
 	    }

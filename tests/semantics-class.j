@@ -5,12 +5,23 @@ namespace jlang {
         u8 b;
         u8* s;
         void set_something(u32 a, u32 b, u32 c);
+	Foo();
+	~Foo();
     };
     void foo_function();
 };
 
 u32 print_value(u32 number);
 using namespace jlang as asdf;
+
+// We still need syntax to support
+// constructors and destructors because
+// they have a slightly different form
+// and don't have a return-value associated with them.
+//Foo::Foo()
+//{}
+//Foo::~Foo()
+//{}
 
 void
 Foo::set_something(u32 _a, u32 _b, u32 _c)
