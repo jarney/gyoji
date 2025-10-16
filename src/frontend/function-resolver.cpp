@@ -1089,8 +1089,9 @@ FunctionDefinitionResolver::extract_from_expression_postfix_function_call(
 	arg_types.push_back(arg_returned_value);
     }
 
-    const Type *function_pointer_type = function->tmpvar_get(function_type_tmpvar);
-    if (function_pointer_type->get_type() == Type::TYPE_FUNCTION_POINTER) {
+    const Type *call_type = function->tmpvar_get(function_type_tmpvar);
+    if (call_type->get_type() == Type::TYPE_FUNCTION_POINTER) {
+	const Type *function_pointer_type = call_type;
 	// We declare that we return the vale that the function
 	// will return.
 	returned_tmpvar = function->tmpvar_define(function_pointer_type->get_return_type());
@@ -1108,12 +1109,13 @@ FunctionDefinitionResolver::extract_from_expression_postfix_function_call(
 	
 	return true;
     }
-    else if (function_pointer_type->get_type() == Type::TYPE_METHOD_CALL) {
+    else if (call_type->get_type() == Type::TYPE_METHOD_CALL) {
+	const Type *method_call_type = call_type;
 	// First, extract the object from the method call into a tmpvar.
 	// Next, extract the function into another tmpvar.
 	// Finally, put together the arguments and make the call.
 	
-	size_t function_pointer_type_tmpvar = function->tmpvar_define(function_pointer_type->get_function_pointer_type());
+	size_t function_pointer_type_tmpvar = function->tmpvar_define(method_call_type->get_function_pointer_type());
 
 	// This is what resolves the method to call.
 	auto operation_get_function = std::make_unique<OperationUnary>(
@@ -1129,7 +1131,9 @@ FunctionDefinitionResolver::extract_from_expression_postfix_function_call(
 	// This is what resolves the object to make
 	// the functionn call on.  We push it as the
 	// implicit first argument to the call.
-	size_t method_object_tmpvar = function->tmpvar_define(function_pointer_type->get_class_type());
+	const Type * pointer_to_object_type = mir.get_types().get_pointer_to(method_call_type->get_class_type(), expression.get_source_ref());
+	size_t method_object_tmpvar = function->tmpvar_define(pointer_to_object_type);
+	
 	auto operation_get_object = std::make_unique<OperationUnary>(
 	    Operation::OP_METHOD_GET_OBJECT,
 	    expression.get_source_ref(),
@@ -1142,7 +1146,7 @@ FunctionDefinitionResolver::extract_from_expression_postfix_function_call(
 	    .add_operation(std::move(operation_get_object));
 	
 	// This is what the function pointer type should return.
-	returned_tmpvar = function->tmpvar_define(function_pointer_type->get_function_pointer_type()->get_return_type());
+	returned_tmpvar = function->tmpvar_define(method_call_type->get_function_pointer_type()->get_return_type());
 
 	auto operation = std::make_unique<OperationFunctionCall>(
 	    expression.get_source_ref(),
@@ -1163,7 +1167,7 @@ FunctionDefinitionResolver::extract_from_expression_postfix_function_call(
 	    .add_simple_error(
 		expression.get_function().get_source_ref(),
 		"Called object is not a function.",
-		std::string("Type of object being called is not a function, but is a ") + function_pointer_type->get_name() + std::string(" instead.")
+		std::string("Type of object being called is not a function, but is a ") + call_type->get_name() + std::string(" instead.")
 		);
 	return false;
     }
@@ -1225,7 +1229,7 @@ FunctionDefinitionResolver::extract_from_expression_postfix_dot(
 
 	const Type * method_call_type = mir.get_types().get_method_call(class_type, symbol->get_type(), expression.get_source_ref());
 	returned_tmpvar = function->tmpvar_define(method_call_type);
-
+	
 	auto operation = std::make_unique<OperationGetMethod>(
 	    expression.get_source_ref(),
 	    returned_tmpvar,

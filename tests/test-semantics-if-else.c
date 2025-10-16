@@ -17,10 +17,11 @@ typedef struct {
 
 void jlang_Foo_set_something(Foo *, u32, u32, u32, u32);
 
-int main(int argc, char **argv)
+int main2(int argc, char **argv)
 {
     Foo st;
     jlang_Foo_set_something(&st, 1, 2, 3, 19);
+    return 0;
 }
 
 //u32 preamble_function_call()

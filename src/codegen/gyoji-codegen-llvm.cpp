@@ -489,13 +489,13 @@ CodeGeneratorLLVMContext::generate_operation_method_get_object(
     llvm::Constant *object_tmpvar_el = method_call_constant_struct->getAggregateElement((unsigned)0);
     llvm::ConstantInt * object_tmpvar_int = (llvm::ConstantInt*)object_tmpvar_el;
     size_t object_tmpvar = object_tmpvar_int->getValue().getZExtValue();
-    llvm::Value *object_value = tmp_values[object_tmpvar];
-    llvm::Value *object_lvalue = tmp_values[object_tmpvar];
+    llvm::Value *object_value = tmp_lvalues[object_tmpvar];
+//    llvm::Value *object_lvalue = tmp_lvalues[object_tmpvar];
     
     fprintf(stderr, "Object tmpvar in get object is %ld\n", object_tmpvar);
 
     tmp_values.insert(std::pair(operation.get_result(), object_value));
-    tmp_lvalues.insert(std::pair(operation.get_result(), object_lvalue));
+//    tmp_lvalues.insert(std::pair(operation.get_result(), object_lvalue));
 }
 void
 CodeGeneratorLLVMContext::generate_operation_method_get_function(
