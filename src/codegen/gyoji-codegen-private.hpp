@@ -75,6 +75,7 @@ namespace Gyoji::codegen {
 	
 	void generate_operation_method_get_object(
 	    std::map<size_t, llvm::Value *> & tmp_values,
+	    std::map<size_t, llvm::Value *> & tmp_lvalues,
 	    const Gyoji::mir::Function & mir_function,
 	    const Gyoji::mir::OperationUnary & operation
 	    );

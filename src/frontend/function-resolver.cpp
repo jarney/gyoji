@@ -1216,7 +1216,7 @@ FunctionDefinitionResolver::extract_from_expression_postfix_dot(
 	    expression.get_source_ref(),
 	    returned_tmpvar,
 	    class_tmpvar,
-	    fully_qualified_function_name
+ 	    fully_qualified_function_name
 	    );
 	function
 	    ->get_basic_block(current_block)

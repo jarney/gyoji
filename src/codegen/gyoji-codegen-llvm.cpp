@@ -392,12 +392,18 @@ CodeGeneratorLLVMContext::generate_operation_function_call(
     std::vector<llvm::Value *> llvm_args;
     const std::vector<size_t> & operands = operation.get_operands();;
     for (size_t i = 0; i < operands.size()-1; i++) {
+	const Type *atype = mir_function.tmpvar_get(operands.at(i+1));
+	fprintf(stderr, "Argument type %s\n", atype->get_name().c_str());
 	llvm::Value *llvm_arg = tmp_values[operands.at(i+1)];
 	llvm_args.push_back(llvm_arg);
     }
     const Type *mir_type = mir_function.tmpvar_get(function_operand);
     llvm::Type *llvm_fptr_type = types[mir_type->get_name()];
 
+    fprintf(stderr, "Generating function call on %s with %ld arguments\n",
+	    mir_type->get_name().c_str(),
+	    operands.size());
+    
     Builder->CreateCall((llvm::FunctionType*)llvm_fptr_type, (llvm::Function*)llvm_function, llvm_args);
 
 }
@@ -417,6 +423,7 @@ CodeGeneratorLLVMContext::generate_operation_get_method(
     // value from here into the 'method_get_object'
     // without putting it on the heap or anything.
     size_t object_tmpvar = operation.get_operands().at(0);
+    fprintf(stderr, "Object tmpvar in get method is %ld\n", object_tmpvar);
     llvm::Constant * object_value = llvm::ConstantInt::get(llvm::Type::getInt32Ty(*TheContext), object_tmpvar);
     
     llvm::Function *fptr_value = TheModule->getFunction(operation.get_method());
@@ -447,14 +454,25 @@ CodeGeneratorLLVMContext::generate_operation_get_method(
 void
 CodeGeneratorLLVMContext::generate_operation_method_get_object(
     std::map<size_t, llvm::Value *> & tmp_values,
+    std::map<size_t, llvm::Value *> & tmp_lvalues,
     const Gyoji::mir::Function & mir_function,
     const Gyoji::mir::OperationUnary & operation
     )
 {
     // Get the struct and pull out the "object's"
     // tmpvar.
-//    llvm::Value *value_a = tmp_values[struct_tmpvar];
-//    tmp_values.insert(std::pair(operation.get_result(), result));
+    llvm::Value *method_call_value = tmp_values[operation.get_a()];
+    llvm::ConstantStruct *method_call_constant_struct = (llvm::ConstantStruct*)method_call_value;
+    llvm::Constant *object_tmpvar_el = method_call_constant_struct->getAggregateElement((unsigned)0);
+    llvm::ConstantInt * object_tmpvar_int = (llvm::ConstantInt*)object_tmpvar_el;
+    size_t object_tmpvar = object_tmpvar_int->getValue().getZExtValue();
+    llvm::Value *object_value = tmp_values[object_tmpvar];
+    llvm::Value *object_lvalue = tmp_values[object_tmpvar];
+    
+    fprintf(stderr, "Object tmpvar in get object is %ld\n", object_tmpvar);
+
+    tmp_values.insert(std::pair(operation.get_result(), object_value));
+    tmp_lvalues.insert(std::pair(operation.get_result(), object_lvalue));
 }
 void
 CodeGeneratorLLVMContext::generate_operation_method_get_function(
@@ -463,7 +481,12 @@ CodeGeneratorLLVMContext::generate_operation_method_get_function(
     const Gyoji::mir::OperationUnary & operation
     )
 {
-
+    // Get the struct and pull out the "function pointer"
+    // tmpvar.
+    llvm::Value *method_call_value = tmp_values[operation.get_a()];
+    llvm::ConstantStruct *method_call_constant_struct = (llvm::ConstantStruct*)method_call_value;
+    llvm::Constant *fptr_value = method_call_constant_struct->getAggregateElement((unsigned)1);
+    tmp_values.insert(std::pair(operation.get_result(), fptr_value));
 }
 
 	
@@ -1586,7 +1609,7 @@ CodeGeneratorLLVMContext::generate_basic_block(
 	    generate_operation_get_method(tmp_values, mir_function, (const OperationGetMethod&)operation);
 	    break;
 	case Operation::OP_METHOD_GET_OBJECT:
-	    generate_operation_method_get_object(tmp_values, mir_function, (const OperationUnary&)operation);
+	    generate_operation_method_get_object(tmp_values, tmp_lvalues, mir_function, (const OperationUnary&)operation);
 	    break;
 	case Operation::OP_METHOD_GET_FUNCTION:
 	    generate_operation_method_get_function(tmp_values, mir_function, (const OperationUnary&)operation);
