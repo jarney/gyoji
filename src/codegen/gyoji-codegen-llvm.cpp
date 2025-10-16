@@ -1,5 +1,6 @@
 #include <gyoji-codegen.hpp>
 #include "gyoji-codegen-private.hpp"
+#include <gyoji-misc/jstring.hpp>
 
 using namespace llvm::sys;
 using namespace Gyoji::codegen;
@@ -65,12 +66,16 @@ CodeGeneratorLLVMContext::create_function(const Function & function)
     }
     
     llvm::Type* return_value_type = types[function.get_return_type()->get_name()];
-    
+
     llvm::FunctionType *FT =
 	llvm::FunctionType::get(return_value_type, llvm_arguments, false);
     
+    std::string method_name = function.get_name();
+    std::vector<std::string> method_name_components = Gyoji::misc::string_split(method_name, std::string("::"));
+    method_name = Gyoji::misc::join(method_name_components, "_");
+
     llvm::Function *F =
-	llvm::Function::Create(FT, llvm::Function::ExternalLinkage, function.get_name(), TheModule.get());
+	llvm::Function::Create(FT, llvm::Function::ExternalLinkage, method_name, TheModule.get());
     
     // Set names for all arguments.
     unsigned Idx = 0;
@@ -425,10 +430,14 @@ CodeGeneratorLLVMContext::generate_operation_get_method(
     size_t object_tmpvar = operation.get_operands().at(0);
     fprintf(stderr, "Object tmpvar in get method is %ld\n", object_tmpvar);
     llvm::Constant * object_value = llvm::ConstantInt::get(llvm::Type::getInt32Ty(*TheContext), object_tmpvar);
+
+    std::string method_name = operation.get_method();
+    std::vector<std::string> method_name_components = Gyoji::misc::string_split(method_name, std::string("::"));
+    method_name = Gyoji::misc::join(method_name_components, "_");
     
-    llvm::Function *fptr_value = TheModule->getFunction(operation.get_method());
+    llvm::Function *fptr_value = TheModule->getFunction(method_name);
     if (fptr_value == nullptr) {
-	fptr_value = llvm::Function::Create((llvm::FunctionType*)fptr_type, llvm::Function::ExternalLinkage, operation.get_method(), TheModule.get());
+	fptr_value = llvm::Function::Create((llvm::FunctionType*)fptr_type, llvm::Function::ExternalLinkage, method_name, TheModule.get());
 	if (fptr_value == nullptr) {
 	    fprintf(stderr, "Could not find function for symbol %s\n", operation.get_method().c_str());
 	    exit(1);
@@ -511,6 +520,8 @@ CodeGeneratorLLVMContext::generate_operation_symbol(
     // but we should also handle global variables
     // when we get to it, even though globals
     // and statics are evil incarnate.
+    std::vector<std::string> symbol_name_components = Gyoji::misc::string_split(symbol_name, std::string("::"));
+    symbol_name = Gyoji::misc::join(symbol_name_components, "_");
 
     llvm::Function *F = TheModule->getFunction(symbol_name);
     if (F == nullptr) {
