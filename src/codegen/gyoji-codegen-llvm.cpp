@@ -85,8 +85,6 @@ CodeGeneratorLLVMContext::create_function(const Function & function)
 	llvm::FunctionType::get(return_value_type, llvm_arguments, false);
     
     std::string method_name = function.get_name();
-    std::vector<std::string> method_name_components = Gyoji::misc::string_split(method_name, std::string("::"));
-    method_name = Gyoji::misc::join(method_name_components, "_");
 
     llvm::Function *F =
 	llvm::Function::Create(FT, llvm::Function::ExternalLinkage, method_name, TheModule.get());
@@ -202,11 +200,6 @@ CodeGeneratorLLVMContext::create_type_function_pointer(const Gyoji::mir::Type *f
 {
     const Gyoji::mir::Type *mir_return_type = fptr_type->get_return_type();
     llvm::Type *llvm_return_type = create_type(mir_return_type);
-    fprintf(stderr, "Creating function pointer type\n");
-    fprintf(stderr, "Return type is %p (%s)-> %p\n",
-	    mir_return_type,
-	    mir_return_type->get_name().c_str(),
-	    llvm_return_type);
     
     const std::vector<Gyoji::mir::Argument> & mir_args = fptr_type->get_argument_types();
     
@@ -238,8 +231,6 @@ CodeGeneratorLLVMContext::create_type_method_call(const Gyoji::mir::Type *method
 
     const Gyoji::mir::Type *u32_type = mir.get_types().get_type("u32");
     members.push_back(create_type(u32_type));
-    fprintf(stderr, "Creating method call type %p\n", method_call_type->get_function_pointer_type());
-
     members.push_back(create_type(method_call_type->get_function_pointer_type()));
     
     llvm::Type *llvm_method_call_type = llvm::StructType::create(*TheContext, members, method_call_type->get_name());
@@ -348,14 +339,12 @@ CodeGeneratorLLVMContext::create_type(const Type * type)
 	return create_type_reference(type);
     }
     else if (type->is_function_pointer()) {
-	fprintf(stderr, "create_type() Creating fptr type %p\n", type);
 	return create_type_function_pointer(type);
     }
     else if (type->is_array()) {
 	return create_type_array(type);
     }
     else if (type->is_method_call()) {
-	fprintf(stderr, "create_type() Creating method call type %p\n", type);
 	return create_type_method_call(type);
     }
     fprintf(stderr, "Compiler BUG!  Unknown type type passed to code generator %s\n", type->get_name().c_str());
@@ -411,18 +400,12 @@ CodeGeneratorLLVMContext::generate_operation_function_call(
     std::vector<llvm::Value *> llvm_args;
     const std::vector<size_t> & operands = operation.get_operands();;
     for (size_t i = 0; i < operands.size()-1; i++) {
-	const Type *atype = mir_function.tmpvar_get(operands.at(i+1));
-	fprintf(stderr, "Argument type %s\n", atype->get_name().c_str());
 	llvm::Value *llvm_arg = tmp_values[operands.at(i+1)];
 	llvm_args.push_back(llvm_arg);
     }
     const Type *mir_type = mir_function.tmpvar_get(function_operand);
     llvm::Type *llvm_fptr_type = types[mir_type->get_name()];
 
-    fprintf(stderr, "Generating function call on %s with %ld arguments\n",
-	    mir_type->get_name().c_str(),
-	    operands.size());
-    
     Builder->CreateCall((llvm::FunctionType*)llvm_fptr_type, (llvm::Function*)llvm_function, llvm_args);
 
 }
@@ -442,12 +425,9 @@ CodeGeneratorLLVMContext::generate_operation_get_method(
     // value from here into the 'method_get_object'
     // without putting it on the heap or anything.
     size_t object_tmpvar = operation.get_operands().at(0);
-    fprintf(stderr, "Object tmpvar in get method is %ld\n", object_tmpvar);
     llvm::Constant * object_value = llvm::ConstantInt::get(llvm::Type::getInt32Ty(*TheContext), object_tmpvar);
 
     std::string method_name = operation.get_method();
-    std::vector<std::string> method_name_components = Gyoji::misc::string_split(method_name, std::string("::"));
-    method_name = Gyoji::misc::join(method_name_components, "_");
     
     llvm::Function *fptr_value = TheModule->getFunction(method_name);
     if (fptr_value == nullptr) {
@@ -489,13 +469,12 @@ CodeGeneratorLLVMContext::generate_operation_method_get_object(
     llvm::Constant *object_tmpvar_el = method_call_constant_struct->getAggregateElement((unsigned)0);
     llvm::ConstantInt * object_tmpvar_int = (llvm::ConstantInt*)object_tmpvar_el;
     size_t object_tmpvar = object_tmpvar_int->getValue().getZExtValue();
-    llvm::Value *object_value = tmp_lvalues[object_tmpvar];
-//    llvm::Value *object_lvalue = tmp_lvalues[object_tmpvar];
-    
-    fprintf(stderr, "Object tmpvar in get object is %ld\n", object_tmpvar);
 
+    // This is where we indirect the object to get its pointer
+    // We take the 'lvalue' (pointer) and put it into the value
+    // The returned object is no longer an lvalue.
+    llvm::Value *object_value = tmp_lvalues[object_tmpvar];
     tmp_values.insert(std::pair(operation.get_result(), object_value));
-//    tmp_lvalues.insert(std::pair(operation.get_result(), object_lvalue));
 }
 void
 CodeGeneratorLLVMContext::generate_operation_method_get_function(
@@ -534,8 +513,6 @@ CodeGeneratorLLVMContext::generate_operation_symbol(
     // but we should also handle global variables
     // when we get to it, even though globals
     // and statics are evil incarnate.
-    std::vector<std::string> symbol_name_components = Gyoji::misc::string_split(symbol_name, std::string("::"));
-    symbol_name = Gyoji::misc::join(symbol_name_components, "_");
 
     llvm::Function *F = TheModule->getFunction(symbol_name);
     if (F == nullptr) {

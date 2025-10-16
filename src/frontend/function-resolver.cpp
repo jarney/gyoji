@@ -53,16 +53,6 @@ FunctionResolver::extract_from_namespace(
 bool
 FunctionResolver::extract_from_class_definition(const ClassDefinition & definition)
 {
-    // TODO: We should extract members as
-    // functions from classes so we can set up method calls.
-    // and prepare resolution of class members as variables.
-    // We'll do this last after all the other operations are
-    // supported because we want to first work with 'normal'
-    // C constructs before diving into the OO aspects.
-    //
-    //fprintf(stderr, "Extracting from class definition, constructors and destructors which are special-case functions.\n");
-    // These must be linked back to their corresponding type definitions
-    // so that we can generate their code.
     return true;
 }
 
@@ -167,10 +157,7 @@ FunctionDefinitionResolver::resolve()
     std::string fully_qualified_function_name = 
 	function_definition.get_name().get_fully_qualified_name();
 
-    fprintf(stderr, " - Extracting function %s\n",
-	    fully_qualified_function_name.c_str());
     NS2Entity *entity = function_definition.get_name().get_ns2_entity();
-    fprintf(stderr, " - namespace is %s\n", entity->get_parent()->get_fully_qualified_name().c_str());
 
     Type *maybe_class_type = mir.get_types().get_type(entity->get_parent()->get_fully_qualified_name());
     if (maybe_class_type != nullptr) {
@@ -266,7 +253,6 @@ FunctionDefinitionResolver::resolve()
 			     function_definition_arg->get_identifier().get_source_ref(),
 			     function_definition_arg->get_type_specifier().get_source_ref());
 	arguments.push_back(arg);
-	fprintf(stderr, "Function argument %s\n", name.c_str());
 	if (!scope_tracker.add_variable(name, mir_type, function_definition_arg->get_identifier().get_source_ref())) {
 	    return false;
 	}
@@ -463,11 +449,6 @@ FunctionDefinitionResolver::resolve()
 	const ScopeOperation *goto_operation = fixup.first;
 	size_t basic_block_id = goto_operation->get_goto_point().get_basic_block_id();
 	size_t location = goto_operation->get_goto_point().get_location();
-	fprintf(stderr, "Processing fixup for goto %s %ld %ld\n",
-		goto_operation->get_goto_label().c_str(),
-		basic_block_id,
-		location
-	    );
 	for (const auto & unwind : fixup.second) {
 	    fprintf(stderr, "Unwinding variable %s\n", unwind->get_variable_name().c_str());
 
@@ -557,7 +538,6 @@ FunctionDefinitionResolver::extract_from_expression_primary_identifier(
 	    // This is a class member, so we can resolve it
 	    // by dereferencing 'this'.
 	    if (member != nullptr) {
-		fprintf(stderr, "This is a member\n");
 		size_t this_tmpvar = function->tmpvar_define(class_pointer_type);
 		auto this_operation = std::make_unique<OperationLocalVariable>(
 		    expression.get_identifier().get_source_ref(),
@@ -1060,6 +1040,74 @@ FunctionDefinitionResolver::extract_from_expression_postfix_array_index(
     return true;
 }
 
+
+bool
+FunctionDefinitionResolver::check_function_call_signature(
+    bool is_method,
+    const std::vector<size_t> & passed_arguments,
+    const std::vector<const Gyoji::context::SourceReference *> & passed_src_refs,
+    const Type *function_pointer_type,
+    const Gyoji::context::SourceReference & src_ref    
+    )
+{
+    // Here, we need to check that the arguments we're passing to the
+    // function match the function/method signature.
+    const std::vector<Argument> & function_pointer_args = function_pointer_type->get_argument_types();
+
+    bool is_ok = true;
+    
+    if (passed_arguments.size() != function_pointer_args.size()) {
+	std::unique_ptr<Gyoji::context::Error> error = std::make_unique<Gyoji::context::Error>(
+	    (is_method ?
+	     std::string("Wrong number of arguments passed to method call.") :
+	     std::string("Wrong number of arguments passed to function call.")
+	    )    
+	    );
+	error->add_message(src_ref,
+			   std::string("Passing ")
+			   + std::to_string(passed_arguments.size() - (is_method ? 1 : 0))
+			   + ( is_method ? std::string(" to method") : std::string(" to function."))
+	    );
+	error->add_message(function_pointer_type->get_declared_source_ref(),
+			   (is_method ? std::string("Method was declared to have ") : std::string("Function was declared to have "))
+			   + std::to_string(function_pointer_args.size() - (is_method ? 1 : 0))
+			   + std::string(" arguments.")
+	    );
+	compiler_context
+	    .get_errors()
+	    .add_error(std::move(error));
+	is_ok = false;
+    }
+
+    size_t minsize = std::min(passed_arguments.size(), function_pointer_args.size());
+    for (size_t i = 0; i < minsize; i++) {
+	const Type *passed_type = function->tmpvar_get(passed_arguments.at(i));
+	const SourceReference & passed_src_ref = *passed_src_refs.at(i);
+	const Argument & arg = function_pointer_args.at(i);
+	const Type *required_type = arg.get_type();
+	if (required_type->get_name() != passed_type->get_name()) {
+	    std::unique_ptr<Gyoji::context::Error> error = std::make_unique<Gyoji::context::Error>("Incorrect argument type passed to call");
+	    error->add_message(passed_src_ref,
+			       std::string("Passing type ")
+			       + passed_type->get_name()
+			       + std::string(" as argument ")
+			       + std::to_string(i+1)
+			       
+		);
+	    error->add_message(arg.get_source_ref(),
+			       std::string("Argument type was declared as ")
+			       + required_type->get_name()
+		);
+	    compiler_context
+		.get_errors()
+		.add_error(std::move(error));
+	    is_ok = false;
+	}
+    }
+    
+    return is_ok;
+}
+
 bool
 FunctionDefinitionResolver::extract_from_expression_postfix_function_call(
     size_t & returned_tmpvar,
@@ -1068,7 +1116,6 @@ FunctionDefinitionResolver::extract_from_expression_postfix_function_call(
     // Extract the expression itself from the arguments.
     size_t function_type_tmpvar;
     if (!extract_from_expression(function_type_tmpvar, expression.get_function())) {
-	fprintf(stderr, "Not extracting function early return\n");
 	return false;
     }
     // For method calls, function_type_tmpvar must somehow encode
@@ -1076,17 +1123,17 @@ FunctionDefinitionResolver::extract_from_expression_postfix_function_call(
     // as well as another tmpvar for the class value itself.
     // The value will end up encoding pair of "class_tmpvar" and "function_type_tmpvar".
     
-    
     // TODO: Check that the values we're passing here
     // match the function's signature.
-    std::vector<size_t> arg_types;
+    std::vector<size_t> passed_arguments;
+    std::vector<const Gyoji::context::SourceReference *> passed_src_refs;
     for (const auto & arg_expr : expression.get_arguments().get_arguments()) {
 	size_t arg_returned_value;
 	if (!extract_from_expression(arg_returned_value, *arg_expr)) {
-	    fprintf(stderr, "Not extracting function arg expression\n");
 	    return false;
 	}
-	arg_types.push_back(arg_returned_value);
+	passed_arguments.push_back(arg_returned_value);
+	passed_src_refs.push_back(&arg_expr->get_source_ref());
     }
 
     const Type *call_type = function->tmpvar_get(function_type_tmpvar);
@@ -1095,12 +1142,16 @@ FunctionDefinitionResolver::extract_from_expression_postfix_function_call(
 	// We declare that we return the vale that the function
 	// will return.
 	returned_tmpvar = function->tmpvar_define(function_pointer_type->get_return_type());
+
+	if (!check_function_call_signature(false, passed_arguments, passed_src_refs, function_pointer_type, expression.get_source_ref())) {
+	    return false;
+	}
 	
 	auto operation = std::make_unique<OperationFunctionCall>(
 	    expression.get_source_ref(),
 	    returned_tmpvar,
 	    function_type_tmpvar,
-	    arg_types
+	    passed_arguments
 	    );
 	
 	function
@@ -1140,21 +1191,28 @@ FunctionDefinitionResolver::extract_from_expression_postfix_function_call(
 	    method_object_tmpvar,
 	    function_type_tmpvar
 	    );
-	arg_types.insert(arg_types.begin(), method_object_tmpvar);
+	passed_arguments.insert(passed_arguments.begin(), method_object_tmpvar);
+	passed_src_refs.insert(passed_src_refs.begin(), &expression.get_source_ref());
 	function
 	    ->get_basic_block(current_block)
 	    .add_operation(std::move(operation_get_object));
 	
+	const Type *function_pointer_type = method_call_type->get_function_pointer_type();
+	
+	if (!check_function_call_signature(true, passed_arguments, passed_src_refs, function_pointer_type, expression.get_source_ref())) {
+	    return false;
+	}
+	
 	// This is what the function pointer type should return.
-	returned_tmpvar = function->tmpvar_define(method_call_type->get_function_pointer_type()->get_return_type());
+	returned_tmpvar = function->tmpvar_define(function_pointer_type->get_return_type());
 
+	// Make the actual function call.
 	auto operation = std::make_unique<OperationFunctionCall>(
 	    expression.get_source_ref(),
 	    returned_tmpvar,
 	    function_pointer_type_tmpvar,
-	    arg_types
+	    passed_arguments
 	    );
-	
 	function
 	    ->get_basic_block(current_block)
 	    .add_operation(std::move(operation));
@@ -1214,7 +1272,6 @@ FunctionDefinitionResolver::extract_from_expression_postfix_dot(
     const TypeMethod *method = class_type->method_get(member_name);
     if (method != nullptr) {
 	std::string fully_qualified_function_name = class_type->get_name() + NS2Context::NAMESPACE_DELIMITER + member_name;
-	fprintf(stderr, "We have a method here, what value should we push %s?\n", fully_qualified_function_name.c_str());
 	const Gyoji::mir::Symbol *symbol = mir.get_symbols().get_symbol(fully_qualified_function_name);
 	if (symbol == nullptr) {
 	    compiler_context
@@ -2677,7 +2734,6 @@ FunctionDefinitionResolver::extract_from_statement_variable_declaration(
     // and assigning the value to something.
     const Gyoji::mir::Type * mir_type = type_resolver.extract_from_type_specifier(statement.get_type_specifier());
     
-    fprintf(stderr, "Defining local variable %s\n", statement.get_identifier().get_name().c_str());
     if (!local_declare_or_error(
 	    mir_type,
 	    statement.get_identifier().get_name(),

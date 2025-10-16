@@ -216,6 +216,14 @@ namespace Gyoji::frontend::lowering {
 	    size_t & returned_tmpvar,
 	    const Gyoji::frontend::tree::ExpressionPostfixArrayIndex & expression);
 	
+	bool check_function_call_signature(
+	    bool is_method,
+	    const std::vector<size_t> & passed_arguments,
+	    const std::vector<const Gyoji::context::SourceReference *> & passed_src_refs,
+	    const Gyoji::mir::Type *function_pointer_type,
+	    const Gyoji::context::SourceReference & src_ref    
+	    );
+	
 	bool extract_from_expression_postfix_function_call(
 	    size_t & returned_tmpvar,
 	    const Gyoji::frontend::tree::ExpressionPostfixFunctionCall & expression);

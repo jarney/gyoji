@@ -16,7 +16,8 @@ u32 main(u32 argc, u8**argv)
 	ptr_to_a = &c;
 
 	print_value(a);
-	print_value(ptr_to_a);
+// Wrong argument type, this is an error.
+//	print_value(ptr_to_a);
 	print_value(*ptr_to_a);
 
 	print_value(c);
