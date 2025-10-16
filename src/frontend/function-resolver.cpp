@@ -79,10 +79,8 @@ FunctionResolver::extract_functions(const std::vector<Gyoji::owned<FileStatement
 	    }
 	}
 	else if (std::holds_alternative<Gyoji::owned<FileStatementGlobalDefinition>>(file_statement)) {
-	    // TODO:
-	    // We want to resolve global variables at this stage, but
-	    // for now, let's handle resolution of local and stack variables
-	    // before we dive into global resolution.
+	    // Nothing, no globals can exist here.
+	    // Global declarations should already be resolved by the type_resolver earlier.
 	}
 	else if (std::holds_alternative<Gyoji::owned<ClassDeclaration>>(file_statement)) {
 	    // Nothing, no functions can exist here.
@@ -183,16 +181,6 @@ FunctionDefinitionResolver::resolve()
 	}
     }
     
-    // TODO
-    // Here, we should figure out if this is a 'regular' function
-    // or a method of a class.  If it's a regular function, fair enough,
-    // but if it's a class, we should make the 'this' argument the first
-    // implicit argument so that the semantics will act like a method call
-    // instead of just a funtion.  This impacts the variable resolution also
-    // becuase variables found may be 'local' variables or might be 'this->var'
-    // style variables that automatically get de-referenced from the
-    // implicit object 'this' argument.
-    
     const TypeSpecifier & type_specifier = function_definition.get_return_type();
     const Type *return_type = type_resolver.extract_from_type_specifier(type_specifier);
     
@@ -209,7 +197,12 @@ FunctionDefinitionResolver::resolve()
     }
     std::vector<FunctionArgument> arguments;
 
-    // Add the implicit '<this>' argument if this is a method.
+    // If this is a method instead of a plain function,
+    // we add the implicit '<this>' argument as the first argument
+    // so that we can use it to get access to the class content.
+    // Note that we do not expose 'this' or 'super' as a keyword here
+    // in order to limit the damage the programmer can potentially do in
+    // leaking the 'this' pointer elsewhere, particularly in a constructor.
     if (is_method()) {
 	class_pointer_type = mir.get_types().get_pointer_to(class_type, function_definition.get_source_ref());
 	std::string this_arg_name("<this>");
@@ -1123,8 +1116,6 @@ FunctionDefinitionResolver::extract_from_expression_postfix_function_call(
     // as well as another tmpvar for the class value itself.
     // The value will end up encoding pair of "class_tmpvar" and "function_type_tmpvar".
     
-    // TODO: Check that the values we're passing here
-    // match the function's signature.
     std::vector<size_t> passed_arguments;
     std::vector<const Gyoji::context::SourceReference *> passed_src_refs;
     for (const auto & arg_expr : expression.get_arguments().get_arguments()) {
@@ -1143,6 +1134,8 @@ FunctionDefinitionResolver::extract_from_expression_postfix_function_call(
 	// will return.
 	returned_tmpvar = function->tmpvar_define(function_pointer_type->get_return_type());
 
+	// Check that the function signature we're calling matches
+	// the declaration of that function.
 	if (!check_function_call_signature(false, passed_arguments, passed_src_refs, function_pointer_type, expression.get_source_ref())) {
 	    return false;
 	}
@@ -1199,6 +1192,8 @@ FunctionDefinitionResolver::extract_from_expression_postfix_function_call(
 	
 	const Type *function_pointer_type = method_call_type->get_function_pointer_type();
 	
+	// Check that the method signature we're calling matches
+	// the declaration of that method
 	if (!check_function_call_signature(true, passed_arguments, passed_src_refs, function_pointer_type, expression.get_source_ref())) {
 	    return false;
 	}

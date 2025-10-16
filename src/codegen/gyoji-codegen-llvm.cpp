@@ -466,6 +466,7 @@ CodeGeneratorLLVMContext::generate_operation_method_get_object(
     llvm::ConstantInt * object_tmpvar_int = (llvm::ConstantInt*)object_tmpvar_el;
     size_t object_tmpvar = object_tmpvar_int->getValue().getZExtValue();
 
+
     // This is where we indirect the object to get its pointer
     // We take the 'lvalue' (pointer) and put it into the value
     // The returned object is no longer an lvalue.
@@ -1696,6 +1697,15 @@ CodeGeneratorLLVMContext::generate_basic_block(
 void
 CodeGeneratorLLVMContext::generate_function(const Gyoji::mir::Function & function)
 {
+    // TODO: We should probably break this stuff off
+    // into a separate object so we don't have to manually
+    // clear context like this.
+    local_lvalues.clear();
+    local_variables.clear();
+    blocks.clear();
+    tmp_values.clear();
+    tmp_lvalues.clear();
+    
     // Transfer ownership of the prototype to the FunctionProtos map, but keep a
     // reference to it for use below.
     llvm::Function *TheFunction = create_function(function);

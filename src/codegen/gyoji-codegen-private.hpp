@@ -56,7 +56,6 @@ namespace Gyoji::codegen {
 	const Gyoji::mir::MIR & mir;
 	
 	std::map<std::string, llvm::Type *> types;
-
 	std::map<std::string, llvm::Value *> local_lvalues;
 	std::map<std::string, llvm::Value *> local_variables;
 	std::map<size_t, llvm::BasicBlock *> blocks;

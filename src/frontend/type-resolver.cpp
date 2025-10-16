@@ -21,6 +21,7 @@ using namespace Gyoji::mir;
 using namespace Gyoji::context;
 using namespace Gyoji::frontend::tree;
 using namespace Gyoji::frontend::lowering;
+using namespace Gyoji::frontend::namespaces;
 
 TypeResolver::TypeResolver(
     Gyoji::context::CompilerContext & _compiler_context,
@@ -309,7 +310,6 @@ TypeResolver::extract_from_class_members(Type & type, const ClassDefinition & cl
 	    Type *fptr_type = get_or_create(pointer_name, Type::TYPE_FUNCTION_POINTER, false, member_method->get_source_ref());
 	    
 	    if (!fptr_type->is_complete()) {
-		fprintf(stderr, "Defining function pointer for method %s %p\n", pointer_name.c_str(), ret_type);
 		fptr_type->complete_function_pointer_definition(
 		    ret_type,
 		    fptr_arguments,
@@ -450,6 +450,15 @@ TypeResolver::extract_from_function_specifications(
     )
 {
 
+    NS2Entity *entity = name.get_ns2_entity();
+    Type *maybe_class_type = mir.get_types().get_type(entity->get_parent()->get_fully_qualified_name());
+    const Type *class_pointer_type = nullptr;
+    bool is_method = false;
+    if (maybe_class_type != nullptr) {
+	class_pointer_type = mir.get_types().get_pointer_to(maybe_class_type, type_specifier.get_source_ref());
+	is_method = true;
+    }
+    
     std::string fully_qualified_function_name = 
 	name.get_fully_qualified_name();
     
@@ -469,6 +478,12 @@ TypeResolver::extract_from_function_specifications(
     std::vector<std::string> arg_list;
     std::vector<Argument> fptr_arguments;
     const auto & function_definition_args = function_argument_list.get_arguments();
+    if (is_method) {
+	arg_list.push_back(class_pointer_type->get_name());
+	fptr_arguments.push_back(
+	    Argument(class_pointer_type, name.get_source_ref())
+	    );
+    }
     for (const auto & function_definition_arg : function_definition_args) {
 	std::string name = function_definition_arg->get_identifier().get_fully_qualified_name();
 	const Type * t = extract_from_type_specifier(function_definition_arg->get_type_specifier());
@@ -482,7 +497,6 @@ TypeResolver::extract_from_function_specifications(
     Type *pointer_type = get_or_create(pointer_name, Type::TYPE_FUNCTION_POINTER, false, name.get_source_ref());
 
     if (!pointer_type->is_complete()) {
-	fprintf(stderr, "Defining function pointer for regular type %s %p\n", pointer_name.c_str(), type);
 	pointer_type->complete_function_pointer_definition(
 	    type,
 	    fptr_arguments,
@@ -539,7 +553,8 @@ TypeResolver::extract_types(const std::vector<Gyoji::owned<FileStatement>> & sta
 	    extract_from_function_definition(*std::get<Gyoji::owned<FileStatementFunctionDefinition>>(file_statement));
 	}
 	else if (std::holds_alternative<Gyoji::owned<FileStatementGlobalDefinition>>(file_statement)) {
-	    // Nothing, no statements can be declared inside here.
+	    // TODO: We should extract the global symbols
+	    // from here.
 	}
 	else if (std::holds_alternative<Gyoji::owned<ClassDeclaration>>(file_statement)) {
 	    extract_from_class_declaration(*std::get<Gyoji::owned<ClassDeclaration>>(file_statement));
