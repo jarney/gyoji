@@ -807,7 +807,7 @@ CodeGeneratorLLVMContext::generate_operation_dereference(
     size_t a = operation.get_a();
     // The type is a class
     const Gyoji::mir::Type *mir_pointer_type = mir_function.tmpvar_get(a);
-    if (!mir_pointer_type->is_pointer()) {
+    if (!mir_pointer_type->is_pointer() && !mir_pointer_type->is_reference()) {
 	fprintf(stderr, "Address of thing being referenced is not a pointer\n");
 	exit(1);
     }
@@ -1484,17 +1484,35 @@ CodeGeneratorLLVMContext::generate_operation_assign(
     const Gyoji::mir::OperationBinary & operation
     )
 {
-    llvm::Value *lvalue = tmp_lvalues[operation.get_a()];
-    llvm::Value *value_b = tmp_values[operation.get_b()];
-    llvm::Value *b_value = Builder->CreateStore(value_b, lvalue);
-
-    // TODO: Assigning an lvalue results in an lvalue.
-    const auto & b_lvalue = tmp_lvalues.find(operation.get_b());
-    if (b_lvalue != tmp_lvalues.end()) {
-	tmp_lvalues.insert(std::pair(operation.get_result(), b_lvalue->second));
+    const Type *atype = mir_function.tmpvar_get(operation.get_a());
+    const Type *btype = mir_function.tmpvar_get(operation.get_b());
+    // We're allowed to assign between pointers and references
+    // fairly interchangably.  The lowering rules check
+    // whether this is allowed by the 'unsafe' blocks.
+    if (
+	(atype->is_reference() && btype->is_pointer()) ||
+	(atype->is_pointer() && btype->is_reference())
+	) {
+	llvm::Value * a_value = tmp_values[operation.get_a()];
+	llvm::Value * a_lvalue = tmp_lvalues[operation.get_a()];
+	llvm::Value * b_value = tmp_values[operation.get_b()];
+	llvm::Value *assigned_value = Builder->CreateStore(b_value, a_lvalue);
+	tmp_values.insert(std::pair(operation.get_result(), a_value));
+	tmp_lvalues.insert(std::pair(operation.get_result(), a_lvalue));
     }
-    
-    tmp_values.insert(std::pair(operation.get_result(), b_value));
+    else {
+	llvm::Value * a_lvalue = tmp_lvalues[operation.get_a()];
+	llvm::Value * b_value = tmp_values[operation.get_b()];
+	llvm::Value *assigned_value = Builder->CreateStore(b_value, a_lvalue);
+	
+	// TODO: Assigning an lvalue results in an lvalue.
+	const auto & b_lvalue = tmp_lvalues.find(operation.get_b());
+	if (b_lvalue != tmp_lvalues.end()) {
+	    tmp_lvalues.insert(std::pair(operation.get_result(), b_lvalue->second));
+	}
+	
+	tmp_values.insert(std::pair(operation.get_result(), b_value));
+    }
 }
 
 // Branch and flow control

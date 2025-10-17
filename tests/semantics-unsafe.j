@@ -51,20 +51,46 @@ u32 main(u32 argc, u8 **argv)
         u32 xval;
 	u32* xptr = &xval;
 
-// Now, we should start to
-// work on reference semantics.
-// This should be valid sometimes
-// to initialize a reference, but
-// we need to be especially careful
-// when assigning references to keep track
-// of where it's pointing 'to'.
+// Not allowed because we need
+// to do this inside an unsafe block.
 //	u32 & xref = &xval;
 
 	// Dereference of pointer must
 	// be inside an unsafe block.
+
+	// This should be legal
+	// because &xval is a pointer type, but
+	// we can also extract a lifetime from it,
+	// so it should be a valid reference at this point.
+	// In order to make that work, we need
+	// to 
+	// u32 &xref = &xval;
+
+	u32 &xref;
 	unsafe {
 		*xptr = 10;
+		print_value(xval);
+                xref = &xval;
 	}
+	
+	// Assigning a reference
+	// should be safe outside
+	// of unsafe blocks because
+	// references (should) have
+	// lifetimes associated with them
+	// that the borrow checker can check are
+	// still valid
+
+	*xref = 12;
+	print_value(xval);
+	print_value(*xref);
+
+	xptr = xref;
+	unsafe {
+	    *xptr = 19;
+	}
+	print_value(xval);
+
     }
 
     return 0;

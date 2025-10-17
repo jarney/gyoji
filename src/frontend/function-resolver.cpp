@@ -1665,39 +1665,39 @@ FunctionDefinitionResolver::extract_from_expression_unary_prefix(
     case ExpressionUnaryPrefix::DEREFERENCE:
         {
 	    bool is_ok = true;
-	if (operand_type->get_type() != Type::TYPE_POINTER) {
-	    compiler_context
-		.get_errors()
-		.add_simple_error(
-		    expression.get_expression().get_source_ref(),
-		    "Cannot dereference non-pointer",
-		    std::string("Attempting to de-reference non-pointer type ") + operand_type->get_name()
-		    );
-	    is_ok = false;
-	}
-	if (!scope_tracker.is_unsafe()) {
-	    compiler_context
-		.get_errors()
-		.add_simple_error(
-		    expression.get_expression().get_source_ref(),
-		    "De-referencing pointers (*) must be done inside an 'unsafe' block.",
-		    std::string("De-referencing a pointer outside an 'unsafe' block breaks the safety guarantees of the language.")
-		    );
-	    is_ok = false;
-	}
-	if (!is_ok) {
-	    return false;
-	}
-	returned_tmpvar = function->tmpvar_define(operand_type->get_pointer_target());
-	auto operation = std::make_unique<OperationUnary>(
-	    Operation::OP_DEREFERENCE,
-	    expression.get_source_ref(),
-	    returned_tmpvar,
-	    operand_tmpvar
-	    );
-	function
-	    ->get_basic_block(current_block)
-	    .add_operation(std::move(operation));
+	    if (!operand_type->is_pointer() && !operand_type->is_reference()) {
+		compiler_context
+		    .get_errors()
+		    .add_simple_error(
+			expression.get_expression().get_source_ref(),
+			"Cannot dereference non-pointer",
+			std::string("Attempting to de-reference non-pointer type ") + operand_type->get_name()
+			);
+		is_ok = false;
+	    }
+	    if (!scope_tracker.is_unsafe() && !operand_type->is_reference()) {
+		compiler_context
+		    .get_errors()
+		    .add_simple_error(
+			expression.get_expression().get_source_ref(),
+			"De-referencing pointers (*) must be done inside an 'unsafe' block.",
+			std::string("De-referencing a pointer outside an 'unsafe' block breaks the safety guarantees of the language.")
+			);
+		is_ok = false;
+	    }
+	    if (!is_ok) {
+		return false;
+	    }
+	    returned_tmpvar = function->tmpvar_define(operand_type->get_pointer_target());
+	    auto operation = std::make_unique<OperationUnary>(
+		Operation::OP_DEREFERENCE,
+		expression.get_source_ref(),
+		returned_tmpvar,
+		operand_tmpvar
+		);
+	    function
+		->get_basic_block(current_block)
+		.add_operation(std::move(operation));
         }
         break;
     case ExpressionUnaryPrefix::PLUS:
@@ -2233,14 +2233,34 @@ FunctionDefinitionResolver::handle_binary_operation_assignment(
     const Type *btype = function->tmpvar_get(b_tmpvar);
     // Check that both operands are the same type.
     if (atype->get_name() != btype->get_name()) {
-	compiler_context
-	    .get_errors()
-	    .add_simple_error(
-		_src_ref,
-		"Type mismatch in assignment operation",
-		std::string("The operands of an assignment should be the same type, but were: a= ") + atype->get_name() + std::string(" b=") + btype->get_name()
-		);
-	return false;
+	// If we're assigning a reference to a pointer, we
+	// should allow it in some circumstances.
+	if (atype->is_reference() && btype->is_pointer()) {
+	    if (!scope_tracker.is_unsafe()) {
+		compiler_context
+		    .get_errors()
+		    .add_simple_error(
+			_src_ref,
+			"Assigning a reference to a raw pointer must be done inside an 'unsafe' block",
+			std::string("Assigning a pointer to a reference must be done inside an unsafe block")
+			);
+		return false;
+	    }
+	}
+	else if (atype->is_pointer() && btype->is_reference()) {
+	    // Nothing to do.  This is a valid assignment
+	    // even inside an unsafe block.
+	}
+	else {
+	    compiler_context
+		.get_errors()
+		.add_simple_error(
+		    _src_ref,
+		    "Type mismatch in assignment operation",
+		    std::string("The operands of an assignment should be the same type, but were: a= ") + atype->get_name() + std::string(" b=") + btype->get_name()
+		    );
+	    return false;
+	}
     }
     if (atype->is_void()) {
 	compiler_context
