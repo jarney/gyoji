@@ -83,11 +83,4 @@ void AnalysisPassUnreachable::check(const Function & function) const
 	    }
 	}
     }
-    
-    // First, check that all blocks are connected
-    // in a reachability graph by doing a depth-first search
-    // on blocks.
-//    check_all_blocks_reachable(function);
-
-
 }

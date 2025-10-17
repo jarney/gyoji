@@ -63,7 +63,7 @@ namespace Gyoji::analysis {
     class AnalysisPass {
     public:
 	AnalysisPass(Gyoji::context::CompilerContext & _compiler_context, std::string _name);
-	~AnalysisPass();
+	virtual ~AnalysisPass();
 	virtual void check(const Gyoji::mir::MIR & mir) const = 0;
 	
 	Gyoji::context::CompilerContext & get_compiler_context() const;
@@ -86,7 +86,7 @@ namespace Gyoji::analysis {
     class AnalysisPassTypeResolution : public AnalysisPass {
     public:
 	AnalysisPassTypeResolution(Gyoji::context::CompilerContext & _compiler_context);
-	~AnalysisPassTypeResolution();
+	virtual ~AnalysisPassTypeResolution();
 	
 	virtual void check(const Gyoji::mir::MIR & mir) const;
     private:
@@ -113,7 +113,7 @@ namespace Gyoji::analysis {
     class AnalysisPassUnreachable : public AnalysisPass {
     public:
 	AnalysisPassUnreachable(Gyoji::context::CompilerContext & _compiler_context);
-	~AnalysisPassUnreachable();
+	virtual ~AnalysisPassUnreachable();
 	
 	virtual void check(const Gyoji::mir::MIR & mir) const;
     private:
@@ -133,7 +133,7 @@ namespace Gyoji::analysis {
     class AnalysisPassBorrowChecker : public AnalysisPass {
     public:
 	AnalysisPassBorrowChecker(Gyoji::context::CompilerContext & _compiler_context);
-	~AnalysisPassBorrowChecker();
+	virtual ~AnalysisPassBorrowChecker();
 	virtual void check(const Gyoji::mir::MIR & mir) const;
     private:
 	void check(const Gyoji::mir::Function & function) const;
@@ -150,11 +150,13 @@ namespace Gyoji::analysis {
      */
     class AnalysisPassReturnValues : public AnalysisPass {
     public:
-	AnalysisPassReturnValues();
-	~AnalysisPassReturnValues();
+	AnalysisPassReturnValues(Gyoji::context::CompilerContext & _compiler_context);
+	virtual ~AnalysisPassReturnValues();
 	virtual void check(const Gyoji::mir::MIR & mir) const;
+    private:
+	void check(const Gyoji::mir::Function & function) const;
     };
-
+    
     /**
      * @brief This pass ensures that every variable that has been declared is also paired with an un-declare.
      *
@@ -167,8 +169,8 @@ namespace Gyoji::analysis {
      */
     class AnalysisPassVariableScopePairing : public AnalysisPass {
     public:
-	AnalysisPassVariableScopePairing();
-	~AnalysisPassVariableScopePairing();
+	AnalysisPassVariableScopePairing(Gyoji::context::CompilerContext & _compiler_context);
+	virtual ~AnalysisPassVariableScopePairing();
 	virtual void check(const Gyoji::mir::MIR & mir) const;
     };
     

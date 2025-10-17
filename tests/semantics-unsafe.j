@@ -63,7 +63,8 @@ u32 main(u32 argc, u8 **argv)
 	// we can also extract a lifetime from it,
 	// so it should be a valid reference at this point.
 	// In order to make that work, we need
-	// to 
+	// to capture enough lifetime information
+	// to satisfy the borrow checker.
 	// u32 &xref = &xval;
 
 	u32 &xref;
