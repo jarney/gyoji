@@ -2206,29 +2206,46 @@ class_member_declaration_list
         ;
 
 class_member_declaration
-        : opt_access_modifier type_specifier IDENTIFIER SEMICOLON {
+        : opt_access_modifier opt_unsafe type_specifier IDENTIFIER SEMICOLON {
                 // Member Variable
-	        $3->set_identifier_type(Gyoji::frontend::tree::Terminal::IDENTIFIER_LOCAL_SCOPE);
-		NS2Entity *entity = return_data.identifier_get_or_create($3->get_value(), false, $3->get_source_ref());
-		$3->set_ns2_entity(entity);
+	        $4->set_identifier_type(Gyoji::frontend::tree::Terminal::IDENTIFIER_LOCAL_SCOPE);
+		NS2Entity *entity = return_data.identifier_get_or_create($4->get_value(), false, $4->get_source_ref());
+		$4->set_ns2_entity(entity);
                 auto expr = std::make_unique<Gyoji::frontend::tree::ClassMemberDeclarationVariable>(
                                                                                                        std::move($1),
                                                                                                        std::move($2),
                                                                                                        std::move($3),
-                                                                                                       std::move($4)
+                                                                                                       std::move($4),
+                                                                                                       std::move($5)
                                                                                                        );
                 const Gyoji::frontend::ast::SyntaxNode &sn = *(expr);
                 $$ = std::make_unique<Gyoji::frontend::tree::ClassMemberDeclaration>(std::move(expr), sn);
                 PRINT_NONTERMINALS($$);
         }
-        | opt_access_modifier type_specifier IDENTIFIER PAREN_L opt_function_definition_arg_list PAREN_R SEMICOLON {
+        | opt_access_modifier opt_unsafe type_specifier IDENTIFIER PAREN_L opt_function_definition_arg_list PAREN_R SEMICOLON {
                 // Method
-	        $3->set_identifier_type(Gyoji::frontend::tree::Terminal::IDENTIFIER_LOCAL_SCOPE);
-		NS2Entity *entity = return_data.identifier_get_or_create($3->get_value(), false, $3->get_source_ref());
-		$3->set_ns2_entity(entity);
+	        $4->set_identifier_type(Gyoji::frontend::tree::Terminal::IDENTIFIER_LOCAL_SCOPE);
+		NS2Entity *entity = return_data.identifier_get_or_create($4->get_value(), false, $4->get_source_ref());
+		$4->set_ns2_entity(entity);
                 auto expr = std::make_unique<Gyoji::frontend::tree::ClassMemberDeclarationMethod>(
                                                                                                      std::move($1),
                                                                                                      std::move($2),
+                                                                                                     std::move($3),
+                                                                                                     std::move($4),
+                                                                                                     std::move($5),
+                                                                                                     std::move($6),
+                                                                                                     std::move($7),
+                                                                                                     std::move($8)
+                                                                                                     );
+                const Gyoji::frontend::ast::SyntaxNode &sn = *(expr);
+                $$ = std::make_unique<Gyoji::frontend::tree::ClassMemberDeclaration>(std::move(expr), sn);
+                PRINT_NONTERMINALS($$);
+        }
+        | opt_access_modifier opt_unsafe type_specifier PAREN_L opt_function_definition_arg_list PAREN_R SEMICOLON {
+                // Constructor
+                auto expr = std::make_unique<Gyoji::frontend::tree::ClassMemberDeclarationConstructor>(
+                                                                                                     std::move($1),
+												     std::move($2),
                                                                                                      std::move($3),
                                                                                                      std::move($4),
                                                                                                      std::move($5),
@@ -2239,21 +2256,7 @@ class_member_declaration
                 $$ = std::make_unique<Gyoji::frontend::tree::ClassMemberDeclaration>(std::move(expr), sn);
                 PRINT_NONTERMINALS($$);
         }
-        | opt_access_modifier type_specifier PAREN_L opt_function_definition_arg_list PAREN_R SEMICOLON {
-                // Constructor
-                auto expr = std::make_unique<Gyoji::frontend::tree::ClassMemberDeclarationConstructor>(
-                                                                                                     std::move($1),
-                                                                                                     std::move($2),
-                                                                                                     std::move($3),
-                                                                                                     std::move($4),
-                                                                                                     std::move($5),
-                                                                                                     std::move($6)
-                                                                                                     );
-                const Gyoji::frontend::ast::SyntaxNode &sn = *(expr);
-                $$ = std::make_unique<Gyoji::frontend::tree::ClassMemberDeclaration>(std::move(expr), sn);
-                PRINT_NONTERMINALS($$);
-        }
-        | opt_access_modifier TILDE type_specifier PAREN_L opt_function_definition_arg_list PAREN_R SEMICOLON {
+        | opt_access_modifier opt_unsafe TILDE type_specifier PAREN_L opt_function_definition_arg_list PAREN_R SEMICOLON {
                 // Destructor
                 auto expr = std::make_unique<Gyoji::frontend::tree::ClassMemberDeclarationDestructor>(
                                                                                                          std::move($1),
@@ -2262,7 +2265,8 @@ class_member_declaration
                                                                                                          std::move($4),
                                                                                                          std::move($5),
                                                                                                          std::move($6),
-                                                                                                         std::move($7)
+                                                                                                         std::move($7),
+                                                                                                         std::move($8)
                                                                                                          );
                 const Gyoji::frontend::ast::SyntaxNode &sn = *(expr);
                 $$ = std::make_unique<Gyoji::frontend::tree::ClassMemberDeclaration>(std::move(expr), sn);
@@ -2355,18 +2359,18 @@ type_specifier
                 $$ = std::make_unique<Gyoji::frontend::tree::TypeSpecifier>(std::move(expr), sn);
                 PRINT_NONTERMINALS($$);
         }
-        | type_specifier PAREN_L STAR IDENTIFIER PAREN_R PAREN_L opt_function_definition_arg_list PAREN_R {
+        | type_specifier PAREN_L opt_unsafe STAR IDENTIFIER PAREN_R PAREN_L opt_function_definition_arg_list PAREN_R {
                 NS2Entity *entity = return_data.type_get_or_create($4->get_value(), $4->get_source_ref());
 		$4->set_ns2_entity(entity);
                 auto expr = std::make_unique<Gyoji::frontend::tree::TypeSpecifierFunctionPointer>(
                                                                                       std::move($1),
                                                                                       std::move($2),
-                                                                                      std::move($3),
                                                                                       std::move($4),
                                                                                       std::move($5),
                                                                                       std::move($6),
                                                                                       std::move($7),
-                                                                                      std::move($8)
+                                                                                      std::move($8),
+                                                                                      std::move($9)
                                                                                       );
                 const Gyoji::frontend::ast::SyntaxNode &sn = *(expr);
                 $$ = std::make_unique<Gyoji::frontend::tree::TypeSpecifier>(std::move(expr), sn);

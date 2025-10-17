@@ -53,11 +53,13 @@ Function::Function(
     std::string _name,
     const Type *_return_type,
     const std::vector<FunctionArgument> & _arguments,
+    bool _is_unsafe,
     const Gyoji::context::SourceReference & _source_ref
     )
     : name(_name)
     , return_type(_return_type)
     , arguments(_arguments)
+    , m_is_unsafe(_is_unsafe)
     , source_ref(_source_ref)
     , blockid(0)
 {
@@ -81,6 +83,10 @@ Function::get_arguments() const
 const Gyoji::context::SourceReference &
 Function::get_source_ref() const
 { return source_ref; }
+
+bool
+Function::is_unsafe() const
+{ return m_is_unsafe; }
 
 const BasicBlock &
 Function::get_basic_block(size_t blockid) const
@@ -155,12 +161,10 @@ Function::calculate_block_reachability()
     // we take them off the unreachable list.
     while (open_list.size() != 0) {
 	size_t current = open_list.back();
-	fprintf(stderr, "Checking block %ld\n", current);
 	open_list.pop_back();
 	unreachable.erase(current);
 	const auto & connections_to  = edges[current];
 	for (size_t to : connections_to) {
-	    fprintf(stderr, "    - %ld\n", to);
 	    blocks[to]->add_reachable_from(current);
 	}
 	open_list.insert(open_list.end(), connections_to.begin(), connections_to.end());
@@ -171,7 +175,6 @@ Function::calculate_block_reachability()
 	// If this happens, then there is a bug in the 'lowering'
 	// code which should prevent this from being constructed
 	// in this way.
-	fprintf(stderr, "Unreachable block %ld\n", unreach.first);
 	const BasicBlock & block = get_basic_block(unreach.first);
 
 	// If this block is empty, we will already have
@@ -181,7 +184,6 @@ Function::calculate_block_reachability()
 	if (operations.size() == 0) {
 	    // Cull it from the block list
 	    // becuase it's empty and unreachable.
-	    fprintf(stderr, "Removing block %ld\n", unreach.first);
 	    blocks.erase(unreach.first);
 	}
     }

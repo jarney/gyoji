@@ -158,20 +158,23 @@ ScopeOperation::get_source_ref() const
 ///////////////////////////////////////////////////
 // Scope
 ///////////////////////////////////////////////////
-Scope::Scope()
+Scope::Scope(bool _is_unsafe)
     : parent(nullptr)
     , scope_is_loop(false)
+    , scope_is_unsafe(_is_unsafe)
     , loop_break_blockid(0)
     , loop_continue_blockid(0)
 {}
 
 Scope::Scope(
+    bool _is_unsafe,
     bool _is_loop,
     size_t _loop_break_blockid,
     size_t _loop_continue_blockid
     )
     : parent(nullptr)
     , scope_is_loop(_is_loop)
+    , scope_is_unsafe(_is_unsafe)
     , loop_break_blockid(_loop_break_blockid)
     , loop_continue_blockid(_loop_continue_blockid)
 {}
@@ -207,6 +210,11 @@ Scope::is_loop() const
 {
     return scope_is_loop;
 }
+bool
+Scope::is_unsafe() const
+{
+    return scope_is_unsafe;
+}
 size_t
 Scope::get_loop_break_blockid() const
 { return loop_break_blockid; }
@@ -222,8 +230,10 @@ Scope::get_variables() const
 ///////////////////////////////////////////////////
 // ScopeTracker
 ///////////////////////////////////////////////////
-ScopeTracker::ScopeTracker(const Gyoji::context::CompilerContext & _compiler_context)
-    : root(std::make_unique<Scope>())
+ScopeTracker::ScopeTracker(
+    bool _root_is_unsafe,
+    const Gyoji::context::CompilerContext & _compiler_context)
+    : root(std::make_unique<Scope>(_root_is_unsafe))
     , compiler_context(_compiler_context)
     , tracker_prior_point()
     , tracker_backward_edges()
@@ -239,9 +249,9 @@ ScopeTracker::~ScopeTracker()
 
 
 void
-ScopeTracker::scope_push(const Gyoji::context::SourceReference & _source_ref)
+ScopeTracker::scope_push(bool _is_unsafe, const Gyoji::context::SourceReference & _source_ref)
 {
-    auto child_scope = std::make_unique<Scope>();
+    auto child_scope = std::make_unique<Scope>(_is_unsafe);
     Scope *new_current = child_scope.get();
     child_scope->parent = current;
     auto child_op = ScopeOperation::create_child(std::move(child_scope), _source_ref);
@@ -249,10 +259,14 @@ ScopeTracker::scope_push(const Gyoji::context::SourceReference & _source_ref)
     current = new_current;
     tracker_prior_point.push_back(tracker_prior_point.back());
 }
+
 void
 ScopeTracker::scope_push_loop(const Gyoji::context::SourceReference & _source_ref, size_t _loop_break_blockid, size_t _loop_continue_blockid)
 {
-    auto child_scope = std::make_unique<Scope>(true, _loop_break_blockid, _loop_continue_blockid);
+    // Scopes associated with loops cannot directly
+    // be declared as unsafe, so if you want that, you should
+    // do it in the parent scope of the loop.
+    auto child_scope = std::make_unique<Scope>(false, true, _loop_break_blockid, _loop_continue_blockid);
     Scope *new_current = child_scope.get();
     child_scope->parent = current;
     auto child_op = ScopeOperation::create_child(std::move(child_scope), _source_ref);
@@ -421,6 +435,20 @@ ScopeTracker::get_variables_to_unwind_for_break() const
 const Scope *
 ScopeTracker::get_current() const
 { return current; }
+
+
+bool
+ScopeTracker::is_unsafe() const
+{
+    Scope* cur = current;
+    while (cur) {
+	if (cur->is_unsafe()) {
+	    return true;
+	}
+	cur = cur->parent;
+    }
+    return false;
+}
 
 bool
 ScopeTracker::add_variable(std::string variable_name, const Gyoji::mir::Type *mir_type, const Gyoji::context::SourceReference & source_ref)

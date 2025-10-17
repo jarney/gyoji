@@ -706,10 +706,15 @@ namespace Gyoji::mir {
 	 */
 	const std::vector<Argument> & get_argument_types() const;
 
+	/**
+	 * Returns true if this is an unsafe function pointer.
+	 * This is ONLY valid for types that are 'is_function_pointer()'.
+	 */
+	bool is_unsafe() const;
+	
 	const Type * get_class_type() const;
 	const Type * get_function_pointer_type() const;
 
-	
 	/**
 	 * Completes the definition of a composite type.
 	 */
@@ -739,6 +744,7 @@ namespace Gyoji::mir {
 	void complete_function_pointer_definition(
 	    const Type *_return_type,
 	    const std::vector<Argument> & _argument_types,
+	    bool _is_unsafe,
 	    const Gyoji::context::SourceReference & _source_ref
 	    );
 
@@ -753,7 +759,7 @@ namespace Gyoji::mir {
 	 * of the type database.
 	 */
 	void dump(FILE *out) const;
-	
+
 	/**
 	 * If a type is forward-declared without a complete type,
 	 * this returns the reference to the source location
@@ -775,6 +781,7 @@ namespace Gyoji::mir {
 	std::string name;
 	TypeType type;
 	bool complete;
+	bool m_is_unsafe;
 	
 	const Gyoji::context::SourceReference *declared_source_ref;
 	const Gyoji::context::SourceReference *defined_source_ref;

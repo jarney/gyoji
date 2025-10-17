@@ -69,17 +69,17 @@ int test_jump_backward_ok()
 {
     Gyoji::context::CompilerContext context("Some name");
     
-    ScopeTracker tracker(context);
+    ScopeTracker tracker(false, context);
 
     tracker.add_variable("argc", nullptr, zero_source_ref);
     tracker.add_variable("argv", nullptr, zero_source_ref);
 
-    tracker.scope_push(zero_source_ref);
+    tracker.scope_push(false, zero_source_ref);
     tracker.label_define("label1", 2, zero_source_ref);
     tracker.add_variable("foo", nullptr, zero_source_ref);
     tracker.scope_pop();
     
-    tracker.scope_push(zero_source_ref);
+    tracker.scope_push(false, zero_source_ref);
     tracker.add_goto("label1", std::make_unique<FunctionPoint>(0, 1), zero_source_ref);
     tracker.scope_pop();
 
@@ -104,12 +104,12 @@ int test_jump_forward_ok()
 {
     Gyoji::context::CompilerContext context("Some name");
     
-    ScopeTracker tracker(context);
+    ScopeTracker tracker(false, context);
 
     tracker.add_variable("argc", nullptr, zero_source_ref);
     tracker.add_variable("argv", nullptr, zero_source_ref);
 
-    tracker.scope_push(zero_source_ref);
+    tracker.scope_push(false, zero_source_ref);
     {
         // Note that the goto and declare must happen together.
 	// I don't like that these aren't atomic, but the caller
@@ -120,7 +120,7 @@ int test_jump_forward_ok()
     }
     tracker.scope_pop();
 
-    tracker.scope_push(zero_source_ref);
+    tracker.scope_push(false, zero_source_ref);
     {
 	// This one doesn't need a basic block ID
 	// because it was forward declared with the goto above.
@@ -154,15 +154,15 @@ int test_jump_backward_skip_initialization()
 {
     Gyoji::context::CompilerContext context("Some name");
     
-    ScopeTracker tracker(context);
+    ScopeTracker tracker(false, context);
 
     tracker.add_variable("argc", nullptr, zero_source_ref);
     tracker.add_variable("argv", nullptr, zero_source_ref);
 
-    tracker.scope_push(zero_source_ref);
+    tracker.scope_push(false, zero_source_ref);
     tracker.add_variable("one", nullptr, zero_source_ref);
     
-    tracker.scope_push(zero_source_ref);
+    tracker.scope_push(false, zero_source_ref);
     tracker.add_variable("two", nullptr, zero_source_ref);
     tracker.label_define("label1", 2, zero_source_ref);
     
@@ -174,10 +174,10 @@ int test_jump_backward_skip_initialization()
     tracker.add_goto("label2", std::make_unique<FunctionPoint>(1, 1), zero_source_ref);
     tracker.add_variable("five", nullptr, zero_source_ref);
 
-    tracker.scope_push(zero_source_ref);
+    tracker.scope_push(false, zero_source_ref);
     tracker.add_variable("six", nullptr, zero_source_ref);
     
-    tracker.scope_push(zero_source_ref);
+    tracker.scope_push(false, zero_source_ref);
     tracker.add_variable("four", nullptr, zero_source_ref);
     tracker.label_define("label2", 2, zero_source_ref);
     tracker.scope_pop();

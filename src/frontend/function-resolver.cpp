@@ -136,7 +136,7 @@ FunctionDefinitionResolver::FunctionDefinitionResolver(
     , function_definition(_function_definition)
     , mir(_mir)
     , type_resolver(_type_resolver)
-    , scope_tracker(_compiler_context)
+    , scope_tracker(_function_definition.get_unsafe_modifier().is_unsafe(), _compiler_context)
     , class_type(nullptr)
     , method(nullptr)
 {}
@@ -155,6 +155,8 @@ FunctionDefinitionResolver::resolve()
     std::string fully_qualified_function_name = 
 	function_definition.get_name().get_fully_qualified_name();
 
+    bool is_unsafe = function_definition.get_unsafe_modifier().is_unsafe();
+    
     NS2Entity *entity = function_definition.get_name().get_ns2_entity();
 
     // This section tries to figure out if this is a plain function
@@ -344,9 +346,9 @@ FunctionDefinitionResolver::resolve()
 		return false;
 	    }
 	    const std::vector<Argument> & function_arguments = symbol_type->get_argument_types();
-	    
+
 	    if (arguments.size() != function_arguments.size()) {
-		std::unique_ptr<Gyoji::context::Error> error = std::make_unique<Gyoji::context::Error>("Method argument mismatch");
+		std::unique_ptr<Gyoji::context::Error> error = std::make_unique<Gyoji::context::Error>("Function argument mismatch");
 		error->add_message(
 		    function_definition.get_source_ref(),
 		    std::string("Function has ") + std::to_string(arguments.size()) + std::string(" arguments defined")
@@ -363,6 +365,22 @@ FunctionDefinitionResolver::resolve()
 	    }
 	    bool arg_error = false;
 
+	    if (symbol_type->is_unsafe() != is_unsafe) {
+		std::unique_ptr<Gyoji::context::Error> error = std::make_unique<Gyoji::context::Error>("Function safety modifier does not match declaration.");
+		error->add_message(
+		    function_definition.get_return_type().get_source_ref(),
+		    std::string("Function defined as ") + (is_unsafe ? std::string("unsafe") : std::string("not unsafe")) + std::string(".")
+		    );
+		error->add_message(
+		    symbol_type->get_defined_source_ref(),
+		    std::string("Does not match previous declaration as ") + (symbol_type->is_unsafe() ? std::string("unsafe") : std::string("not unsafe"))
+		    );
+		compiler_context
+		    .get_errors()
+		    .add_error(std::move(error));
+		arg_error = true;
+	    }
+	    
 	    if (symbol_type->get_return_type()->get_name() != return_type->get_name()) {
 		std::unique_ptr<Gyoji::context::Error> error = std::make_unique<Gyoji::context::Error>("Return-value does not match declaration");
 		error->add_message(
@@ -408,6 +426,7 @@ FunctionDefinitionResolver::resolve()
 	fully_qualified_function_name,
 	return_type,
 	arguments,
+	is_unsafe,
 	function_definition.get_source_ref());
 
     
@@ -1143,6 +1162,27 @@ FunctionDefinitionResolver::check_function_call_signature(
 	is_ok = false;
     }
 
+    // If we're not in an unsafe context (i.e. we're in safe mode)
+    // then we cannot call an unsafe function.
+    if (!scope_tracker.is_unsafe()) {
+	if (function_pointer_type->is_unsafe()) {
+	    std::unique_ptr<Gyoji::context::Error> error = std::make_unique<Gyoji::context::Error>(
+		(is_method ?
+		 std::string("Calling an unsafe method from a safe context.") : 
+		 std::string("Calling an unsafe function from a safe context.")
+		    )    
+		);
+	    error->add_message(src_ref,
+			       (is_method ? std::string("Method ") : std::string("Function ") )
+			       + std::string("is declared as unsafe, but this is not inside a scope marked unsafe.")
+		);
+	    compiler_context
+		.get_errors()
+		.add_error(std::move(error));
+	    is_ok = false;
+	}
+    }
+    
     size_t minsize = std::min(passed_arguments.size(), function_pointer_args.size());
     for (size_t i = 0; i < minsize; i++) {
 	const Type *passed_type = function->tmpvar_get(passed_arguments.at(i));
@@ -1409,6 +1449,16 @@ FunctionDefinitionResolver::extract_from_expression_postfix_arrow(
 	return false;
     }
 
+    if (!scope_tracker.is_unsafe()) {
+	compiler_context
+	    .get_errors()
+	    .add_simple_error(
+		expression.get_expression().get_source_ref(),
+		"De-referencing pointers (->) must be done inside an 'unsafe' block.",
+		std::string("De-referencing a pointer outside an 'unsafe' block breaks the safety guarantees of the language.")
+		);
+	return false;
+    }
     // First takes 'operand' as a pointer
     // and de-references it into an lvalue.
     size_t class_reference_tmpvar = function->tmpvar_define(class_type);
@@ -1425,6 +1475,16 @@ FunctionDefinitionResolver::extract_from_expression_postfix_arrow(
     
     const std::string & member_name = expression.get_identifier().get_name();
     const TypeMember *member = class_type->member_get(member_name);
+    if (member == nullptr) {
+	compiler_context
+	    .get_errors()
+	    .add_simple_error(
+		expression.get_expression().get_source_ref(),
+		"Attempt to access an undeclared member",
+		std::string("Member ") + member_name + std::string(" was not declared in ") + class_type->get_name()
+		);
+	return false;
+    }
     
     returned_tmpvar = function->tmpvar_define(member->get_type());
     auto dot_operation = std::make_unique<OperationDot>(
@@ -1604,6 +1664,7 @@ FunctionDefinitionResolver::extract_from_expression_unary_prefix(
         break;
     case ExpressionUnaryPrefix::DEREFERENCE:
         {
+	    bool is_ok = true;
 	if (operand_type->get_type() != Type::TYPE_POINTER) {
 	    compiler_context
 		.get_errors()
@@ -1612,6 +1673,19 @@ FunctionDefinitionResolver::extract_from_expression_unary_prefix(
 		    "Cannot dereference non-pointer",
 		    std::string("Attempting to de-reference non-pointer type ") + operand_type->get_name()
 		    );
+	    is_ok = false;
+	}
+	if (!scope_tracker.is_unsafe()) {
+	    compiler_context
+		.get_errors()
+		.add_simple_error(
+		    expression.get_expression().get_source_ref(),
+		    "De-referencing pointers (*) must be done inside an 'unsafe' block.",
+		    std::string("De-referencing a pointer outside an 'unsafe' block breaks the safety guarantees of the language.")
+		    );
+	    is_ok = false;
+	}
+	if (!is_ok) {
 	    return false;
 	}
 	returned_tmpvar = function->tmpvar_define(operand_type->get_pointer_target());
@@ -2900,7 +2974,10 @@ FunctionDefinitionResolver::extract_from_statement_ifelse(
     current_block = blockid_if;
 
     // Perform the stuff inside the 'if' block.
-    scope_tracker.scope_push(statement.get_if_scope_body().get_source_ref());
+    // If blocks cannot inherently be defined as unsafe,
+    // so if you need that, put the if statement inside
+    // an unsafe block.
+    scope_tracker.scope_push(false, statement.get_if_scope_body().get_source_ref());
     if (!extract_from_statement_list(
 	    true,
 	    statement.get_if_scope_body().get_statements()
@@ -2922,7 +2999,10 @@ FunctionDefinitionResolver::extract_from_statement_ifelse(
     
     if (statement.has_else()) {
 	// Perform the stuff in the 'else' block.
-	scope_tracker.scope_push(statement.get_else_scope_body().get_source_ref());
+	// If/Else blocks cannot inherently be defined as unsafe,
+	// so if you need that, put the if statement inside
+	// an unsafe block.
+	scope_tracker.scope_push(false, statement.get_else_scope_body().get_source_ref());
 	size_t blockid_tmp = current_block;
 	current_block = blockid_else;
 	if (!extract_from_statement_list(
@@ -3187,8 +3267,11 @@ FunctionDefinitionResolver::extract_from_statement_switch(
 	    
 	    current_block = blockid_if;
 	}
-	
-	scope_tracker.scope_push(block_ptr->get_scope_body().get_source_ref());
+
+	// Switch blocks are not inherently unsafe.
+	// If you need that, you need to declare the unsafe block
+	// either inside the block or outside the switch.
+	scope_tracker.scope_push(false, block_ptr->get_scope_body().get_source_ref());
 	if (!extract_from_statement_list(true, block_ptr->get_scope_body().get_statements())) {
 	    return false;
 	}
@@ -3422,7 +3505,10 @@ FunctionDefinitionResolver::extract_from_statement_list(
 	}
 	else if (std::holds_alternative<Gyoji::owned<StatementBlock>>(statement_type)) {
 	    const auto & statement = std::get<Gyoji::owned<StatementBlock>>(statement_type);
-	    scope_tracker.scope_push(statement->get_scope_body().get_source_ref());
+	    scope_tracker.scope_push(
+		statement->get_unsafe_modifier().is_unsafe(),
+		statement->get_scope_body().get_source_ref()
+		);
 	    if (!extract_from_statement_list(true, statement->get_scope_body().get_statements())) {
 		return false;
 	    }

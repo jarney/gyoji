@@ -1740,6 +1740,7 @@ namespace Gyoji::frontend::tree {
     public:
 	ClassMemberDeclarationVariable(
 	    Gyoji::owned<AccessModifier> _access_modifier,
+	    Gyoji::owned<UnsafeModifier> _unsafe_modifier,
 	    Gyoji::owned<TypeSpecifier> _type_specifier,
 	    Gyoji::owned<Terminal> _identifier_token,
 	    Gyoji::owned<Terminal> _semicolon_token
@@ -1749,11 +1750,13 @@ namespace Gyoji::frontend::tree {
 	 */
 	~ClassMemberDeclarationVariable();
 	const AccessModifier & get_access_modifier() const;
+	const UnsafeModifier & get_unsafe_modifier() const;
 	const TypeSpecifier & get_type_specifier() const;
 	const std::string & get_name() const;
 	const Gyoji::context::SourceReference & get_name_source_ref() const;
     private:
 	Gyoji::owned<AccessModifier> access_modifier;
+	Gyoji::owned<UnsafeModifier> unsafe_modifier;
 	Gyoji::owned<TypeSpecifier> type_specifier;
 	Gyoji::owned<Terminal> identifier_token;
 	Gyoji::owned<Terminal> semicolon_token;
@@ -1762,6 +1765,7 @@ namespace Gyoji::frontend::tree {
     public:
 	ClassMemberDeclarationMethod(
 	    Gyoji::owned<AccessModifier> _access_modifier,
+	    Gyoji::owned<UnsafeModifier> _unsafe_modifier,
 	    Gyoji::owned<TypeSpecifier> _type_specifier,
 	    Gyoji::owned<Terminal> _identifier_token,
 	    Gyoji::owned<Terminal> _paren_l_token,
@@ -1774,11 +1778,13 @@ namespace Gyoji::frontend::tree {
 	 */
 	~ClassMemberDeclarationMethod();
 	const AccessModifier & get_access_modifier() const;
+	const UnsafeModifier & get_unsafe_modifier() const;
 	const TypeSpecifier & get_type_specifier() const;
 	const Terminal & get_identifier() const;
 	const FunctionDefinitionArgList & get_arguments() const;
     private:
 	Gyoji::owned<AccessModifier> access_modifier;
+	Gyoji::owned<UnsafeModifier> unsafe_modifier;
 	Gyoji::owned<TypeSpecifier> type_specifier;
 	Gyoji::owned<Terminal> identifier_token;
 	Gyoji::owned<Terminal> paren_l_token;
@@ -1790,6 +1796,7 @@ namespace Gyoji::frontend::tree {
     public:
 	ClassMemberDeclarationConstructor(
 	    Gyoji::owned<AccessModifier> _access_modifier,
+	    Gyoji::owned<UnsafeModifier> _unsafe_modifier,
 	    Gyoji::owned<TypeSpecifier> _type_specifier,
 	    Gyoji::owned<Terminal> _paren_l_token,
 	    Gyoji::owned<FunctionDefinitionArgList> _function_definition_arg_list,
@@ -1801,10 +1808,12 @@ namespace Gyoji::frontend::tree {
 	 */
 	~ClassMemberDeclarationConstructor();
 	const AccessModifier & get_access_modifier() const;
+	const UnsafeModifier & get_unsafe_modifier() const;
 	const TypeSpecifier & get_type_specifier() const;
 	const FunctionDefinitionArgList & get_arguments() const;
     private:
 	Gyoji::owned<AccessModifier> access_modifier;
+	Gyoji::owned<UnsafeModifier> unsafe_modifier;
 	Gyoji::owned<TypeSpecifier> type_specifier;
 	Gyoji::owned<Terminal> paren_l_token;
 	Gyoji::owned<FunctionDefinitionArgList> function_definition_arg_list;
@@ -1815,6 +1824,7 @@ namespace Gyoji::frontend::tree {
     public:
 	ClassMemberDeclarationDestructor(
 	    Gyoji::owned<AccessModifier> _access_modifier,
+	    Gyoji::owned<UnsafeModifier> _unsafe_modifier,
 	    Gyoji::owned<Terminal> _tilde_token,
 	    Gyoji::owned<TypeSpecifier> _type_specifier,
 	    Gyoji::owned<Terminal> _paren_l_token,
@@ -1827,10 +1837,12 @@ namespace Gyoji::frontend::tree {
 	 */
 	~ClassMemberDeclarationDestructor();
 	const AccessModifier & get_access_modifier() const;
+	const UnsafeModifier & get_unsafe_modifier() const;
 	const TypeSpecifier & get_type_specifier() const;
 	const FunctionDefinitionArgList & get_arguments() const;
     private:
 	Gyoji::owned<AccessModifier> access_modifier;
+	Gyoji::owned<UnsafeModifier> unsafe_modifier;
 	Gyoji::owned<Terminal> tilde_token;
 	Gyoji::owned<TypeSpecifier> type_specifier;
 	Gyoji::owned<Terminal> paren_l_token;

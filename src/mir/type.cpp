@@ -268,6 +268,13 @@ Type::get_argument_types() const
 {
     return argument_types;
 }
+
+bool
+Type::is_unsafe() const
+{
+    return m_is_unsafe;
+}
+
 const Type *
 Type::get_class_type() const
 {
@@ -315,12 +322,14 @@ void
 Type::complete_function_pointer_definition(
     const Type *_return_type,
     const std::vector<Argument> & _argument_types,
+    bool _is_unsafe,
     const Gyoji::context::SourceReference & _source_ref
     )
 {
     complete = true;
     return_type = _return_type;
     argument_types = _argument_types;
+    m_is_unsafe = _is_unsafe;
     defined_source_ref = &_source_ref;
 }
 

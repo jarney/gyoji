@@ -239,13 +239,21 @@ TypeResolver::extract_from_class_members(Type & type, const ClassDefinition & cl
 	if (std::holds_alternative<Gyoji::owned<ClassMemberDeclarationVariable>>(class_member_type)) {
 	    const auto & member_variable = std::get<Gyoji::owned<ClassMemberDeclarationVariable>>(class_member_type);
 	    
+	    if (member_variable->get_unsafe_modifier().is_unsafe()) {
+		compiler_context
+		    .get_errors()
+		    .add_simple_error(member_variable->get_type_specifier().get_source_ref(),
+				      "Member variables cannot be declared inherently unsafe.",
+				      std::string("Member variable ") + member_variable->get_name() + std::string(" cannot be declared unsafe.  This would not have any valid meaning.")
+			);
+	    }
 	    const Type *member_type = extract_from_type_specifier(member_variable->get_type_specifier());
 	    if (member_type == nullptr) {
 		compiler_context
 		    .get_errors()
 		    .add_simple_error(member_variable->get_type_specifier().get_source_ref(),
 				      "Could not find type",
-				      "Could not extract type of member variable " + member_variable->get_name()
+				      std::string("Could not extract type of member variable ") + member_variable->get_name()
 			);
 	    }
 	    else {
@@ -305,14 +313,17 @@ TypeResolver::extract_from_class_members(Type & type, const ClassDefinition & cl
 		);
 	    methods.insert(std::pair(member_method->get_identifier().get_name(), method));
 
+	    bool is_unsafe = member_method->get_unsafe_modifier().is_unsafe();
 	    std::string arg_string = Gyoji::misc::join(arg_list, ",");
-	    std::string pointer_name = ret_type->get_name() + std::string("(*)") + std::string("(") + arg_string + std::string(")");
+	    std::string unsafe_str = is_unsafe ? std::string("unsafe") : std::string("");
+	    std::string pointer_name = ret_type->get_name() + std::string("(") + unsafe_str + std::string("*)") + std::string("(") + arg_string + std::string(")");
 	    Type *fptr_type = get_or_create(pointer_name, Type::TYPE_FUNCTION_POINTER, false, member_method->get_source_ref());
 	    
 	    if (!fptr_type->is_complete()) {
 		fptr_type->complete_function_pointer_definition(
 		    ret_type,
 		    fptr_arguments,
+		    is_unsafe,
 		    member_method->get_source_ref()
 		    );
 	    }
@@ -446,7 +457,8 @@ void
 TypeResolver::extract_from_function_specifications(
     const Terminal & name,
     const TypeSpecifier & type_specifier,
-    const FunctionDefinitionArgList & function_argument_list
+    const FunctionDefinitionArgList & function_argument_list,
+    const UnsafeModifier & unsafe_modifier
     )
 {
 
@@ -492,14 +504,17 @@ TypeResolver::extract_from_function_specifications(
 	    Argument(t, function_definition_arg->get_type_specifier().get_source_ref())
 	    );
     }
+    bool is_unsafe = unsafe_modifier.is_unsafe();
     std::string arg_string = Gyoji::misc::join(arg_list, ",");
-    std::string pointer_name = type->get_name() + std::string("(*)") + std::string("(") + arg_string + std::string(")");
+    std::string unsafe_str = is_unsafe ? std::string("unsafe") : std::string("");
+    std::string pointer_name = type->get_name() + std::string("(") + unsafe_str + std::string("*)") + std::string("(") + arg_string + std::string(")");
     Type *pointer_type = get_or_create(pointer_name, Type::TYPE_FUNCTION_POINTER, false, name.get_source_ref());
 
     if (!pointer_type->is_complete()) {
 	pointer_type->complete_function_pointer_definition(
 	    type,
 	    fptr_arguments,
+	    is_unsafe,
 	    name.get_source_ref()
 	    );
     }
@@ -520,7 +535,8 @@ TypeResolver::extract_from_function_definition(const FileStatementFunctionDefini
     extract_from_function_specifications(
 	function_definition.get_name(),
 	function_definition.get_return_type(),
-	function_definition.get_arguments()
+	function_definition.get_arguments(),
+	function_definition.get_unsafe_modifier()
 	);
 }
 
@@ -530,7 +546,8 @@ TypeResolver::extract_from_function_declaration(const FileStatementFunctionDecla
     extract_from_function_specifications(
 	function_declaration.get_name(),
 	function_declaration.get_return_type(),
-	function_declaration.get_arguments()
+	function_declaration.get_arguments(),
+	function_declaration.get_unsafe_modifier()
 	);
 }
 

@@ -356,6 +356,7 @@ namespace Gyoji::mir {
 	    std::string _name,
 	    const Type *_return_type,
 	    const std::vector<FunctionArgument> & _arguments,
+	    bool _is_unsafe,
 	    const Gyoji::context::SourceReference & _source_ref
 	    );
 	~Function();
@@ -458,6 +459,11 @@ namespace Gyoji::mir {
 	const Gyoji::context::SourceReference & get_source_ref() const;
 
 	/**
+	 * Returns true if this function is declared as unsafe.
+	 */
+	bool is_unsafe() const;
+
+	/**
 	 * @brief Temporary values used by opcodes
 	 *
 	 * @details
@@ -524,6 +530,7 @@ namespace Gyoji::mir {
 	const std::string name;
 	const Type *return_type;
 	std::vector<FunctionArgument> arguments;
+	bool m_is_unsafe;
 	
 	const Gyoji::context::SourceReference & source_ref;
 	

@@ -85,7 +85,8 @@ namespace Gyoji::frontend::lowering {
 	void extract_from_function_specifications(
 	    const Gyoji::frontend::tree::Terminal & name,
 	    const Gyoji::frontend::tree::TypeSpecifier & type_specifier,
-	    const Gyoji::frontend::tree::FunctionDefinitionArgList & arguments
+	    const Gyoji::frontend::tree::FunctionDefinitionArgList & arguments,
+	    const Gyoji::frontend::tree::UnsafeModifier & unsafe_modifier
 	    );
 	
 	void extract_from_function_definition(const Gyoji::frontend::tree::FileStatementFunctionDefinition & function_definition);

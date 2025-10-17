@@ -181,16 +181,18 @@ namespace Gyoji::frontend::lowering {
 	 * This is an anonymous scope that is NOT a
 	 * loop (i.e. break and continue are not permitted here).
 	 */
-	Scope();
+	Scope(bool _is_unsafe);
 	/**
 	 * This is a scope that is associated with some
 	 * loop like a 'for' or 'while'.  The block ID for
 	 * where to jump to in case of break or continue
 	 * are provided so that they can be known if they are needed.
 	 */
-	Scope(bool _is_loop,
-	      size_t _loop_break_blockid,
-	      size_t _loop_continue_blockid
+	Scope(
+	    bool _is_unsafe,
+	    bool _is_loop,
+	    size_t _loop_break_blockid,
+	    size_t _loop_continue_blockid
 	    );
 	/**
 	 * @brief Move along, nothing to see here.
@@ -211,6 +213,15 @@ namespace Gyoji::frontend::lowering {
 	const LocalVariable *get_variable(std::string name) const;
 
 	bool is_loop() const;
+
+	/**
+	 * Returns true if this scope is declared
+	 * as unsafe.  Does not check ancestors, only
+	 * the current scope.  If you want to know if
+	 * an ancestor is unsafe, use the scope tracker
+	 * instead.
+	 */
+	bool is_unsafe() const;
 	
 	size_t get_loop_break_blockid() const;
 	
@@ -225,6 +236,7 @@ namespace Gyoji::frontend::lowering {
 	// what is the block id to jump
 	// to for a 'break' or 'continue' operation?
 	bool scope_is_loop;
+	bool scope_is_unsafe;
 	size_t loop_break_blockid;
 	size_t loop_continue_blockid;
 	
@@ -303,7 +315,10 @@ namespace Gyoji::frontend::lowering {
      */
     class ScopeTracker {
     public:
-	ScopeTracker(const Gyoji::context::CompilerContext & _compiler_context);
+	ScopeTracker(
+	    bool _root_is_unsafe,
+	    const Gyoji::context::CompilerContext & _compiler_context
+	    );
 	/**
 	 * @brief Move along, nothing to see here.
 	 *
@@ -313,9 +328,12 @@ namespace Gyoji::frontend::lowering {
 	~ScopeTracker();
 
 	/**
-	 * Enter a new (un-named) scope.
+	 * Enter a new (un-named) scope.  This will add a
+	 * new scope with the 'unsafe' modifier if it is
+	 * declared as unsafe.
 	 */
 	void scope_push(
+	    bool is_unsafe,
 	    const Gyoji::context::SourceReference & _source_ref
 	    );
 
@@ -451,14 +469,17 @@ namespace Gyoji::frontend::lowering {
 	std::vector<std::string> get_variables_to_unwind_for_label(std::string & label) const;
 
 	const Scope *get_current() const;
-	
+
+	/**
+	 * This returns true if this scope or one of its ancestors
+	 * is marked as unsafe.
+	 */
+	bool is_unsafe() const;
     private:
 	void add_flat_op(const ScopeOperation *op);
 
 	void add_operation(Gyoji::owned<ScopeOperation> op);
 
-
-	
 	Gyoji::owned<Scope> root;
 	Scope *current;
 	const Gyoji::context::CompilerContext & compiler_context;

@@ -1314,17 +1314,20 @@ ClassArgumentList::get_arguments() const
 ///////////////////////////////////////////////////
 ClassMemberDeclarationVariable::ClassMemberDeclarationVariable(
     Gyoji::owned<AccessModifier> _access_modifier,
+    Gyoji::owned<UnsafeModifier> _unsafe_modifier,
     Gyoji::owned<TypeSpecifier> _type_specifier,
     Gyoji::owned<Terminal> _identifier_token,
     Gyoji::owned<Terminal> _semicolon_token
     )
     : SyntaxNode(NONTERMINAL_class_member_declaration_variable, this, _access_modifier->get_source_ref())
     , access_modifier(std::move(_access_modifier))
+    , unsafe_modifier(std::move(_unsafe_modifier))
     , type_specifier(std::move(_type_specifier))
     , identifier_token(std::move(_identifier_token))
     , semicolon_token(std::move(_semicolon_token))
 {
     add_child(*access_modifier);
+    add_child(*unsafe_modifier);
     add_child(*type_specifier);
     add_child(*identifier_token);
     add_child(*semicolon_token);
@@ -1334,6 +1337,9 @@ ClassMemberDeclarationVariable::~ClassMemberDeclarationVariable()
 const AccessModifier &
 ClassMemberDeclarationVariable::get_access_modifier() const
 { return *access_modifier; }
+const UnsafeModifier &
+ClassMemberDeclarationVariable::get_unsafe_modifier() const
+{ return *unsafe_modifier; }
 const TypeSpecifier &
 ClassMemberDeclarationVariable::get_type_specifier() const
 { return *type_specifier; }
@@ -1346,6 +1352,7 @@ ClassMemberDeclarationVariable::get_name_source_ref() const
 ///////////////////////////////////////////////////
 ClassMemberDeclarationMethod::ClassMemberDeclarationMethod(
     Gyoji::owned<AccessModifier> _access_modifier,
+    Gyoji::owned<UnsafeModifier> _unsafe_modifier,
     Gyoji::owned<TypeSpecifier> _type_specifier,
     Gyoji::owned<Terminal> _identifier_token,
     Gyoji::owned<Terminal> _paren_l_token,
@@ -1355,6 +1362,7 @@ ClassMemberDeclarationMethod::ClassMemberDeclarationMethod(
     )
     : SyntaxNode(NONTERMINAL_class_member_declaration_method, this, _access_modifier->get_source_ref())
     , access_modifier(std::move(_access_modifier))
+    , unsafe_modifier(std::move(_unsafe_modifier))
     , type_specifier(std::move(_type_specifier))
     , identifier_token(std::move(_identifier_token))
     , paren_l_token(std::move(_paren_l_token))
@@ -1363,6 +1371,7 @@ ClassMemberDeclarationMethod::ClassMemberDeclarationMethod(
     , semicolon_token(std::move(_semicolon_token))
 {
     add_child(*access_modifier);
+    add_child(*unsafe_modifier);
     add_child(*type_specifier);
     add_child(*identifier_token);
     add_child(*paren_l_token);
@@ -1375,6 +1384,9 @@ ClassMemberDeclarationMethod::~ClassMemberDeclarationMethod()
 const AccessModifier &
 ClassMemberDeclarationMethod::get_access_modifier() const
 { return *access_modifier; }
+const UnsafeModifier &
+ClassMemberDeclarationMethod::get_unsafe_modifier() const
+{ return *unsafe_modifier; }
 const TypeSpecifier &
 ClassMemberDeclarationMethod::get_type_specifier() const
 { return *type_specifier; }
@@ -1387,6 +1399,7 @@ ClassMemberDeclarationMethod::get_arguments() const
 ///////////////////////////////////////////////////
 ClassMemberDeclarationConstructor::ClassMemberDeclarationConstructor(
     Gyoji::owned<AccessModifier> _access_modifier,
+    Gyoji::owned<UnsafeModifier> _unsafe_modifier,
     Gyoji::owned<TypeSpecifier> _type_specifier,
     Gyoji::owned<Terminal> _paren_l_token,
     Gyoji::owned<FunctionDefinitionArgList> _function_definition_arg_list,
@@ -1395,6 +1408,7 @@ ClassMemberDeclarationConstructor::ClassMemberDeclarationConstructor(
     )
     : SyntaxNode(NONTERMINAL_class_member_declaration_method, this, _access_modifier->get_source_ref())
     , access_modifier(std::move(_access_modifier))
+    , unsafe_modifier(std::move(_unsafe_modifier))
     , type_specifier(std::move(_type_specifier))
     , paren_l_token(std::move(_paren_l_token))
     , function_definition_arg_list(std::move(_function_definition_arg_list))
@@ -1402,6 +1416,7 @@ ClassMemberDeclarationConstructor::ClassMemberDeclarationConstructor(
     , semicolon_token(std::move(_semicolon_token))
 {
     add_child(*access_modifier);
+    add_child(*unsafe_modifier);
     add_child(*type_specifier);
     add_child(*paren_l_token);
     add_child(*function_definition_arg_list);
@@ -1413,6 +1428,9 @@ ClassMemberDeclarationConstructor::~ClassMemberDeclarationConstructor()
 const AccessModifier &
 ClassMemberDeclarationConstructor::get_access_modifier() const
 { return *access_modifier; }
+const UnsafeModifier &
+ClassMemberDeclarationConstructor::get_unsafe_modifier() const
+{ return *unsafe_modifier; }
 const TypeSpecifier &
 ClassMemberDeclarationConstructor::get_type_specifier() const
 { return *type_specifier; }
@@ -1422,6 +1440,7 @@ ClassMemberDeclarationConstructor::get_arguments() const
 ///////////////////////////////////////////////////
 ClassMemberDeclarationDestructor::ClassMemberDeclarationDestructor(
     Gyoji::owned<AccessModifier> _access_modifier,
+    Gyoji::owned<UnsafeModifier> _unsafe_modifier,
     Gyoji::owned<Terminal> _tilde_token,
     Gyoji::owned<TypeSpecifier> _type_specifier,
     Gyoji::owned<Terminal> _paren_l_token,
@@ -1431,6 +1450,7 @@ ClassMemberDeclarationDestructor::ClassMemberDeclarationDestructor(
     )
     : SyntaxNode(NONTERMINAL_class_member_declaration_method, this, _access_modifier->get_source_ref())
     , access_modifier(std::move(_access_modifier))
+    , unsafe_modifier(std::move(_unsafe_modifier))
     , tilde_token(std::move(_tilde_token))
     , type_specifier(std::move(_type_specifier))
     , paren_l_token(std::move(_paren_l_token))
@@ -1439,6 +1459,7 @@ ClassMemberDeclarationDestructor::ClassMemberDeclarationDestructor(
     , semicolon_token(std::move(_semicolon_token))
 {
     add_child(*access_modifier);
+    add_child(*unsafe_modifier);
     add_child(*tilde_token);
     add_child(*type_specifier);
     add_child(*paren_l_token);
@@ -1451,6 +1472,9 @@ ClassMemberDeclarationDestructor::~ClassMemberDeclarationDestructor()
 const AccessModifier &
 ClassMemberDeclarationDestructor::get_access_modifier() const
 { return *access_modifier; }
+const UnsafeModifier &
+ClassMemberDeclarationDestructor::get_unsafe_modifier() const
+{ return *unsafe_modifier; }
 const TypeSpecifier &
 ClassMemberDeclarationDestructor::get_type_specifier() const
 { return *type_specifier; }
