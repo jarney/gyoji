@@ -125,6 +125,70 @@ Function::tmpvar_duplicate(size_t tempvar_id)
 }
 
 void
+Function::calculate_block_reachability()
+{
+    // This map encodes the relationship between a block
+    // and the blocks it is connected to.
+    std::map<size_t, std::vector<size_t>> edges;
+
+    // This is the working list of blocks we're
+    // examining.
+    std::vector<size_t> open_list;
+
+    // This is a map of blockid:blockid
+    // for the unreachable blocks.
+    std::map<size_t, size_t> unreachable;
+
+    // Build a graph with the 'edges'.
+    for (const auto & block : blocks) {
+	// Everything starts out as unreachable.
+	unreachable.insert(std::pair(block.first, block.first));
+	std::vector connections_to = block.second->get_connections();
+	edges.insert(std::pair(block.first, connections_to));
+    }
+    // We start with only one element on the open list,
+    // that is the 'start' or 'entry' block.
+    
+    open_list.push_back(0);
+    // With each iteration, we look for
+    // blocks we connect to.  Once we find them,
+    // we take them off the unreachable list.
+    while (open_list.size() != 0) {
+	size_t current = open_list.back();
+	fprintf(stderr, "Checking block %ld\n", current);
+	open_list.pop_back();
+	unreachable.erase(current);
+	const auto & connections_to  = edges[current];
+	for (size_t to : connections_to) {
+	    fprintf(stderr, "    - %ld\n", to);
+	    blocks[to]->add_reachable_from(current);
+	}
+	open_list.insert(open_list.end(), connections_to.begin(), connections_to.end());
+    }
+    for (const auto & unreach : unreachable) {
+	// This is unreachable in the sense that the
+	// basic blocks are not a connected graph.
+	// If this happens, then there is a bug in the 'lowering'
+	// code which should prevent this from being constructed
+	// in this way.
+	fprintf(stderr, "Unreachable block %ld\n", unreach.first);
+	const BasicBlock & block = get_basic_block(unreach.first);
+
+	// If this block is empty, we will already have
+	// reported that as an error, so we don't need to
+	// do that again.
+	const auto & operations = block.get_operations();
+	if (operations.size() == 0) {
+	    // Cull it from the block list
+	    // becuase it's empty and unreachable.
+	    fprintf(stderr, "Removing block %ld\n", unreach.first);
+	    blocks.erase(unreach.first);
+	}
+    }
+
+}
+
+void
 Function::dump(FILE *out) const
 {
     fprintf(out, "    %s\n", get_name().c_str());
@@ -183,6 +247,29 @@ BasicBlock::contains_terminator() const
     }
     return false;
 }
+
+std::vector<size_t>
+BasicBlock::get_connections() const
+{
+    for (const auto & op : operations) {
+	if (op->is_terminating()) {
+	    return op->get_connections();
+	}
+    }    
+
+    // In theory, this should not happen
+    // because we will already have checked
+    // that all blocks have terminators.
+    std::vector<size_t> empty_edges;
+    return empty_edges;
+}
+const std::vector<size_t> &
+BasicBlock::get_reachable_from() const
+{ return reachable_from; }
+
+void
+BasicBlock::add_reachable_from(size_t other_block)
+{ reachable_from.push_back(other_block); }
 
 size_t
 BasicBlock::size() const

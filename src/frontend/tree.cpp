@@ -1151,6 +1151,10 @@ ScopeBody::~ScopeBody()
 const StatementList &
 ScopeBody::get_statements() const
 { return *statement_list; }
+const SourceReference &
+ScopeBody::get_end_source_ref() const
+{ return brace_r_token->get_terminal_source_ref(); }
+
 ///////////////////////////////////////////////////
 FileStatementFunctionDefinition::FileStatementFunctionDefinition(
     Gyoji::owned<FileStatementFunctionDeclStart> _start,

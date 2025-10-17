@@ -222,8 +222,32 @@ namespace Gyoji::mir {
 	 * such as a branch, goto, or return.
 	 */
 	bool contains_terminator() const;
+
+	/**
+	 * This method returns the list of other
+	 * basic blocks we connect to.
+	 */
+	std::vector<size_t> get_connections() const;
+
+	/**
+	 * This is the list of blocks that
+	 * can enter this block.  Note that this
+	 * is not valid until the 'calculate_block_reachability()'
+	 * function has been called on the parent function
+	 * to calculate the full reachability graph.
+	 */
+	const std::vector<size_t> & get_reachable_from() const;
+	
+	bool is_reachable() const;
+	/**
+	 * This is called from the 'calculate_block_reachability'
+	 * function when the reachability graph is calculated.
+	 */
+	void add_reachable_from(size_t other_block);
     private:
 	std::vector<Gyoji::owned<Operation>> operations;
+	std::vector<size_t> reachable_from;
+	bool start_block;
     };
 
     /**
@@ -474,6 +498,28 @@ namespace Gyoji::mir {
 	 */
 	size_t tmpvar_duplicate(size_t tmpvar_id);
 	
+	/**
+	 * This must be done after all of the blocks and main
+	 * control-flow have been added.  This calculates
+	 * whether blocks are reachable or not with the current
+	 * control-flow graph.  Early return in some cases may
+	 * leave an empty block at the end and render a block unreachable.
+	 * We need to know about this so we can make a good decision
+	 * about whether to add a 'return' at the end of a void
+	 * function or raise an error due to a missing return.
+	 * At this point, we can also cull
+	 * unreachable blocks if they're empty because
+	 * they would have no effect on the generated
+	 * code and there's no unreachable code to actually
+	 * cause us to raise an error.
+	 *
+	 * This will happen,
+	 * for example, if you return from all branches of
+	 * a switch or if/else, leaving the tail of the
+	 * function empty.
+	 */
+	void calculate_block_reachability();
+
     private:
 	const std::string name;
 	const Type *return_type;

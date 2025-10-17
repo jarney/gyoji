@@ -1736,9 +1736,12 @@ CodeGeneratorLLVMContext::generate_function(const Gyoji::mir::Function & functio
 	i++;
     }
 
-    llvm::Value *return_value = nullptr;
-
     for (const auto & block_it : function.get_blocks()) {
+	// Skip empty blocks.
+	if (block_it.second->size() == 0) {
+	    continue;
+	}
+	
 	std::string block_name = std::string("BB") + std::to_string(block_it.first);
 	llvm::BasicBlock *BB = llvm::BasicBlock::Create(*TheContext, block_name, TheFunction);
 	blocks[block_it.first] = BB;
@@ -1747,30 +1750,18 @@ CodeGeneratorLLVMContext::generate_function(const Gyoji::mir::Function & functio
     Builder->CreateBr(blocks[0]);
     
     for (const auto & block_it : function.get_blocks()) {
+	// Skip empty blocks.
+	// We've already verified in the analysis phase
+	// that if a block is unreachable, it's also empty.
+	if (block_it.second->size() == 0) {
+	    continue;
+	}
+	
 	// Create a new basic block to start insertion into.
 	llvm::BasicBlock *BB = blocks[block_it.first];
 	Builder->SetInsertPoint(BB);
-	llvm::Value *return_value_block = generate_basic_block(function, *block_it.second);
-	
-	// Technically, we should be using 'PHI'
-	// here and reconciling multiple possible
-	// return paths.
-	if (return_value_block != nullptr) {
-	    return_value = return_value_block;
-	}
+	generate_basic_block(function, *block_it.second);
     }
-
-    // This should not be required.  We should
-    // enforce this through the analysis layer
-    // and reject programs that may return without
-    // defining a return value.
-#if 0
-    if (return_value == nullptr) {
-	Builder->CreateRet(
-	    Builder->getInt32(0x1000)
-	    );
-    }
-#endif
     
     // Validate the generated code, checking for consistency.
     verifyFunction(*TheFunction);

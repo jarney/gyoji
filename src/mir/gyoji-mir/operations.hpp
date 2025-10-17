@@ -915,7 +915,17 @@ namespace Gyoji::mir {
 	 * conditional branch, or return statement.
 	 */
 	bool is_terminating() const;
-	
+
+	/**
+	 * @brief Returns the list of basic blocks we might connect to.
+	 *
+	 * @details
+	 * This function returns the basic blocks this operation is connected
+	 * to.  If it is a JUMP or JUMP_CONDITIONAL, it will return the blocks
+	 * we are jumping to.  If it is any other type (including a return)
+	 * then it returns nothing.
+	 */
+	std::vector<size_t> get_connections() const;
 	/**
 	 * @brief Get the reference to the source which originated this operation.
 	 *

@@ -311,6 +311,7 @@ namespace Gyoji::frontend::lowering {
 	    std::vector<std::string> & unwind);
 	
 	bool extract_from_statement_list(
+	    bool automatic_unwind,
 	    const Gyoji::frontend::tree::StatementList & statement_list
 	    );
 	

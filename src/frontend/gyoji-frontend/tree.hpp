@@ -1615,6 +1615,7 @@ namespace Gyoji::frontend::tree {
 	 */
 	~ScopeBody();
 	const StatementList & get_statements() const;
+	const Gyoji::context::SourceReference & get_end_source_ref() const;
     private:
 	Gyoji::owned<Terminal> brace_l_token;
 	Gyoji::owned<StatementList> statement_list;

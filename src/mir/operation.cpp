@@ -186,6 +186,20 @@ Operation::is_terminating() const
 	(type == OP_RETURN_VOID);
 }
 
+std::vector<size_t>
+Operation::get_connections() const
+{
+    std::vector<size_t> connections;
+    if (type == OP_JUMP) {
+	connections.push_back(operands.at(0));
+    }
+    else if (type == OP_JUMP_CONDITIONAL) {
+	connections.push_back(operands.at(1));
+	connections.push_back(operands.at(2));
+    }
+    return connections;
+}
+
 Operation::OperationType
 Operation::get_type() const
 { return type; }

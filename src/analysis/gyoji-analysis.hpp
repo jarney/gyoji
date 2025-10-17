@@ -118,6 +118,9 @@ namespace Gyoji::analysis {
 	virtual void check(const Gyoji::mir::MIR & mir) const;
     private:
 	void check(const Gyoji::mir::Function & function) const;
+	void check_all_blocks_reachable(
+	    const Gyoji::mir::Function & function
+	    ) const;
     };
 
     /**

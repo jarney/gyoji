@@ -109,6 +109,9 @@ void AnalysisPassBorrowChecker::check(const Function & function) const
 	const BasicBlock & block = *block_it.second;
 	const std::vector<Gyoji::owned<Operation>> & operations = block.get_operations();
 
+#if 0
+	// In principle, empty blocks are ok as long as
+	// they are not reachable.
 	// Each basic block must have at least one operation.
 	if (operations.size() == 0) {
 	    get_compiler_context()
@@ -119,7 +122,7 @@ void AnalysisPassBorrowChecker::check(const Function & function) const
 		    );
 	    break;
 	}
-
+#endif
 	// TODO: Finish the logic of
 	// tying blocks together in a graph
 	// by traversing it.

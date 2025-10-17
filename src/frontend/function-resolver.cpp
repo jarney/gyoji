@@ -157,6 +157,8 @@ FunctionDefinitionResolver::resolve()
 
     NS2Entity *entity = function_definition.get_name().get_ns2_entity();
 
+    // This section tries to figure out if this is a plain function
+    // or a method call on a class.
     Type *maybe_class_type = mir.get_types().get_type(entity->get_parent()->get_fully_qualified_name());
     if (maybe_class_type != nullptr) {
 	const auto & method_it = maybe_class_type->get_methods().find(entity->get_name());
@@ -181,8 +183,8 @@ FunctionDefinitionResolver::resolve()
 	}
     }
     
-    const TypeSpecifier & type_specifier = function_definition.get_return_type();
-    const Type *return_type = type_resolver.extract_from_type_specifier(type_specifier);
+    const TypeSpecifier & return_type_specifier = function_definition.get_return_type();
+    const Type *return_type = type_resolver.extract_from_type_specifier(return_type_specifier);
     
     if (return_type == nullptr) {
 	compiler_context
@@ -316,7 +318,6 @@ FunctionDefinitionResolver::resolve()
 	if (arg_error) {
 	    return false;
 	}
-	
     }
     else {
 	// We should to the same check
@@ -396,13 +397,11 @@ FunctionDefinitionResolver::resolve()
 			.add_error(std::move(error));
 		    arg_error = true;
 		}
+	    }
+	    if (arg_error) {
+		return false;
+	    }
 	}
-	if (arg_error) {
-	    return false;
-	}
-	}
-
-
     }
     
     function = std::make_unique<Function>(
@@ -417,6 +416,7 @@ FunctionDefinitionResolver::resolve()
     current_block = function->add_block();
     
     if (!extract_from_statement_list(
+	    false, // do-unwind automatically
 	    function_definition.get_scope_body().get_statements())) {
 	return false;
     }
@@ -465,6 +465,77 @@ FunctionDefinitionResolver::resolve()
 	    location++;
 	}
     }
+
+    // We can now calculate the reachability graph
+    // of the basic blocks and cull any empty blocks that
+    // are unreachable.  This doesn't seem very
+    // elegant, but we need to know the reachability
+    // of non-terminating blocks so we know if we need
+    // to add return statements to them
+    // or if they can just be culled.
+    function->calculate_block_reachability();
+
+    // Case: Reachable block with no terminator.
+    //       This will be a missing return, so we need to
+    //       add it or raise an error.
+    // Case  Reachable block with terminator.
+    //       This is the normal case.
+    // Case  Unreachable block with no terminator.
+    //       It may still contain unreachable statements
+    //       that we need to raise an error for.
+    // Case  Unreachable block with terminator.
+    //       It contains unreachable code, so this
+    //       is an error.
+    
+    // Check for missing return statements
+    // and insert them if the function is 'void'.
+    // If the function is not 'void', then
+    // we need to raise an error for it.
+    bool is_ok = true;
+    const auto & blocks = function->get_blocks();
+    for (const auto & block_it : blocks) {
+	const BasicBlock & block = *block_it.second;
+	if (!block.contains_terminator()
+	    // A block is reachable if it is reachable from another block
+	    // OR it is the 'entry' block with ID 0.
+	    && (block.get_reachable_from().size() != 0 || block_it.first == 0)
+	    ) {
+	    if (return_type->is_void()) {
+		std::vector<std::string> unwind_scope = scope_tracker.get_variables_to_unwind_for_scope();
+		leave_scope(function_definition.get_scope_body().get_source_ref(), unwind_scope);
+	
+		auto operation = std::make_unique<OperationReturnVoid>(
+		    return_type_specifier.get_source_ref()
+		    );
+		function->get_basic_block(block_it.first).add_operation(std::move(operation));
+	    }
+	    else {
+		fprintf(stderr, "Block %ld\n", block_it.first);
+		std::unique_ptr<Gyoji::context::Error> error = std::make_unique<Gyoji::context::Error>("Control reaches end of non-void function");
+		error->add_message(
+		    function_definition.get_scope_body().get_end_source_ref(),
+		    std::string("Function ")
+		    + fully_qualified_function_name
+		    + std::string(" returns ")
+		    + return_type->get_name()
+		    + std::string(" but is missing a return statement at the end of the function.")
+		    );
+		error->add_message(
+		    return_type_specifier.get_source_ref(),
+		    std::string("Return type defined here")
+		    );
+		compiler_context
+		    .get_errors()
+		    .add_error(std::move(error));
+		is_ok = false;
+	    }
+	}
+    }
+    // If we had an error, that's ok because
+    // we're still safe to process our next function.
+//    if (!is_ok) {
+//	return true;
+//    }
     
     mir.get_functions().add_function(std::move(function));
 
@@ -2831,7 +2902,8 @@ FunctionDefinitionResolver::extract_from_statement_ifelse(
     // Perform the stuff inside the 'if' block.
     scope_tracker.scope_push(statement.get_if_scope_body().get_source_ref());
     if (!extract_from_statement_list(
-	statement.get_if_scope_body().get_statements()
+	    true,
+	    statement.get_if_scope_body().get_statements()
 	    )) {
 	return false;
     }
@@ -2854,7 +2926,8 @@ FunctionDefinitionResolver::extract_from_statement_ifelse(
 	size_t blockid_tmp = current_block;
 	current_block = blockid_else;
 	if (!extract_from_statement_list(
-	    statement.get_else_scope_body().get_statements()
+		true,
+		statement.get_else_scope_body().get_statements()
 		)) {
 	    return false;
 	}
@@ -2920,7 +2993,8 @@ FunctionDefinitionResolver::extract_from_statement_while(
 	blockid_evaluate_expression
 	);
     if (!extract_from_statement_list(
-	statement.get_scope_body().get_statements()
+	    true,
+	    statement.get_scope_body().get_statements()
 	    )) {
 	return false;
     }
@@ -2997,7 +3071,8 @@ FunctionDefinitionResolver::extract_from_statement_for(
     size_t blockid_tmp_if = current_block;
     current_block = blockid_if;
     if (!extract_from_statement_list(
-	statement.get_scope_body().get_statements()
+	    true,
+	    statement.get_scope_body().get_statements()
 	    )) {
 	return false;
     }
@@ -3037,7 +3112,6 @@ FunctionDefinitionResolver::extract_from_statement_switch(
 	return false;
     }
     const Type *switch_value_type = function->tmpvar_get(switch_value_tmpvar);
-    fprintf(stderr, "Switch value %ld\n", switch_value_tmpvar);
 
     size_t blockid_done = function->add_block();
 	
@@ -3052,7 +3126,6 @@ FunctionDefinitionResolver::extract_from_statement_switch(
 
     bool has_default = false;
     for (const auto & block_ptr : blocks) {
-	fprintf(stderr, "Switch block\n");
 	if (block_ptr->is_default()) {
 	    if (i != nblocks-1) {
 		compiler_context
@@ -3116,16 +3189,21 @@ FunctionDefinitionResolver::extract_from_statement_switch(
 	}
 	
 	scope_tracker.scope_push(block_ptr->get_scope_body().get_source_ref());
-	if (!extract_from_statement_list(block_ptr->get_scope_body().get_statements())) {
+	if (!extract_from_statement_list(true, block_ptr->get_scope_body().get_statements())) {
 	    return false;
 	}
 	scope_tracker.scope_pop();
-	
-	auto operation_jump_to_done = std::make_unique<OperationJump>(
-	    block_ptr->get_source_ref(),
-	    blockid_done
-	    );
-	function->get_basic_block(current_block).add_operation(std::move(operation_jump_to_done));
+
+	// If we have returned from the block,
+	// then it's safe to leave off the jump back
+	// to outside the switch.
+	if (!function->get_basic_block(current_block).contains_terminator()) {
+	    auto operation_jump_to_done = std::make_unique<OperationJump>(
+		block_ptr->get_source_ref(),
+		blockid_done
+		);
+	    function->get_basic_block(current_block).add_operation(std::move(operation_jump_to_done));
+	}
 	current_block = blockid_else;
 
 	i++;
@@ -3145,7 +3223,6 @@ FunctionDefinitionResolver::extract_from_statement_switch(
 	current_block = blockid_done;
     }
     
-    fprintf(stderr, "TODO: Switch statement is not yet supported\n");
     return is_ok;
 }
 
@@ -3330,6 +3407,7 @@ FunctionDefinitionResolver::leave_scope(
 	    
 bool
 FunctionDefinitionResolver::extract_from_statement_list(
+    bool automatic_unwind,
     const StatementList & statement_list)
 {
 
@@ -3345,7 +3423,7 @@ FunctionDefinitionResolver::extract_from_statement_list(
 	else if (std::holds_alternative<Gyoji::owned<StatementBlock>>(statement_type)) {
 	    const auto & statement = std::get<Gyoji::owned<StatementBlock>>(statement_type);
 	    scope_tracker.scope_push(statement->get_scope_body().get_source_ref());
-	    if (!extract_from_statement_list(statement->get_scope_body().get_statements())) {
+	    if (!extract_from_statement_list(true, statement->get_scope_body().get_statements())) {
 		return false;
 	    }
 	    scope_tracker.scope_pop();
@@ -3431,7 +3509,11 @@ FunctionDefinitionResolver::extract_from_statement_list(
     // unwind the current scope.
     // If we did a return already, we will already
     // have called these, so we should skip it.
-    if (!did_return) {
+    // Note that in the outer-most scope, we don't
+    // do this because we'll add the return and
+    // the scope unwinding based on the end of
+    // the function (if it is reachable)
+    if (!did_return && automatic_unwind) {
 	std::vector<std::string> unwind_scope = scope_tracker.get_variables_to_unwind_for_scope();
 	leave_scope(statement_list.get_source_ref(), unwind_scope);
     }
