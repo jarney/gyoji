@@ -1702,8 +1702,12 @@ namespace Gyoji::mir {
 	 * Move along, nothing to see here.
 	 */
 	virtual ~OperationJumpConditional();
+	size_t get_if_block() const;
+	size_t get_else_block() const;
     protected:
 	virtual std::string get_description() const;
+	size_t if_block;
+	size_t else_block;
     private:
     };
 
@@ -1736,8 +1740,10 @@ namespace Gyoji::mir {
 	 * Move along, nothing to see here.
 	 */
 	virtual ~OperationJump();
+	size_t get_jump_block() const;
     protected:
 	virtual std::string get_description() const;
+	size_t jump_block;
     private:
     };
 

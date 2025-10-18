@@ -1523,8 +1523,8 @@ CodeGeneratorLLVMContext::generate_operation_jump_conditional(
     )
 {
     llvm::Value *condition = tmp_values[operation.get_operands().at(0)];
-    llvm::BasicBlock *bbIf = blocks[operation.get_operands().at(1)];
-    llvm::BasicBlock *bbElse = blocks[operation.get_operands().at(2)];
+    llvm::BasicBlock *bbIf = blocks[operation.get_if_block()];
+    llvm::BasicBlock *bbElse = blocks[operation.get_else_block()];
     Builder->CreateCondBr(condition, bbIf, bbElse);
 }
 void
@@ -1533,7 +1533,7 @@ CodeGeneratorLLVMContext::generate_operation_jump(
     const Gyoji::mir::OperationJump & operation
     )
 {
-    llvm::BasicBlock *target = blocks[operation.get_operands().at(0)];
+    llvm::BasicBlock *target = blocks[operation.get_jump_block()];
     Builder->CreateBr(target);
 }
 

@@ -859,8 +859,11 @@ OperationJumpConditional::OperationJumpConditional(
     size_t _if_block,
     size_t _else_block
     )
-    : Operation(OP_JUMP_CONDITIONAL, _src_ref, 0, _operand, _if_block, _else_block)
-{}
+    : Operation(OP_JUMP_CONDITIONAL, _src_ref, 0, _operand)
+    , if_block(_if_block)
+    , else_block(_else_block)
+{
+}
 
 OperationJumpConditional::~OperationJumpConditional()
 {}
@@ -873,11 +876,17 @@ OperationJumpConditional::get_description() const
 
     std::string desc = op_name + std::string(" (");
     desc = desc + std::string(" _") + std::to_string(operands.at(0));
-    desc = desc + std::string(" BB") + std::to_string(operands.at(1));
-    desc = desc + std::string(" BB") + std::to_string(operands.at(2));
+    desc = desc + std::string(" BB") + std::to_string(get_if_block());
+    desc = desc + std::string(" BB") + std::to_string(get_else_block());
     desc = desc + std::string(" )");
     return desc;
 }
+size_t
+OperationJumpConditional::get_if_block() const
+{ return if_block; }
+size_t
+OperationJumpConditional::get_else_block() const
+{ return else_block; }
 
 //////////////////////////////////////////////
 // OperationJump
@@ -886,7 +895,8 @@ OperationJump::OperationJump(
     const Gyoji::context::SourceReference & _src_ref,
     size_t _block
     )
-    : Operation(OP_JUMP, _src_ref, 0, _block)
+    : Operation(OP_JUMP, _src_ref, 0)
+    , jump_block(_block)
 {}
 OperationJump::~OperationJump()
 {}
@@ -898,11 +908,14 @@ OperationJump::get_description() const
     const std::string & op_name = it->second;
 
     std::string desc = op_name + std::string(" (");
-    desc = desc + std::string(" BB") + std::to_string(operands.at(0));
+    desc = desc + std::string(" BB") + std::to_string(get_jump_block());
     desc = desc + std::string(" )");
     return desc;
 }
-    
+size_t
+OperationJump::get_jump_block() const
+{ return jump_block; }
+
 //////////////////////////////////////////////
 // OperationReturn
 //////////////////////////////////////////////
