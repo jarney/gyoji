@@ -172,6 +172,28 @@ namespace Gyoji::analysis {
 	AnalysisPassVariableScopePairing(Gyoji::context::CompilerContext & _compiler_context);
 	virtual ~AnalysisPassVariableScopePairing();
 	virtual void check(const Gyoji::mir::MIR & mir) const;
+    private:
+	void check(const Gyoji::mir::Function & function) const;
+    };
+
+    /**
+     * @brief This pass ensures that all values are assigned before they are used.
+     *
+     * @details
+     * In order to prove that a program has safe, deterministic behavior,
+     * it is important that no value be used prior to assigning a definite
+     * value to it.  We don't really require bounds on that value (i.e. it could come
+     * from user input from a function).  Whatever it is, however, must be assigned
+     * and not just some random leftover value from the stack or heap due to
+     * uninitialized data.
+     */
+    class AnalysisPassUseBeforeAssignment : public AnalysisPass {
+    public:
+	AnalysisPassUseBeforeAssignment(Gyoji::context::CompilerContext & _compiler_context);
+	virtual ~AnalysisPassUseBeforeAssignment();
+	virtual void check(const Gyoji::mir::MIR & mir) const;
+    private:
+	void check(const Gyoji::mir::Function & function) const;
     };
     
 };

@@ -33,51 +33,90 @@ AnalysisPassReturnValues::check(const Gyoji::mir::MIR & mir) const
     }
 }
 
+namespace Gyoji::analysis {
+    class ReturnOperationVisitor : public OperationVisitor {
+    public:
+	ReturnOperationVisitor(
+	    CompilerContext & _compiler_context,
+	    const Function & _function
+	    );
+	~ReturnOperationVisitor();
+
+	void visit(
+	    size_t block_id,
+	    const BasicBlock & block,
+	    size_t operation_index,
+	    const Operation & operation
+	    );
+    private:
+	CompilerContext & compiler_context;
+	const Function & function;
+	const Type *return_type;
+    };
+    
+};
+
+ReturnOperationVisitor::ReturnOperationVisitor(
+    CompilerContext & _compiler_context,
+    const Function & _function
+    )
+    : OperationVisitor()
+    , compiler_context(_compiler_context)
+    , function(_function)
+    , return_type(_function.get_return_type())
+{
+}
+
+ReturnOperationVisitor::~ReturnOperationVisitor()
+{}
+
+void ReturnOperationVisitor::visit(
+    size_t block_id,
+    const BasicBlock & block,
+    size_t operation_index,
+    const Operation & operation
+    )    
+{
+    if (operation.get_type() == Operation::OP_RETURN) {
+	const Type *operation_type = function.tmpvar_get(operation.get_operands().at(0));
+	if (return_type->get_name() != operation_type->get_name()) {
+	    std::unique_ptr<Gyoji::context::Error> error = std::make_unique<Gyoji::context::Error>("Return statement returns incorrec type.");
+	    error->add_message(
+		operation.get_source_ref(),
+		std::string("Return statement returns value of type ") + operation_type->get_name() + std::string(" but function is declared to return ") + return_type->get_name()
+		);
+	    error->add_message(
+		function.get_source_ref(),
+		"Return-value of function declared here."
+		);
+	    compiler_context
+		.get_errors()
+		.add_error(std::move(error));
+	}
+    }
+    else if (operation.get_type() == Operation::OP_RETURN_VOID) {
+	if (!return_type->is_void()) {
+	    std::unique_ptr<Gyoji::context::Error> error = std::make_unique<Gyoji::context::Error>("Return statement returns incorrec type.");
+	    error->add_message(
+		operation.get_source_ref(),
+		std::string("Return statement returns void (no value), but function is declared to return ") + return_type->get_name()
+		);
+	    error->add_message(
+		function.get_source_ref(),
+		"Return-type of function declared here."
+		);
+	    compiler_context
+		.get_errors()
+		.add_error(std::move(error));
+	}
+    }
+}
+
 void AnalysisPassReturnValues::check(const Function & function) const
 {
     // This is what the function should return.
-    const Type *return_type = function.get_return_type();
-
-    const auto & blocks = function.get_blocks();
-    for (const auto & block_it : blocks) {
-	const BasicBlock & block = *block_it.second;
-	for (const auto & op_it : block.get_operations()) {
-	    const Operation & operation = *op_it;
-
-	    if (operation.get_type() == Operation::OP_RETURN) {
-		const Type *operation_type = function.tmpvar_get(operation.get_operands().at(0));
-		if (return_type->get_name() != operation_type->get_name()) {
-		    std::unique_ptr<Gyoji::context::Error> error = std::make_unique<Gyoji::context::Error>("Return statement returns incorrec type.");
-		    error->add_message(
-			operation.get_source_ref(),
-			std::string("Return statement returns value of type ") + operation_type->get_name() + std::string(" but function is declared to return ") + return_type->get_name()
-			);
-		    error->add_message(
-			function.get_source_ref(),
-			"Return-value of function declared here."
-			);
-		    get_compiler_context()
-			.get_errors()
-			.add_error(std::move(error));
-		}
-	    }
-	    else if (operation.get_type() == Operation::OP_RETURN_VOID) {
-		if (!return_type->is_void()) {
-		    std::unique_ptr<Gyoji::context::Error> error = std::make_unique<Gyoji::context::Error>("Return statement returns incorrec type.");
-		    error->add_message(
-			operation.get_source_ref(),
-			std::string("Return statement returns void (no value), but function is declared to return ") + return_type->get_name()
-			);
-		    error->add_message(
-			function.get_source_ref(),
-			"Return-type of function declared here."
-			);
-		    get_compiler_context()
-			.get_errors()
-			.add_error(std::move(error));
-		}
-	    }
-	}
-    }
+    ReturnOperationVisitor ppVisitor(get_compiler_context(), function);
+    
+    function.iterate_operations(ppVisitor);
 }
 

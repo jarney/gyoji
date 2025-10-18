@@ -76,6 +76,7 @@ int main(int argc, char **argv)
     analysis_passes.push_back(std::make_unique<AnalysisPassTypeResolution>(context));
     analysis_passes.push_back(std::make_unique<AnalysisPassUnreachable>(context));
     analysis_passes.push_back(std::make_unique<AnalysisPassReturnValues>(context));
+    analysis_passes.push_back(std::make_unique<AnalysisPassUseBeforeAssignment>(context));
     analysis_passes.push_back(std::make_unique<AnalysisPassBorrowChecker>(context));
 
     

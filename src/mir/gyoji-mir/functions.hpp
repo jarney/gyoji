@@ -26,7 +26,8 @@ namespace Gyoji::mir {
     class Function;
     class SimpleStatement;
     class BasicBlock;
-
+    class OperationVisitor;
+    
     /**
      * @brief
      * Container for functions
@@ -526,6 +527,15 @@ namespace Gyoji::mir {
 	 */
 	void calculate_block_reachability();
 
+	/**
+	 * This method is used to iterate all of the operations
+	 * inside all basic blocks of a funciton.  The operations
+	 * are visited in no particular order, but this does
+	 * guarantee that all of the operations in all of the
+	 * basic blocks will be visited exactly once.
+	 */
+	void iterate_operations(OperationVisitor & visitor) const;
+	
     private:
 	const std::string name;
 	const Type *return_type;
@@ -540,4 +550,24 @@ namespace Gyoji::mir {
 	std::map<size_t, Gyoji::owned<BasicBlock>> blocks;
 	std::vector<const Type*> tmpvars;
     };
+
+    class OperationVisitor {
+    public:
+	OperationVisitor();
+	~OperationVisitor();
+	/**
+	 * The block_id is the block ID of the block
+	 * in the function.  The operation_index
+	 * is the index of the operation inside the basic block.
+	 * The same block and operation can alternatively be
+	 * accessed through function.get_basic_block(block_id).get_operations().at(operation_index);
+	 */
+	virtual void visit(
+	    size_t block_id,
+	    const BasicBlock & block,
+	    size_t operation_index,
+	    const Operation & operation
+	    ) = 0;
+    };
+    
 };

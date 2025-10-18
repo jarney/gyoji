@@ -191,6 +191,24 @@ Function::calculate_block_reachability()
 }
 
 void
+Function::iterate_operations(OperationVisitor & visitor) const
+{
+    const auto & blocks = get_blocks();
+    for (const auto & block_it : blocks) {
+	const BasicBlock & block = *block_it.second;
+	size_t operation_index = 0;
+	for (const auto & op_it : block.get_operations()) {
+	    const Operation & operation = *op_it;
+	    visitor.visit(block_it.first, block, operation_index, operation);
+	    operation_index++;
+	}
+    }
+}
+
+
+
+
+void
 Function::dump(FILE *out) const
 {
     fprintf(out, "    %s\n", get_name().c_str());
@@ -324,3 +342,13 @@ FunctionArgument::get_name_source_ref() const
 const Gyoji::context::SourceReference &
 FunctionArgument::get_type_source_ref() const
 { return type_source_ref; }
+/////////////////////////////////////
+// OperationVisitor
+/////////////////////////////////////
+
+OperationVisitor::OperationVisitor()
+{}
+
+OperationVisitor::~OperationVisitor()
+{}
+
