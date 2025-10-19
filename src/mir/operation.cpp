@@ -193,11 +193,17 @@ Operation::get_connections() const
 {
     std::vector<size_t> connections;
     if (type == OP_JUMP) {
-	connections.push_back(operands.at(0));
+	// A bit embarrased we have to cast here, but I don't want
+	// to rework this right now.
+	OperationJump *jumpop = (OperationJump*)this;
+	connections.push_back(jumpop->get_jump_block());
     }
     else if (type == OP_JUMP_CONDITIONAL) {
-	connections.push_back(operands.at(1));
-	connections.push_back(operands.at(2));
+	// A bit embarrased we have to cast here, but I don't want
+	// to rework this right now.
+	OperationJumpConditional *ifop = (OperationJumpConditional*)this;
+        connections.push_back(ifop->get_if_block());
+	connections.push_back(ifop->get_else_block());
     }
     return connections;
 }

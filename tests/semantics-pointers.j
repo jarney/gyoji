@@ -9,8 +9,10 @@ u32 main(u32 argc, u8**argv)
 	a = 10;
 	c = 17;
 	ptr_to_a = &a;
-	*ptr_to_a = 20;
-	c = *ptr_to_a;
+	unsafe {
+		*ptr_to_a = 20;
+		c = *ptr_to_a;
+	}
 	c = 19;
 	a = 23;
 	ptr_to_a = &c;
@@ -18,7 +20,9 @@ u32 main(u32 argc, u8**argv)
 	print_value(a);
 // Wrong argument type, this is an error.
 //	print_value(ptr_to_a);
-	print_value(*ptr_to_a);
+	unsafe {
+	       print_value(*ptr_to_a);
+	}
 
 	print_value(c);
 
