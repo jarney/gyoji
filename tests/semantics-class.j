@@ -18,8 +18,11 @@ using namespace jlang as asdf;
 // constructors and destructors because
 // they have a slightly different form
 // and don't have a return-value associated with them.
-//Foo::Foo()
-//{}
+Foo::Foo(u32 xx)
+{
+    print_value(888);
+    print_value(xx);
+}
 //Foo::~Foo()
 //{}
 
@@ -44,7 +47,7 @@ u32 main(u32 argc, u8**argv)
 {
         u32 x;
         x = 19;
-	Foo cl(19);
+	Foo cl(537);
 	cl.set_something(10u32, 42u32, 99u32);
 	foo_function();
 	return 0u32;

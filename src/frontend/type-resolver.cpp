@@ -524,7 +524,8 @@ TypeResolver::extract_from_type_definition(const TypeDefinition & type_definitio
 void
 TypeResolver::extract_from_function_specifications(
     const Terminal & name,
-    const TypeSpecifier & type_specifier,
+    const Type *return_type,
+    const SourceReference & return_type_source_ref,
     const FunctionDefinitionArgList & function_argument_list,
     const UnsafeModifier & unsafe_modifier
     )
@@ -535,23 +536,14 @@ TypeResolver::extract_from_function_specifications(
     const Type *class_pointer_type = nullptr;
     bool is_method = false;
     if (maybe_class_type != nullptr) {
-	class_pointer_type = mir.get_types().get_pointer_to(maybe_class_type, type_specifier.get_source_ref());
+	class_pointer_type = mir.get_types().get_pointer_to(maybe_class_type, return_type_source_ref);
 	is_method = true;
     }
     
     std::string fully_qualified_function_name = 
 	name.get_fully_qualified_name();
     
-    const Type *type = extract_from_type_specifier(type_specifier);
-    if (type == nullptr) {
-	compiler_context
-	    .get_errors()
-	    .add_simple_error(type_specifier.get_source_ref(),
-			      "Compiler bug!  Please report this message(3)",
-			      "Function pointer type declared with invalid type"
-		);
-	return;
-    }    
+    
 //////
 // Define the type of a function pointer.
 //////
@@ -575,12 +567,12 @@ TypeResolver::extract_from_function_specifications(
     bool is_unsafe = unsafe_modifier.is_unsafe();
     std::string arg_string = Gyoji::misc::join(arg_list, ",");
     std::string unsafe_str = is_unsafe ? std::string("unsafe") : std::string("");
-    std::string pointer_name = type->get_name() + std::string("(") + unsafe_str + std::string("*)") + std::string("(") + arg_string + std::string(")");
+    std::string pointer_name = return_type->get_name() + std::string("(") + unsafe_str + std::string("*)") + std::string("(") + arg_string + std::string(")");
     Type *pointer_type = get_or_create(pointer_name, Type::TYPE_FUNCTION_POINTER, false, name.get_source_ref());
 
     if (!pointer_type->is_complete()) {
 	pointer_type->complete_function_pointer_definition(
-	    type,
+	    return_type,
 	    fptr_arguments,
 	    is_unsafe,
 	    name.get_source_ref()
@@ -600,20 +592,60 @@ TypeResolver::extract_from_function_specifications(
 void
 TypeResolver::extract_from_function_definition(const FileStatementFunctionDefinition & function_definition)
 {
+    const Type *return_type;
+    const SourceReference *return_type_source_ref;
+    if (function_definition.is_constructor()) {
+	return_type = mir.get_types().get_type("void");
+	return_type_source_ref = &function_definition.get_name().get_source_ref();
+    }
+    else {
+	return_type = extract_from_type_specifier(function_definition.get_return_type());
+	return_type_source_ref = &function_definition.get_return_type().get_source_ref();
+	if (return_type == nullptr) {
+	    compiler_context
+		.get_errors()
+		.add_simple_error(function_definition.get_return_type().get_source_ref(),
+				  "Compiler bug!  Please report this message(3)",
+				  "Function pointer type declared with invalid type"
+		    );
+	    return;
+	}
+    }
     extract_from_function_specifications(
-	function_definition.get_name(),
-	function_definition.get_return_type(),
-	function_definition.get_arguments(),
-	function_definition.get_unsafe_modifier()
-	);
+	    function_definition.get_name(),
+	    return_type,
+	    *return_type_source_ref,
+	    function_definition.get_arguments(),
+	    function_definition.get_unsafe_modifier()
+	    );
 }
 
 void
 TypeResolver::extract_from_function_declaration(const FileStatementFunctionDeclaration & function_declaration)
 {
+    const Type *return_type;
+    const SourceReference *return_type_source_ref;
+    if (function_declaration.is_constructor()) {
+	return_type = mir.get_types().get_type("void");
+	return_type_source_ref = &function_declaration.get_name().get_source_ref();
+    }
+    else {
+	return_type = extract_from_type_specifier(function_declaration.get_return_type());
+	return_type_source_ref = &function_declaration.get_return_type().get_source_ref();
+	if (return_type == nullptr) {
+	    compiler_context
+		.get_errors()
+		.add_simple_error(function_declaration.get_return_type().get_source_ref(),
+				  "Compiler bug!  Please report this message(3)",
+				  "Function pointer type declared with invalid type"
+		    );
+	    return;
+	}
+    }
     extract_from_function_specifications(
 	function_declaration.get_name(),
-	function_declaration.get_return_type(),
+	return_type,
+	*return_type_source_ref,
 	function_declaration.get_arguments(),
 	function_declaration.get_unsafe_modifier()
 	);

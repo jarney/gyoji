@@ -886,6 +886,20 @@ function_decl_start
                         std::move($4)
                         );
         }
+        // Constructors and destructors
+        | opt_access_modifier opt_unsafe IDENTIFIER {
+                NS2Entity *ns2_entity = return_data.identifier_get_or_create($3->get_value(), true, $3->get_source_ref());
+		if (ns2_entity == nullptr) {
+		    return -1;
+		}
+		$3->set_ns2_entity(ns2_entity);
+		return_data.ns2_context->namespace_push(ns2_entity);
+		$$ = std::make_unique<Gyoji::frontend::tree::FileStatementFunctionDeclStart>(
+                        std::move($1),
+                        std::move($2),
+                        std::move($3)
+                        );
+        }
         ;
 
 file_statement_function_definition

@@ -490,12 +490,29 @@ FileStatementFunctionDeclStart::FileStatementFunctionDeclStart(
     : SyntaxNode(NONTERMINAL_function_decl_start, this, _name->get_source_ref())
     , access_modifier(std::move(_access_modifier))
     , unsafe_modifier(std::move(_unsafe_modifier))
+    , m_is_constructor(false)
     , type_specifier(std::move(_type_specifier))
     , name(std::move(_name))
 {
     add_child(*access_modifier);
     add_child(*unsafe_modifier);
     add_child(*type_specifier);
+    add_child(*name);
+}
+FileStatementFunctionDeclStart::FileStatementFunctionDeclStart(
+    Gyoji::owned<AccessModifier> _access_modifier,
+    Gyoji::owned<UnsafeModifier> _unsafe_modifier,
+    Gyoji::owned<Terminal> _name
+    )
+    : SyntaxNode(NONTERMINAL_function_decl_start, this, _name->get_source_ref())
+    , access_modifier(std::move(_access_modifier))
+    , unsafe_modifier(std::move(_unsafe_modifier))
+    , m_is_constructor(true)
+    , type_specifier(nullptr)
+    , name(std::move(_name))
+{
+    add_child(*access_modifier);
+    add_child(*unsafe_modifier);
     add_child(*name);
 }
 
@@ -517,6 +534,10 @@ FileStatementFunctionDeclStart::get_type_specifier() const
 const Terminal &
 FileStatementFunctionDeclStart::get_name() const
 { return *name; }
+
+bool
+FileStatementFunctionDeclStart::is_constructor() const
+{ return m_is_constructor; }
 
 ///////////////////////////////////////////////////
 
@@ -548,9 +569,15 @@ FileStatementFunctionDeclaration::get_access_modifier() const
 const UnsafeModifier &
 FileStatementFunctionDeclaration::get_unsafe_modifier() const
 { return start->get_unsafe_modifier(); }
+
+bool
+FileStatementFunctionDeclaration::is_constructor() const
+{ return start->is_constructor(); }
+
 const TypeSpecifier &
 FileStatementFunctionDeclaration::get_return_type() const
 { return start->get_type_specifier(); }
+
 const Terminal &
 FileStatementFunctionDeclaration::get_name() const
 { return start->get_name(); }
@@ -1223,6 +1250,10 @@ FileStatementFunctionDefinition::get_access_modifier() const
 const UnsafeModifier &
 FileStatementFunctionDefinition::get_unsafe_modifier() const
 { return start->get_unsafe_modifier(); }
+
+bool
+FileStatementFunctionDefinition::is_constructor() const
+{ return start->is_constructor(); }
 
 const TypeSpecifier &
 FileStatementFunctionDefinition::get_return_type() const

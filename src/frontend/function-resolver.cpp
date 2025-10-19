@@ -185,8 +185,17 @@ FunctionDefinitionResolver::resolve()
 	}
     }
     
-    const TypeSpecifier & return_type_specifier = function_definition.get_return_type();
-    const Type *return_type = type_resolver.extract_from_type_specifier(return_type_specifier);
+    const Type *return_type;
+    const SourceReference *return_type_source_ref;
+    if (function_definition.is_constructor()) {
+	return_type = mir.get_types().get_type("void");
+	return_type_source_ref = &function_definition.get_name().get_source_ref();
+    }
+    else {
+	const TypeSpecifier & return_type_specifier = function_definition.get_return_type();
+	return_type = type_resolver.extract_from_type_specifier(return_type_specifier);
+	return_type_source_ref = &return_type_specifier.get_source_ref();
+    }
     
     if (return_type == nullptr) {
 	compiler_context
@@ -285,7 +294,7 @@ FunctionDefinitionResolver::resolve()
 	if (method->get_return_type()->get_name() != return_type->get_name()) {
 	    std::unique_ptr<Gyoji::context::Error> error = std::make_unique<Gyoji::context::Error>("Return-value does not match declaration");
 	    error->add_message(
-		function_definition.get_return_type().get_source_ref(),
+		*return_type_source_ref,
 		std::string("Return-value defined as ") + return_type->get_name() + std::string(".")
 		);
 	    error->add_message(
@@ -368,7 +377,7 @@ FunctionDefinitionResolver::resolve()
 	    if (symbol_type->is_unsafe() != is_unsafe) {
 		std::unique_ptr<Gyoji::context::Error> error = std::make_unique<Gyoji::context::Error>("Function safety modifier does not match declaration.");
 		error->add_message(
-		    function_definition.get_return_type().get_source_ref(),
+		    *return_type_source_ref,
 		    std::string("Function defined as ") + (is_unsafe ? std::string("unsafe") : std::string("not unsafe")) + std::string(".")
 		    );
 		error->add_message(
@@ -384,12 +393,12 @@ FunctionDefinitionResolver::resolve()
 	    if (symbol_type->get_return_type()->get_name() != return_type->get_name()) {
 		std::unique_ptr<Gyoji::context::Error> error = std::make_unique<Gyoji::context::Error>("Return-value does not match declaration");
 		error->add_message(
-		    function_definition.get_return_type().get_source_ref(),
+		    *return_type_source_ref,
 		    std::string("Return-value defined as ") + return_type->get_name() + std::string(".")
 		    );
 		error->add_message(
 		    symbol_type->get_defined_source_ref(),
-		    std::string("Does not match declaration ") + symbol_type->get_return_type()->get_name()
+		    std::string("Does not match declaration ") + return_type->get_name()
 		    );
 		compiler_context
 		    .get_errors()
@@ -524,7 +533,7 @@ FunctionDefinitionResolver::resolve()
 		leave_scope(function_definition.get_scope_body().get_source_ref(), unwind_scope);
 	
 		auto operation = std::make_unique<OperationReturnVoid>(
-		    return_type_specifier.get_source_ref()
+		    *return_type_source_ref
 		    );
 		function->get_basic_block(block_it.first).add_operation(std::move(operation));
 	    }
@@ -540,7 +549,7 @@ FunctionDefinitionResolver::resolve()
 		    + std::string(" but is missing a return statement at the end of the function.")
 		    );
 		error->add_message(
-		    return_type_specifier.get_source_ref(),
+		    *return_type_source_ref,
 		    std::string("Return type defined here")
 		    );
 		compiler_context

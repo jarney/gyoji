@@ -975,8 +975,12 @@ namespace Gyoji::frontend::tree {
 	 * marked as safe or unsafe.
 	 */
 	const UnsafeModifier & get_unsafe_modifier() const;
+	
+	bool is_constructor() const;
+	
 	/**
 	 * Specifies the type of the return value of the function.
+	 * Only valid if !is_constructor().
 	 */
 	const TypeSpecifier & get_return_type() const;
 	/**
@@ -1657,15 +1661,22 @@ namespace Gyoji::frontend::tree {
 	    Gyoji::owned<TypeSpecifier> _type_specifier,
 	    Gyoji::owned<Terminal> _name
 	    );
+	FileStatementFunctionDeclStart(
+	    Gyoji::owned<AccessModifier> _access_modifier,
+	    Gyoji::owned<UnsafeModifier> _unsafe_modifier,
+	    Gyoji::owned<Terminal> _name
+	    );
 	~FileStatementFunctionDeclStart();
 
 	const AccessModifier & get_access_modifier() const;
 	const UnsafeModifier & get_unsafe_modifier() const;
 	const TypeSpecifier & get_type_specifier() const;
+	bool is_constructor() const;
 	const Terminal & get_name() const;
     private:
 	Gyoji::owned<AccessModifier> access_modifier;
 	Gyoji::owned<UnsafeModifier> unsafe_modifier;
+	bool m_is_constructor;
 	Gyoji::owned<TypeSpecifier> type_specifier;
 	Gyoji::owned<Terminal> name; // function name (IDENTIFIER)
     };
@@ -1685,9 +1696,14 @@ namespace Gyoji::frontend::tree {
 	~FileStatementFunctionDefinition();
 	const AccessModifier & get_access_modifier() const;
 	const UnsafeModifier & get_unsafe_modifier() const;
+	bool is_constructor() const;
+	/**
+	 * Only valid if !is_constructor().
+	 */
 	const TypeSpecifier & get_return_type() const;
 	const Terminal & get_name() const;
 	const FunctionDefinitionArgList & get_arguments() const;
+	
 	const ScopeBody & get_scope_body() const;
 	
     private:
