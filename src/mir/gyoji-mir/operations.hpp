@@ -109,6 +109,28 @@ namespace Gyoji::mir {
 	     * @endcode
 	     */
 	    OP_FUNCTION_CALL,
+	    
+	    /**
+	     * @brief Call the constructor for a composite type.
+	     *
+	     * @details
+	     * Directs the MIR to call the constructor for a
+	     * composite type.  This is essentially the same
+	     * as OP_FUNCTION_CALL except that as being a separate
+	     * opcode, it allows the analysis layers to easily
+	     * detect when composite variables have been properly
+	     * initialized.
+	     */
+	    OP_CONSTRUCTOR,
+
+	    /**
+	     * @brief Call the destructor for a composite type.
+	     *
+	     * @details
+	     * Directs the MIR to call the destructor for
+	     * a composite type.
+	     */
+	    OP_DESTRUCTOR,
 
 	    /**
 	     * @brief Load method call to that it can be called with OP_FUNCTION_CALL later.
@@ -1169,6 +1191,7 @@ namespace Gyoji::mir {
 	 * to the function.
 	 */
 	OperationFunctionCall(
+	    OperationType _type,
 	    const Gyoji::context::SourceReference & _src_ref,
 	    size_t _result,
 	    size_t _callee_tmpvar,

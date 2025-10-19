@@ -75,6 +75,18 @@ namespace Gyoji::frontend::lowering {
 	const Gyoji::mir::Type* extract_from_type_specifier_array(const Gyoji::frontend::tree::TypeSpecifierArray & type_specifier);
 	
 	void extract_from_class_declaration(const Gyoji::frontend::tree::ClassDeclaration & declaration);
+
+	void extract_from_class_method_types(
+	    Gyoji::mir::Type & class_type,
+	    std::map<std::string, Gyoji::mir::TypeMethod> & methods,
+	    std::string simple_name,
+	    std::string fully_qualified_name,
+	    const Gyoji::frontend::tree::UnsafeModifier & method_unsafe_modifier,
+	    const Gyoji::mir::Type *method_return_type,
+	    const Gyoji::frontend::tree::FunctionDefinitionArgList & function_definition_arg_list,
+	    const Gyoji::context::SourceReference & source_ref
+	    );
+
 	void extract_from_class_members(Gyoji::mir::Type & type, const Gyoji::frontend::tree::ClassDefinition & definition);
 	void extract_from_class_definition(const Gyoji::frontend::tree::ClassDefinition & definition);
 	void extract_from_enum_definition(const Gyoji::frontend::tree::EnumDefinition & enum_definition);

@@ -226,7 +226,69 @@ TypeResolver::extract_from_type_specifier(const TypeSpecifier & type_specifier)
 }
 
 void
-TypeResolver::extract_from_class_members(Type & type, const ClassDefinition & class_definition)
+TypeResolver::extract_from_class_method_types(
+    Type &class_type,
+    std::map<std::string, TypeMethod> & methods,
+    std::string simple_name,
+    std::string fully_qualified_name,
+    const Gyoji::frontend::tree::UnsafeModifier & method_unsafe_modifier,
+    const Type *method_return_type,
+    const Gyoji::frontend::tree::FunctionDefinitionArgList & function_definition_arg_list,
+    const Gyoji::context::SourceReference & source_ref
+    )
+{
+    std::vector<std::string> arg_list;
+    std::vector<Argument> fptr_arguments;
+    // First, pass the 'this' pointer
+    // to the function.
+    const Type * this_type = mir.get_types().get_pointer_to(&class_type, class_type.get_defined_source_ref());
+    Argument arg_this(this_type, source_ref);
+    fptr_arguments.push_back(arg_this);
+    arg_list.push_back(this_type->get_name());
+	    
+    const std::vector<Gyoji::owned<FunctionDefinitionArg>> & function_definition_args = 
+	function_definition_arg_list.get_arguments();
+    for (const auto & function_definition_arg : function_definition_args) {
+	const Type *argument_type = extract_from_type_specifier(function_definition_arg->get_type_specifier());
+	Argument arg(argument_type, function_definition_arg->get_source_ref());
+	fptr_arguments.push_back(arg);
+	arg_list.push_back(argument_type->get_name());
+    }
+    
+    TypeMethod method(
+	simple_name,
+	source_ref,
+	&class_type,
+	method_return_type,
+	fptr_arguments
+	);
+    fprintf(stderr, "Defining method %s\n", simple_name.c_str());
+    methods.insert(std::pair(simple_name, method));
+    
+    bool is_unsafe = method_unsafe_modifier.is_unsafe();
+    std::string arg_string = Gyoji::misc::join(arg_list, ",");
+    std::string unsafe_str = is_unsafe ? std::string("unsafe") : std::string("");
+    std::string pointer_name = method_return_type->get_name() + std::string("(") + unsafe_str + std::string("*)") + std::string("(") + arg_string + std::string(")");
+    Type *fptr_type = get_or_create(pointer_name, Type::TYPE_FUNCTION_POINTER, false, source_ref);
+    
+    if (!fptr_type->is_complete()) {
+	fptr_type->complete_function_pointer_definition(
+	    method_return_type,
+	    fptr_arguments,
+	    is_unsafe,
+	    source_ref
+	    );
+    }
+    fprintf(stderr, "Defining symbol %s\n", fully_qualified_name.c_str());
+    mir.get_symbols().define_symbol(
+	fully_qualified_name,
+	fptr_type
+	);
+}
+
+
+void
+TypeResolver::extract_from_class_members(Type & class_type, const ClassDefinition & class_definition)
 {
     std::vector<TypeMember> members;
     std::map<std::string, const TypeMember*> members_by_name;
@@ -283,59 +345,65 @@ TypeResolver::extract_from_class_members(Type & type, const ClassDefinition & cl
 	else if (std::holds_alternative<Gyoji::owned<ClassMemberDeclarationMethod>>(class_member_type)) {
 	    const auto & member_method = std::get<Gyoji::owned<ClassMemberDeclarationMethod>>(class_member_type);
 
-	    std::vector<std::string> arg_list;
-	    std::vector<Argument> fptr_arguments;
-	    // First, pass the 'this' pointer
-	    // to the function.
-	    const Type * this_type = mir.get_types().get_pointer_to(&type, type.get_defined_source_ref());
-	    Argument arg_this(this_type, member_method->get_source_ref());
-	    fptr_arguments.push_back(arg_this);
-	    arg_list.push_back(this_type->get_name());
+	    // Regular methods have return types.  Constructors/destructors always return void.
+	    const Type * method_return_type = extract_from_type_specifier(member_method->get_type_specifier());
 
-	    const Type * ret_type = extract_from_type_specifier(member_method->get_type_specifier());
+	    std::string simple_name = member_method->get_identifier().get_name();
+	    std::string fully_qualified_name = member_method->get_identifier().get_fully_qualified_name();
 	    
-	    const FunctionDefinitionArgList & function_definition_arg_list = member_method->get_arguments();
-	    const std::vector<Gyoji::owned<FunctionDefinitionArg>> & function_definition_args = 
-		function_definition_arg_list.get_arguments();
-	    for (const auto & function_definition_arg : function_definition_args) {
-		const Type *argument_type = extract_from_type_specifier(function_definition_arg->get_type_specifier());
-		Argument arg(argument_type, function_definition_arg->get_source_ref());
-		fptr_arguments.push_back(arg);
-		arg_list.push_back(argument_type->get_name());
-	    }
-	    
-	    TypeMethod method(
-		member_method->get_identifier().get_name(),
-		member_method->get_source_ref(),
-		&type,
-		ret_type,
-		fptr_arguments
+	    extract_from_class_method_types(
+		class_type,
+		methods,
+		simple_name,
+		fully_qualified_name,
+		member_method->get_unsafe_modifier(),
+		method_return_type,
+		member_method->get_arguments(),
+		member_method->get_source_ref()
 		);
-	    methods.insert(std::pair(member_method->get_identifier().get_name(), method));
+	}
+	else if (std::holds_alternative<Gyoji::owned<ClassMemberDeclarationConstructor>>(class_member_type)) {
+	    const auto & member_method = std::get<Gyoji::owned<ClassMemberDeclarationConstructor>>(class_member_type);
+	    // Regular methods have return types.  Constructors/destructors always return void.
+	    const Type * method_return_type = mir.get_types().get_type("void");
 
-	    bool is_unsafe = member_method->get_unsafe_modifier().is_unsafe();
-	    std::string arg_string = Gyoji::misc::join(arg_list, ",");
-	    std::string unsafe_str = is_unsafe ? std::string("unsafe") : std::string("");
-	    std::string pointer_name = ret_type->get_name() + std::string("(") + unsafe_str + std::string("*)") + std::string("(") + arg_string + std::string(")");
-	    Type *fptr_type = get_or_create(pointer_name, Type::TYPE_FUNCTION_POINTER, false, member_method->get_source_ref());
-	    
-	    if (!fptr_type->is_complete()) {
-		fptr_type->complete_function_pointer_definition(
-		    ret_type,
-		    fptr_arguments,
-		    is_unsafe,
-		    member_method->get_source_ref()
-		    );
-	    }
-	    
-	    mir.get_symbols().define_symbol(
-		member_method->get_identifier().get_fully_qualified_name(),
-		fptr_type
+	    std::string simple_name = "Foo";
+	    std::string fully_qualified_name = "jlang::Foo::Foo";
+
+	    extract_from_class_method_types(
+		class_type,
+		methods,
+		simple_name,
+		fully_qualified_name,
+		member_method->get_unsafe_modifier(),
+		method_return_type,
+		member_method->get_arguments(),
+		member_method->get_source_ref()
+		);
+	}
+	else if (std::holds_alternative<Gyoji::owned<ClassMemberDeclarationDestructor>>(class_member_type)) {
+	    const auto & member_method = std::get<Gyoji::owned<ClassMemberDeclarationDestructor>>(class_member_type);
+
+	    // Regular methods have return types.  Constructors/destructors always return void.
+	    const Type * method_return_type = mir.get_types().get_type("void");
+
+	    std::string simple_name = "~Foo";
+	    std::string fully_qualified_name = "jlang::Foo::~Foo";
+
+	    extract_from_class_method_types(
+		class_type,
+		methods,
+		simple_name,
+		fully_qualified_name,
+		member_method->get_unsafe_modifier(),
+		method_return_type,
+		member_method->get_arguments(),
+		member_method->get_source_ref()
 		);
 	}
     }
     
-    type.complete_composite_definition(
+    class_type.complete_composite_definition(
 	members,
 	methods,
 	class_definition.get_name_source_ref());

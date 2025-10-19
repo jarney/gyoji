@@ -1573,6 +1573,8 @@ CodeGeneratorLLVMContext::generate_basic_block(
 	switch (operation.get_type()) {
         // Global symbols
 	case Operation::OP_FUNCTION_CALL:
+	case Operation::OP_CONSTRUCTOR:
+	case Operation::OP_DESTRUCTOR:
 	    generate_operation_function_call(mir_function, (const OperationFunctionCall &)operation);
 	    break;
 	case Operation::OP_GET_METHOD:

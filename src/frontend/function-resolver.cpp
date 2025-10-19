@@ -1252,6 +1252,7 @@ FunctionDefinitionResolver::extract_from_expression_postfix_function_call(
 	}
 	
 	auto operation = std::make_unique<OperationFunctionCall>(
+	    Operation::OP_FUNCTION_CALL,
 	    expression.get_source_ref(),
 	    returned_tmpvar,
 	    function_type_tmpvar,
@@ -1314,6 +1315,7 @@ FunctionDefinitionResolver::extract_from_expression_postfix_function_call(
 
 	// Make the actual function call.
 	auto operation = std::make_unique<OperationFunctionCall>(
+	    Operation::OP_FUNCTION_CALL,
 	    expression.get_source_ref(),
 	    returned_tmpvar,
 	    function_pointer_type_tmpvar,
@@ -2931,17 +2933,87 @@ FunctionDefinitionResolver::extract_from_statement_variable_declaration(
 	    );
 	function->get_basic_block(current_block).add_operation(std::move(op_variable));
 
-	// TODO: Actually call the constructor.
-	// Mostly here, just check that the argument types match
-	// the function signature and then fire up the call.
-	/*
-	size_t constructor_result_tmpvar = function->tmpvar_define(mir_type);
-	auto op_constructor = std::make_unique<OperationConstructor>(
+	// Extract the 'this' pointer
+	// from the variable so we can add it to the constructor
+	// args.
+	const Type *variable_pointer_type = mir.get_types().get_pointer_to(mir_type, statement.get_source_ref());
+	size_t variable_pointer_tmpvar = function->tmpvar_define(variable_pointer_type);
+	auto operation_this_pointer = std::make_unique<OperationUnary>(
+	    Operation::OP_ADDRESSOF,
+	    statement.get_source_ref(),
+	    variable_pointer_tmpvar,
+	    variable_tmpvar
+	    );
+	function
+	    ->get_basic_block(current_block)
+	    .add_operation(std::move(operation_this_pointer));
+
+	std::vector<size_t> passed_arguments;
+	std::vector<const Gyoji::context::SourceReference *> passed_src_refs;
+
+	// First argument is the <this> pointer:
+	passed_arguments.push_back(variable_pointer_tmpvar);
+	passed_src_refs.push_back(&statement.get_source_ref());
+	
+	for (const auto & arg_expr : statement.get_argument_expression_list().get_arguments()) {
+	    size_t arg_returned_value;
+	    if (!extract_from_expression(arg_returned_value, *arg_expr)) {
+		return false;
+	    }
+	    passed_arguments.push_back(arg_returned_value);
+	    passed_src_refs.push_back(&arg_expr->get_source_ref());
+	}
+
+	std::string fully_qualified_function_name("jlang::Foo::Foo");
+	const Gyoji::mir::Symbol *constructor_symbol = mir.get_symbols().get_symbol(fully_qualified_function_name);
+	if (constructor_symbol == nullptr) {
+	    std::unique_ptr<Gyoji::context::Error> error = std::make_unique<Gyoji::context::Error>("No constructor found.");
+	    error->add_message(
+		function_definition.get_source_ref(),
+		std::string("Constructor ") + fully_qualified_function_name + std::string(" was not defined for class ") + mir_type->get_name()
+		);
+	    compiler_context
+		.get_errors()
+		.add_error(std::move(error));
+	    return false;
+	}
+	const Type *constructor_fptr_type = constructor_symbol->get_type();
+	if (constructor_fptr_type->get_type() != Type::TYPE_FUNCTION_POINTER) {
+	    std::unique_ptr<Gyoji::context::Error> error = std::make_unique<Gyoji::context::Error>("Symbol is not a constructor");
+	    error->add_message(
+		function_definition.get_source_ref(),
+		std::string("Symbol ") + fully_qualified_function_name + std::string(" is not declared as a constructor.")
+		);
+	    compiler_context
+		.get_errors()
+		.add_error(std::move(error));
+	    return false;
+	}
+	// Check that the method signature we're calling matches
+	// the declaration of that method
+	if (!check_function_call_signature(true, passed_arguments, passed_src_refs, constructor_fptr_type, statement.get_argument_expression_list().get_source_ref())) {
+	    return false;
+	}
+	
+	size_t constructor_fptr_tmpvar = function->tmpvar_define(constructor_fptr_type);
+	auto operation_get_constructor_function = std::make_unique<OperationSymbol>(
+	    statement.get_argument_expression_list().get_source_ref(),
+	    constructor_fptr_tmpvar,
+	    fully_qualified_function_name
+	    );
+	function->get_basic_block(current_block).add_operation(std::move(operation_get_constructor_function));
+	
+	// This is what the function pointer type should return.
+	size_t constructor_result_tmpvar = function->tmpvar_define(constructor_fptr_type->get_return_type());
+	
+	auto op_constructor = std::make_unique<OperationFunctionCall>(
+            Operation::OP_CONSTRUCTOR,
 	    statement.get_argument_expression_list().get_source_ref(),
 	    constructor_result_tmpvar,
-	    ...arguments...
+	    constructor_fptr_tmpvar,
+	    passed_arguments
 	    );
-	*/
+	function->get_basic_block(current_block).add_operation(std::move(op_constructor));
     }
     else {
 	// If this is a class type, throw an error because this

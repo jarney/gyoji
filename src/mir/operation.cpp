@@ -29,6 +29,8 @@ void Gyoji::mir::operation_static_init()
 
     // Functions and global symbols
     op_type_names.insert(std::pair(Operation::OP_FUNCTION_CALL, "function-call"));
+    op_type_names.insert(std::pair(Operation::OP_CONSTRUCTOR, "constructor"));
+    op_type_names.insert(std::pair(Operation::OP_DESTRUCTOR, "destructor"));
     op_type_names.insert(std::pair(Operation::OP_GET_METHOD, "get-method"));
     op_type_names.insert(std::pair(Operation::OP_METHOD_GET_OBJECT, "method-get-object"));
     op_type_names.insert(std::pair(Operation::OP_METHOD_GET_FUNCTION, "method-get-function"));
@@ -246,6 +248,8 @@ Operation::get_readsfrom(size_t tmpvar) const
 {
     switch (type) {
     case OP_FUNCTION_CALL:
+    case OP_CONSTRUCTOR:
+    case OP_DESTRUCTOR:
     case OP_GET_METHOD:
     case OP_METHOD_GET_FUNCTION:
     case OP_METHOD_GET_OBJECT:
@@ -382,12 +386,13 @@ OperationGetMethod::get_method() const
 // OperationFunctionCall
 //////////////////////////////////////////////
 OperationFunctionCall::OperationFunctionCall(
+    Operation::OperationType _type,
     const Gyoji::context::SourceReference & _src_ref,
     size_t _result,
     size_t _callee_tmpvar,
     std::vector<size_t> _arg_args
     )
-    : Operation(OP_FUNCTION_CALL, _src_ref, _result, _callee_tmpvar)
+    : Operation(_type, _src_ref, _result, _callee_tmpvar)
 {
     for (const auto & av : _arg_args) {
 	add_operand(av);
