@@ -23,8 +23,10 @@ Foo::Foo(u32 xx)
     print_value(888);
     print_value(xx);
 }
-//Foo::~Foo()
-//{}
+Foo::~Foo()
+{
+    print_value(777);
+}
 
 void foo_function()
 {

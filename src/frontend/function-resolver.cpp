@@ -3315,9 +3315,6 @@ FunctionDefinitionResolver::extract_from_statement_for(
     
     current_block = blockid_done;
 
-    // Un-declare the variable we declared.
-//    leave_scope(function, current_block, statement.get_source_ref(), unwind);
-    
     return true;
 }
 
@@ -3617,10 +3614,77 @@ FunctionDefinitionResolver::leave_scope(
     std::vector<std::string> & unwind)
 {
     
-    for (const auto & undecl : unwind) {
+    for (const auto & variable_name : unwind) {
+	// Get the type of the unwound variable.  If it's a class, call the destructor.
+	const LocalVariable *localvar = scope_tracker.get_variable(variable_name);
+	const Type *class_type = localvar->get_type();
+	if (class_type->is_composite()) {
+	    // Look to see if a destructor is declared.
+	    fprintf(stderr, "Looking for destructor for %s\n", class_type->get_name().c_str());
+	    for (const auto & method : class_type->get_methods()) {
+		fprintf(stderr, "    Method %s\n", method.first.c_str());
+	    }
+	    // Where to find the leaf-node "Foo" part of the class name????
+	    std::string type_simple_name("Foo");
+	    std::string fully_qualified_function_name = class_type->get_name() + std::string("::") + std::string("~") + type_simple_name;
+	    
+	    const Gyoji::mir::Symbol *symbol = mir.get_symbols().get_symbol(fully_qualified_function_name);
+	    if (symbol != nullptr) {
+		fprintf(stderr, "Found destructor\n");
+		const Type *destructor_fptr_type = symbol->get_type();
+
+		// Destructors take no arguments except the
+		// object itself.
+		std::vector<size_t> passed_arguments;
+		
+		size_t variable_tmpvar = function->tmpvar_define(class_type);
+		auto op_variable = std::make_unique<OperationLocalVariable>(
+		    src_ref,
+		    variable_tmpvar,
+		    variable_name,
+		    class_type
+		    );
+		function->get_basic_block(current_block).add_operation(std::move(op_variable));
+		
+		const Type *variable_pointer_type = mir.get_types().get_pointer_to(class_type, src_ref);
+		size_t variable_pointer_tmpvar = function->tmpvar_define(variable_pointer_type);
+		auto operation_this_pointer = std::make_unique<OperationUnary>(
+		    Operation::OP_ADDRESSOF,
+		    src_ref,
+		    variable_pointer_tmpvar,
+		    variable_tmpvar
+		    );
+		function
+		    ->get_basic_block(current_block)
+		    .add_operation(std::move(operation_this_pointer));
+
+		passed_arguments.push_back(variable_pointer_tmpvar);
+	// Emitting destructor call.
+		size_t destructor_fptr_tmpvar = function->tmpvar_define(destructor_fptr_type);
+		auto operation_get_destructor_function = std::make_unique<OperationSymbol>(
+		    src_ref,
+		    destructor_fptr_tmpvar,
+		    fully_qualified_function_name
+		    );
+		function->get_basic_block(current_block).add_operation(std::move(operation_get_destructor_function));
+		
+		// This is what the function pointer type should return.
+		size_t destructor_result_tmpvar = function->tmpvar_define(destructor_fptr_type->get_return_type());
+		auto op_constructor = std::make_unique<OperationFunctionCall>(
+		    Operation::OP_DESTRUCTOR,
+		    src_ref,
+		    destructor_result_tmpvar,
+		    destructor_fptr_tmpvar,
+		    passed_arguments
+		    );
+		function->get_basic_block(current_block).add_operation(std::move(op_constructor));
+		
+	    }
+	}
+	
 	auto operation = std::make_unique<OperationLocalUndeclare>(
 	    src_ref,
-	    undecl);
+	    variable_name);
 	function->get_basic_block(current_block).add_operation(std::move(operation));
     }
     unwind.clear();

@@ -367,6 +367,7 @@ TypeResolver::extract_from_class_members(Type & class_type, const ClassDefinitio
 	    // Regular methods have return types.  Constructors/destructors always return void.
 	    const Type * method_return_type = mir.get_types().get_type("void");
 
+	    // TODO: Where to find the leaf-node part of the class name?
 	    std::string simple_name = "Foo";
 	    std::string fully_qualified_name = "jlang::Foo::Foo";
 
@@ -387,6 +388,7 @@ TypeResolver::extract_from_class_members(Type & class_type, const ClassDefinitio
 	    // Regular methods have return types.  Constructors/destructors always return void.
 	    const Type * method_return_type = mir.get_types().get_type("void");
 
+	    // TODO: Where to find the leaf-node part of the class name?
 	    std::string simple_name = "~Foo";
 	    std::string fully_qualified_name = "jlang::Foo::~Foo";
 
