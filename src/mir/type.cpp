@@ -250,6 +250,19 @@ Type::method_get(const std::string & method_name) const
     }
     return &it->second;
 }
+#if 0
+const TypeMethod *method_get_constructor() const
+{
+    std::string destructor_name = "";
+    return method_get(constructor_name);
+}
+	
+const TypeMethod *method_get_destructor() const
+{
+    std::string destructor_name = "";
+    return method_get(destructor_name);
+}
+#endif
 
 const Type *
 Type::get_pointer_target() const

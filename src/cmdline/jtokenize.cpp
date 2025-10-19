@@ -61,7 +61,8 @@ int main(int argc, char **argv)
 	       token->get_source_ref().get_line(),
 	       token->get_source_ref().get_column(),
 	       token->get_type(),
-	       token->get_value().c_str());
+	       token->get_value().c_str()
+	    );
     }
     
     return 0;

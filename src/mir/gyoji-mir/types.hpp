@@ -677,6 +677,12 @@ namespace Gyoji::mir {
 
 	const TypeMethod *method_get(const std::string & member_name) const;
 
+#if 0
+	const TypeMethod *method_get_constructor() const;
+	
+	const TypeMethod *method_get_destructor() const;
+#endif
+	
 	/**
 	 * This returns a pointer to the type pointed to by
 	 * this type.  It is ONLY valid for types that are 'is_pointer()' or

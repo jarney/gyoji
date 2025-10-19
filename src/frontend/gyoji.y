@@ -886,7 +886,7 @@ function_decl_start
                         std::move($4)
                         );
         }
-        // Constructors and destructors
+        // Constructors
         | opt_access_modifier opt_unsafe IDENTIFIER {
                 NS2Entity *ns2_entity = return_data.identifier_get_or_create($3->get_value(), true, $3->get_source_ref());
 		if (ns2_entity == nullptr) {
@@ -900,6 +900,37 @@ function_decl_start
                         std::move($3)
                         );
         }
+        // Destructors:
+        // Recognizing this is actually hard.
+
+        // This one would put the tilde at the beginning which isn't what we want either.
+//        | opt_access_modifier opt_unsafe TILDE IDENTIFIER {
+//                NS2Entity *ns2_entity = return_data.identifier_get_or_create($4->get_value(), true, $4->get_source_ref());
+//		if (ns2_entity == nullptr) {
+//		    return -1;
+//		}
+//		$4->set_ns2_entity(ns2_entity);
+//		return_data.ns2_context->namespace_push(ns2_entity);
+//		$$ = std::make_unique<Gyoji::frontend::tree::FileStatementFunctionDeclStart>(
+//                        std::move($1),
+//                        std::move($2),
+//                        std::move($4)
+//                        );
+//        }
+        // This doesn't do it and introduces a Shift/Reduce conflict.
+//        | opt_access_modifier opt_unsafe TYPE_NAME TILDE IDENTIFIER {
+//                NS2Entity *ns2_entity = return_data.identifier_get_or_create($5->get_value(), true, $5->get_source_ref());
+//		if (ns2_entity == nullptr) {
+//		    return -1;
+//		}
+//		$5->set_ns2_entity(ns2_entity);
+//		return_data.ns2_context->namespace_push(ns2_entity);
+//		$$ = std::make_unique<Gyoji::frontend::tree::FileStatementFunctionDeclStart>(
+//                        std::move($1),
+//                        std::move($2),
+//                        std::move($5)
+//                        );
+//	}
         ;
 
 file_statement_function_definition

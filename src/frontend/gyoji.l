@@ -208,7 +208,6 @@ unsafe {PROCESS_NODE(UNSAFE);}
 \: {PROCESS_NODE(COLON);}
 \, {PROCESS_NODE(COMMA);}
 \! {PROCESS_NODE(BANG);}
-\~ {PROCESS_NODE(TILDE);}
 \& {PROCESS_NODE(ANDPERSAND);}
 \| {PROCESS_NODE(PIPE);}
 \+ {PROCESS_NODE(PLUS);}
@@ -227,7 +226,13 @@ null         {PROCESS_NODE(LITERAL_NULL);}
 
 {float} {PROCESS_NODE(LITERAL_FLOAT);}
 {integer} { PROCESS_NODE(LITERAL_INT);}
-(::)*{identifier}({whitespace}*:{whitespace}*:{whitespace}*{identifier})* {
+(::)?{identifier}({whitespace}*:{whitespace}*:{whitespace}*(\~)?{identifier})* {
+// The identifier regex is pretty intense, so here's the breakdown:
+// It can start with "::" for root-qualified searches.
+// Then it can contain an identifier [a-zA-z0-9]*
+// After that, you can put any number of '::' delimiters (with whitespace)
+// and optionally a ~ to denote a destructor.
+
     LexContext *lex_context = (LexContext*)yyget_extra(yyscanner);
     NS2Context & ns2_context = lex_context->ns2_context;
 
@@ -253,6 +258,11 @@ null         {PROCESS_NODE(LITERAL_NULL);}
         // already be assigned to a namespace location.
         PROCESS_IDENTIFIER(IDENTIFIER, entity);
     }
+}
+\~ {
+    // Needs to be after identifier because
+    // identifiers (for destructors) can contain a tilde.
+    PROCESS_NODE(TILDE);
 }
 
 "/*"        {
