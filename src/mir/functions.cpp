@@ -139,7 +139,8 @@ Function::calculate_block_reachability()
 
     // This is the working list of blocks we're
     // examining.
-    std::vector<size_t> open_list;
+    std::map<size_t, size_t> open_list;
+    std::map<size_t, size_t> closed_list;
 
     // This is a map of blockid:blockid
     // for the unreachable blocks.
@@ -155,21 +156,30 @@ Function::calculate_block_reachability()
     // We start with only one element on the open list,
     // that is the 'start' or 'entry' block.
     
-    open_list.push_back(0);
+    open_list.insert(std::pair(0, 0));
     // With each iteration, we look for
     // blocks we connect to.  Once we find them,
     // we take them off the unreachable list.
     while (open_list.size() != 0) {
-	size_t current = open_list.back();
-	open_list.pop_back();
+	size_t current = open_list.begin()->first;
+	open_list.erase(current);
 	unreachable.erase(current);
 	const auto & connections_to  = edges[current];
 	for (size_t to : connections_to) {
 	    blocks[to]->add_reachable_from(current);
+	    
+	    // Only add it back to the open list
+	    // if it wasn't found on the closed list
+	    // becuase we've reached it already.
+	    if (closed_list.find(to) == closed_list.end()) {
+		fprintf(stderr, "Adding %ld to open list\n", to);
+		open_list.insert(std::pair(to, to));
+	    }
 	}
-	open_list.insert(open_list.end(), connections_to.begin(), connections_to.end());
+	closed_list.insert(std::pair(current, current));
     }
     for (const auto & unreach : unreachable) {
+	fprintf(stderr, "Unreachable basic block %ld\n", unreach.first);
 	// This is unreachable in the sense that the
 	// basic blocks are not a connected graph.
 	// If this happens, then there is a bug in the 'lowering'
