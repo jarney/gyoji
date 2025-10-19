@@ -3466,7 +3466,6 @@ FunctionDefinitionResolver::extract_from_statement_break(
 	scope_tracker.get_loop_break_blockid()
 	);
     function->get_basic_block(current_block).add_operation(std::move(operation_jump_to_break));
-    current_block = function->add_block();
     
     return true;
 }
@@ -3490,7 +3489,6 @@ FunctionDefinitionResolver::extract_from_statement_continue(
 	scope_tracker.get_loop_continue_blockid()
 	);
     function->get_basic_block(current_block).add_operation(std::move(operation_jump_to_continue));
-    current_block = function->add_block();
     
     return true;
 }
@@ -3552,6 +3550,7 @@ FunctionDefinitionResolver::extract_from_statement_goto(
     size_t label_block;
     if (label == nullptr) {
 	label_block = function->add_block();
+	fprintf(stderr, "Adding label block %ld\n", label_block);
 	scope_tracker.label_declare(label_name, label_block);
     }
     else {
@@ -3569,10 +3568,7 @@ FunctionDefinitionResolver::extract_from_statement_goto(
 	label_block
 	);
     function->get_basic_block(current_block).add_operation(std::move(operation));
-    // This jump ends the basic block, so we start a new one.
-    size_t next_block = function->add_block();
-    current_block = next_block;
-
+    // This jump ends the basic block, so it's terminated.
     return true;
 }
 	
@@ -3627,7 +3623,7 @@ FunctionDefinitionResolver::extract_from_statement_list(
     const StatementList & statement_list)
 {
 
-    bool did_return = false;
+    bool current_block_terminated = false;
     for (const auto & statement_el : statement_list.get_statements()) {
 	const auto & statement_type = statement_el->get_statement();
 	if (std::holds_alternative<Gyoji::owned<StatementVariableDeclaration>>(statement_type)) {
@@ -3695,6 +3691,7 @@ FunctionDefinitionResolver::extract_from_statement_list(
 	    if (!extract_from_statement_goto(*statement)) {
 		return false;
 	    }
+	    current_block_terminated = true;
 	}
 	else if (std::holds_alternative<Gyoji::owned<StatementBreak>>(statement_type)) {
 	    const auto & statement = std::get<Gyoji::owned<StatementBreak>>(statement_type);
@@ -3702,6 +3699,7 @@ FunctionDefinitionResolver::extract_from_statement_list(
 		    *statement)) {
 		return false;
 	    }
+	    current_block_terminated = true;
 	}
 	else if (std::holds_alternative<Gyoji::owned<StatementContinue>>(statement_type)) {
 	    const auto & statement = std::get<Gyoji::owned<StatementContinue>>(statement_type);
@@ -3709,6 +3707,7 @@ FunctionDefinitionResolver::extract_from_statement_list(
 		    *statement)) {
 		return false;
 	    }
+	    current_block_terminated = true;
 	}
 	else if (std::holds_alternative<Gyoji::owned<StatementReturn>>(statement_type)) {
 	    const auto & statement = std::get<Gyoji::owned<StatementReturn>>(statement_type);
@@ -3717,7 +3716,7 @@ FunctionDefinitionResolver::extract_from_statement_list(
 	    if (!extract_from_statement_return(*statement)) {
 		return false;
 	    }
-	    did_return = true;
+	    current_block_terminated = true;
 	}
 	else {
 	    fprintf(stderr, "Compiler bug, invalid statement type\n");
@@ -3732,7 +3731,7 @@ FunctionDefinitionResolver::extract_from_statement_list(
     // do this because we'll add the return and
     // the scope unwinding based on the end of
     // the function (if it is reachable)
-    if (!did_return && automatic_unwind) {
+    if (!current_block_terminated && automatic_unwind) {
 	std::vector<std::string> unwind_scope = scope_tracker.get_variables_to_unwind_for_scope();
 	leave_scope(statement_list.get_source_ref(), unwind_scope);
     }
