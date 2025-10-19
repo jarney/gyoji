@@ -1041,6 +1041,15 @@ namespace Gyoji::frontend::tree {
 	    Gyoji::owned<InitializerExpression> _initializer,
 	    Gyoji::owned<Terminal> _semicolon_token
 	    );
+	StatementVariableDeclaration(
+	    Gyoji::owned<TypeSpecifier> _type_specifier,
+	    Gyoji::owned<Terminal> _identifier_token,
+	    Gyoji::owned<Terminal> _paren_l_token,
+	    Gyoji::owned<ArgumentExpressionList> _argument_expression_list,
+	    Gyoji::owned<Terminal> _paren_r_token,
+	    Gyoji::owned<Terminal> _semicolon_token
+	    );
+
 	/**
 	 * Destructor, nothing special.
 	 */
@@ -1053,16 +1062,34 @@ namespace Gyoji::frontend::tree {
 	 * Returns the name of the variable being declared.
 	 */
 	const Terminal & get_identifier() const;
+
+	bool is_constructor() const;
+	
 	/**
 	 * Returns the initializer expression, usually a literal,
 	 * that is used to populate the variable with known values.
+	 * Only valid if !is_constructor().
 	 */
 	const InitializerExpression & get_initializer_expression() const;
+
+	/**
+	 * Returns the list of constructor arguments to pass.
+	 * Only valid if is_constructor().
+	 */
+	const ArgumentExpressionList & get_argument_expression_list() const;
+
     private:
 	Gyoji::owned<TypeSpecifier> type_specifier;
 	Gyoji::owned<Terminal> identifier_token;
 	Gyoji::owned<ArrayLength> array_length;
+
+	bool m_is_constructor;
 	Gyoji::owned<InitializerExpression> initializer;
+
+	Gyoji::owned<Terminal> paren_l_token;
+	Gyoji::owned<ArgumentExpressionList> argument_expression_list;
+	Gyoji::owned<Terminal> paren_r_token;
+	
 	Gyoji::owned<Terminal> semicolon_token;
     };
     

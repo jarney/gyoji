@@ -5,8 +5,8 @@ namespace jlang {
         u8 b;
         u8* s;
         void set_something(u32 a, u32 b, u32 c);
-//	Foo();
-//	~Foo();
+	Foo(u32 x);
+	~Foo();
     };
     void foo_function();
 };
@@ -44,7 +44,7 @@ u32 main(u32 argc, u8**argv)
 {
         u32 x;
         x = 19;
-	Foo cl;
+	Foo cl(19);
 	cl.set_something(10u32, 42u32, 99u32);
 	foo_function();
 	return 0u32;

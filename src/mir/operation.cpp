@@ -222,6 +222,69 @@ Operation::dump(FILE *out) const
     fprintf(out, "            %s\n", get_description().c_str());
 }
 
+#if 0
+// XXX TODO: Is this really the way to handle this?
+bool
+Operation::contains(size_t tmpvar) const
+{
+    for (const size_t & operand : operands) {
+	if (operand == tmpvar) {
+	    return true;
+	}
+    }
+    return false;
+}
+
+// The semantics here depend strongly on the opcode
+// because how the opcode is used depends strongly
+// on what the semantics of the opcode are.
+// Most of the time, the value is 'readfrom'
+// but, for example, in an assignment, it is
+// written to, but not read from.
+bool
+Operation::get_readsfrom(size_t tmpvar) const
+{
+    switch (type) {
+    case OP_FUNCTION_CALL:
+    case OP_GET_METHOD:
+    case OP_METHOD_GET_FUNCTION:
+    case OP_METHOD_GET_OBJECT:
+    case OP_SYMBOL:
+
+    case OP_WIDEN_SIGNED:
+    case OP_WIDEN_UNSIGNED:
+    case OP_WIDEN_FLOAT:
+
+    case OP_ARRAY_INDEX:
+    case OP_DOT:
+	
+    case OP_ADDRESSOF:
+    case OP_DEREFERENCE:
+    case OP_NEGATE:
+	return contains(tmpvar);
+	break;
+    case OP_LOCAL_DECLARE:
+    case OP_LOCAL_UNDECLARE:
+    case OP_LOCAL_VARIABLE:
+	
+    case OP_LITERAL_CHAR:
+    case OP_LITERAL_STRING:
+    case OP_LITERAL_INT:
+    case OP_LITERAL_FLOAT:
+    case OP_LITERAL_BOOL:
+    case OP_LITERAL_NULL:
+	return false;
+	
+	break;
+    }
+    return false;
+}
+bool
+Operation::get_writesto(size_t tmpvar) const
+{
+    return false;
+}
+#endif
 
 //////////////////////////////////////////////
 // OperationUnary

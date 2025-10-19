@@ -949,6 +949,22 @@ namespace Gyoji::mir {
 	 * method to provide debuginng information.
 	 */
 	virtual std::string get_description() const;
+
+#if 0
+	// XXX Is this really the way to handle this?
+	/**
+	 * Returns true if this operation
+	 * de-references or reads from the value
+	 * given.  For example, if this is an 'rvalue' of
+	 * an assignment operation, this will be true.
+	 * This allows an 'imperfect' pass on read-before-write
+	 * error checking.  In fact, this does give us the equivalent
+	 * set of rules as Rust since Rust doesn't allow borrow or
+	 * pointer to uninitialized data.
+	 */
+	bool get_readsfrom(size_t tmpvar) const;
+	bool get_writesto(size_t tmpvar) const;
+#endif
     protected:
 	OperationType type;
 	const Gyoji::context::SourceReference & src_ref;
@@ -964,6 +980,11 @@ namespace Gyoji::mir {
 	 * when constructing operations.
 	 */
 	void add_operand(size_t operand);
+
+#if 0
+	// XXX Is this really the way to handle this?
+	bool contains(size_t tmpvar) const;
+#endif
     };
 
     /**

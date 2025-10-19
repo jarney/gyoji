@@ -600,7 +600,11 @@ StatementVariableDeclaration::StatementVariableDeclaration(
     : SyntaxNode(NONTERMINAL_statement_variable_declaration, this, _type_specifier->get_source_ref())
     , type_specifier(std::move(_type_specifier))
     , identifier_token(std::move(_identifier_token))
+    , m_is_constructor(false)
     , initializer(std::move(_initializer))
+    , paren_l_token(nullptr)
+    , argument_expression_list(nullptr)
+    , paren_r_token(nullptr)
     , semicolon_token(std::move(_semicolon_token))
 {
     add_child(*type_specifier);
@@ -608,6 +612,32 @@ StatementVariableDeclaration::StatementVariableDeclaration(
     add_child(*initializer);
     add_child(*semicolon_token);
 }
+StatementVariableDeclaration::StatementVariableDeclaration(
+    Gyoji::owned<TypeSpecifier> _type_specifier,
+    Gyoji::owned<Terminal> _identifier_token,
+    Gyoji::owned<Terminal> _paren_l_token,
+    Gyoji::owned<ArgumentExpressionList> _argument_expression_list,
+    Gyoji::owned<Terminal> _paren_r_token,
+    Gyoji::owned<Terminal> _semicolon_token
+    )
+    : SyntaxNode(NONTERMINAL_statement_variable_declaration, this, _type_specifier->get_source_ref())
+    , type_specifier(std::move(_type_specifier))
+    , identifier_token(std::move(_identifier_token))
+    , m_is_constructor(true)
+    , initializer(nullptr)
+    , paren_l_token(std::move(_paren_l_token))
+    , argument_expression_list(std::move(_argument_expression_list))
+    , paren_r_token(std::move(_paren_r_token))
+    , semicolon_token(std::move(_semicolon_token))
+{
+    add_child(*type_specifier);
+    add_child(*identifier_token);
+    add_child(*paren_l_token);
+    add_child(*argument_expression_list);
+    add_child(*paren_r_token);
+    add_child(*semicolon_token);
+}
+
 StatementVariableDeclaration::~StatementVariableDeclaration()
 {}
 const TypeSpecifier &
@@ -616,9 +646,16 @@ StatementVariableDeclaration::get_type_specifier() const
 const Terminal & 
 StatementVariableDeclaration::get_identifier() const
 { return *identifier_token; }
+bool
+StatementVariableDeclaration::is_constructor() const
+{ return m_is_constructor; }
 const InitializerExpression &
 StatementVariableDeclaration::get_initializer_expression() const
 { return *initializer;}
+const ArgumentExpressionList &
+StatementVariableDeclaration::get_argument_expression_list() const
+{ return *argument_expression_list;}
+
 ///////////////////////////////////////////////////
 StatementBlock::StatementBlock(
     Gyoji::owned<UnsafeModifier> _unsafe_modifier,

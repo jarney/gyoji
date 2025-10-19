@@ -2301,6 +2301,9 @@ FunctionDefinitionResolver::handle_binary_operation_assignment(
 	type,
 	_src_ref,
 	returned_tmpvar,
+	// a_tmpvar is an lvalue and b_tmpvar is an rvalue
+	// should we wait to resolve the rvalue
+	// until we actually consume it?
 	a_tmpvar,
 	b_tmpvar
 	);
@@ -2897,46 +2900,84 @@ FunctionDefinitionResolver::extract_from_statement_variable_declaration(
 	    )) {
 	return false;
     }
-    
-    const auto & initializer_expression = statement.get_initializer_expression();
-    if (initializer_expression.has_expression()) {
-	// From here, we need to:
-	// 1) call LocalVariable
-	// 2) Evaluate the expression
-	// 3) Perform an assignment.
+
+    if (statement.is_constructor()) {
+	// Here, we should call the constructor
+	// since it is the one that forces initialization
+	// of all class members (if applicable).
+	// First, check that this is a class type.  If it isn't, then
+	// we it must be a single initializer for a primitive.
+	if (!mir_type->is_composite()) {
+	    compiler_context
+		.get_errors()
+		.add_simple_error(
+		    statement.get_argument_expression_list().get_source_ref(),
+		    "Constructors are not supported for non-class types",
+		    std::string("Constructors must be called on class types and not primitive types like ") + mir_type->get_name()
+		    );
+	    return false;
+	}
+
+	// This lowers to a single MIR operation
+	// so that we can easily tell from the MIR
+	// whether this variable is initialized before use.
+	// Get the variable.
 	size_t variable_tmpvar = function->tmpvar_define(mir_type);
-	auto operation = std::make_unique<OperationLocalVariable>(
+	auto op_variable = std::make_unique<OperationLocalVariable>(
 	    statement.get_source_ref(),
 	    variable_tmpvar,
 	    statement.get_identifier().get_name(),
 	    mir_type
 	    );
-	function->get_basic_block(current_block).add_operation(std::move(operation));
+	function->get_basic_block(current_block).add_operation(std::move(op_variable));
 
-	size_t initial_value_tmpvar;
-	if (!extract_from_expression(initial_value_tmpvar, initializer_expression.get_expression())) {
-	    return false;
-	}
-
-	size_t returned_tmpvar; // We don't save the returned val because nobody wants it.
-	if (!handle_binary_operation_assignment(
-		initializer_expression.get_source_ref(),
-		Operation::OP_ASSIGN,
-		returned_tmpvar,
-		variable_tmpvar,
-		initial_value_tmpvar
-		)) {
-	    return false;
-	}
+	// TODO: Actually call the constructor.
+	// Mostly here, just check that the argument types match
+	// the function signature and then fire up the call.
+	/*
+	size_t constructor_result_tmpvar = function->tmpvar_define(mir_type);
+	auto op_constructor = std::make_unique<OperationConstructor>(
+	    statement.get_argument_expression_list().get_source_ref(),
+	    constructor_result_tmpvar,
+	    ...arguments...
+	    );
+	*/
     }
     else {
-	// TODO: In order to avoid undefined behavior, we should
-	// always make sure that the variable has an initial default
-	// value even if there isn't one provided.  We should look
-	// at the type system and ask it for a 'default' value
-	// for the type.
-	// In many cases, this would be the constructor if it
-	// is available for that type.
+	// If this is a class type, throw an error because this
+	// would be not the correct way to initialize it.
+	
+	const auto & initializer_expression = statement.get_initializer_expression();
+	if (initializer_expression.has_expression()) {
+	    // From here, we need to:
+	    // 1) call LocalVariable
+	    // 2) Evaluate the expression
+	    // 3) Perform an assignment.
+	    size_t variable_tmpvar = function->tmpvar_define(mir_type);
+	    auto operation = std::make_unique<OperationLocalVariable>(
+		statement.get_source_ref(),
+		variable_tmpvar,
+		statement.get_identifier().get_name(),
+		mir_type
+		);
+	    function->get_basic_block(current_block).add_operation(std::move(operation));
+	    
+	    size_t initial_value_tmpvar;
+	    if (!extract_from_expression(initial_value_tmpvar, initializer_expression.get_expression())) {
+		return false;
+	    }
+	    
+	    size_t returned_tmpvar; // We don't save the returned val because nobody wants it.
+	    if (!handle_binary_operation_assignment(
+		    initializer_expression.get_source_ref(),
+		    Operation::OP_ASSIGN,
+		    returned_tmpvar,
+		    variable_tmpvar,
+		    initial_value_tmpvar
+		    )) {
+		return false;
+	    }
+	}
     }
 
     

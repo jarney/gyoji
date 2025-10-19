@@ -1062,7 +1062,20 @@ statement_variable_declaration
 		    );
                 PRINT_NONTERMINALS($$);
         }
-        ;
+        | type_specifier IDENTIFIER PAREN_L opt_argument_expression_list PAREN_R SEMICOLON {
+	    // Constructor
+                NS2Entity *ns2_entity = return_data.identifier_get_or_create($2->get_value(), true, $2->get_source_ref());
+	        $2->set_ns2_entity(ns2_entity);
+                $$ = std::make_unique<Gyoji::frontend::tree::StatementVariableDeclaration>(
+		    std::move($1),
+		    std::move($2),
+		    std::move($3),
+		    std::move($4),
+		    std::move($5),
+		    std::move($6)
+		    );
+                PRINT_NONTERMINALS($$);
+        }
 
 statement_block
         : opt_unsafe scope_body {

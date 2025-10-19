@@ -5,22 +5,27 @@ unsafe void unsafe_function();
 
 u32 print_value(u32 number);
 
+class Foo {
+      u32 x;
+};
+
 unsafe void unsafe_function()
 {
     u32 x;
     u32 *p = &x;
 
     *p = 10;
+
+    Foo foo;
+    print_value(foo.x);
+
+    print_value(x);
 }
 
 void safe_function(u32 a)
 {
     u32 x = 10;
 }
-
-class Foo {
-      u32 x;
-};
 
 u32 main(u32 argc, u8 **argv)
 {
