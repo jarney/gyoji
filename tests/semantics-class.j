@@ -5,7 +5,7 @@ namespace jlang {
         u8 b;
         u8* s;
         void set_something(u32 a, u32 b, u32 c);
-	Foo(u32 x);
+	Foo();
 	~Foo();
     };
     void foo_function();
@@ -21,10 +21,10 @@ using namespace jlang as asdf;
 //
 // Syntax says this is ok, but semantics doesn't resolve it Foo : : Foo()
 //
-Foo::Foo(u32 xx)
+Foo::Foo()
 {
     print_value(888);
-    print_value(xx);
+//    print_value(xx);
 }
 
 // Whtiespace in the middle still screws us up, so
@@ -57,9 +57,10 @@ Foo::set_something(u32 _a, u32 _b, u32 _c)
 
 u32 main(u32 argc, u8**argv)
 {
-        u32 x;
+        u32 x(8u32);
         x = 19;
-	Foo cl(537);
+//	Foo cl(537);
+	Foo cl;
 	cl.set_something(10u32, 42u32, 99u32);
 	foo_function();
 	return 0u32;

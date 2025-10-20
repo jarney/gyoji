@@ -25,11 +25,13 @@ using namespace Gyoji::mir;
 ////////////////////////////////////////
 Type::Type(
     std::string _name,
+    std::string _simple_name,
     TypeType _type,
     bool _complete,
     const SourceReference & _source_ref
     )
     : name(_name)
+    , simple_name(_simple_name)
     , type(_type)
     , complete(_complete)
     , declared_source_ref(&_source_ref)
@@ -42,8 +44,33 @@ Type::Type(
     , class_type(nullptr)
     , function_pointer_type(nullptr)
 {}
-Type::Type(std::string _name, const SourceReference & _source_ref, const Type & _other)
+Type::Type(
+    std::string _name,
+    TypeType _type,
+    bool _complete,
+    const SourceReference & _source_ref
+    )
     : name(_name)
+    , simple_name(_name)
+    , type(_type)
+    , complete(_complete)
+    , declared_source_ref(&_source_ref)
+    , defined_source_ref(&_source_ref)
+    , pointer_or_ref(nullptr)
+    , array_length(1)
+    , return_type(nullptr)
+    , argument_types()
+    , members()
+    , class_type(nullptr)
+    , function_pointer_type(nullptr)
+{}
+Type::Type(
+    std::string _name,
+    std::string _simple_name,
+    const SourceReference & _source_ref,
+    const Type & _other)
+    : name(_name)
+    , simple_name(_simple_name)
     , type(_other.type)
     , complete(_other.complete)
     , declared_source_ref(&_source_ref)
@@ -223,6 +250,10 @@ const std::string &
 Type::get_name() const
 { return name; }
 
+const std::string &
+Type::get_simple_name() const
+{ return simple_name; }
+
 const std::vector<TypeMember> &
 Type::get_members() const
 { return members; }
@@ -250,19 +281,19 @@ Type::method_get(const std::string & method_name) const
     }
     return &it->second;
 }
-#if 0
-const TypeMethod *method_get_constructor() const
+
+const TypeMethod *
+Type::method_get_constructor() const
 {
-    std::string destructor_name = "";
-    return method_get(constructor_name);
+    return method_get(simple_name);
 }
 	
-const TypeMethod *method_get_destructor() const
+const TypeMethod *
+Type::method_get_destructor() const
 {
-    std::string destructor_name = "";
-    return method_get(destructor_name);
+    return method_get(std::string("~") + simple_name);
 }
-#endif
+
 
 const Type *
 Type::get_pointer_target() const

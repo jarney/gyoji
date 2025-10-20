@@ -687,8 +687,7 @@ class_decl_start
                                                                          std::move($1),
                                                                          std::move($2),
                                                                          std::move($3),
-                                                                         std::move($4),
-                                                                         true // is_identifier
+                                                                         std::move($4)
                                                                          );
 
 		
@@ -700,8 +699,7 @@ class_decl_start
                                                                          std::move($1),
                                                                          std::move($2),
                                                                          std::move($3),
-                                                                         std::move($4),
-                                                                         false // is_identifier
+                                                                         std::move($4)
                                                                          );
         }
         ;

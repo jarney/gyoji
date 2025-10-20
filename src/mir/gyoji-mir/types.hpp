@@ -518,6 +518,14 @@ namespace Gyoji::mir {
 	 */
 	Type(
 	    std::string _name,
+	    std::string _simple_name,
+	    TypeType _type,
+	    bool _complete,
+	    const Gyoji::context::SourceReference & _source_ref
+	    );
+	
+	Type(
+	    std::string _name,
 	    TypeType _type,
 	    bool _complete,
 	    const Gyoji::context::SourceReference & _source_ref
@@ -529,6 +537,7 @@ namespace Gyoji::mir {
 	 */
 	Type(
 	    std::string _name,
+	    std::string _simple_name,
 	    const Gyoji::context::SourceReference & _source_ref,
 	    const Type & _other
 	    );
@@ -545,6 +554,15 @@ namespace Gyoji::mir {
 	 * This returns the fully-qualified name of the type.
 	 */
 	const std::string & get_name() const;
+
+	/**
+	 * This returns the 'simple' name (i.e. not fully qualified).
+	 * This is mainly used to construct the constructor and destructor
+	 * names by appending the "Simple" name to the fully-qualified name
+	 * as a method name.
+	 */
+	const std::string & get_simple_name() const;
+	
 	/**
 	 * This returns true if the type has not yet been completely specified.
 	 * In particular, types may be incomplete when they are initially
@@ -677,11 +695,9 @@ namespace Gyoji::mir {
 
 	const TypeMethod *method_get(const std::string & member_name) const;
 
-#if 0
-	const TypeMethod *method_get_constructor() const;
+	const TypeMethod* method_get_constructor() const;
 	
 	const TypeMethod *method_get_destructor() const;
-#endif
 	
 	/**
 	 * This returns a pointer to the type pointed to by
@@ -785,6 +801,7 @@ namespace Gyoji::mir {
 	
     private:
 	std::string name;
+	std::string simple_name;
 	TypeType type;
 	bool complete;
 	bool m_is_unsafe;

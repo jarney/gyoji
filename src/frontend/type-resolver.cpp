@@ -45,7 +45,11 @@ void TypeResolver::resolve()
 void
 TypeResolver::extract_from_class_declaration(const ClassDeclaration & declaration)
 {
-    Gyoji::owned<Type> type = std::make_unique<Type>(declaration.get_name(), Type::TYPE_COMPOSITE, false, declaration.get_name_source_ref());
+    Gyoji::owned<Type> type = std::make_unique<Type>(
+	declaration.get_fully_qualified_name(),
+	Type::TYPE_COMPOSITE,
+	false,
+	declaration.get_name_source_ref());
     mir.get_types().define_type(std::move(type));
 }
 
@@ -367,9 +371,8 @@ TypeResolver::extract_from_class_members(Type & class_type, const ClassDefinitio
 	    // Regular methods have return types.  Constructors/destructors always return void.
 	    const Type * method_return_type = mir.get_types().get_type("void");
 
-	    // TODO: Where to find the leaf-node part of the class name?
-	    std::string simple_name = "Foo";
-	    std::string fully_qualified_name = "jlang::Foo::Foo";
+	    std::string simple_name = class_type.get_simple_name();
+	    std::string fully_qualified_name = class_type.get_name() + std::string("::") + simple_name;
 
 	    extract_from_class_method_types(
 		class_type,
@@ -388,9 +391,9 @@ TypeResolver::extract_from_class_members(Type & class_type, const ClassDefinitio
 	    // Regular methods have return types.  Constructors/destructors always return void.
 	    const Type * method_return_type = mir.get_types().get_type("void");
 
-	    // TODO: Where to find the leaf-node part of the class name?
-	    std::string simple_name = "~Foo";
-	    std::string fully_qualified_name = "jlang::Foo::~Foo";
+	    std::string simple_name = std::string("~") + class_type.get_simple_name();
+	    std::string fully_qualified_name = class_type.get_name() + std::string("::") + simple_name;
+	    fprintf(stderr, "Extracting destructor %s %s\n", simple_name.c_str(), fully_qualified_name.c_str());
 
 	    extract_from_class_method_types(
 		class_type,
@@ -414,12 +417,17 @@ TypeResolver::extract_from_class_members(Type & class_type, const ClassDefinitio
 void
 TypeResolver::extract_from_class_definition(const ClassDefinition & definition)
 {
-    const auto it = mir.get_types().get_types().find(definition.get_name());
+    const auto it = mir.get_types().get_types().find(definition.get_fully_qualified_name());
     
     if (it == mir.get_types().get_types().end()) {
 	// Case 1: No forward declaration exists, fill in the definition
 	// from the class.
-	Gyoji::owned<Type> type = std::make_unique<Type>(definition.get_name(), Type::TYPE_COMPOSITE, true, definition.get_name_source_ref());
+	Gyoji::owned<Type> type = std::make_unique<Type>(
+	    definition.get_fully_qualified_name(),
+	    definition.get_name(),
+	    Type::TYPE_COMPOSITE,
+	    true,
+	    definition.get_name_source_ref());
 	extract_from_class_members(*type, definition);
 	mir.get_types().define_type(std::move(type));
     }
@@ -432,7 +440,7 @@ TypeResolver::extract_from_class_definition(const ClassDefinition & definition)
 	else {
 	    // Case 3: Class is declared and complete, but does not match our current definition,
 	    // so this is a duplicate.  Raise an error to avoid ambiguity.
-	    std::unique_ptr<Gyoji::context::Error> error = std::make_unique<Gyoji::context::Error>(std::string("Duplicate class definition: ") + definition.get_name());
+	    std::unique_ptr<Gyoji::context::Error> error = std::make_unique<Gyoji::context::Error>(std::string("Duplicate class definition: ") + definition.get_fully_qualified_name());
 	    error->add_message(type.get_defined_source_ref(),
 			       "Originally defined here"
 		);
@@ -498,6 +506,7 @@ TypeResolver::extract_from_type_definition(const TypeDefinition & type_definitio
 	// it as a generic with specific type parameters
 	// when we get to that point.
 	Gyoji::owned<Type> type = std::make_unique<Type>(
+	    type_definition.get_name(),
 	    type_definition.get_name(),
 	    type_definition.get_type_specifier().get_source_ref(),
 	    *defined_type

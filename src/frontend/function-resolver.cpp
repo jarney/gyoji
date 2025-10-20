@@ -1941,7 +1941,7 @@ FunctionDefinitionResolver::handle_binary_operation_arithmetic(
 	    .add_simple_error(
 		_src_ref,
 		"Type mismatch in binary operation",
-		std::string("The type of operands should be numeric, but were: a= ") + atype->get_name() + std::string(" b=") + btype->get_name()
+		std::string("The type of operands should be numeric, but were: a=") + atype->get_name() + std::string(" b=") + btype->get_name()
 		);
 	return false;
     }
@@ -1953,7 +1953,7 @@ FunctionDefinitionResolver::handle_binary_operation_arithmetic(
 		.add_simple_error(
 		    _src_ref,
 		    "Type mismatch in binary operation",
-		    std::string("The type of operands should be integer, but were a= ") + atype->get_name() + std::string(" b=") + btype->get_name()
+		    std::string("The type of operands should be integer, but were a=") + atype->get_name() + std::string(" b=") + btype->get_name()
 		    );
 	    return false;
 	}
@@ -1970,7 +1970,7 @@ FunctionDefinitionResolver::handle_binary_operation_arithmetic(
 	    .add_simple_error(
 		_src_ref,
 		"Type mismatch in binary operation",
-		std::string("The type of operands both integer or floating-point types.  Automatic cast from int to float is not supported. a= ") +
+		std::string("The type of operands both integer or floating-point types.  Automatic cast from int to float is not supported. a=") +
 		atype->get_name() + std::string(" b=") + btype->get_name()
 		);
 	return false;
@@ -2024,7 +2024,7 @@ FunctionDefinitionResolver::handle_binary_operation_logical(
 	    .add_simple_error(
 		_src_ref,
 		"Type mismatch in logical operation",
-		std::string("The type of operands should be bool , but were: a= ") + atype->get_name() + std::string(" b=") + btype->get_name()
+		std::string("The type of operands should be bool , but were: a=") + atype->get_name() + std::string(" b=") + btype->get_name()
 		);
 	return false;
     }
@@ -2059,7 +2059,7 @@ FunctionDefinitionResolver::handle_binary_operation_bitwise(
 	    .add_simple_error(
 		_src_ref,
 		"Type mismatch in binary operation",
-		std::string("The type of operands should be unsigned integers, but were: a= ") + atype->get_name() + std::string(" b=") + btype->get_name()
+		std::string("The type of operands should be unsigned integers, but were: a=") + atype->get_name() + std::string(" b=") + btype->get_name()
 		);
 	return false;
     }
@@ -2111,7 +2111,7 @@ FunctionDefinitionResolver::handle_binary_operation_shift(
 	    .add_simple_error(
 		_src_ref,
 		"Type mismatch in binary operation",
-		std::string("The type of operands should be unsigned integers, but were: a= ") + atype->get_name() + std::string(" b=") + btype->get_name()
+		std::string("The type of operands should be unsigned integers, but were: a=") + atype->get_name() + std::string(" b=") + btype->get_name()
 		);
 	return false;
     }
@@ -2162,7 +2162,7 @@ FunctionDefinitionResolver::handle_binary_operation_compare(
 	    .add_simple_error(
 		_src_ref,
 		"Type mismatch in compare operation",
-		std::string("The operands of a comparision should be the same type, but were: a= ") + atype->get_name() + std::string(" b=") + btype->get_name()
+		std::string("The operands of a comparision should be the same type, but were: a=") + atype->get_name() + std::string(" b=") + btype->get_name()
 		);
 	return false;
     }
@@ -2172,7 +2172,7 @@ FunctionDefinitionResolver::handle_binary_operation_compare(
 	    .add_simple_error(
 		_src_ref,
 		"Type mismatch in compare operation",
-		std::string("The operands of a comparison must not be void, but were: a= ") + atype->get_name() + std::string(" b=") + btype->get_name()
+		std::string("The operands of a comparison must not be void, but were: a=") + atype->get_name() + std::string(" b=") + btype->get_name()
 		);
 	return false;
     }
@@ -2182,7 +2182,7 @@ FunctionDefinitionResolver::handle_binary_operation_compare(
 	    .add_simple_error(
 		_src_ref,
 		"Type mismatch in compare operation",
-		std::string("The operands of a comparison must not be composite structures or classes, but were: a= ") + atype->get_name() + std::string(" b=") + btype->get_name()
+		std::string("The operands of a comparison must not be composite structures or classes, but were: a=") + atype->get_name() + std::string(" b=") + btype->get_name()
 		);
 	return false;
     }
@@ -2197,7 +2197,7 @@ FunctionDefinitionResolver::handle_binary_operation_compare(
 	    .add_simple_error(
 		_src_ref,
 		"Type mismatch in compare operation",
-		std::string("The operands of a comparison of pointers and references may not be used except for equality comparisions, but were: a= ") + atype->get_name() + std::string(" b=") + btype->get_name()
+		std::string("The operands of a comparison of pointers and references may not be used except for equality comparisions, but were: a=") + atype->get_name() + std::string(" b=") + btype->get_name()
 		);
 	return false;	
     }
@@ -2268,7 +2268,7 @@ FunctionDefinitionResolver::handle_binary_operation_assignment(
 		.add_simple_error(
 		    _src_ref,
 		    "Type mismatch in assignment operation",
-		    std::string("The operands of an assignment should be the same type, but were: a= ") + atype->get_name() + std::string(" b=") + btype->get_name()
+		    std::string("The operands of an assignment should be the same type, but were: a=") + atype->get_name() + std::string(" b=") + btype->get_name()
 		    );
 	    return false;
 	}
@@ -2279,7 +2279,7 @@ FunctionDefinitionResolver::handle_binary_operation_assignment(
 	    .add_simple_error(
 		_src_ref,
 		"Type mismatch in assignment operation",
-		std::string("The operands of an assignment must not be void, but were: a= ") + atype->get_name() + std::string(" b=") + btype->get_name()
+		std::string("The operands of an assignment must not be void, but were: a=") + atype->get_name() + std::string(" b=") + btype->get_name()
 		);
 	return false;
     }
@@ -2289,7 +2289,7 @@ FunctionDefinitionResolver::handle_binary_operation_assignment(
 	    .add_simple_error(
 		_src_ref,
 		"Type mismatch in assignment operation",
-		std::string("The operands of an assignment must not be composite structures or classes, but were: a= ") + atype->get_name() + std::string(" b=") + btype->get_name()
+		std::string("The operands of an assignment must not be composite structures or classes, but were: a=") + atype->get_name() + std::string(" b=") + btype->get_name()
 		);
 	return false;
     }
@@ -2912,22 +2912,23 @@ FunctionDefinitionResolver::extract_from_statement_variable_declaration(
 	return false;
     }
 
-    if (statement.is_constructor()) {
-	// Here, we should call the constructor
-	// since it is the one that forces initialization
-	// of all class members (if applicable).
-	// First, check that this is a class type.  If it isn't, then
-	// we it must be a single initializer for a primitive.
-	if (!mir_type->is_composite()) {
+    // If it is composite, we MUST call
+    // the constructor.
+    if (mir_type->is_composite()) {
+	const TypeMethod *default_constructor = mir_type->method_get_constructor();
+	if (default_constructor == nullptr) {
 	    compiler_context
 		.get_errors()
 		.add_simple_error(
-		    statement.get_argument_expression_list().get_source_ref(),
-		    "Constructors are not supported for non-class types",
-		    std::string("Constructors must be called on class types and not primitive types like ") + mir_type->get_name()
+		    statement.get_source_ref(),
+		    "Constructor is required for class type",
+		    std::string("Constructors must be called on class types ") + mir_type->get_name()
 		    );
 	    return false;
 	}
+	// This seems like a really bad way to
+	// get the constructor name.
+	std::string fully_qualified_function_name(mir_type->get_name() + std::string("::") + default_constructor->get_name());
 
 	// This lowers to a single MIR operation
 	// so that we can easily tell from the MIR
@@ -2963,17 +2964,21 @@ FunctionDefinitionResolver::extract_from_statement_variable_declaration(
 	// First argument is the <this> pointer:
 	passed_arguments.push_back(variable_pointer_tmpvar);
 	passed_src_refs.push_back(&statement.get_source_ref());
-	
-	for (const auto & arg_expr : statement.get_argument_expression_list().get_arguments()) {
-	    size_t arg_returned_value;
-	    if (!extract_from_expression(arg_returned_value, *arg_expr)) {
-		return false;
-	    }
-	    passed_arguments.push_back(arg_returned_value);
-	    passed_src_refs.push_back(&arg_expr->get_source_ref());
-	}
 
-	std::string fully_qualified_function_name("jlang::Foo::Foo");
+	// If this is a constructor, we can get the arguments
+	// from the statement.  If it's not, we assume a
+	// constructor that has no arguments.
+	if (statement.is_constructor()) {
+	    for (const auto & arg_expr : statement.get_argument_expression_list().get_arguments()) {
+		size_t arg_returned_value;
+		if (!extract_from_expression(arg_returned_value, *arg_expr)) {
+		    return false;
+		}
+		passed_arguments.push_back(arg_returned_value);
+		passed_src_refs.push_back(&arg_expr->get_source_ref());
+	    }
+	}
+	
 	const Gyoji::mir::Symbol *constructor_symbol = mir.get_symbols().get_symbol(fully_qualified_function_name);
 	if (constructor_symbol == nullptr) {
 	    std::unique_ptr<Gyoji::context::Error> error = std::make_unique<Gyoji::context::Error>("No constructor found.");
@@ -3000,13 +3005,13 @@ FunctionDefinitionResolver::extract_from_statement_variable_declaration(
 	}
 	// Check that the method signature we're calling matches
 	// the declaration of that method
-	if (!check_function_call_signature(true, passed_arguments, passed_src_refs, constructor_fptr_type, statement.get_argument_expression_list().get_source_ref())) {
+	if (!check_function_call_signature(true, passed_arguments, passed_src_refs, constructor_fptr_type, statement.get_source_ref())) {
 	    return false;
 	}
 	
 	size_t constructor_fptr_tmpvar = function->tmpvar_define(constructor_fptr_type);
 	auto operation_get_constructor_function = std::make_unique<OperationSymbol>(
-	    statement.get_argument_expression_list().get_source_ref(),
+	    statement.get_source_ref(),
 	    constructor_fptr_tmpvar,
 	    fully_qualified_function_name
 	    );
@@ -3017,50 +3022,78 @@ FunctionDefinitionResolver::extract_from_statement_variable_declaration(
 	
 	auto op_constructor = std::make_unique<OperationFunctionCall>(
             Operation::OP_CONSTRUCTOR,
-	    statement.get_argument_expression_list().get_source_ref(),
+	    statement.get_source_ref(),
 	    constructor_result_tmpvar,
 	    constructor_fptr_tmpvar,
 	    passed_arguments
 	    );
 	function->get_basic_block(current_block).add_operation(std::move(op_constructor));
+
     }
     else {
-	// If this is a class type, throw an error because this
-	// would be not the correct way to initialize it.
+	const Expression *expression = nullptr;
 	
-	const auto & initializer_expression = statement.get_initializer_expression();
-	if (initializer_expression.has_expression()) {
-	    // From here, we need to:
-	    // 1) call LocalVariable
-	    // 2) Evaluate the expression
-	    // 3) Perform an assignment.
-	    size_t variable_tmpvar = function->tmpvar_define(mir_type);
-	    auto operation = std::make_unique<OperationLocalVariable>(
-		statement.get_source_ref(),
-		variable_tmpvar,
-		statement.get_identifier().get_name(),
-		mir_type
-		);
-	    function->get_basic_block(current_block).add_operation(std::move(operation));
-	    
-	    size_t initial_value_tmpvar;
-	    if (!extract_from_expression(initial_value_tmpvar, initializer_expression.get_expression())) {
+	if (statement.is_constructor()) {
+	    // Initialization of simple types
+	    // must be equals-style
+	    const std::vector<Gyoji::owned<Expression>> & arguments = 
+		statement.get_argument_expression_list().get_arguments();
+	    if (arguments.size() != 1) {
+		compiler_context
+		    .get_errors()
+		    .add_simple_error(
+			statement.get_argument_expression_list().get_source_ref(),
+			"Initializer of primitive type must consist of a single argument",
+			std::string("Initialization of a primitive type must be a single argument of the correct type for ") + mir_type->get_name()
+			);
 		return false;
 	    }
-	    
-	    size_t returned_tmpvar; // We don't save the returned val because nobody wants it.
-	    if (!handle_binary_operation_assignment(
-		    initializer_expression.get_source_ref(),
-		    Operation::OP_ASSIGN,
-		    returned_tmpvar,
-		    variable_tmpvar,
-		    initial_value_tmpvar
-		    )) {
-		return false;
+	    // Check size.
+	    expression = arguments.at(0).get();
+	}
+	else {
+	    // This is an equals-style
+	    // initialization of a primitive variable.
+	    const auto & initializer_expression = statement.get_initializer_expression();
+	    if (initializer_expression.has_expression()) {
+		expression = &initializer_expression.get_expression();
+	    }
+	    else {
+		// The author has chosen to defer initialization,
+		// so we're done with the initialization part.
+		return true;
 	    }
 	}
+	// From here, we need to:
+	// 1) call LocalVariable
+	// 2) Evaluate the expression
+	// 3) Perform an assignment.
+	size_t variable_tmpvar = function->tmpvar_define(mir_type);
+	auto operation = std::make_unique<OperationLocalVariable>(
+	    statement.get_source_ref(),
+	    variable_tmpvar,
+	    statement.get_identifier().get_name(),
+	    mir_type
+	    );
+	function->get_basic_block(current_block).add_operation(std::move(operation));
+	
+	size_t initial_value_tmpvar;
+	if (!extract_from_expression(initial_value_tmpvar, *expression)) {
+	    return false;
+	    }
+	
+	size_t returned_tmpvar; // We don't save the returned val because nobody wants it.
+	if (!handle_binary_operation_assignment(
+		expression->get_source_ref(),
+		Operation::OP_ASSIGN,
+		returned_tmpvar,
+		variable_tmpvar,
+		initial_value_tmpvar
+		)) {
+	    return false;
+	}
+	
     }
-
     
     return true;
 }
@@ -3625,8 +3658,8 @@ FunctionDefinitionResolver::leave_scope(
 		fprintf(stderr, "    Method %s\n", method.first.c_str());
 	    }
 	    // Where to find the leaf-node "Foo" part of the class name????
-	    std::string type_simple_name("Foo");
-	    std::string fully_qualified_function_name = class_type->get_name() + std::string("::") + std::string("~") + type_simple_name;
+	    const TypeMethod *default_destructor = class_type->method_get_destructor();
+	    std::string fully_qualified_function_name(class_type->get_name() + std::string("::~") + class_type->get_simple_name());
 	    
 	    const Gyoji::mir::Symbol *symbol = mir.get_symbols().get_symbol(fully_qualified_function_name);
 	    if (symbol != nullptr) {

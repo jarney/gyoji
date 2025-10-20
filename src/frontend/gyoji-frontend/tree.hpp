@@ -1741,8 +1741,7 @@ namespace Gyoji::frontend::tree {
 	    Gyoji::owned<AccessModifier> _access_modifier,
 	    Gyoji::owned<Terminal> _class_token,
 	    Gyoji::owned<Terminal> _identifier_token,
-	    Gyoji::owned<ClassArgumentList> _class_argument_list,
-	    bool is_identifier
+	    Gyoji::owned<ClassArgumentList> _class_argument_list
 	    );
 	
 	/**
@@ -1750,7 +1749,7 @@ namespace Gyoji::frontend::tree {
 	 */
 	~ClassDeclStart();
 	const AccessModifier & get_access_modifier() const;
-	const std::string & get_name() const;
+	const Terminal & get_identifier() const;
 	const Gyoji::context::SourceReference & get_name_source_ref() const;
 	
 	const ClassArgumentList & get_argument_list() const;
@@ -1759,7 +1758,6 @@ namespace Gyoji::frontend::tree {
 	Gyoji::owned<Terminal> class_token;
 	Gyoji::owned<Terminal> identifier_token;
 	Gyoji::owned<ClassArgumentList> class_argument_list;
-	std::string name;
     };
     class ClassArgumentList : public Gyoji::frontend::ast::SyntaxNode {
     public:
@@ -1795,7 +1793,7 @@ namespace Gyoji::frontend::tree {
 	const AccessModifier & get_access_modifier() const;
 	const UnsafeModifier & get_unsafe_modifier() const;
 	const TypeSpecifier & get_type_specifier() const;
-	const std::string & get_name() const;
+	std::string get_name() const;
 	const Gyoji::context::SourceReference & get_name_source_ref() const;
     private:
 	Gyoji::owned<AccessModifier> access_modifier;
@@ -1948,7 +1946,8 @@ namespace Gyoji::frontend::tree {
 	~ClassDeclaration();
 	const AccessModifier & get_access_modifier() const;
 	
-	const std::string & get_name() const;
+	std::string get_name() const;
+	std::string get_fully_qualified_name() const;
 	const Gyoji::context::SourceReference & get_name_source_ref() const;
 	
 	const ClassArgumentList & get_argument_list() const;
@@ -1971,7 +1970,8 @@ namespace Gyoji::frontend::tree {
 	 */
 	~ClassDefinition();
 	const AccessModifier & get_access_modifier() const;
-	const std::string & get_name() const;
+	std::string get_name() const;
+	std::string get_fully_qualified_name() const;
 	const Gyoji::context::SourceReference & get_name_source_ref() const;
 	const ClassArgumentList & get_argument_list() const;
 	const std::vector<Gyoji::owned<ClassMemberDeclaration>> & get_members() const;

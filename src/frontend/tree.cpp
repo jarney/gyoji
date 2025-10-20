@@ -1313,8 +1313,7 @@ ClassDeclStart::ClassDeclStart(
     Gyoji::owned<AccessModifier> _access_modifier,
     Gyoji::owned<Terminal> _class_token,
     Gyoji::owned<Terminal> _identifier_token,
-    Gyoji::owned<ClassArgumentList> _class_argument_list,
-    bool is_identifier
+    Gyoji::owned<ClassArgumentList> _class_argument_list
     )
     : SyntaxNode(NONTERMINAL_class_decl_start, this, _access_modifier->get_source_ref())
     , access_modifier(std::move(_access_modifier))
@@ -1326,19 +1325,15 @@ ClassDeclStart::ClassDeclStart(
     add_child(*class_token);
     add_child(*identifier_token);
     add_child(*class_argument_list);
-    name = identifier_token->get_fully_qualified_name();
 }
 ClassDeclStart::~ClassDeclStart()
 {}
 const AccessModifier &
 ClassDeclStart::get_access_modifier() const
 { return *access_modifier; }
-const std::string &
-ClassDeclStart::get_name() const
-{ return name; }
-const SourceReference &
-ClassDeclStart::get_name_source_ref() const
-{ return identifier_token->get_source_ref(); }
+const Terminal &
+ClassDeclStart::get_identifier() const
+{ return *identifier_token; }
 
 const ClassArgumentList &
 ClassDeclStart::get_argument_list() const
@@ -1411,9 +1406,9 @@ ClassMemberDeclarationVariable::get_unsafe_modifier() const
 const TypeSpecifier &
 ClassMemberDeclarationVariable::get_type_specifier() const
 { return *type_specifier; }
-const std::string &
+std::string
 ClassMemberDeclarationVariable::get_name() const
-{ return identifier_token->get_value(); }
+{ return identifier_token->get_name(); }
 const SourceReference &
 ClassMemberDeclarationVariable::get_name_source_ref() const
 { return identifier_token->get_source_ref(); }
@@ -1602,14 +1597,19 @@ ClassDeclaration::get_access_modifier() const
 {
     return class_decl_start->get_access_modifier();
 }
-const std::string &
+std::string
+ClassDeclaration::get_fully_qualified_name() const
+{
+    return class_decl_start->get_identifier().get_fully_qualified_name();
+}
+std::string
 ClassDeclaration::get_name() const
 {
-    return class_decl_start->get_name();
+    return class_decl_start->get_identifier().get_name();
 }
 const SourceReference &
 ClassDeclaration::get_name_source_ref() const
-{ return class_decl_start->get_name_source_ref(); }
+{ return class_decl_start->get_identifier().get_source_ref(); }
 
 const ClassArgumentList &
 ClassDeclaration::get_argument_list() const
@@ -1645,14 +1645,19 @@ ClassDefinition::get_access_modifier() const
 {
     return class_decl_start->get_access_modifier();
 }
-const std::string &
+std::string
 ClassDefinition::get_name() const
 {
-    return class_decl_start->get_name();
+    return class_decl_start->get_identifier().get_name();
+}
+std::string
+ClassDefinition::get_fully_qualified_name() const
+{
+    return class_decl_start->get_identifier().get_fully_qualified_name();
 }
 const SourceReference &
 ClassDefinition::get_name_source_ref() const
-{ return class_decl_start->get_name_source_ref(); }
+{ return class_decl_start->get_identifier().get_source_ref(); }
 const ClassArgumentList &
 ClassDefinition::get_argument_list() const
 {
