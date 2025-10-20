@@ -901,7 +901,10 @@ function_decl_start
                         );
         }
         // Destructors:
-        // Recognizing this is actually hard.
+        // Recognizing this is actually hard, so we ended up doing it in the lexical layer
+        // instead of the syntax layer.
+// This is a bit non-ideal, and before that, we tried a few options that didn't work for
+// a number of reasons.
 
         // This one would put the tilde at the beginning which isn't what we want either.
 //        | opt_access_modifier opt_unsafe TILDE IDENTIFIER {

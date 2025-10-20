@@ -18,12 +18,21 @@ using namespace jlang as asdf;
 // constructors and destructors because
 // they have a slightly different form
 // and don't have a return-value associated with them.
+//
+// Syntax says this is ok, but semantics doesn't resolve it Foo : : Foo()
+//
 Foo::Foo(u32 xx)
 {
     print_value(888);
     print_value(xx);
 }
 
+// Whtiespace in the middle still screws us up, so
+// we should normalize this.  The parser is ok with
+// it, but it should be eaten up in the lexical layers.
+//
+// Syntax says this is ok, but semantics doesn't resolve it Foo : : ~  Foo()
+//
 Foo::~Foo()
 {
     print_value(777);

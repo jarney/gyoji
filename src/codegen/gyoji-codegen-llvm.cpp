@@ -865,6 +865,7 @@ CodeGeneratorLLVMContext::generate_operation_bitwise_not(
 
     llvm::Value * avalue = tmp_values[a];
     llvm::Value * result = Builder->CreateNot(avalue);
+    fprintf(stderr, "Doing bitwise not %p %p\n", avalue, result);
     tmp_values.insert(std::pair(operation.get_result(), result));
 }
 

@@ -226,12 +226,16 @@ null         {PROCESS_NODE(LITERAL_NULL);}
 
 {float} {PROCESS_NODE(LITERAL_FLOAT);}
 {integer} { PROCESS_NODE(LITERAL_INT);}
-(::)?{identifier}({whitespace}*:{whitespace}*:{whitespace}*(\~)?{identifier})* {
+(::)?{identifier}({whitespace}*:{whitespace}*:{whitespace}*(\~{whitespace}*)?{identifier})* {
 // The identifier regex is pretty intense, so here's the breakdown:
 // It can start with "::" for root-qualified searches.
 // Then it can contain an identifier [a-zA-z0-9]*
 // After that, you can put any number of '::' delimiters (with whitespace)
 // and optionally a ~ to denote a destructor.
+//
+// The fact that the ~ must appear AFTER the :: is what allows us
+// to disambiguate it from a regular ~ as a bitwise not even at the lexical
+// layer.
 
     LexContext *lex_context = (LexContext*)yyget_extra(yyscanner);
     NS2Context & ns2_context = lex_context->ns2_context;
