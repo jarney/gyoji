@@ -39,7 +39,8 @@ namespace Gyoji::mir {
     public:
 	typedef enum {
 	    SYMBOL_STATIC_FUNCTION,
-	    SYMBOL_MEMBER_METHOD
+	    SYMBOL_MEMBER_METHOD,
+	    SYMBOL_MEMBER_DESTRUCTOR
 	} SymbolType;
 	/**
 	 * Creates a new symbol in the symbol table.  Names

@@ -686,8 +686,17 @@ FunctionDefinitionResolver::extract_from_expression_primary_identifier(
 	    return false;
 	}
 
-	if (symbol->get_type() == Gyoji::mir::Symbol::SYMBOL_MEMBER_METHOD) {
-	    fprintf(stderr, "Making internal method call to %s\n", fully_qualified_name.c_str());
+	if (symbol->get_type() == Gyoji::mir::Symbol::SYMBOL_MEMBER_DESTRUCTOR) {
+	    compiler_context
+		.get_errors()
+		.add_simple_error(
+		    expression.get_source_ref(),
+		    "Explicit calls to destructors are not allowed.",
+		    std::string("Symbol ") + fully_qualified_name + std::string(" is a destructor and may not be called directly")
+		    );
+	    return false;
+	}
+	else if (symbol->get_type() == Gyoji::mir::Symbol::SYMBOL_MEMBER_METHOD) {
 	    if (!is_method()) {
 		compiler_context
 		    .get_errors()

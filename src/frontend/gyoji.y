@@ -1400,6 +1400,8 @@ expression_primary_identifier
         : IDENTIFIER {
                 NS2Entity *ns2_entity = return_data.identifier_get_or_create($1->get_value(), true, $1->get_source_ref());
 		$1->set_ns2_entity(ns2_entity);
+#if 0
+		// Useful for debugging identifer/scope stuff.
 		fprintf(stderr, "Identifier %s\n", ns2_entity->get_fully_qualified_name().c_str());
 		switch (ns2_entity->get_type()) {
 		case NS2Entity::ENTITY_TYPE_IDENTIFIER:
@@ -1430,6 +1432,7 @@ expression_primary_identifier
 		    fprintf(stderr, "ID:UNCATEGORIZED\n");
 		    break;
 		}
+#endif
                 $$ = std::make_unique<Gyoji::frontend::tree::ExpressionPrimaryIdentifier>(std::move($1));
                 PRINT_NONTERMINALS($$);
         }

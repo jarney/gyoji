@@ -427,7 +427,7 @@ TypeResolver::extract_from_class_members(Type & class_type, const ClassDefinitio
 		methods,
 		simple_name,
 		fully_qualified_name,
-		Gyoji::mir::Symbol::SYMBOL_MEMBER_METHOD,
+		Gyoji::mir::Symbol::SYMBOL_MEMBER_DESTRUCTOR,
 		member_method->get_unsafe_modifier(),
 		method_return_type,
 		member_method->get_arguments(),

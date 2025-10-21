@@ -57,9 +57,10 @@ Foo::set_something(u32 _a, u32 _b, u32 _c)
        _a -= 1;
        set_something(_a, _b, _c);
     }
-//TODO: Need to allow recursion and member calls from member context.
-//TODO: Still need to prevent this correctly.
-//    jlang::Foo::~Foo();
+
+// Disallowed in order to provide
+// guarantees about destructor behavior.
+//  jlang::Foo::~Foo();
 	return;
 }
 
@@ -71,6 +72,9 @@ u32 main(u32 argc, u8**argv)
 	Foo cl;
 
 // Disallowed member calls in static context.
+//	Foo::set_something(&cl);
+
+// Destructors cannot be called directly.
 //	Foo::~Foo(&cl);
 
 // This is syntactially prevented because ~ isn't valid in this context,
