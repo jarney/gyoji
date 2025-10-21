@@ -1459,6 +1459,57 @@ ClassMemberDeclarationMethod::get_identifier() const
 const FunctionDefinitionArgList &
 ClassMemberDeclarationMethod::get_arguments() const
 { return *function_definition_arg_list; }
+
+///////////////////////////////////////////////////
+ClassMemberDeclarationMethodStatic::ClassMemberDeclarationMethodStatic(
+    Gyoji::owned<Terminal> _static_token,
+    Gyoji::owned<AccessModifier> _access_modifier,
+    Gyoji::owned<UnsafeModifier> _unsafe_modifier,
+    Gyoji::owned<TypeSpecifier> _type_specifier,
+    Gyoji::owned<Terminal> _identifier_token,
+    Gyoji::owned<Terminal> _paren_l_token,
+    Gyoji::owned<FunctionDefinitionArgList> _function_definition_arg_list,
+    Gyoji::owned<Terminal> _paren_r_token,
+    Gyoji::owned<Terminal> _semicolon_token
+    )
+    : SyntaxNode(NONTERMINAL_class_member_declaration_method, this, _access_modifier->get_source_ref())
+    , static_token(std::move(_static_token))
+    , access_modifier(std::move(_access_modifier))
+    , unsafe_modifier(std::move(_unsafe_modifier))
+    , type_specifier(std::move(_type_specifier))
+    , identifier_token(std::move(_identifier_token))
+    , paren_l_token(std::move(_paren_l_token))
+    , function_definition_arg_list(std::move(_function_definition_arg_list))
+    , paren_r_token(std::move(_paren_r_token))
+    , semicolon_token(std::move(_semicolon_token))
+{
+    add_child(*static_token);
+    add_child(*access_modifier);
+    add_child(*unsafe_modifier);
+    add_child(*type_specifier);
+    add_child(*identifier_token);
+    add_child(*paren_l_token);
+    add_child(*function_definition_arg_list);
+    add_child(*paren_r_token);
+    add_child(*semicolon_token);
+}
+ClassMemberDeclarationMethodStatic::~ClassMemberDeclarationMethodStatic()
+{}
+const AccessModifier &
+ClassMemberDeclarationMethodStatic::get_access_modifier() const
+{ return *access_modifier; }
+const UnsafeModifier &
+ClassMemberDeclarationMethodStatic::get_unsafe_modifier() const
+{ return *unsafe_modifier; }
+const TypeSpecifier &
+ClassMemberDeclarationMethodStatic::get_type_specifier() const
+{ return *type_specifier; }
+const Terminal & 
+ClassMemberDeclarationMethodStatic::get_identifier() const
+{ return *identifier_token; }
+const FunctionDefinitionArgList &
+ClassMemberDeclarationMethodStatic::get_arguments() const
+{ return *function_definition_arg_list; }
 ///////////////////////////////////////////////////
 ClassMemberDeclarationConstructor::ClassMemberDeclarationConstructor(
     Gyoji::owned<AccessModifier> _access_modifier,

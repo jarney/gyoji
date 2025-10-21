@@ -75,6 +75,8 @@
 %token <Gyoji::owned<Gyoji::frontend::tree::Terminal>> PRIVATE
 %token <Gyoji::owned<Gyoji::frontend::tree::Terminal>> PROTECTED
 
+%token <Gyoji::owned<Gyoji::frontend::tree::Terminal>> STATIC
+
  /* Logical Operations */
 %token <Gyoji::owned<Gyoji::frontend::tree::Terminal>> LOGICAL_NOT
 %token <Gyoji::owned<Gyoji::frontend::tree::Terminal>> LOGICAL_AND
@@ -1398,6 +1400,38 @@ expression_primary_identifier
         : IDENTIFIER {
                 NS2Entity *ns2_entity = return_data.identifier_get_or_create($1->get_value(), true, $1->get_source_ref());
 		$1->set_ns2_entity(ns2_entity);
+#if 0
+		fprintf(stderr, "Identifier %s\n", ns2_entity->get_fully_qualified_name().c_str());
+		switch (ns2_entity->get_type()) {
+		case NS2Entity::ENTITY_TYPE_IDENTIFIER:
+		    fprintf(stderr, "Type:IDENTIFIER\n");
+		    break;
+		case NS2Entity::ENTITY_TYPE_TYPE:
+		    fprintf(stderr, "Type:TYPE\n");
+		    break;
+		case NS2Entity::ENTITY_TYPE_CLASS:
+		    fprintf(stderr, "Type:CLASS\n");
+		    break;
+		case NS2Entity::ENTITY_TYPE_NAMESPACE:
+		    fprintf(stderr, "Type:NAMESPACE\n");
+		    break;
+		case NS2Entity::ENTITY_TYPE_LABEL:
+		    fprintf(stderr, "Type:LABEL\n");
+		    break;
+		}
+		switch ($1->get_identifier_type()) {
+	    
+		case Gyoji::frontend::tree::Terminal::IDENTIFIER_GLOBAL_SCOPE:
+		    fprintf(stderr, "ID:GLOBAL_SCOPE\n");
+		    break;
+		case Gyoji::frontend::tree::Terminal::IDENTIFIER_LOCAL_SCOPE:
+		    fprintf(stderr, "ID:LOCAL_SCOPE\n");
+		    break;
+		case Gyoji::frontend::tree::Terminal::IDENTIFIER_UNCATEGORIZED:
+		    fprintf(stderr, "ID:UNCATEGORIZED\n");
+		    break;
+		}
+#endif
                 $$ = std::make_unique<Gyoji::frontend::tree::ExpressionPrimaryIdentifier>(std::move($1));
                 PRINT_NONTERMINALS($$);
         }
@@ -2281,7 +2315,27 @@ class_member_declaration
                 $$ = std::make_unique<Gyoji::frontend::tree::ClassMemberDeclaration>(std::move(expr), sn);
                 PRINT_NONTERMINALS($$);
         }
-        | opt_access_modifier opt_unsafe type_specifier IDENTIFIER PAREN_L opt_function_definition_arg_list PAREN_R SEMICOLON {
+        | STATIC opt_access_modifier opt_unsafe type_specifier IDENTIFIER PAREN_L opt_function_definition_arg_list PAREN_R SEMICOLON {
+	        $5->set_identifier_type(Gyoji::frontend::tree::Terminal::IDENTIFIER_GLOBAL_SCOPE);
+		NS2Entity *entity = return_data.identifier_get_or_create($5->get_value(), false, $5->get_source_ref());
+		$5->set_ns2_entity(entity);
+		fprintf(stderr, "Defined entity %s\n", entity->get_fully_qualified_name().c_str());
+	        auto expr = std::make_unique<Gyoji::frontend::tree::ClassMemberDeclarationMethodStatic>(
+                                                                                                     std::move($1),
+                                                                                                     std::move($2),
+                                                                                                     std::move($3),
+                                                                                                     std::move($4),
+                                                                                                     std::move($5),
+                                                                                                     std::move($6),
+                                                                                                     std::move($7),
+                                                                                                     std::move($8),
+                                                                                                     std::move($9)
+		);
+                const Gyoji::frontend::ast::SyntaxNode &sn = *(expr);
+                $$ = std::make_unique<Gyoji::frontend::tree::ClassMemberDeclaration>(std::move(expr), sn);
+                PRINT_NONTERMINALS($$);
+        }
+	| opt_access_modifier opt_unsafe type_specifier IDENTIFIER PAREN_L opt_function_definition_arg_list PAREN_R SEMICOLON {
                 // Method
 	        $4->set_identifier_type(Gyoji::frontend::tree::Terminal::IDENTIFIER_LOCAL_SCOPE);
 		NS2Entity *entity = return_data.identifier_get_or_create($4->get_value(), false, $4->get_source_ref());

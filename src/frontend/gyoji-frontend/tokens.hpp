@@ -116,6 +116,8 @@ namespace Gyoji::frontend::tree {
     const Gyoji::context::TokenID TERMINAL_whitespace = 85;
     const Gyoji::context::TokenID TERMINAL_newline = 86;
     const Gyoji::context::TokenID TERMINAL_file_metadata = 87;
+
+    const Gyoji::context::TokenID TERMINAL_STATIC = 88;
     
     // Syntax Non-terminals
     const Gyoji::context::TokenID NONTERMINAL_access_modifier = 200;

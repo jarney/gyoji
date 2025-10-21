@@ -81,6 +81,7 @@ namespace Gyoji::frontend::lowering {
 	    std::map<std::string, Gyoji::mir::TypeMethod> & methods,
 	    std::string simple_name,
 	    std::string fully_qualified_name,
+	    Gyoji::mir::Symbol::SymbolType symbol_type,
 	    const Gyoji::frontend::tree::UnsafeModifier & method_unsafe_modifier,
 	    const Gyoji::mir::Type *method_return_type,
 	    const Gyoji::frontend::tree::FunctionDefinitionArgList & function_definition_arg_list,
@@ -96,6 +97,7 @@ namespace Gyoji::frontend::lowering {
 	
 	void extract_from_function_specifications(
 	    const Gyoji::frontend::tree::Terminal & name,
+	    Gyoji::mir::Symbol::SymbolType symbol_type,
 	    const Gyoji::mir::Type *return_type,
 	    const Gyoji::context::SourceReference & return_type_source_ref,
 	    const Gyoji::frontend::tree::FunctionDefinitionArgList & arguments,

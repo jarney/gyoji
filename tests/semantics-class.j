@@ -7,6 +7,7 @@ namespace jlang {
         void set_something(u32 a, u32 b, u32 c);
 	Foo();
 	~Foo();
+	static Foo construct();
     };
     void foo_function();
 };
@@ -52,6 +53,11 @@ Foo::set_something(u32 _a, u32 _b, u32 _c)
     print_value(_b);
     print_value(_c);
     print_value(a);
+
+//TODO: Need to allow recursion and member calls from member context.
+//    set_something(_a, _b, _c);
+//TODO: Still need to prevent this correctly.
+//    jlang::Foo::~Foo();
 	return;
 }
 
@@ -61,6 +67,19 @@ u32 main(u32 argc, u8**argv)
         x = 19;
 //	Foo cl(537);
 	Foo cl;
+
+// Disallowed member calls in static context.
+//	Foo::~Foo(&cl);
+
+// This is syntactially prevented because ~ isn't valid in this context,
+// so it will never resolve.
+//	cl.~Foo();
+	
+// TODO: Factories instead of constructors!!!
+// But we'll keep destructors.  Kind-of an odd mix,
+// but it lets us still do scope-guards.
+//	cl = Foo::construct();
+	
 	cl.set_something(10u32, 42u32, 99u32);
 	foo_function();
 	return 0u32;

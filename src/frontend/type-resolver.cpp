@@ -235,6 +235,7 @@ TypeResolver::extract_from_class_method_types(
     std::map<std::string, TypeMethod> & methods,
     std::string simple_name,
     std::string fully_qualified_name,
+    Gyoji::mir::Symbol::SymbolType type,
     const Gyoji::frontend::tree::UnsafeModifier & method_unsafe_modifier,
     const Type *method_return_type,
     const Gyoji::frontend::tree::FunctionDefinitionArgList & function_definition_arg_list,
@@ -284,8 +285,10 @@ TypeResolver::extract_from_class_method_types(
 	    );
     }
     fprintf(stderr, "Defining symbol %s\n", fully_qualified_name.c_str());
+    
     mir.get_symbols().define_symbol(
 	fully_qualified_name,
+	type,
 	fptr_type
 	);
 }
@@ -346,6 +349,28 @@ TypeResolver::extract_from_class_members(Type & class_type, const ClassDefinitio
 		}
 	    }
 	}
+	else if (std::holds_alternative<Gyoji::owned<ClassMemberDeclarationMethodStatic>>(class_member_type)) {
+	    const auto & member_method = std::get<Gyoji::owned<ClassMemberDeclarationMethodStatic>>(class_member_type);
+	    // Regular methods have return types.  Constructors/destructors always return void.
+	    const Type * method_return_type = extract_from_type_specifier(member_method->get_type_specifier());
+	    if (method_return_type == nullptr) {
+		continue;
+	    }
+	    std::string simple_name = member_method->get_identifier().get_name();
+	    std::string fully_qualified_name = member_method->get_identifier().get_fully_qualified_name();
+	    
+	    extract_from_class_method_types(
+		class_type,
+		methods,
+		simple_name,
+		fully_qualified_name,
+		Gyoji::mir::Symbol::SYMBOL_STATIC_FUNCTION,
+		member_method->get_unsafe_modifier(),
+		method_return_type,
+		member_method->get_arguments(),
+		member_method->get_source_ref()
+		);
+	}
 	else if (std::holds_alternative<Gyoji::owned<ClassMemberDeclarationMethod>>(class_member_type)) {
 	    const auto & member_method = std::get<Gyoji::owned<ClassMemberDeclarationMethod>>(class_member_type);
 
@@ -360,6 +385,7 @@ TypeResolver::extract_from_class_members(Type & class_type, const ClassDefinitio
 		methods,
 		simple_name,
 		fully_qualified_name,
+		Gyoji::mir::Symbol::SYMBOL_MEMBER_METHOD,
 		member_method->get_unsafe_modifier(),
 		method_return_type,
 		member_method->get_arguments(),
@@ -379,6 +405,7 @@ TypeResolver::extract_from_class_members(Type & class_type, const ClassDefinitio
 		methods,
 		simple_name,
 		fully_qualified_name,
+		Gyoji::mir::Symbol::SYMBOL_MEMBER_METHOD,
 		member_method->get_unsafe_modifier(),
 		method_return_type,
 		member_method->get_arguments(),
@@ -400,6 +427,7 @@ TypeResolver::extract_from_class_members(Type & class_type, const ClassDefinitio
 		methods,
 		simple_name,
 		fully_qualified_name,
+		Gyoji::mir::Symbol::SYMBOL_MEMBER_METHOD,
 		member_method->get_unsafe_modifier(),
 		method_return_type,
 		member_method->get_arguments(),
@@ -428,8 +456,9 @@ TypeResolver::extract_from_class_definition(const ClassDefinition & definition)
 	    Type::TYPE_COMPOSITE,
 	    true,
 	    definition.get_name_source_ref());
-	extract_from_class_members(*type, definition);
+	Type & class_type = *type.get();
 	mir.get_types().define_type(std::move(type));
+	extract_from_class_members(class_type, definition);
     }
     else {
 	auto & type = *it->second;
@@ -467,8 +496,6 @@ TypeResolver::extract_from_enum_definition(const EnumDefinition & enum_definitio
 	for (const auto & ev : enum_definition.get_value_list().get_values()) {
 	    fprintf(stderr, "Value is %s\n", ev->get_name().c_str());
 	}
-	
-	
 //	mir.get_symbols().define_symbol(
 //	    fully_qualified_function_name,
 //	    pointer_type
@@ -535,6 +562,7 @@ TypeResolver::extract_from_type_definition(const TypeDefinition & type_definitio
 void
 TypeResolver::extract_from_function_specifications(
     const Terminal & name,
+    Gyoji::mir::Symbol::SymbolType symbol_type,
     const Type *return_type,
     const SourceReference & return_type_source_ref,
     const FunctionDefinitionArgList & function_argument_list,
@@ -595,6 +623,7 @@ TypeResolver::extract_from_function_specifications(
 //////
     mir.get_symbols().define_symbol(
 	fully_qualified_function_name,
+	symbol_type,
 	pointer_type
 	);
     
@@ -624,6 +653,7 @@ TypeResolver::extract_from_function_definition(const FileStatementFunctionDefini
     }
     extract_from_function_specifications(
 	    function_definition.get_name(),
+	    Gyoji::mir::Symbol::SYMBOL_STATIC_FUNCTION,
 	    return_type,
 	    *return_type_source_ref,
 	    function_definition.get_arguments(),
@@ -655,6 +685,7 @@ TypeResolver::extract_from_function_declaration(const FileStatementFunctionDecla
     }
     extract_from_function_specifications(
 	function_declaration.get_name(),
+	Gyoji::mir::Symbol::SYMBOL_STATIC_FUNCTION,
 	return_type,
 	*return_type_source_ref,
 	function_declaration.get_arguments(),

@@ -416,7 +416,7 @@ CodeGeneratorLLVMContext::generate_operation_get_method(
     )
 {
     const Gyoji::mir::Symbol *symbol = mir.get_symbols().get_symbol(operation.get_method());
-    llvm::Type *fptr_type = types[symbol->get_type()->get_name()];
+    llvm::Type *fptr_type = types[symbol->get_mir_type()->get_name()];
 
     // This isn't a 'real' value,
     // it's intended as a way to pass the
@@ -498,9 +498,9 @@ CodeGeneratorLLVMContext::generate_operation_symbol(
     std::string symbol_name = operation.get_symbol_name();
     const Gyoji::mir::Symbol *symbol = mir.get_symbols().get_symbol(symbol_name);
     
-    llvm::Type *fptr_type = types[symbol->get_type()->get_name()];
+    llvm::Type *fptr_type = types[symbol->get_mir_type()->get_name()];
     if (fptr_type == nullptr) {
-	fprintf(stderr, "Could not find function pointer type for %s\n", symbol->get_type()->get_name().c_str());
+	fprintf(stderr, "Could not find function pointer type for %s\n", symbol->get_mir_type()->get_name().c_str());
 	exit(1);
     }
 

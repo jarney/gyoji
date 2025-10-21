@@ -1833,6 +1833,39 @@ namespace Gyoji::frontend::tree {
 	Gyoji::owned<Terminal> paren_r_token;
 	Gyoji::owned<Terminal> semicolon_token;
     };
+    class ClassMemberDeclarationMethodStatic : public Gyoji::frontend::ast::SyntaxNode {
+    public:
+	ClassMemberDeclarationMethodStatic(
+	    Gyoji::owned<Terminal> _static_token,
+	    Gyoji::owned<AccessModifier> _access_modifier,
+	    Gyoji::owned<UnsafeModifier> _unsafe_modifier,
+	    Gyoji::owned<TypeSpecifier> _type_specifier,
+	    Gyoji::owned<Terminal> _identifier_token,
+	    Gyoji::owned<Terminal> _paren_l_token,
+	    Gyoji::owned<FunctionDefinitionArgList> _function_definition_arg_list,
+	    Gyoji::owned<Terminal> _paren_r_token,
+	    Gyoji::owned<Terminal> _semicolon_token
+	    );
+	/**
+	 * Destructor, nothing special.
+	 */
+	~ClassMemberDeclarationMethodStatic();
+	const AccessModifier & get_access_modifier() const;
+	const UnsafeModifier & get_unsafe_modifier() const;
+	const TypeSpecifier & get_type_specifier() const;
+	const Terminal & get_identifier() const;
+	const FunctionDefinitionArgList & get_arguments() const;
+    private:
+	Gyoji::owned<Terminal> static_token;
+	Gyoji::owned<AccessModifier> access_modifier;
+	Gyoji::owned<UnsafeModifier> unsafe_modifier;
+	Gyoji::owned<TypeSpecifier> type_specifier;
+	Gyoji::owned<Terminal> identifier_token;
+	Gyoji::owned<Terminal> paren_l_token;
+	Gyoji::owned<FunctionDefinitionArgList> function_definition_arg_list;
+	Gyoji::owned<Terminal> paren_r_token;
+	Gyoji::owned<Terminal> semicolon_token;
+    };
     class ClassMemberDeclarationConstructor : public Gyoji::frontend::ast::SyntaxNode {
     public:
 	ClassMemberDeclarationConstructor(
@@ -1897,6 +1930,7 @@ namespace Gyoji::frontend::tree {
 	typedef std::variant<
 	    Gyoji::owned<ClassMemberDeclarationVariable>,
 	    Gyoji::owned<ClassMemberDeclarationMethod>,
+	    Gyoji::owned<ClassMemberDeclarationMethodStatic>,
 	    Gyoji::owned<ClassMemberDeclarationConstructor>,
 	    Gyoji::owned<ClassMemberDeclarationDestructor>,
 	    Gyoji::owned<ClassDeclaration>,

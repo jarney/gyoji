@@ -16,9 +16,13 @@
 
 using namespace Gyoji::mir;
 
-Symbol::Symbol(std::string _name, const Type *_type)
+Symbol::Symbol(
+    std::string _name,
+    SymbolType _type,
+    const Type *_mir_type)
     : name(_name)
     , type(_type)
+    , mir_type(_mir_type)
 {}
 
 Symbol::~Symbol()
@@ -29,9 +33,12 @@ Symbol::get_name() const
 { return name; }
 
 const Type *
+Symbol::get_mir_type() const
+{ return mir_type; }
+
+Symbol::SymbolType
 Symbol::get_type() const
 { return type; }
-
 
 
 Symbols::Symbols()
@@ -41,13 +48,16 @@ Symbols::~Symbols()
 {}
 
 void
-Symbols::define_symbol(std::string name, const Type *symbol_type)
+Symbols::define_symbol(
+    std::string name,
+    Symbol::SymbolType type,
+    const Type *mir_type)
 {
     const auto & it = symbols.find(name);
     if (it != symbols.end()) {
 	return;
     }
-    symbols.insert(std::pair(name, std::make_unique<Symbol>(name, symbol_type)));
+    symbols.insert(std::pair(name, std::make_unique<Symbol>(name, type, mir_type)));
 }
 
 void
@@ -55,9 +65,19 @@ Symbols::dump(FILE *out) const
 {
     for (const auto & symbol : symbols) {
 	const Gyoji::owned<Symbol> & sym = symbol.second;
-        fprintf(out, "    %s : %s\n",
+	std::string type;
+	switch (sym->get_type()) {
+	case Symbol::SYMBOL_STATIC_FUNCTION:
+	    type = std::string("static function");
+	    break;
+	case Symbol::SYMBOL_MEMBER_METHOD:
+	    type = std::string("member method");
+	    break;
+	}
+        fprintf(out, "    %s : %s %s\n",
 		sym->get_name().c_str(),
-		sym->get_type()->get_name().c_str());
+		type.c_str(),
+		sym->get_mir_type()->get_name().c_str());
     }
 }
 

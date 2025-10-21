@@ -342,7 +342,7 @@ FunctionDefinitionResolver::resolve()
 	else {
 	    // If there was a forward declaration, we need to make sure
 	    // it is the correct type and matches the function signature.
-	    const Type *symbol_type = symbol->get_type();
+	    const Type *symbol_type = symbol->get_mir_type();
 	    if (symbol_type->get_type() != Type::TYPE_FUNCTION_POINTER) {
 		std::unique_ptr<Gyoji::context::Error> error = std::make_unique<Gyoji::context::Error>("Symbol is not a function");
 		error->add_message(
@@ -593,7 +593,7 @@ FunctionDefinitionResolver::extract_from_expression_primary_identifier(
     // * Otherwise, emit it as a 'load' and just follow our nose
     //   at runtime.
     // * Maybe we really should 'flatten' our access here.
-    
+
     if (expression.get_identifier().get_identifier_type() == Terminal::IDENTIFIER_LOCAL_SCOPE) {
 	// This block is obsolete, it should
 	// no longer be possible to get here, so we should
@@ -678,17 +678,31 @@ FunctionDefinitionResolver::extract_from_expression_primary_identifier(
 	const Gyoji::mir::Symbol *symbol = mir.get_symbols().get_symbol(
 	    expression.get_identifier().get_fully_qualified_name()
 	    );
+	// The symbol 1) must exist AND
+	// if we're doing a method call, it must be a method
+	// AND if it's not a method call, it must be a static function.
 	if (symbol == nullptr) {
 	    compiler_context
 		.get_errors()
 		.add_simple_error(
 		    expression.get_source_ref(),
 		    "Unresolved symbol",
-		    std::string("Local variable ") + expression.get_identifier().get_fully_qualified_name() + std::string(" was not found in this scope.")
+		    std::string("Symbol ") + expression.get_identifier().get_fully_qualified_name() + std::string(" was not declared in this scope.")
 		    );
 	    return false;
 	}
-	returned_tmpvar = function->tmpvar_define(symbol->get_type());
+	if (symbol->get_type() == Gyoji::mir::Symbol::SYMBOL_MEMBER_METHOD && !is_method()) {
+	    compiler_context
+		.get_errors()
+		.add_simple_error(
+		    expression.get_source_ref(),
+		    "Invalid method call",
+		    std::string("Symbol ") + expression.get_identifier().get_fully_qualified_name() + std::string(" is a member function, but is being called from a static context.")
+		    );
+	    return false;
+	}
+	
+	returned_tmpvar = function->tmpvar_define(symbol->get_mir_type());
 
 	auto operation = std::make_unique<OperationSymbol>(
 	    expression.get_identifier().get_source_ref(),
@@ -1390,7 +1404,7 @@ FunctionDefinitionResolver::extract_from_expression_postfix_dot(
     if (method != nullptr) {
 	std::string fully_qualified_function_name = class_type->get_name() + NS2Context::NAMESPACE_DELIMITER + member_name;
 	const Gyoji::mir::Symbol *symbol = mir.get_symbols().get_symbol(fully_qualified_function_name);
-	if (symbol == nullptr) {
+	if (symbol == nullptr || symbol->get_type() != Gyoji::mir::Symbol::SYMBOL_MEMBER_METHOD) {
 	    compiler_context
 		.get_errors()
 		.add_simple_error(
@@ -1401,7 +1415,7 @@ FunctionDefinitionResolver::extract_from_expression_postfix_dot(
 	    return false;
 	}
 
-	const Type * method_call_type = mir.get_types().get_method_call(class_type, symbol->get_type(), expression.get_source_ref());
+	const Type * method_call_type = mir.get_types().get_method_call(class_type, symbol->get_mir_type(), expression.get_source_ref());
 	returned_tmpvar = function->tmpvar_define(method_call_type);
 	
 	auto operation = std::make_unique<OperationGetMethod>(
@@ -2991,7 +3005,7 @@ FunctionDefinitionResolver::extract_from_statement_variable_declaration(
 		.add_error(std::move(error));
 	    return false;
 	}
-	const Type *constructor_fptr_type = constructor_symbol->get_type();
+	const Type *constructor_fptr_type = constructor_symbol->get_mir_type();
 	if (constructor_fptr_type->get_type() != Type::TYPE_FUNCTION_POINTER) {
 	    std::unique_ptr<Gyoji::context::Error> error = std::make_unique<Gyoji::context::Error>("Symbol is not a constructor");
 	    error->add_message(
@@ -3658,13 +3672,12 @@ FunctionDefinitionResolver::leave_scope(
 		fprintf(stderr, "    Method %s\n", method.first.c_str());
 	    }
 	    // Where to find the leaf-node "Foo" part of the class name????
-	    const TypeMethod *default_destructor = class_type->method_get_destructor();
 	    std::string fully_qualified_function_name(class_type->get_name() + std::string("::~") + class_type->get_simple_name());
 	    
 	    const Gyoji::mir::Symbol *symbol = mir.get_symbols().get_symbol(fully_qualified_function_name);
 	    if (symbol != nullptr) {
 		fprintf(stderr, "Found destructor\n");
-		const Type *destructor_fptr_type = symbol->get_type();
+		const Type *destructor_fptr_type = symbol->get_mir_type();
 
 		// Destructors take no arguments except the
 		// object itself.

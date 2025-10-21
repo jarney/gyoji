@@ -37,6 +37,10 @@ namespace Gyoji::mir {
      */
     class Symbol {
     public:
+	typedef enum {
+	    SYMBOL_STATIC_FUNCTION,
+	    SYMBOL_MEMBER_METHOD
+	} SymbolType;
 	/**
 	 * Creates a new symbol in the symbol table.  Names
 	 * are assumed to be globally unique and care must
@@ -44,7 +48,7 @@ namespace Gyoji::mir {
 	 * they do not conflict since this would pose
 	 * a problem for linkage of the generated binary.
 	 */
-	Symbol(std::string _name, const Type *_type);
+	Symbol(std::string _name, SymbolType _type, const Type *_mir_type);
 
 	/**
 	 * @brief Move along, nothing to see here.
@@ -62,10 +66,13 @@ namespace Gyoji::mir {
 	 * Returns a pointer to the immutable type
 	 * of the symbol.
 	 */
-	const Type *get_type() const;
+	const Type *get_mir_type() const;
+
+	SymbolType get_type() const;
     private:
 	std::string name;
-	const Type *type;
+	SymbolType type;
+	const Type *mir_type;
     };
 
     /**
@@ -106,7 +113,10 @@ namespace Gyoji::mir {
 	 * exists.  The caller is advised to always check
 	 * that a symbol is defined before defining a new one.
 	 */
-	void define_symbol(std::string name, const Type *symbol_type);
+	void define_symbol(
+	    std::string name,
+	    Symbol::SymbolType _sym_type,
+	    const Type *symbol_type);
 
 	/**
 	 * @brief Look up a symbol by name.
