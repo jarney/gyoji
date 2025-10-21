@@ -695,8 +695,6 @@ namespace Gyoji::mir {
 
 	const TypeMethod *method_get(const std::string & member_name) const;
 
-	const TypeMethod* method_get_constructor() const;
-	
 	const TypeMethod *method_get_destructor() const;
 	
 	/**

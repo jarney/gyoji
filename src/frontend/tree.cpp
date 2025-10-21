@@ -490,7 +490,7 @@ FileStatementFunctionDeclStart::FileStatementFunctionDeclStart(
     : SyntaxNode(NONTERMINAL_function_decl_start, this, _name->get_source_ref())
     , access_modifier(std::move(_access_modifier))
     , unsafe_modifier(std::move(_unsafe_modifier))
-    , m_is_constructor(false)
+    , m_is_destructor(false)
     , type_specifier(std::move(_type_specifier))
     , name(std::move(_name))
 {
@@ -507,7 +507,7 @@ FileStatementFunctionDeclStart::FileStatementFunctionDeclStart(
     : SyntaxNode(NONTERMINAL_function_decl_start, this, _name->get_source_ref())
     , access_modifier(std::move(_access_modifier))
     , unsafe_modifier(std::move(_unsafe_modifier))
-    , m_is_constructor(true)
+    , m_is_destructor(true)
     , type_specifier(nullptr)
     , name(std::move(_name))
 {
@@ -536,8 +536,8 @@ FileStatementFunctionDeclStart::get_name() const
 { return *name; }
 
 bool
-FileStatementFunctionDeclStart::is_constructor() const
-{ return m_is_constructor; }
+FileStatementFunctionDeclStart::is_destructor() const
+{ return m_is_destructor; }
 
 ///////////////////////////////////////////////////
 
@@ -571,8 +571,8 @@ FileStatementFunctionDeclaration::get_unsafe_modifier() const
 { return start->get_unsafe_modifier(); }
 
 bool
-FileStatementFunctionDeclaration::is_constructor() const
-{ return start->is_constructor(); }
+FileStatementFunctionDeclaration::is_destructor() const
+{ return start->is_destructor(); }
 
 const TypeSpecifier &
 FileStatementFunctionDeclaration::get_return_type() const
@@ -627,11 +627,7 @@ StatementVariableDeclaration::StatementVariableDeclaration(
     : SyntaxNode(NONTERMINAL_statement_variable_declaration, this, _type_specifier->get_source_ref())
     , type_specifier(std::move(_type_specifier))
     , identifier_token(std::move(_identifier_token))
-    , m_is_constructor(false)
     , initializer(std::move(_initializer))
-    , paren_l_token(nullptr)
-    , argument_expression_list(nullptr)
-    , paren_r_token(nullptr)
     , semicolon_token(std::move(_semicolon_token))
 {
     add_child(*type_specifier);
@@ -639,32 +635,6 @@ StatementVariableDeclaration::StatementVariableDeclaration(
     add_child(*initializer);
     add_child(*semicolon_token);
 }
-StatementVariableDeclaration::StatementVariableDeclaration(
-    Gyoji::owned<TypeSpecifier> _type_specifier,
-    Gyoji::owned<Terminal> _identifier_token,
-    Gyoji::owned<Terminal> _paren_l_token,
-    Gyoji::owned<ArgumentExpressionList> _argument_expression_list,
-    Gyoji::owned<Terminal> _paren_r_token,
-    Gyoji::owned<Terminal> _semicolon_token
-    )
-    : SyntaxNode(NONTERMINAL_statement_variable_declaration, this, _type_specifier->get_source_ref())
-    , type_specifier(std::move(_type_specifier))
-    , identifier_token(std::move(_identifier_token))
-    , m_is_constructor(true)
-    , initializer(nullptr)
-    , paren_l_token(std::move(_paren_l_token))
-    , argument_expression_list(std::move(_argument_expression_list))
-    , paren_r_token(std::move(_paren_r_token))
-    , semicolon_token(std::move(_semicolon_token))
-{
-    add_child(*type_specifier);
-    add_child(*identifier_token);
-    add_child(*paren_l_token);
-    add_child(*argument_expression_list);
-    add_child(*paren_r_token);
-    add_child(*semicolon_token);
-}
-
 StatementVariableDeclaration::~StatementVariableDeclaration()
 {}
 const TypeSpecifier &
@@ -673,16 +643,9 @@ StatementVariableDeclaration::get_type_specifier() const
 const Terminal & 
 StatementVariableDeclaration::get_identifier() const
 { return *identifier_token; }
-bool
-StatementVariableDeclaration::is_constructor() const
-{ return m_is_constructor; }
 const InitializerExpression &
 StatementVariableDeclaration::get_initializer_expression() const
 { return *initializer;}
-const ArgumentExpressionList &
-StatementVariableDeclaration::get_argument_expression_list() const
-{ return *argument_expression_list;}
-
 ///////////////////////////////////////////////////
 StatementBlock::StatementBlock(
     Gyoji::owned<UnsafeModifier> _unsafe_modifier,
@@ -1252,8 +1215,8 @@ FileStatementFunctionDefinition::get_unsafe_modifier() const
 { return start->get_unsafe_modifier(); }
 
 bool
-FileStatementFunctionDefinition::is_constructor() const
-{ return start->is_constructor(); }
+FileStatementFunctionDefinition::is_destructor() const
+{ return start->is_destructor(); }
 
 const TypeSpecifier &
 FileStatementFunctionDefinition::get_return_type() const
@@ -1509,47 +1472,6 @@ ClassMemberDeclarationMethodStatic::get_identifier() const
 { return *identifier_token; }
 const FunctionDefinitionArgList &
 ClassMemberDeclarationMethodStatic::get_arguments() const
-{ return *function_definition_arg_list; }
-///////////////////////////////////////////////////
-ClassMemberDeclarationConstructor::ClassMemberDeclarationConstructor(
-    Gyoji::owned<AccessModifier> _access_modifier,
-    Gyoji::owned<UnsafeModifier> _unsafe_modifier,
-    Gyoji::owned<TypeSpecifier> _type_specifier,
-    Gyoji::owned<Terminal> _paren_l_token,
-    Gyoji::owned<FunctionDefinitionArgList> _function_definition_arg_list,
-    Gyoji::owned<Terminal> _paren_r_token,
-    Gyoji::owned<Terminal> _semicolon_token
-    )
-    : SyntaxNode(NONTERMINAL_class_member_declaration_method, this, _access_modifier->get_source_ref())
-    , access_modifier(std::move(_access_modifier))
-    , unsafe_modifier(std::move(_unsafe_modifier))
-    , type_specifier(std::move(_type_specifier))
-    , paren_l_token(std::move(_paren_l_token))
-    , function_definition_arg_list(std::move(_function_definition_arg_list))
-    , paren_r_token(std::move(_paren_r_token))
-    , semicolon_token(std::move(_semicolon_token))
-{
-    add_child(*access_modifier);
-    add_child(*unsafe_modifier);
-    add_child(*type_specifier);
-    add_child(*paren_l_token);
-    add_child(*function_definition_arg_list);
-    add_child(*paren_r_token);
-    add_child(*semicolon_token);
-}
-ClassMemberDeclarationConstructor::~ClassMemberDeclarationConstructor()
-{}
-const AccessModifier &
-ClassMemberDeclarationConstructor::get_access_modifier() const
-{ return *access_modifier; }
-const UnsafeModifier &
-ClassMemberDeclarationConstructor::get_unsafe_modifier() const
-{ return *unsafe_modifier; }
-const TypeSpecifier &
-ClassMemberDeclarationConstructor::get_type_specifier() const
-{ return *type_specifier; }
-const FunctionDefinitionArgList &
-ClassMemberDeclarationConstructor::get_arguments() const
 { return *function_definition_arg_list; }
 ///////////////////////////////////////////////////
 ClassMemberDeclarationDestructor::ClassMemberDeclarationDestructor(

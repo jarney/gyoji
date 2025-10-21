@@ -976,11 +976,11 @@ namespace Gyoji::frontend::tree {
 	 */
 	const UnsafeModifier & get_unsafe_modifier() const;
 	
-	bool is_constructor() const;
+	bool is_destructor() const;
 	
 	/**
 	 * Specifies the type of the return value of the function.
-	 * Only valid if !is_constructor().
+	 * Only valid if !is_destructor().
 	 */
 	const TypeSpecifier & get_return_type() const;
 	/**
@@ -1045,14 +1045,6 @@ namespace Gyoji::frontend::tree {
 	    Gyoji::owned<InitializerExpression> _initializer,
 	    Gyoji::owned<Terminal> _semicolon_token
 	    );
-	StatementVariableDeclaration(
-	    Gyoji::owned<TypeSpecifier> _type_specifier,
-	    Gyoji::owned<Terminal> _identifier_token,
-	    Gyoji::owned<Terminal> _paren_l_token,
-	    Gyoji::owned<ArgumentExpressionList> _argument_expression_list,
-	    Gyoji::owned<Terminal> _paren_r_token,
-	    Gyoji::owned<Terminal> _semicolon_token
-	    );
 
 	/**
 	 * Destructor, nothing special.
@@ -1067,8 +1059,6 @@ namespace Gyoji::frontend::tree {
 	 */
 	const Terminal & get_identifier() const;
 
-	bool is_constructor() const;
-	
 	/**
 	 * Returns the initializer expression, usually a literal,
 	 * that is used to populate the variable with known values.
@@ -1076,24 +1066,11 @@ namespace Gyoji::frontend::tree {
 	 */
 	const InitializerExpression & get_initializer_expression() const;
 
-	/**
-	 * Returns the list of constructor arguments to pass.
-	 * Only valid if is_constructor().
-	 */
-	const ArgumentExpressionList & get_argument_expression_list() const;
-
     private:
 	Gyoji::owned<TypeSpecifier> type_specifier;
 	Gyoji::owned<Terminal> identifier_token;
 	Gyoji::owned<ArrayLength> array_length;
-
-	bool m_is_constructor;
 	Gyoji::owned<InitializerExpression> initializer;
-
-	Gyoji::owned<Terminal> paren_l_token;
-	Gyoji::owned<ArgumentExpressionList> argument_expression_list;
-	Gyoji::owned<Terminal> paren_r_token;
-	
 	Gyoji::owned<Terminal> semicolon_token;
     };
     
@@ -1671,12 +1648,12 @@ namespace Gyoji::frontend::tree {
 	const AccessModifier & get_access_modifier() const;
 	const UnsafeModifier & get_unsafe_modifier() const;
 	const TypeSpecifier & get_type_specifier() const;
-	bool is_constructor() const;
+	bool is_destructor() const;
 	const Terminal & get_name() const;
     private:
 	Gyoji::owned<AccessModifier> access_modifier;
 	Gyoji::owned<UnsafeModifier> unsafe_modifier;
-	bool m_is_constructor;
+	bool m_is_destructor;
 	Gyoji::owned<TypeSpecifier> type_specifier;
 	Gyoji::owned<Terminal> name; // function name (IDENTIFIER)
     };
@@ -1696,9 +1673,9 @@ namespace Gyoji::frontend::tree {
 	~FileStatementFunctionDefinition();
 	const AccessModifier & get_access_modifier() const;
 	const UnsafeModifier & get_unsafe_modifier() const;
-	bool is_constructor() const;
+	bool is_destructor() const;
 	/**
-	 * Only valid if !is_constructor().
+	 * Only valid if !is_destructor().
 	 */
 	const TypeSpecifier & get_return_type() const;
 	const Terminal & get_name() const;
@@ -1866,34 +1843,6 @@ namespace Gyoji::frontend::tree {
 	Gyoji::owned<Terminal> paren_r_token;
 	Gyoji::owned<Terminal> semicolon_token;
     };
-    class ClassMemberDeclarationConstructor : public Gyoji::frontend::ast::SyntaxNode {
-    public:
-	ClassMemberDeclarationConstructor(
-	    Gyoji::owned<AccessModifier> _access_modifier,
-	    Gyoji::owned<UnsafeModifier> _unsafe_modifier,
-	    Gyoji::owned<TypeSpecifier> _type_specifier,
-	    Gyoji::owned<Terminal> _paren_l_token,
-	    Gyoji::owned<FunctionDefinitionArgList> _function_definition_arg_list,
-	    Gyoji::owned<Terminal> _paren_r_token,
-	    Gyoji::owned<Terminal> _semicolon_token
-	    );
-	/**
-	 * Destructor, nothing special.
-	 */
-	~ClassMemberDeclarationConstructor();
-	const AccessModifier & get_access_modifier() const;
-	const UnsafeModifier & get_unsafe_modifier() const;
-	const TypeSpecifier & get_type_specifier() const;
-	const FunctionDefinitionArgList & get_arguments() const;
-    private:
-	Gyoji::owned<AccessModifier> access_modifier;
-	Gyoji::owned<UnsafeModifier> unsafe_modifier;
-	Gyoji::owned<TypeSpecifier> type_specifier;
-	Gyoji::owned<Terminal> paren_l_token;
-	Gyoji::owned<FunctionDefinitionArgList> function_definition_arg_list;
-	Gyoji::owned<Terminal> paren_r_token;
-	Gyoji::owned<Terminal> semicolon_token;
-    };
     class ClassMemberDeclarationDestructor : public Gyoji::frontend::ast::SyntaxNode {
     public:
 	ClassMemberDeclarationDestructor(
@@ -1931,7 +1880,6 @@ namespace Gyoji::frontend::tree {
 	    Gyoji::owned<ClassMemberDeclarationVariable>,
 	    Gyoji::owned<ClassMemberDeclarationMethod>,
 	    Gyoji::owned<ClassMemberDeclarationMethodStatic>,
-	    Gyoji::owned<ClassMemberDeclarationConstructor>,
 	    Gyoji::owned<ClassMemberDeclarationDestructor>,
 	    Gyoji::owned<ClassDeclaration>,
 	    Gyoji::owned<ClassDefinition>,

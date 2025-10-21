@@ -16,7 +16,6 @@ public class q {
     //my_type_t[32] x;
     private my_inner_type_t zzz;
     public void foo(i32 a, i32 b);
-    public q(i32 a, i32 b);
     public ~q(i32 a, i32 b);
 
     private enum i32 ErrorState {

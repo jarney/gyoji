@@ -283,12 +283,6 @@ Type::method_get(const std::string & method_name) const
 }
 
 const TypeMethod *
-Type::method_get_constructor() const
-{
-    return method_get(simple_name);
-}
-	
-const TypeMethod *
 Type::method_get_destructor() const
 {
     return method_get(std::string("~") + simple_name);

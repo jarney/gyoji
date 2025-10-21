@@ -160,7 +160,7 @@ FunctionDefinitionResolver::resolve()
     NS2Entity *entity = function_definition.get_name().get_ns2_entity();
 
     // This section tries to figure out if this is a plain function
-    // or a method call on a class.
+    // or a method/destructor call on a class.
     Type *maybe_class_type = mir.get_types().get_type(entity->get_parent()->get_fully_qualified_name());
     if (maybe_class_type != nullptr) {
 	const auto & method_it = maybe_class_type->get_methods().find(entity->get_name());
@@ -187,7 +187,7 @@ FunctionDefinitionResolver::resolve()
     
     const Type *return_type;
     const SourceReference *return_type_source_ref;
-    if (function_definition.is_constructor()) {
+    if (function_definition.is_destructor()) {
 	return_type = mir.get_types().get_type("void");
 	return_type_source_ref = &function_definition.get_name().get_source_ref();
     }
@@ -2962,187 +2962,47 @@ FunctionDefinitionResolver::extract_from_statement_variable_declaration(
 	return false;
     }
 
-    // If it is composite, we MUST call
-    // the constructor.
-    if (mir_type->is_composite()) {
-	const TypeMethod *default_constructor = mir_type->method_get_constructor();
-	if (default_constructor == nullptr) {
-	    compiler_context
-		.get_errors()
-		.add_simple_error(
-		    statement.get_source_ref(),
-		    "Constructor is required for class type",
-		    std::string("Constructors must be called on class types ") + mir_type->get_name()
-		    );
-	    return false;
-	}
-	// This seems like a really bad way to
-	// get the constructor name.
-	std::string fully_qualified_function_name(mir_type->get_name() + std::string("::") + default_constructor->get_name());
-
-	// This lowers to a single MIR operation
-	// so that we can easily tell from the MIR
-	// whether this variable is initialized before use.
-	// Get the variable.
-	size_t variable_tmpvar = function->tmpvar_define(mir_type);
-	auto op_variable = std::make_unique<OperationLocalVariable>(
-	    statement.get_source_ref(),
-	    variable_tmpvar,
-	    statement.get_identifier().get_name(),
-	    mir_type
-	    );
-	function->get_basic_block(current_block).add_operation(std::move(op_variable));
-
-	// Extract the 'this' pointer
-	// from the variable so we can add it to the constructor
-	// args.
-	const Type *variable_pointer_type = mir.get_types().get_pointer_to(mir_type, statement.get_source_ref());
-	size_t variable_pointer_tmpvar = function->tmpvar_define(variable_pointer_type);
-	auto operation_this_pointer = std::make_unique<OperationUnary>(
-	    Operation::OP_ADDRESSOF,
-	    statement.get_source_ref(),
-	    variable_pointer_tmpvar,
-	    variable_tmpvar
-	    );
-	function
-	    ->get_basic_block(current_block)
-	    .add_operation(std::move(operation_this_pointer));
-
-	std::vector<size_t> passed_arguments;
-	std::vector<const Gyoji::context::SourceReference *> passed_src_refs;
-
-	// First argument is the <this> pointer:
-	passed_arguments.push_back(variable_pointer_tmpvar);
-	passed_src_refs.push_back(&statement.get_source_ref());
-
-	// If this is a constructor, we can get the arguments
-	// from the statement.  If it's not, we assume a
-	// constructor that has no arguments.
-	if (statement.is_constructor()) {
-	    for (const auto & arg_expr : statement.get_argument_expression_list().get_arguments()) {
-		size_t arg_returned_value;
-		if (!extract_from_expression(arg_returned_value, *arg_expr)) {
-		    return false;
-		}
-		passed_arguments.push_back(arg_returned_value);
-		passed_src_refs.push_back(&arg_expr->get_source_ref());
-	    }
-	}
-	
-	const Gyoji::mir::Symbol *constructor_symbol = mir.get_symbols().get_symbol(fully_qualified_function_name);
-	if (constructor_symbol == nullptr) {
-	    std::unique_ptr<Gyoji::context::Error> error = std::make_unique<Gyoji::context::Error>("No constructor found.");
-	    error->add_message(
-		function_definition.get_source_ref(),
-		std::string("Constructor ") + fully_qualified_function_name + std::string(" was not defined for class ") + mir_type->get_name()
-		);
-	    compiler_context
-		.get_errors()
-		.add_error(std::move(error));
-	    return false;
-	}
-	const Type *constructor_fptr_type = constructor_symbol->get_mir_type();
-	if (constructor_fptr_type->get_type() != Type::TYPE_FUNCTION_POINTER) {
-	    std::unique_ptr<Gyoji::context::Error> error = std::make_unique<Gyoji::context::Error>("Symbol is not a constructor");
-	    error->add_message(
-		function_definition.get_source_ref(),
-		std::string("Symbol ") + fully_qualified_function_name + std::string(" is not declared as a constructor.")
-		);
-	    compiler_context
-		.get_errors()
-		.add_error(std::move(error));
-	    return false;
-	}
-	// Check that the method signature we're calling matches
-	// the declaration of that method
-	if (!check_function_call_signature(true, passed_arguments, passed_src_refs, constructor_fptr_type, statement.get_source_ref())) {
-	    return false;
-	}
-	
-	size_t constructor_fptr_tmpvar = function->tmpvar_define(constructor_fptr_type);
-	auto operation_get_constructor_function = std::make_unique<OperationSymbol>(
-	    statement.get_source_ref(),
-	    constructor_fptr_tmpvar,
-	    fully_qualified_function_name
-	    );
-	function->get_basic_block(current_block).add_operation(std::move(operation_get_constructor_function));
-	
-	// This is what the function pointer type should return.
-	size_t constructor_result_tmpvar = function->tmpvar_define(constructor_fptr_type->get_return_type());
-	
-	auto op_constructor = std::make_unique<OperationFunctionCall>(
-            Operation::OP_CONSTRUCTOR,
-	    statement.get_source_ref(),
-	    constructor_result_tmpvar,
-	    constructor_fptr_tmpvar,
-	    passed_arguments
-	    );
-	function->get_basic_block(current_block).add_operation(std::move(op_constructor));
-
+    const Expression *expression = nullptr;
+    
+    // This is an equals-style
+    // initialization of a primitive variable.
+    const auto & initializer_expression = statement.get_initializer_expression();
+    if (initializer_expression.has_expression()) {
+	expression = &initializer_expression.get_expression();
     }
     else {
-	const Expression *expression = nullptr;
-	
-	if (statement.is_constructor()) {
-	    // Initialization of simple types
-	    // must be equals-style
-	    const std::vector<Gyoji::owned<Expression>> & arguments = 
-		statement.get_argument_expression_list().get_arguments();
-	    if (arguments.size() != 1) {
-		compiler_context
-		    .get_errors()
-		    .add_simple_error(
-			statement.get_argument_expression_list().get_source_ref(),
-			"Initializer of primitive type must consist of a single argument",
-			std::string("Initialization of a primitive type must be a single argument of the correct type for ") + mir_type->get_name()
-			);
-		return false;
-	    }
-	    // Check size.
-	    expression = arguments.at(0).get();
-	}
-	else {
-	    // This is an equals-style
-	    // initialization of a primitive variable.
-	    const auto & initializer_expression = statement.get_initializer_expression();
-	    if (initializer_expression.has_expression()) {
-		expression = &initializer_expression.get_expression();
-	    }
-	    else {
-		// The author has chosen to defer initialization,
-		// so we're done with the initialization part.
-		return true;
-	    }
-	}
-	// From here, we need to:
-	// 1) call LocalVariable
-	// 2) Evaluate the expression
-	// 3) Perform an assignment.
-	size_t variable_tmpvar = function->tmpvar_define(mir_type);
-	auto operation = std::make_unique<OperationLocalVariable>(
-	    statement.get_source_ref(),
-	    variable_tmpvar,
-	    statement.get_identifier().get_name(),
-	    mir_type
-	    );
-	function->get_basic_block(current_block).add_operation(std::move(operation));
-	
-	size_t initial_value_tmpvar;
-	if (!extract_from_expression(initial_value_tmpvar, *expression)) {
-	    return false;
-	    }
-	
-	size_t returned_tmpvar; // We don't save the returned val because nobody wants it.
-	if (!handle_binary_operation_assignment(
-		expression->get_source_ref(),
-		Operation::OP_ASSIGN,
+	// The author has chosen to defer initialization,
+	// so we're done with the initialization part.
+	return true;
+    }
+
+    // From here, we need to:
+    // 1) call LocalVariable
+    // 2) Evaluate the expression
+    // 3) Perform an assignment.
+    size_t variable_tmpvar = function->tmpvar_define(mir_type);
+    auto operation = std::make_unique<OperationLocalVariable>(
+	statement.get_source_ref(),
+	variable_tmpvar,
+	statement.get_identifier().get_name(),
+	mir_type
+	);
+    function->get_basic_block(current_block).add_operation(std::move(operation));
+    
+    size_t initial_value_tmpvar;
+    if (!extract_from_expression(initial_value_tmpvar, *expression)) {
+	return false;
+    }
+    
+    size_t returned_tmpvar; // We don't save the returned val because nobody wants it.
+    if (!handle_binary_operation_assignment(
+	    expression->get_source_ref(),
+	    Operation::OP_ASSIGN,
 		returned_tmpvar,
-		variable_tmpvar,
-		initial_value_tmpvar
-		)) {
-	    return false;
-	}
-	
+	    variable_tmpvar,
+	    initial_value_tmpvar
+	    )) {
+	return false;
     }
     
     return true;

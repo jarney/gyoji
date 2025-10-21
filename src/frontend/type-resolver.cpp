@@ -392,29 +392,20 @@ TypeResolver::extract_from_class_members(Type & class_type, const ClassDefinitio
 		member_method->get_source_ref()
 		);
 	}
-	else if (std::holds_alternative<Gyoji::owned<ClassMemberDeclarationConstructor>>(class_member_type)) {
-	    const auto & member_method = std::get<Gyoji::owned<ClassMemberDeclarationConstructor>>(class_member_type);
-	    // Regular methods have return types.  Constructors/destructors always return void.
-	    const Type * method_return_type = mir.get_types().get_type("void");
-
-	    std::string simple_name = class_type.get_simple_name();
-	    std::string fully_qualified_name = class_type.get_name() + std::string("::") + simple_name;
-
-	    extract_from_class_method_types(
-		class_type,
-		methods,
-		simple_name,
-		fully_qualified_name,
-		Gyoji::mir::Symbol::SYMBOL_MEMBER_METHOD,
-		member_method->get_unsafe_modifier(),
-		method_return_type,
-		member_method->get_arguments(),
-		member_method->get_source_ref()
-		);
-	}
 	else if (std::holds_alternative<Gyoji::owned<ClassMemberDeclarationDestructor>>(class_member_type)) {
 	    const auto & member_method = std::get<Gyoji::owned<ClassMemberDeclarationDestructor>>(class_member_type);
 
+	    if (member_method->get_arguments().get_arguments().size() != 0) {
+		compiler_context
+		    .get_errors()
+		    .add_simple_error(
+			member_method->get_source_ref(),
+			"Destructors may not have arguments",
+			std::string("Destructors may not have funciton arguments.")
+			);
+		continue;
+	    }
+	    
 	    // Regular methods have return types.  Constructors/destructors always return void.
 	    const Type * method_return_type = mir.get_types().get_type("void");
 
@@ -634,7 +625,7 @@ TypeResolver::extract_from_function_definition(const FileStatementFunctionDefini
 {
     const Type *return_type;
     const SourceReference *return_type_source_ref;
-    if (function_definition.is_constructor()) {
+    if (function_definition.is_destructor()) {
 	return_type = mir.get_types().get_type("void");
 	return_type_source_ref = &function_definition.get_name().get_source_ref();
     }
@@ -666,7 +657,7 @@ TypeResolver::extract_from_function_declaration(const FileStatementFunctionDecla
 {
     const Type *return_type;
     const SourceReference *return_type_source_ref;
-    if (function_declaration.is_constructor()) {
+    if (function_declaration.is_destructor()) {
 	return_type = mir.get_types().get_type("void");
 	return_type_source_ref = &function_declaration.get_name().get_source_ref();
     }

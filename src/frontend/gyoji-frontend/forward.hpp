@@ -71,7 +71,6 @@ namespace Gyoji::frontend::tree {
         class ClassMemberDeclarationVariable;
         class ClassMemberDeclarationMethod;
         class ClassMemberDeclarationMethodStatic;
-        class ClassMemberDeclarationConstructor;
         class ClassMemberDeclarationDestructor;
   class ClassDefinition;
   class ClassDeclaration;
@@ -169,7 +168,6 @@ namespace Gyoji::frontend::tree {
         Gyoji::frontend::tree::      ClassMemberDeclarationVariable*,       \
         Gyoji::frontend::tree::      ClassMemberDeclarationMethod*,         \
         Gyoji::frontend::tree::      ClassMemberDeclarationMethodStatic*,   \
-        Gyoji::frontend::tree::      ClassMemberDeclarationConstructor*,    \
         Gyoji::frontend::tree::      ClassMemberDeclarationDestructor*,     \
         Gyoji::frontend::tree::    ClassMemberDeclaration*,                 \
         Gyoji::frontend::tree::  ClassMemberDeclarationList*,               \

@@ -886,7 +886,7 @@ function_decl_start
                         std::move($4)
                         );
         }
-        // Constructors
+        // Destructors
         | opt_access_modifier opt_unsafe IDENTIFIER {
                 NS2Entity *ns2_entity = return_data.identifier_get_or_create($3->get_value(), true, $3->get_source_ref());
 		if (ns2_entity == nullptr) {
@@ -1110,20 +1110,7 @@ statement_variable_declaration
 		    );
                 PRINT_NONTERMINALS($$);
         }
-        | type_specifier IDENTIFIER PAREN_L opt_argument_expression_list PAREN_R SEMICOLON {
-	    // Constructor
-                NS2Entity *ns2_entity = return_data.identifier_get_or_create($2->get_value(), true, $2->get_source_ref());
-	        $2->set_ns2_entity(ns2_entity);
-                $$ = std::make_unique<Gyoji::frontend::tree::StatementVariableDeclaration>(
-		    std::move($1),
-		    std::move($2),
-		    std::move($3),
-		    std::move($4),
-		    std::move($5),
-		    std::move($6)
-		    );
-                PRINT_NONTERMINALS($$);
-        }
+        ;
 
 statement_block
         : opt_unsafe scope_body {
@@ -2350,21 +2337,6 @@ class_member_declaration
                                                                                                      std::move($6),
                                                                                                      std::move($7),
                                                                                                      std::move($8)
-                                                                                                     );
-                const Gyoji::frontend::ast::SyntaxNode &sn = *(expr);
-                $$ = std::make_unique<Gyoji::frontend::tree::ClassMemberDeclaration>(std::move(expr), sn);
-                PRINT_NONTERMINALS($$);
-        }
-        | opt_access_modifier opt_unsafe type_specifier PAREN_L opt_function_definition_arg_list PAREN_R SEMICOLON {
-                // Constructor
-                auto expr = std::make_unique<Gyoji::frontend::tree::ClassMemberDeclarationConstructor>(
-                                                                                                     std::move($1),
-												     std::move($2),
-                                                                                                     std::move($3),
-                                                                                                     std::move($4),
-                                                                                                     std::move($5),
-                                                                                                     std::move($6),
-                                                                                                     std::move($7)
                                                                                                      );
                 const Gyoji::frontend::ast::SyntaxNode &sn = *(expr);
                 $$ = std::make_unique<Gyoji::frontend::tree::ClassMemberDeclaration>(std::move(expr), sn);
