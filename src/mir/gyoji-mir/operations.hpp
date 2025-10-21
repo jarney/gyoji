@@ -1167,6 +1167,8 @@ namespace Gyoji::mir {
 	virtual ~OperationGetMethod();
 
 	const std::string & get_method() const;
+    protected:
+	virtual std::string get_description() const;
     private:
 	size_t object_to_call;
 	std::string method_name;

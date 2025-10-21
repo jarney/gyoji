@@ -388,6 +388,21 @@ const std::string &
 OperationGetMethod::get_method() const
 { return method_name; }
 
+std::string
+OperationGetMethod::get_description() const
+{
+    const auto & it = op_type_names.find(type);
+    const std::string & op_name = it->second;
+
+    std::string desc = std::string("_") + std::to_string(result) + std::string(" = ") + op_name + std::string(" (");
+    desc = desc + std::string(" ") + std::to_string(operands.at(0));
+    desc = desc + std::string(" ") + method_name;
+    desc = desc + std::string(" )");
+    return desc;
+}
+
+
+
 //////////////////////////////////////////////
 // OperationFunctionCall
 //////////////////////////////////////////////

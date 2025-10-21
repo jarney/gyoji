@@ -57,11 +57,12 @@ int main(int argc, char **argv)
 	    break;
 	}
 	const Gyoji::owned<Gyoji::frontend::tree::Terminal> & token = lvalue.as<Gyoji::owned<Gyoji::frontend::tree::Terminal>>();
-	printf("%ld %ld : %d %s\n",
+	printf("%ld %ld : %d %s : %s\n",
 	       token->get_source_ref().get_line(),
 	       token->get_source_ref().get_column(),
 	       token->get_type(),
-	       token->get_value().c_str()
+	       token->get_name().c_str(),
+	       token->get_fully_qualified_name().c_str()
 	    );
     }
     

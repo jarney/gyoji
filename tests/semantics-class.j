@@ -53,9 +53,11 @@ Foo::set_something(u32 _a, u32 _b, u32 _c)
     print_value(_b);
     print_value(_c);
     print_value(a);
-
+    if (_a > 0) {
+       _a -= 1;
+       set_something(_a, _b, _c);
+    }
 //TODO: Need to allow recursion and member calls from member context.
-//    set_something(_a, _b, _c);
 //TODO: Still need to prevent this correctly.
 //    jlang::Foo::~Foo();
 	return;

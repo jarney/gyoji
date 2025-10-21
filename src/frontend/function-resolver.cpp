@@ -519,7 +519,6 @@ FunctionDefinitionResolver::resolve()
     // and insert them if the function is 'void'.
     // If the function is not 'void', then
     // we need to raise an error for it.
-    bool is_ok = true;
     const auto & blocks = function->get_blocks();
     for (const auto & block_it : blocks) {
 	const BasicBlock & block = *block_it.second;
@@ -555,15 +554,9 @@ FunctionDefinitionResolver::resolve()
 		compiler_context
 		    .get_errors()
 		    .add_error(std::move(error));
-		is_ok = false;
 	    }
 	}
     }
-    // If we had an error, that's ok because
-    // we're still safe to process our next function.
-//    if (!is_ok) {
-//	return true;
-//    }
     
     mir.get_functions().add_function(std::move(function));
 
@@ -670,13 +663,14 @@ FunctionDefinitionResolver::extract_from_expression_primary_identifier(
 	// temp var for the operation should be an argument that we've defined in the
 	// scope, but only addressable by 'member' name (i.e. there is no 'this' argument
 	// according to the method).
-	
+
+	std::string fully_qualified_name = expression.get_identifier().get_fully_qualified_name();
 	
 	// Look in the list of functions,
 	// this might be a function pointer assignment or
 	// a global variable.
 	const Gyoji::mir::Symbol *symbol = mir.get_symbols().get_symbol(
-	    expression.get_identifier().get_fully_qualified_name()
+	    fully_qualified_name
 	    );
 	// The symbol 1) must exist AND
 	// if we're doing a method call, it must be a method
@@ -687,19 +681,52 @@ FunctionDefinitionResolver::extract_from_expression_primary_identifier(
 		.add_simple_error(
 		    expression.get_source_ref(),
 		    "Unresolved symbol",
-		    std::string("Symbol ") + expression.get_identifier().get_fully_qualified_name() + std::string(" was not declared in this scope.")
+		    std::string("Symbol ") + fully_qualified_name + std::string(" was not declared in this scope.")
 		    );
 	    return false;
 	}
-	if (symbol->get_type() == Gyoji::mir::Symbol::SYMBOL_MEMBER_METHOD && !is_method()) {
-	    compiler_context
-		.get_errors()
-		.add_simple_error(
-		    expression.get_source_ref(),
-		    "Invalid method call",
-		    std::string("Symbol ") + expression.get_identifier().get_fully_qualified_name() + std::string(" is a member function, but is being called from a static context.")
+
+	if (symbol->get_type() == Gyoji::mir::Symbol::SYMBOL_MEMBER_METHOD) {
+	    fprintf(stderr, "Making internal method call to %s\n", fully_qualified_name.c_str());
+	    if (!is_method()) {
+		compiler_context
+		    .get_errors()
+		    .add_simple_error(
+			expression.get_source_ref(),
+			"Invalid method call",
+			std::string("Symbol ") + fully_qualified_name + std::string(" is a member function, but is being called from a static context.")
+			);
+		return false;
+	    }
+	    else {
+		// This allows us to make method calls from within other methods
+		// and still use the '<this>' pointer.
+		const Type * method_call_type = mir.get_types().get_method_call(class_type, symbol->get_mir_type(), expression.get_source_ref());
+
+		const Type * class_pointer_type = mir.get_types().get_pointer_to(class_type, expression.get_source_ref());
+
+		size_t this_tmpvar = function->tmpvar_define(class_pointer_type);
+		auto operation_this = std::make_unique<OperationLocalVariable>(
+		    expression.get_identifier().get_source_ref(),
+		    this_tmpvar,
+		    std::string("<this>"),
+		    class_pointer_type
 		    );
-	    return false;
+		function->get_basic_block(current_block).add_operation(std::move(operation_this));
+
+		returned_tmpvar = function->tmpvar_define(method_call_type);
+		auto operation_method_call = std::make_unique<OperationGetMethod>(
+		    expression.get_source_ref(),
+		    returned_tmpvar,
+		    this_tmpvar,
+		    fully_qualified_name
+		    );
+		function
+		    ->get_basic_block(current_block)
+		    .add_operation(std::move(operation_method_call));
+
+		return true;
+	    }
 	}
 	
 	returned_tmpvar = function->tmpvar_define(symbol->get_mir_type());
@@ -707,7 +734,7 @@ FunctionDefinitionResolver::extract_from_expression_primary_identifier(
 	auto operation = std::make_unique<OperationSymbol>(
 	    expression.get_identifier().get_source_ref(),
 	    returned_tmpvar,
-	    expression.get_identifier().get_fully_qualified_name()
+	    fully_qualified_name
 	    );
 	function->get_basic_block(current_block).add_operation(std::move(operation));
 	return true;
