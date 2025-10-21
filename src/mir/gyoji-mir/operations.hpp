@@ -899,7 +899,7 @@ namespace Gyoji::mir {
 	 * This method prints debuginng information about
 	 * the opcode to the given file handle.
 	 */
-	void dump(FILE *out) const;
+	void dump(FILE *out, size_t operation_index) const;
 
 	/**
 	 * @brief Opcode of this operation.

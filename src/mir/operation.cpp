@@ -225,9 +225,9 @@ Operation::get_source_ref() const
 { return src_ref; }
 
 void
-Operation::dump(FILE *out) const
+Operation::dump(FILE *out, size_t operation_index) const
 {
-    fprintf(out, "            %s\n", get_description().c_str());
+    fprintf(out, "            %ld : %s\n", operation_index, get_description().c_str());
 }
 
 #if 0

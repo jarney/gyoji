@@ -172,14 +172,12 @@ Function::calculate_block_reachability()
 	    // if it wasn't found on the closed list
 	    // becuase we've reached it already.
 	    if (closed_list.find(to) == closed_list.end()) {
-		fprintf(stderr, "Adding %ld to open list\n", to);
 		open_list.insert(std::pair(to, to));
 	    }
 	}
 	closed_list.insert(std::pair(current, current));
     }
     for (const auto & unreach : unreachable) {
-	fprintf(stderr, "Unreachable basic block %ld\n", unreach.first);
 	// This is unreachable in the sense that the
 	// basic blocks are not a connected graph.
 	// If this happens, then there is a bug in the 'lowering'
@@ -261,8 +259,10 @@ BasicBlock::add_operation(Gyoji::owned<Operation> _operation)
 void
 BasicBlock::dump(FILE *out) const
 {
+    size_t operation_index = 0;
     for (const auto & operation : operations) {
-	operation->dump(out);
+	operation->dump(out, operation_index);
+	operation_index++;
     }
 }
 const std::vector<Gyoji::owned<Operation>> &
