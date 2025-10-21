@@ -49,6 +49,24 @@
  */
 namespace Gyoji::analysis {
 
+    // Ultimately, we will want to
+    // define a relation on program points
+    // so that:
+    //      pp(x, a) < pp(x, a)
+    //      pp(x, a) < pp(x, a+1)
+    // for all a.  and pp(x,y) < pp(w,z)
+    // if and only if w is reachable from
+    // x through the control-flow graph.
+    
+    class ProgramPoint {
+    public:
+	ProgramPoint(size_t _block_id, size_t _operation_index);
+	ProgramPoint(const ProgramPoint & other);
+	~ProgramPoint();
+	size_t block_id;
+	size_t operation_index;
+    };
+    
     /**
      * @brief Abstract interface to analysis passes.
      *
@@ -193,6 +211,13 @@ namespace Gyoji::analysis {
 	virtual ~AnalysisPassUseBeforeAssignment();
 	virtual void check(const Gyoji::mir::MIR & mir) const;
     private:
+	bool true_at(
+	    const Gyoji::mir::Function & function,
+	    std::map<size_t, bool> & already_checked,
+	    const std::vector<ProgramPoint> & true_points,
+	    const ProgramPoint & check_at
+	    ) const;
+	
 	void check(const Gyoji::mir::Function & function) const;
     };
     

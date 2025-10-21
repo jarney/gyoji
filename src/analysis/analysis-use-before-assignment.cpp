@@ -35,24 +35,6 @@ AnalysisPassUseBeforeAssignment::check(const Gyoji::mir::MIR & mir) const
 
 namespace Gyoji::analysis {
 
-    // Ultimately, we will want to
-    // define a relation on program points
-    // so that:
-    //      pp(x, a) < pp(x, a)
-    //      pp(x, a) < pp(x, a+1)
-    // for all a.  and pp(x,y) < pp(w,z)
-    // if and only if w is reachable from
-    // x through the control-flow graph.
-    
-    class ProgramPoint {
-    public:
-	ProgramPoint(size_t _block_id, size_t _operation_index);
-	ProgramPoint(const ProgramPoint & other);
-	~ProgramPoint();
-	size_t block_id;
-	size_t operation_index;
-    };
-    
     // This is an access of a local variable
     // inside a function.  Here, we track the
     // name of the variable, the tmpvar it's
@@ -254,6 +236,59 @@ const std::map<size_t, std::string> &
 VariableTmpvarVisitor::get_tmpvars() const
 { return tmpvars; }
 
+bool AnalysisPassUseBeforeAssignment::true_at(
+    const Function & function,
+    std::map<size_t, bool> & already_checked,
+    const std::vector<ProgramPoint> & true_points,
+    const ProgramPoint & check_at
+    ) const
+{
+    bool found_in_same_block = false;
+    
+    for (const auto & true_point : true_points) {
+	if (check_at.block_id == true_point.block_id &&
+	    check_at.operation_index > true_point.operation_index) {
+	    found_in_same_block = true;
+	    fprintf(stderr, "Found in same block (%ld, %ld) (%ld, %ld)\n",
+		    check_at.block_id,
+		    check_at.operation_index,
+		    true_point.block_id,
+		    true_point.operation_index);
+	}
+    }
+    // It was true in the current block, so it's true.
+    if (found_in_same_block) {
+	return true;
+    }
+    const std::vector<size_t> & predecessors = function.get_basic_block(check_at.block_id).get_reachable_from();
+    if (predecessors.size() == 0) {
+	fprintf(stderr, "No predecessors of %ld to check, so we never found a place where it was true\n", check_at.block_id);
+	return false;
+    }
+    
+    // If it wasn't true in the current block, try all predecessors.
+    for (const auto & predecessor : predecessors) {
+	fprintf(stderr, "Checking pred %ld\n", predecessor);
+	ProgramPoint pred_point(predecessor, function.get_basic_block(predecessor).get_operations().size());
+
+	bool is_true;
+	const auto & already_checked_it = already_checked.find(pred_point.block_id);
+	if (already_checked_it != already_checked.end()) {
+	    is_true = already_checked_it->second;
+	}
+	else {
+	    is_true = true_at(function, already_checked, true_points, pred_point);
+	    already_checked.insert(std::pair(pred_point.block_id, is_true));
+	}
+	if (!is_true) {
+	    fprintf(stderr, "It was not true in block %ld\n", predecessor);
+	    return false;
+	}
+    }
+    return true;
+
+}
+
 void AnalysisPassUseBeforeAssignment::check(const Function & function) const
 {
     // TODO:
@@ -270,24 +305,33 @@ void AnalysisPassUseBeforeAssignment::check(const Function & function) const
     function.iterate_operations(visitor);
     
     fprintf(stderr, "Function %s\n", function.get_name().c_str());
-    for (const auto & load : visitor.get_loads()) {
-	fprintf(stderr, "Variable load var %s block %ld index %ld\n",
-		load.variable_name.c_str(),
-		load.program_point.block_id,
-		load.program_point.operation_index);
 
-	// Go back to all prior program points
-	// and make sure it was initialized 'before'
-	// this point.
-//	if (stored_before(load.variable_name, load.program_point)) {
-//	}
-    }
+    std::map<std::string, std::vector<ProgramPoint>> store_points_by_variable;
     for (const auto & store : visitor.get_stores()) {
 	fprintf(stderr, "tmpvar store %s block %ld index %ld\n",
 		store.variable_name.c_str(),
 		store.program_point.block_id,
 		store.program_point.operation_index);
-    }    
+	store_points_by_variable[store.variable_name].push_back(store.program_point);
+    }
+    for (const auto & load : visitor.get_loads()) {
+	// TODO: Rule out arguments because they're initialized always by caller.
+	if (load.variable_name == std::string("argc")) {
+	    continue;
+	}
+	fprintf(stderr, "Variable load var %s block %ld index %ld\n",
+		load.variable_name.c_str(),
+		load.program_point.block_id,
+		load.program_point.operation_index);
+	
+	std::map<size_t, bool> already_checked;
+	bool is_true = true_at(function, already_checked, store_points_by_variable[load.variable_name], load.program_point);
+	if (!is_true) {
+	    fprintf(stderr, "Uninitialized %s\n", load.variable_name.c_str());
+	}
+	already_checked.insert(std::pair(load.program_point.block_id, is_true));
+    }
+    
 
     // We now have all of the places
     // the variable was stored
@@ -303,3 +347,40 @@ void AnalysisPassUseBeforeAssignment::check(const Function & function) const
     // and ask the question on each.
     
 }
+//////////////////////////
+//
+/*
+  We start with the CFG graph of basic blocks.
+            0
+	   / \
+	  /   \
+	 1     2
+	/ \     \
+       /   \     3
+      4     5    /
+      \     /   /
+       \   /   /
+        \ /   /
+	 6----
+
+  Then we have some property like "used-at" which is
+  associated with a program-point such as (6,3) (basic block 6, 3rd instruction)
+
+  We also have several 'initialized-at' facts like
+    (4,7 ) (2,3)
+
+  What we would like to know if whether 'initialized-before(6,3)' is true.
+
+  The inference rule is P(b,i) = P(b,i+1) for all i.  This says if it was true at point i,
+  it is also true at point i+1 in the same block.
+
+  We also have the rule that says P(b,i) = | (for all c in Prececessors of b : P(c,end))
+
+  So we would like to know if initialized-before(6,3) is true,
+     We first check if there is a (6,k) with k<3.
+     If not, we check if ALL of (4,end) and (5,end) are true.
+        In this case, 4,end is true because (4,7) is true.
+	But (5,end) is false, so we check (1,end).  Again no.
+	But (3,end) is true because (2,end) is true.
+  
+ */
