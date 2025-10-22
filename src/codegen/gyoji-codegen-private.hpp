@@ -69,6 +69,7 @@ namespace Gyoji::codegen {
         llvm::Type *create_type_composite(const Gyoji::mir::Type *compositetype);
         llvm::Type *create_type_pointer(const Gyoji::mir::Type *pointertype);
         llvm::Type *create_type_reference(const Gyoji::mir::Type *referencetype);
+	llvm::Type *create_type_function(const Gyoji::mir::Type *function_type);
 	llvm::Type *create_type_function_pointer(const Gyoji::mir::Type *fptr_type);
 	llvm::Type *create_type_array(const Gyoji::mir::Type *array_type);
 

@@ -1276,9 +1276,13 @@ FunctionDefinitionResolver::extract_from_expression_postfix_function_call(
     
     // Pull out any of the 'partial' operations.
     Operation* function_operation = function->tmpvar_get_operation(function_type_tmpvar);
-    for (const size_t & operand : function_operation->get_operands()) {
-	passed_arguments.insert(passed_arguments.begin(), operand);
-	passed_src_refs.insert(passed_src_refs.begin(), &expression.get_source_ref());
+
+    // TODO: Make sure to cut over from bb->add_operation() to function->add_operation().
+    if (function_operation != nullptr) {
+	for (const size_t & operand : function_operation->get_operands()) {
+	    passed_arguments.insert(passed_arguments.begin(), operand);
+	    passed_src_refs.insert(passed_src_refs.begin(), &expression.get_source_ref());
+	}
     }
     
     returned_tmpvar = function->tmpvar_define(function_pointer_type->get_return_type());

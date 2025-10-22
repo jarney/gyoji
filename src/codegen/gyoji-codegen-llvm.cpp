@@ -165,10 +165,12 @@ llvm::Type *
 CodeGeneratorLLVMContext::create_type_reference(const Gyoji::mir::Type *referencetype)
 {
     const Gyoji::mir::Type * pointer_target = referencetype->get_pointer_target();
+    llvm::Type * llvm_pointer_target = create_type(pointer_target);
     llvm::Type * llvm_type =
-	llvm::PointerType::get(create_type(pointer_target),
+	llvm::PointerType::get(llvm_pointer_target,
 			       0 // Address space (default to 0?  This seems unclean, llvm!)
 	    );
+
     types.insert(std::pair<std::string, llvm::Type*>(
 		     referencetype->get_name(),
 		     llvm_type
@@ -196,9 +198,8 @@ CodeGeneratorLLVMContext::create_type_array(const Gyoji::mir::Type *array_type)
 }
 
 llvm::Type *
-CodeGeneratorLLVMContext::create_type_function_pointer(const Gyoji::mir::Type *fptr_type)
+CodeGeneratorLLVMContext::create_type_function(const Gyoji::mir::Type *fptr_type)
 {
-    fprintf(stderr, "Creating function pointer type %s\n", fptr_type->get_name().c_str());
     const Gyoji::mir::Type *mir_return_type = fptr_type->get_return_type();
     llvm::Type *llvm_return_type = create_type(mir_return_type);
     
@@ -210,14 +211,20 @@ CodeGeneratorLLVMContext::create_type_function_pointer(const Gyoji::mir::Type *f
     }
     
     llvm::ArrayRef<llvm::Type *> llvm_args_ref(llvm_fptr_args);
-    llvm::FunctionType *llvm_fptr_type = llvm::FunctionType::get(llvm_return_type, llvm_args_ref, false);
+    llvm::FunctionType *llvm_function_type = llvm::FunctionType::get(llvm_return_type, llvm_args_ref, false);
     
-#if 0
+    return llvm_function_type;
+}
+
+llvm::Type *
+CodeGeneratorLLVMContext::create_type_function_pointer(const Gyoji::mir::Type *fptr_type)
+{
+    llvm::Type * llvm_function_type = create_type_function(fptr_type);
+    
     llvm::Type * llvm_fptr_type =
 	llvm::PointerType::get(llvm_function_type,
 			       0 // Address space (default to 0?  This seems unclean, llvm!)
 	    );
-#endif    
     types.insert(std::pair<std::string, llvm::Type*>(
 		     fptr_type->get_name(),
 		     llvm_fptr_type
@@ -380,10 +387,15 @@ CodeGeneratorLLVMContext::generate_operation_function_call(
 	llvm::Value *llvm_arg = tmp_values[operands.at(i+1)];
 	llvm_args.push_back(llvm_arg);
     }
-    const Type *mir_type = mir_function.tmpvar_get(function_operand);
-    llvm::Type *llvm_fptr_type = types[mir_type->get_name()];
 
-    Builder->CreateCall((llvm::FunctionType*)llvm_fptr_type, (llvm::Function*)llvm_function, llvm_args);
+    // The function type needs to come from the definition of the function pointer.
+    const Type *mir_type = mir_function.tmpvar_get(function_operand);
+    llvm::FunctionType * function_type = (llvm::FunctionType*)create_type_function(mir_type);
+
+    // The actual function we're calling might be a function pointer.
+    llvm::Function *function = (llvm::Function*)llvm_function;
+    
+    Builder->CreateCall(function_type, function, llvm_args);
 
 }
 
@@ -396,7 +408,7 @@ CodeGeneratorLLVMContext::generate_operation_symbol(
     std::string symbol_name = operation.get_symbol_name();
     const Gyoji::mir::Symbol *symbol = mir.get_symbols().get_symbol(symbol_name);
     
-    llvm::Type *fptr_type = types[symbol->get_mir_type()->get_name()];
+    llvm::Type *fptr_type = create_type_function(symbol->get_mir_type());
     if (fptr_type == nullptr) {
 	fprintf(stderr, "Could not find function pointer type for %s\n", symbol->get_mir_type()->get_name().c_str());
 	exit(1);
@@ -508,17 +520,11 @@ CodeGeneratorLLVMContext::generate_operation_local_variable(
     const Gyoji::mir::OperationLocalVariable & operation
     )
 {
-    fprintf(stderr, "Creating load for %s\n", operation.get_var_type()->get_name().c_str());
-
     llvm::Type *type = types[operation.get_var_type()->get_name()];
     llvm::Value *variable_ptr = local_variables[operation.get_symbol_name()];
     tmp_lvalues.insert(std::pair(operation.get_result(), variable_ptr));
-    if (!operation.get_var_type()->is_function_pointer()) {    
-	llvm::Value *value = Builder->CreateLoad(type, variable_ptr);
-	tmp_values.insert(std::pair(operation.get_result(), value));
-    }
-    
-    fprintf(stderr, "Creating load for %s<done>\n", operation.get_var_type()->get_name().c_str());
+    llvm::Value *value = Builder->CreateLoad(type, variable_ptr);
+    tmp_values.insert(std::pair(operation.get_result(), value));
 }
 void
 CodeGeneratorLLVMContext::generate_operation_local_declare(
@@ -526,11 +532,6 @@ CodeGeneratorLLVMContext::generate_operation_local_declare(
     const Gyoji::mir::OperationLocalDeclare & operation
     )
 {
-    if (operation.get_variable_type()->is_function_pointer()) {
-	fprintf(stderr, "Allocating variable of type %s\n", operation.get_variable_type()->get_name().c_str());
-	return;
-    }
-    
     llvm::Type *type = types[operation.get_variable_type()->get_name()];
     llvm::Value *value = Builder->CreateAlloca(type, nullptr, operation.get_variable());
     local_variables[operation.get_variable()] = value;
@@ -1465,7 +1466,6 @@ CodeGeneratorLLVMContext::generate_operation_return_void(
     const Gyoji::mir::OperationReturnVoid & operation
     )
 {
-    fprintf(stderr, "Returning void\n");
     llvm::Value *value = tmp_values[operation.get_operands().at(0)];
     Builder->CreateRetVoid();
     return value;
@@ -1632,6 +1632,7 @@ CodeGeneratorLLVMContext::generate_function(const Gyoji::mir::Function & functio
     llvm::Function *TheFunction = create_function(function);
     if (!TheFunction) {
 	fprintf(stderr, "Function declaration not found\n");
+	return;
     }
 
     // Record the function arguments in the NamedValues map.

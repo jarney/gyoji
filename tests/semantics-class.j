@@ -43,7 +43,20 @@ Foo::set_something(u32 _a, u32 _b, u32 _c)
     if (_a > 0) {
        _a -= 1;
        print_value(_a);
-       set_something(_a, _b, _c);
+
+// This works, but it's a bit boring.
+//       set_something(_a, _b, _c);
+
+// A more exciting construct is to resolve
+// the method and use it as a function pointer.
+
+       void (*)(Foo*, u32, u32, u32) fptr_set_something = set_something;
+       print_value(999999999);
+
+// Method calls even work with function pointers
+// since we automatically supply the 'this' pointer to them if
+// they match the correct type.
+       fptr_set_something(_a, _b, 999999);
     }
 
 // Disallowed in order to provide
@@ -60,20 +73,16 @@ u32 main(u32 argc, u8**argv)
 	Foo cl;
 
 // We do allow function calls in static context.
-	Foo::set_something(&cl, 0, 0, 0);
+//	Foo::set_something(&cl, 0, 0, 0);
 
+// We can also assign function pointer types to functions
+// and call them.
 	void (*)(Foo*, u32, u32, u32) fptr;
-//	fptr = Foo::set_something;
+	fptr = Foo::set_something;
 
-// Should we allow this?  It seems this is disallowed by
-// the 'is_method' rule, but it seems like we should be able
-// to extract this as a simple method name if we want.
-//	void (*)(Foo*) fptr = Foo::set_something;
-// But if that's the case, what stops us from doing
-// Foo::method(x)?  Maybe that should be allowed also?
-
-
-
+// Indirect calls through function pointers work now also.
+//	fptr(&cl, 57, 84, 92);
+	
 // Destructors cannot be called directly.
 //	Foo::~Foo(&cl);
 
