@@ -107,13 +107,6 @@ namespace Gyoji::mir {
 	const Type * get_array_of(const Type *_type, size_t _length, const Gyoji::context::SourceReference & _src_ref);
 
 	/**
-	 * This creates a method call type which consists of the
-	 * class we are calling (first argument of method) along with the function pointer
-	 * of the method we're calling.
-	 */
-	const Type * get_method_call(const Type *_class_type, const Type *_method_fptr_type, const Gyoji::context::SourceReference & _src_ref);
-
-	/**
 	 * This is used to define a fully-qualified type
 	 * from the definition.  Note that some types
 	 * may be incompletely specified when they are
@@ -476,15 +469,6 @@ namespace Gyoji::mir {
 	    TYPE_FUNCTION_POINTER,
 
 	    /**
-	     * This is a pointer to a method call.
-	     * The actual value it encodes is
-	     * the type of the class whose method this is
-	     * and the type of the function pointer we will
-	     * use to call it.
-	     */
-	    TYPE_METHOD_CALL,
-
-	    /**
 	     * This is similar to a pointer and is also stored
 	     * internally as an address in a u64, but carries
 	     * additional semantics used by the borrow checker.
@@ -641,13 +625,6 @@ namespace Gyoji::mir {
 	 */
 	bool is_function_pointer() const;
 
-	/**
-	 * This returns true if the type is
-	 * a method call to a specific class
-	 * method.
-	 */
-	bool is_method_call() const;
-
        /**
 	 * This returns true if the type is
 	 * an array of data of a specific type.
@@ -768,12 +745,6 @@ namespace Gyoji::mir {
 	    const Gyoji::context::SourceReference & _source_ref
 	    );
 
-	void complete_method_call_definition(
-	    const Type *_class_type,
-	    const Type *_function_pointer_type,
-	    const Gyoji::context::SourceReference & _source_ref
-	    );
-	
 	/**
 	 * Used for debugging purposes to dump the content
 	 * of the type database.

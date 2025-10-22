@@ -378,11 +378,12 @@ TypeResolver::extract_from_class_members(Type & class_type, const ClassDefinitio
 	}
 	else if (std::holds_alternative<Gyoji::owned<ClassMemberDeclarationMethodStatic>>(class_member_type)) {
 	    const auto & member_method = std::get<Gyoji::owned<ClassMemberDeclarationMethodStatic>>(class_member_type);
-	    // Regular methods have return types.  Constructors/destructors always return void.
 	    const Type * method_return_type = extract_from_type_specifier(member_method->get_type_specifier());
 	    if (method_return_type == nullptr) {
-		continue;
+		fprintf(stderr, "Compiler bug! static method is missing a return type.  This should not be possible at the semantics layer.\n");
+		exit(1);
 	    }
+	    
 	    std::string simple_name = member_method->get_identifier().get_name();
 	    std::string fully_qualified_name = member_method->get_identifier().get_fully_qualified_name();
 	    
@@ -401,7 +402,7 @@ TypeResolver::extract_from_class_members(Type & class_type, const ClassDefinitio
 	else if (std::holds_alternative<Gyoji::owned<ClassMemberDeclarationMethod>>(class_member_type)) {
 	    const auto & member_method = std::get<Gyoji::owned<ClassMemberDeclarationMethod>>(class_member_type);
 
-	    // Regular methods have return types.  Constructors/destructors always return void.
+	    // Regular methods have return types.  Destructors always return void.
 	    const Type * method_return_type = extract_from_type_specifier(member_method->get_type_specifier());
 
 	    std::string simple_name = member_method->get_identifier().get_name();
@@ -433,7 +434,7 @@ TypeResolver::extract_from_class_members(Type & class_type, const ClassDefinitio
 		continue;
 	    }
 	    
-	    // Regular methods have return types.  Constructors/destructors always return void.
+	    // Regular methods have return types.  Destructors always return void.
 	    const Type * method_return_type = mir.get_types().get_type("void");
 
 	    std::string simple_name = std::string("~") + class_type.get_simple_name();

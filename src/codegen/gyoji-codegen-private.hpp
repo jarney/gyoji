@@ -71,8 +71,6 @@ namespace Gyoji::codegen {
         llvm::Type *create_type_reference(const Gyoji::mir::Type *referencetype);
 	llvm::Type *create_type_function_pointer(const Gyoji::mir::Type *fptr_type);
 	llvm::Type *create_type_array(const Gyoji::mir::Type *array_type);
-	llvm::Type *create_type_method_call(const Gyoji::mir::Type *method_call_type);
-	
 
 	// Global symbols
 	void generate_operation_function_call(
@@ -80,21 +78,6 @@ namespace Gyoji::codegen {
 	    const Gyoji::mir::OperationFunctionCall & operation
 	    );
 
-	void generate_operation_get_method(
-	    const Gyoji::mir::Function & mir_function,
-	    const Gyoji::mir::OperationGetMethod & operation
-	    );
-	
-	void generate_operation_method_get_object(
-	    const Gyoji::mir::Function & mir_function,
-	    const Gyoji::mir::OperationUnary & operation
-	    );
-
-	void generate_operation_method_get_function(
-	    const Gyoji::mir::Function & mir_function,
-	    const Gyoji::mir::OperationUnary & operation
-	    );
-	
 	void generate_operation_symbol(
 	    const Gyoji::mir::Function & mir_function,
 	    const Gyoji::mir::OperationSymbol & operation

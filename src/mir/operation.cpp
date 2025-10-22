@@ -29,11 +29,7 @@ void Gyoji::mir::operation_static_init()
 
     // Functions and global symbols
     op_type_names.insert(std::pair(Operation::OP_FUNCTION_CALL, "function-call"));
-    op_type_names.insert(std::pair(Operation::OP_CONSTRUCTOR, "constructor"));
     op_type_names.insert(std::pair(Operation::OP_DESTRUCTOR, "destructor"));
-    op_type_names.insert(std::pair(Operation::OP_GET_METHOD, "get-method"));
-    op_type_names.insert(std::pair(Operation::OP_METHOD_GET_OBJECT, "method-get-object"));
-    op_type_names.insert(std::pair(Operation::OP_METHOD_GET_FUNCTION, "method-get-function"));
     op_type_names.insert(std::pair(Operation::OP_SYMBOL, "symbol"));
     
     // Cast operations.
@@ -227,74 +223,10 @@ Operation::get_source_ref() const
 void
 Operation::dump(FILE *out, size_t operation_index) const
 {
-    fprintf(out, "            %ld : %s\n", operation_index, get_description().c_str());
+//    fprintf(out, "            %ld : %s\n", operation_index, get_description().c_str());
+    fprintf(out, "            %s\n", get_description().c_str());
 }
 
-#if 0
-// XXX TODO: Is this really the way to handle this?
-bool
-Operation::contains(size_t tmpvar) const
-{
-    for (const size_t & operand : operands) {
-	if (operand == tmpvar) {
-	    return true;
-	}
-    }
-    return false;
-}
-
-// The semantics here depend strongly on the opcode
-// because how the opcode is used depends strongly
-// on what the semantics of the opcode are.
-// Most of the time, the value is 'readfrom'
-// but, for example, in an assignment, it is
-// written to, but not read from.
-bool
-Operation::get_readsfrom(size_t tmpvar) const
-{
-    switch (type) {
-    case OP_FUNCTION_CALL:
-    case OP_CONSTRUCTOR:
-    case OP_DESTRUCTOR:
-    case OP_GET_METHOD:
-    case OP_METHOD_GET_FUNCTION:
-    case OP_METHOD_GET_OBJECT:
-    case OP_SYMBOL:
-
-    case OP_WIDEN_SIGNED:
-    case OP_WIDEN_UNSIGNED:
-    case OP_WIDEN_FLOAT:
-
-    case OP_ARRAY_INDEX:
-    case OP_DOT:
-	
-    case OP_ADDRESSOF:
-    case OP_DEREFERENCE:
-    case OP_NEGATE:
-	return contains(tmpvar);
-	break;
-    case OP_LOCAL_DECLARE:
-    case OP_LOCAL_UNDECLARE:
-    case OP_LOCAL_VARIABLE:
-	
-    case OP_LITERAL_CHAR:
-    case OP_LITERAL_STRING:
-    case OP_LITERAL_INT:
-    case OP_LITERAL_FLOAT:
-    case OP_LITERAL_BOOL:
-    case OP_LITERAL_NULL:
-	return false;
-	
-	break;
-    }
-    return false;
-}
-bool
-Operation::get_writesto(size_t tmpvar) const
-{
-    return false;
-}
-#endif
 
 //////////////////////////////////////////////
 // OperationUnary
@@ -367,40 +299,6 @@ OperationBinary::get_a() const
 size_t
 OperationBinary::get_b() const
 { return operands.at(1); }
-
-
-//////////////////////////////////////////////
-// OperationGetMethod
-//////////////////////////////////////////////
-OperationGetMethod::OperationGetMethod(
-	    const Gyoji::context::SourceReference & _src_ref,
-	    size_t _result,
-	    size_t _object_to_call,
-	    std::string _method_name
-	    )
-    : Operation(OP_GET_METHOD, _src_ref, _result, _object_to_call)
-    , method_name(_method_name)
-{}
-OperationGetMethod::~OperationGetMethod()
-{}
-
-const std::string &
-OperationGetMethod::get_method() const
-{ return method_name; }
-
-std::string
-OperationGetMethod::get_description() const
-{
-    const auto & it = op_type_names.find(type);
-    const std::string & op_name = it->second;
-
-    std::string desc = std::string("_") + std::to_string(result) + std::string(" = ") + op_name + std::string(" (");
-    desc = desc + std::string(" ") + std::to_string(operands.at(0));
-    desc = desc + std::string(" ") + method_name;
-    desc = desc + std::string(" )");
-    return desc;
-}
-
 
 
 //////////////////////////////////////////////

@@ -111,42 +111,15 @@ namespace Gyoji::mir {
 	    OP_FUNCTION_CALL,
 	    
 	    /**
-	     * @brief Call the constructor for a composite type.
-	     *
-	     * @details
-	     * Directs the MIR to call the constructor for a
-	     * composite type.  This is essentially the same
-	     * as OP_FUNCTION_CALL except that as being a separate
-	     * opcode, it allows the analysis layers to easily
-	     * detect when composite variables have been properly
-	     * initialized.
-	     */
-	    OP_CONSTRUCTOR,
-
-	    /**
 	     * @brief Call the destructor for a composite type.
 	     *
 	     * @details
 	     * Directs the MIR to call the destructor for
-	     * a composite type.
+	     * a composite type.  Note that there is no such
+	     * thing as a 'constructor' in this language.
 	     */
 	    OP_DESTRUCTOR,
 
-	    /**
-	     * @brief Load method call to that it can be called with OP_FUNCTION_CALL later.
-	     *
-	     * @details
-	     * Directs the MIR to load the object to be called
-	     * and the specific method to call so that it can
-	     * be used by the OP_FUNCTION_CALL to make the actual
-	     * function call.
-	     */
-	    OP_GET_METHOD,
-
-	    OP_METHOD_GET_FUNCTION,
-	    
-	    OP_METHOD_GET_OBJECT,
-	    
 	    /**
 	     * @brief Load a symbol from the symbol-table.
 	     *
@@ -161,6 +134,11 @@ namespace Gyoji::mir {
 	     * In the case of a function, this is the function-pointer
 	     * type signature and in the case of a global variable, it will
 	     * be whatever type that variable is declared as.
+	     *
+	     * Symbols can also (optionally) carry 'partial' arguments
+	     * that will automatically be added to any calls made on the
+	     * function.  This is the mechanism that allows methods to be
+	     * called with the 'this' pointer as the first argument.
 	     *
 	     * @code{.unparsed}
 	     * Symbols:

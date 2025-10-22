@@ -34,9 +34,9 @@
  * * Borrow Semantics: That access to variables through references always point
  *   to a valid location and have unique access to it at any point in time.
  *
- * * Pairing of const/dest: Every local variable constructor is paired
+ * * Pairing of const/dest: Every local variable declaration is paired
  *   with a destructor.  No path through the code allows a variable
- *   to be declared and constructed without a corresponding destructor
+ *   to be declared without a corresponding destructor
  *   and de-allocation.
  *
  * * Unreachable code: There is no code after the end of any basic block
@@ -181,9 +181,9 @@ namespace Gyoji::analysis {
      * @details
      * This analysis pass checks to make sure that for every path through
      * the code, if a variable is declared, it is also un-declared and
-     * also guarantees that each of the constructors called for local variables
+     * also guarantees that each of the declared local variables
      * is matched with a destructor, guaranteeing that it is safe to use
-     * constructor/destructor pairs in a way that matches the lexical scopes.
+     * scope guards in a way that matches the lexical scopes.
      */
     class AnalysisPassVariableScopePairing : public AnalysisPass {
     public:

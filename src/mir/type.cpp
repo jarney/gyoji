@@ -209,10 +209,6 @@ Type::is_function_pointer() const
 { return (type == TYPE_FUNCTION_POINTER); }
 
 bool
-Type::is_method_call() const
-{ return (type == TYPE_METHOD_CALL); }
-
-bool
 Type::is_array() const
 { return (type == TYPE_ARRAY); }
 
@@ -371,20 +367,6 @@ Type::complete_function_pointer_definition(
     defined_source_ref = &_source_ref;
 }
 
-void
-Type::complete_method_call_definition(
-    const Type *_class_type,
-    const Type *_function_pointer_type,
-    const Gyoji::context::SourceReference & _source_ref
-    )
-{
-    complete = true;
-    class_type = _class_type;
-    function_pointer_type = _function_pointer_type;
-    defined_source_ref = &_source_ref;
-}
-	
-
 const SourceReference &
 Type::get_declared_source_ref() const
 { return *declared_source_ref; }
@@ -428,13 +410,6 @@ Type::dump(FILE *out) const
 	desc = desc + std::string("(*)");
 	desc = desc + std::string("(") + Gyoji::misc::join(arglist, ",") + std::string(")");
 	type_desc = std::string("function-pointer ") + desc;
-    }
-    else if (is_method_call()) {
-	type_desc =
-	    std::string("method-call ")
-	    + class_type->get_name()
-	    + std::string(" method ")
-	    + function_pointer_type->get_name();
     }
     else if (is_array()) {
 	type_desc = std::string("array ");

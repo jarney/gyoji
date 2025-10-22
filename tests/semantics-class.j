@@ -61,7 +61,10 @@ u32 main(u32 argc, u8**argv)
 
 // We do allow function calls in static context.
 	Foo::set_something(&cl, 0, 0, 0);
-	
+
+	void (*)(Foo*, u32, u32, u32) fptr;
+//	fptr = Foo::set_something;
+
 // Should we allow this?  It seems this is disallowed by
 // the 'is_method' rule, but it seems like we should be able
 // to extract this as a simple method name if we want.

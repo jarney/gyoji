@@ -1088,7 +1088,6 @@ namespace Gyoji::frontend::tree {
 	/**
 	 * Returns the initializer expression, usually a literal,
 	 * that is used to populate the variable with known values.
-	 * Only valid if !is_constructor().
 	 */
 	const InitializerExpression & get_initializer_expression() const;
 
