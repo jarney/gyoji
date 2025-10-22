@@ -35,12 +35,14 @@ void
 Foo::set_something(u32 _a, u32 _b, u32 _c)
 {
     a = _c;
+
     print_value(_a);
     print_value(_b);
     print_value(_c);
     print_value(a);
     if (_a > 0) {
        _a -= 1;
+       print_value(_a);
        set_something(_a, _b, _c);
     }
 
@@ -57,9 +59,9 @@ u32 main(u32 argc, u8**argv)
 //	Foo cl(537);
 	Foo cl;
 
-// Disallowed member calls in static context.
-//	Foo::set_something(&cl);
-
+// We do allow function calls in static context.
+	Foo::set_something(&cl, 0, 0, 0);
+	
 // Should we allow this?  It seems this is disallowed by
 // the 'is_method' rule, but it seems like we should be able
 // to extract this as a simple method name if we want.
@@ -80,8 +82,9 @@ u32 main(u32 argc, u8**argv)
 // But we'll keep destructors.  Kind-of an odd mix,
 // but it lets us still do scope-guards.
 //	cl = Foo::construct();
+
+	foo_function();
 	
 	cl.set_something(10u32, 42u32, 99u32);
-	foo_function();
 	return 0u32;
 }

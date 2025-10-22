@@ -631,11 +631,11 @@ FunctionDefinitionResolver::extract_from_expression_primary_identifier(
 		    );
 		function->get_basic_block(current_block).add_operation(std::move(this_operation));
 
-		size_t class_reference_tmpvar = function->tmpvar_define(class_type);
+		size_t this_reference_tmpvar = function->tmpvar_define(class_type);
 		auto dereference_operation = std::make_unique<OperationUnary>(
 		    Operation::OP_DEREFERENCE,
 		    expression.get_source_ref(),
-		    class_reference_tmpvar,
+		    this_reference_tmpvar,
 		    this_tmpvar
 		    );
 		
@@ -647,7 +647,7 @@ FunctionDefinitionResolver::extract_from_expression_primary_identifier(
 		auto operation = std::make_unique<OperationDot>(
 		    expression.get_source_ref(),
 		    returned_tmpvar,
-		    class_reference_tmpvar,
+		    this_reference_tmpvar,
 		    local_variable_name
 		    );
 		function
@@ -695,6 +695,7 @@ FunctionDefinitionResolver::extract_from_expression_primary_identifier(
 		    );
 	    return false;
 	}
+#if 0
 	else if (symbol->get_type() == Gyoji::mir::Symbol::SYMBOL_MEMBER_METHOD) {
 	    if (!is_method()) {
 		compiler_context
@@ -736,15 +737,19 @@ FunctionDefinitionResolver::extract_from_expression_primary_identifier(
 		return true;
 	    }
 	}
-	
+#endif
+	std::vector<size_t> partials;
 	returned_tmpvar = function->tmpvar_define(symbol->get_mir_type());
-
+	// What if a 'symbol' actually contained
+	// other objects as 'partial' operands
+	// to the function.
 	auto operation = std::make_unique<OperationSymbol>(
 	    expression.get_identifier().get_source_ref(),
 	    returned_tmpvar,
+	    partials,
 	    fully_qualified_name
 	    );
-	function->get_basic_block(current_block).add_operation(std::move(operation));
+	function->add_operation(current_block, std::move(operation));
 	return true;
     }
     return false;
@@ -1298,17 +1303,54 @@ FunctionDefinitionResolver::extract_from_expression_postfix_function_call(
 
     const Type *call_type = function->tmpvar_get(function_type_tmpvar);
     if (call_type->get_type() == Type::TYPE_FUNCTION_POINTER) {
+	fprintf(stderr, "Treating as a function pointer\n");
 	const Type *function_pointer_type = call_type;
 	// We declare that we return the vale that the function
 	// will return.
+
+	// Pull out any of the 'partial' operations.
+	Operation* function_operation = function->tmpvar_get_operation(function_type_tmpvar);
+	for (const size_t & operand : function_operation->get_operands()) {
+	    passed_arguments.insert(passed_arguments.begin(), operand);
+	    passed_src_refs.insert(passed_src_refs.begin(), &expression.get_source_ref());
+	}
+	
 	returned_tmpvar = function->tmpvar_define(function_pointer_type->get_return_type());
 
+	if (is_method()) {
+	    if (passed_arguments.size() == function_pointer_type->get_argument_types().size()-1) {
+		size_t this_tmpvar = function->tmpvar_define(class_type);
+		auto this_operation = std::make_unique<OperationLocalVariable>(
+		    expression.get_source_ref(),
+		    this_tmpvar,
+		    "<this>",
+		    class_pointer_type
+		    );
+		function->add_operation(current_block, std::move(this_operation));
+
+		const Type *this_pointer_type = mir.get_types().get_pointer_to(class_type, expression.get_source_ref());
+		size_t this_pointer_tmpvar = function->tmpvar_define(this_pointer_type);
+		auto operation_this_pointer = std::make_unique<OperationUnary>(
+		    Operation::OP_ADDRESSOF,
+		    expression.get_source_ref(),
+		    this_pointer_tmpvar,
+		    this_tmpvar
+		    );
+		function
+		    ->get_basic_block(current_block)
+		    .add_operation(std::move(operation_this_pointer));
+		
+		passed_arguments.insert(passed_arguments.begin(), this_pointer_tmpvar);
+		passed_src_refs.insert(passed_src_refs.begin(), &expression.get_source_ref());
+	    }
+	}
+	
 	// Check that the function signature we're calling matches
 	// the declaration of that function.
 	if (!check_function_call_signature(false, passed_arguments, passed_src_refs, function_pointer_type, expression.get_source_ref())) {
 	    return false;
 	}
-	
+
 	auto operation = std::make_unique<OperationFunctionCall>(
 	    Operation::OP_FUNCTION_CALL,
 	    expression.get_source_ref(),
@@ -1324,6 +1366,8 @@ FunctionDefinitionResolver::extract_from_expression_postfix_function_call(
 	return true;
     }
     else if (call_type->get_type() == Type::TYPE_METHOD_CALL) {
+	fprintf(stderr, "Treating as a method call\n");
+//	exit(1);
 	const Type *method_call_type = call_type;
 	// First, extract the object from the method call into a tmpvar.
 	// Next, extract the function into another tmpvar.
@@ -1435,6 +1479,13 @@ FunctionDefinitionResolver::extract_from_expression_postfix_dot(
 	return true;
     }
     
+    // Here, we should get the returned tmpvar, and find the symbol operation
+    // that created it.
+//    Operation* symbol_operation = function->tmpvar_get_operation(function_type_tmpvar);
+//    symbol_operation->add_operan
+	
+
+	
     const TypeMethod *method = class_type->method_get(member_name);
     if (method != nullptr) {
 	std::string fully_qualified_function_name = class_type->get_name() + NS2Context::NAMESPACE_DELIMITER + member_name;
@@ -1449,19 +1500,29 @@ FunctionDefinitionResolver::extract_from_expression_postfix_dot(
 		    );
 	    return false;
 	}
-
-	const Type * method_call_type = mir.get_types().get_method_call(class_type, symbol->get_mir_type(), expression.get_source_ref());
-	returned_tmpvar = function->tmpvar_define(method_call_type);
 	
-	auto operation = std::make_unique<OperationGetMethod>(
+	const Type * class_pointer_type = mir.get_types().get_pointer_to(class_type, expression.get_source_ref());
+
+	size_t class_pointer_tmpvar = function->tmpvar_define(class_pointer_type);
+	auto dereference_operation = std::make_unique<OperationUnary>(
+	    Operation::OP_ADDRESSOF,
 	    expression.get_source_ref(),
-	    returned_tmpvar,
-	    class_tmpvar,
- 	    fully_qualified_function_name
+	    class_pointer_tmpvar,
+	    class_tmpvar
 	    );
-	function
-	    ->get_basic_block(current_block)
-	    .add_operation(std::move(operation));
+	function->add_operation(current_block, std::move(dereference_operation));
+
+	std::vector<size_t> partial_operands;
+	partial_operands.push_back(class_pointer_tmpvar);
+	
+	returned_tmpvar = function->tmpvar_define(symbol->get_mir_type());
+	auto operation_symbol = std::make_unique<OperationSymbol>(
+	    expression.get_expression().get_source_ref(),
+	    returned_tmpvar,
+	    partial_operands,
+	    fully_qualified_function_name
+	    );
+	function->add_operation(current_block, std::move(operation_symbol));
 	return true;
     }
     compiler_context
@@ -3603,9 +3664,11 @@ FunctionDefinitionResolver::leave_scope(
 		passed_arguments.push_back(variable_pointer_tmpvar);
 	// Emitting destructor call.
 		size_t destructor_fptr_tmpvar = function->tmpvar_define(destructor_fptr_type);
+		std::vector<size_t> partial_operands;
 		auto operation_get_destructor_function = std::make_unique<OperationSymbol>(
 		    src_ref,
 		    destructor_fptr_tmpvar,
+		    partial_operands,
 		    fully_qualified_function_name
 		    );
 		function->get_basic_block(current_block).add_operation(std::move(operation_get_destructor_function));
@@ -3754,3 +3817,16 @@ FunctionDefinitionResolver::extract_from_statement_list(
     return true;
 }
 
+///////////////////
+/*
+ * So this is the method call rule:
+ * If I'm calling a fptr and:
+ *   1) I'm passing one too few arguments AND
+ *      the missing first argument (including any partials)
+ *      is of the same type as 'this', then
+ *      implicitly supply the missing argument.
+ *   2) When I use the 'dot' operation to get a method,
+ *      supply a partial with the 'a' operand of the DOT expression.
+ *   3) Disallow assignment of partials because that would leak the 'this'
+ *      of the call to a different scope.
+ */

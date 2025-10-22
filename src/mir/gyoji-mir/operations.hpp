@@ -1228,6 +1228,7 @@ namespace Gyoji::mir {
 	OperationSymbol(
 	    const Gyoji::context::SourceReference & _src_ref,
 	    size_t _result,
+	    std::vector<size_t> _partial_operands,
 	    std::string _symbol_name
 	    );
 	/**

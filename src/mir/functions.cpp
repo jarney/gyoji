@@ -101,6 +101,15 @@ Function::get_basic_block(size_t blockid)
     const auto & it = blocks.find(blockid);
     return *(it->second);
 }
+
+void
+Function::add_operation(size_t blockid, Gyoji::owned<Operation> operation)
+{
+    tmpvar_operations[operation->get_result()] = operation.get();
+    get_basic_block(blockid).add_operation(std::move(operation));
+}
+
+
 size_t
 Function::add_block()
 {
@@ -117,6 +126,12 @@ Function::get_blocks() const
 const Type *
 Function::tmpvar_get(size_t tmpvar_id) const
 { return tmpvars.at(tmpvar_id); }
+
+Operation *
+Function::tmpvar_get_operation(size_t tmpvar)
+{
+    return tmpvar_operations[tmpvar];
+}
 
 size_t
 Function::tmpvar_define(const Type* type)

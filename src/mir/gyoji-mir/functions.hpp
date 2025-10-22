@@ -414,6 +414,8 @@ namespace Gyoji::mir {
 	 */
 	BasicBlock & get_basic_block(size_t blockid);
 
+	void add_operation(size_t blockid, Gyoji::owned<Operation> operation);
+	
 	/**
 	 * @brief Creates a new basic block and returns the ID.
 	 *
@@ -489,6 +491,8 @@ namespace Gyoji::mir {
 	 */
 	size_t tmpvar_define(const Type *tmpvar_type);
 
+	Operation * tmpvar_get_operation(size_t tmpvar);
+
 	/**
 	 * @brief Duplicate a temporary variable/reigster.
 	 *
@@ -549,6 +553,7 @@ namespace Gyoji::mir {
 	size_t blockid;
 	std::map<size_t, Gyoji::owned<BasicBlock>> blocks;
 	std::vector<const Type*> tmpvars;
+	std::map<size_t, Operation*> tmpvar_operations;
     };
 
     class OperationVisitor {

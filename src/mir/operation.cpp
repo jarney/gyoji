@@ -429,11 +429,16 @@ OperationFunctionCall::~OperationFunctionCall()
 OperationSymbol::OperationSymbol(
     const Gyoji::context::SourceReference & _src_ref,
     size_t _result,
+    std::vector<size_t> _partial_operands,
     std::string _symbol_name
     )
     : Operation(OP_SYMBOL, _src_ref, _result)
     , symbol_name(_symbol_name)
-{}
+{
+    for (size_t partial_operand : _partial_operands) {
+	add_operand(partial_operand);
+    }
+}
 
 OperationSymbol::~OperationSymbol()
 {}
@@ -448,8 +453,14 @@ OperationSymbol::get_description() const
     const auto & it = op_type_names.find(type);
     const std::string & op_name = it->second;
 
+    std::string partials = "";
+    for (const size_t & op : operands) {
+	partials = partials + std::string(" _") + std::to_string(op);
+    }
+    
     std::string desc = std::string("_") + std::to_string(result) + std::string(" = ") + op_name + std::string(" (");
     desc = desc + std::string(" ") + symbol_name;
+    desc = desc + std::string(" ") + partials;
     desc = desc + std::string(" )");
     return desc;
 }
