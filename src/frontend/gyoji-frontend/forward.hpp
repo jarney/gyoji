@@ -60,7 +60,9 @@ namespace Gyoji::frontend::tree {
     class TypeSpecifierPointerTo;
     class TypeSpecifierReferenceTo;
     class TypeSpecifierArray;
-  
+
+  class TypeSpecifierList;
+    
   class FunctionDefinitionArgList;
     class FunctionDefinitionArg;
 
@@ -161,6 +163,7 @@ namespace Gyoji::frontend::tree {
         Gyoji::frontend::tree::  TypeSpecifierPointerTo*,                   \
         Gyoji::frontend::tree::  TypeSpecifierReferenceTo*,                 \
         Gyoji::frontend::tree::  TypeSpecifierArray*,                       \
+        Gyoji::frontend::tree::TypeSpecifierList*,                          \
         Gyoji::frontend::tree::FunctionDefinitionArgList*,                  \
         Gyoji::frontend::tree::  FunctionDefinitionArg*,                    \
         Gyoji::frontend::tree::  ClassDeclStart*,                           \

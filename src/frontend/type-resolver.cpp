@@ -107,13 +107,35 @@ TypeResolver::extract_from_type_specifier_template(const TypeSpecifierTemplate &
 const Type*
 TypeResolver::extract_from_type_specifier_function_pointer(const TypeSpecifierFunctionPointer & type_specifier)
 {
-    compiler_context
-	.get_errors()
-	.add_simple_error(type_specifier.get_source_ref(),
-			  "Could not find type",
-			  "Function pointer types are not supported yet."
+    const Type *return_type = extract_from_type_specifier(type_specifier.get_return_type());
+
+    std::vector<std::string> arg_list;
+    std::vector<Argument> fptr_arguments;
+
+    for (const auto & type_specifier : type_specifier.get_args().get_arguments()) {
+	const Type *argument_type = extract_from_type_specifier(*type_specifier);
+	Argument arg(argument_type, type_specifier->get_source_ref());
+	fptr_arguments.push_back(arg);
+	arg_list.push_back(argument_type->get_name());
+    }
+    
+//    bool is_unsafe = method_unsafe_modifier.is_unsafe();
+    bool is_unsafe = false;
+    std::string arg_string = Gyoji::misc::join(arg_list, ",");
+    std::string unsafe_str = is_unsafe ? std::string("unsafe") : std::string("");
+    std::string pointer_name = return_type->get_name() + std::string("(") + unsafe_str + std::string("*)") + std::string("(") + arg_string + std::string(")");
+    Type *fptr_type = get_or_create(pointer_name, Type::TYPE_FUNCTION_POINTER, false, type_specifier.get_source_ref());
+    
+    if (!fptr_type->is_complete()) {
+	fptr_type->complete_function_pointer_definition(
+	    return_type,
+	    fptr_arguments,
+	    is_unsafe,
+	    type_specifier.get_source_ref()
 	    );
-    return nullptr;
+    }
+    
+    return fptr_type;
 }
 
 const Type*
@@ -246,10 +268,14 @@ TypeResolver::extract_from_class_method_types(
     std::vector<Argument> fptr_arguments;
     // First, pass the 'this' pointer
     // to the function.
-    const Type * this_type = mir.get_types().get_pointer_to(&class_type, class_type.get_defined_source_ref());
-    Argument arg_this(this_type, source_ref);
-    fptr_arguments.push_back(arg_this);
-    arg_list.push_back(this_type->get_name());
+    if (type == Gyoji::mir::Symbol::SYMBOL_MEMBER_METHOD ||
+        type == Gyoji::mir::Symbol::SYMBOL_MEMBER_DESTRUCTOR) {
+	const Type * this_type = mir.get_types().get_pointer_to(&class_type, class_type.get_defined_source_ref());
+	Argument arg_this(this_type, source_ref);
+    
+	fptr_arguments.push_back(arg_this);
+	arg_list.push_back(this_type->get_name());
+    }
 	    
     const std::vector<Gyoji::owned<FunctionDefinitionArg>> & function_definition_args = 
 	function_definition_arg_list.get_arguments();
@@ -267,6 +293,7 @@ TypeResolver::extract_from_class_method_types(
 	method_return_type,
 	fptr_arguments
 	);
+
     fprintf(stderr, "Defining method %s\n", simple_name.c_str());
     methods.insert(std::pair(simple_name, method));
     

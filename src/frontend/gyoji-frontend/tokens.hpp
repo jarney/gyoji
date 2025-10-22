@@ -203,6 +203,7 @@ namespace Gyoji::frontend::tree {
     const Gyoji::context::TokenID NONTERMINAL_initializer_expression = 280;
     
     const Gyoji::context::TokenID NONTERMINAL_function_decl_start = 281;
+    const Gyoji::context::TokenID NONTERMINAL_type_specifier_list = 282;
     
     const Gyoji::context::TokenID END_OF_TOKENS = 9999;
 

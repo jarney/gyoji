@@ -305,44 +305,35 @@ TypeSpecifierFunctionPointer::TypeSpecifierFunctionPointer(
     Gyoji::owned<TypeSpecifier> _type_specifier,
     Gyoji::owned<Terminal> _paren_l1_token,
     Gyoji::owned<Terminal> _star_token,
-    Gyoji::owned<Terminal> _identifier_token,
     Gyoji::owned<Terminal> _paren_r1_token,
     Gyoji::owned<Terminal> _paren_l2_token,
-    Gyoji::owned<FunctionDefinitionArgList> _function_definition_arg_list,
+    Gyoji::owned<TypeSpecifierList> _type_specifier_list,
     Gyoji::owned<Terminal> _paren_r2_token
     )
     : SyntaxNode(NONTERMINAL_type_specifier_function_pointer, this, _type_specifier->get_source_ref())
     , type_specifier(std::move(_type_specifier))
     , paren_l1_token(std::move(_paren_l1_token))
     , star_token(std::move(_star_token))
-    , identifier_token(std::move(_identifier_token))
     , paren_r1_token(std::move(_paren_r1_token))
     , paren_l2_token(std::move(_paren_l2_token))
-    , function_definition_arg_list(std::move(_function_definition_arg_list))
+    , type_specifier_list(std::move(_type_specifier_list))
     , paren_r2_token(std::move(_paren_r2_token))
 {
     add_child(*type_specifier);
     add_child(*paren_l1_token);
     add_child(*star_token);
-    add_child(*identifier_token);
     add_child(*paren_r1_token);
     add_child(*paren_l2_token);
-    add_child(*function_definition_arg_list);
+    add_child(*type_specifier_list);
     add_child(*paren_r2_token);
 }
 TypeSpecifierFunctionPointer::~TypeSpecifierFunctionPointer()
 {}
 const TypeSpecifier & TypeSpecifierFunctionPointer::get_return_type() const
 { return *type_specifier; }
-const std::string &
-TypeSpecifierFunctionPointer::get_name() const
-{ return identifier_token->get_value(); }
-const SourceReference &
-TypeSpecifierFunctionPointer::get_name_source_ref() const
-{ return identifier_token->get_source_ref(); }
-const FunctionDefinitionArgList &
+const TypeSpecifierList &
 TypeSpecifierFunctionPointer::get_args() const
-{ return *function_definition_arg_list; }
+{ return *type_specifier_list; }
 ///////////////////////////////////////////////////
 TypeSpecifierPointerTo::TypeSpecifierPointerTo(
     Gyoji::owned<TypeSpecifier> _type_specifier,
@@ -458,6 +449,29 @@ FunctionDefinitionArg::get_identifier() const
 { return *identifier_token; }
 
 ///////////////////////////////////////////////////
+TypeSpecifierList::TypeSpecifierList(const Gyoji::context::SourceReference & _source_ref)
+    : SyntaxNode(NONTERMINAL_type_specifier_list, this, _source_ref)
+{}
+TypeSpecifierList::~TypeSpecifierList()
+{}
+const std::vector<Gyoji::owned<TypeSpecifier>> &
+TypeSpecifierList::get_arguments() const
+{ return arguments; }
+void
+TypeSpecifierList::add_argument(Gyoji::owned<TypeSpecifier> _argument)
+{
+    add_child(*_argument);
+    arguments.push_back(std::move(_argument));
+}
+void
+TypeSpecifierList::add_comma(Gyoji::owned<Terminal> _comma)
+{
+    add_child(*_comma);
+    commas.push_back(std::move(_comma));
+}
+
+///////////////////////////////////////////////////
+
 FunctionDefinitionArgList::FunctionDefinitionArgList(const Gyoji::context::SourceReference & _source_ref)
     : SyntaxNode(NONTERMINAL_function_definition_arg_list, this, _source_ref)
 {}

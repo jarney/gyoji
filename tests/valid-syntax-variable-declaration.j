@@ -39,7 +39,7 @@ i32 do_something(q first, i32 second, u8 **third);
 // It is a function poi32er which has type arguments
 // as its return-value and arguments.
 
-typedef i32(i64) (*fptr)(i32(u8) a,i32 b) foo;
+typedef i32(i64) (*)(i32(u8),i32) foo;
 
 using namespace q;
 

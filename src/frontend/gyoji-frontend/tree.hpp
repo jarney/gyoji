@@ -646,10 +646,9 @@ namespace Gyoji::frontend::tree {
 	    Gyoji::owned<TypeSpecifier> _type_specifier,
 	    Gyoji::owned<Terminal> _paren_l1_token,
 	    Gyoji::owned<Terminal> _star_token,
-	    Gyoji::owned<Terminal> _identifier_token,
 	    Gyoji::owned<Terminal> _paren_r1_token,
 	    Gyoji::owned<Terminal> _paren_l2_token,
-	    Gyoji::owned<FunctionDefinitionArgList> _function_definition_arg_list,
+	    Gyoji::owned<TypeSpecifierList> _function_definition_arg_list,
 	    Gyoji::owned<Terminal> _paren_r2_token
 	    );
 	/**
@@ -661,22 +660,16 @@ namespace Gyoji::frontend::tree {
 	 */
 	const TypeSpecifier & get_return_type() const;
 	/**
-	 * Returns the name of the function pointer being declared.
-	 */
-	const std::string & get_name() const;
-	const Gyoji::context::SourceReference & get_name_source_ref() const;
-	/**
 	 * Returns the list of arguments the function expects.
 	 */
-	const FunctionDefinitionArgList & get_args() const;
+	const TypeSpecifierList & get_args() const;
     private:
 	Gyoji::owned<TypeSpecifier> type_specifier;
 	Gyoji::owned<Terminal> paren_l1_token;
 	Gyoji::owned<Terminal> star_token;
-	Gyoji::owned<Terminal> identifier_token;
 	Gyoji::owned<Terminal> paren_r1_token;
 	Gyoji::owned<Terminal> paren_l2_token;
-	Gyoji::owned<FunctionDefinitionArgList> function_definition_arg_list;
+	Gyoji::owned<TypeSpecifierList> type_specifier_list;
 	Gyoji::owned<Terminal> paren_r2_token;
     };
     
@@ -944,6 +937,39 @@ namespace Gyoji::frontend::tree {
 	std::vector<Gyoji::owned<FunctionDefinitionArg>> arguments;
     };
     
+    //! Represents the list of arguments to a function pointer (comma-separated list of types)
+    /**
+     * This represents a list of argumnents to a function.  The input syntax
+     * consists of a comma-separated list of arguments of type TypeSpecifier
+     */
+    class TypeSpecifierList : public Gyoji::frontend::ast::SyntaxNode {
+    public:
+	TypeSpecifierList(const Gyoji::context::SourceReference & _source_ref);
+	/**
+	 * Destructor, nothing special.
+	 */
+	~TypeSpecifierList();
+	/**
+	 * Returns the list of arguments to the function.
+	 */
+	const std::vector<Gyoji::owned<TypeSpecifier>> & get_arguments() const;
+	/**
+	 * Adds a single argument to the function, used during
+	 * the parse stage to construct the function arguments
+	 * from the input syntax.
+	 */
+	void add_argument(Gyoji::owned<TypeSpecifier> _argument);
+	/**
+	 * Adds the comma separator to the function arguments, but this
+	 * plays no role in the semantics.
+	 */
+	void add_comma(Gyoji::owned<Terminal> _comma);
+    private:
+	std::vector<Gyoji::owned<Terminal>> commas;
+	std::vector<Gyoji::owned<TypeSpecifier>> arguments;
+    };
+    
+
     //! Represents the declaration of a function.
     /**
      * This represents the declaration of a function (i.e. without the body), specifying only

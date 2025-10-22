@@ -60,6 +60,15 @@ u32 main(u32 argc, u8**argv)
 // Disallowed member calls in static context.
 //	Foo::set_something(&cl);
 
+// Should we allow this?  It seems this is disallowed by
+// the 'is_method' rule, but it seems like we should be able
+// to extract this as a simple method name if we want.
+//	void (*)(Foo*) fptr = Foo::set_something;
+// But if that's the case, what stops us from doing
+// Foo::method(x)?  Maybe that should be allowed also?
+
+
+
 // Destructors cannot be called directly.
 //	Foo::~Foo(&cl);
 

@@ -537,7 +537,6 @@ FunctionDefinitionResolver::resolve()
 		function->get_basic_block(block_it.first).add_operation(std::move(operation));
 	    }
 	    else {
-		fprintf(stderr, "Block %ld\n", block_it.first);
 		std::unique_ptr<Gyoji::context::Error> error = std::make_unique<Gyoji::context::Error>("Control reaches end of non-void function");
 		error->add_message(
 		    function_definition.get_scope_body().get_end_source_ref(),
@@ -2953,7 +2952,9 @@ FunctionDefinitionResolver::extract_from_statement_variable_declaration(
     // Once the variable exists, we can start performing the initialization
     // and assigning the value to something.
     const Gyoji::mir::Type * mir_type = type_resolver.extract_from_type_specifier(statement.get_type_specifier());
-    
+    if (mir_type == nullptr) {
+	return false;
+    }
     if (!local_declare_or_error(
 	    mir_type,
 	    statement.get_identifier().get_name(),
@@ -3499,7 +3500,6 @@ FunctionDefinitionResolver::extract_from_statement_goto(
     size_t label_block;
     if (label == nullptr) {
 	label_block = function->add_block();
-	fprintf(stderr, "Adding label block %ld\n", label_block);
 	scope_tracker.label_declare(label_name, label_block);
     }
     else {

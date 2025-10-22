@@ -226,6 +226,9 @@
 %nterm <Gyoji::owned<Gyoji::frontend::tree::FunctionDefinitionArgList>> function_definition_arg_list;
 %nterm <Gyoji::owned<Gyoji::frontend::tree::FunctionDefinitionArg>> function_definition_arg
 
+%nterm <Gyoji::owned<Gyoji::frontend::tree::TypeSpecifierList>> opt_type_specifier_list;
+%nterm <Gyoji::owned<Gyoji::frontend::tree::TypeSpecifierList>> type_specifier_list;
+
 %nterm <Gyoji::owned<Gyoji::frontend::tree::Expression>> expression_primary;
 %nterm <Gyoji::owned<Gyoji::frontend::tree::ExpressionPrimaryNested>> expression_primary_nested;
 %nterm <Gyoji::owned<Gyoji::frontend::tree::ExpressionPrimaryIdentifier>> expression_primary_identifier;
@@ -958,6 +961,29 @@ file_statement_function_definition
                                                                                                 std::move($5)
                                                                                                 );
 		return_data.ns2_context->namespace_pop();
+                PRINT_NONTERMINALS($$);
+        }
+        ;
+
+opt_type_specifier_list
+        : /**/ {
+                $$ = std::make_unique<Gyoji::frontend::tree::TypeSpecifierList>(return_data.compiler_context.get_token_stream().get_current_source_ref());
+        }
+        | type_specifier_list {
+                $$ = std::move($1);
+        }
+        ;
+
+type_specifier_list
+        : type_specifier {
+                $$ = std::make_unique<Gyoji::frontend::tree::TypeSpecifierList>($1->get_source_ref());
+                $$->add_argument(std::move($1));
+                PRINT_NONTERMINALS($$);
+        }
+        | type_specifier_list COMMA type_specifier {
+                $$ = std::move($1);
+                $$->add_comma(std::move($2));
+                $$->add_argument(std::move($3));
                 PRINT_NONTERMINALS($$);
         }
         ;
@@ -2445,9 +2471,7 @@ type_specifier
                 $$ = std::make_unique<Gyoji::frontend::tree::TypeSpecifier>(std::move(expr), sn);
                 PRINT_NONTERMINALS($$);
         }
-        | type_specifier PAREN_L opt_unsafe STAR IDENTIFIER PAREN_R PAREN_L opt_function_definition_arg_list PAREN_R {
-                NS2Entity *entity = return_data.type_get_or_create($4->get_value(), $4->get_source_ref());
-		$4->set_ns2_entity(entity);
+        | type_specifier PAREN_L opt_unsafe STAR PAREN_R PAREN_L opt_type_specifier_list PAREN_R {
                 auto expr = std::make_unique<Gyoji::frontend::tree::TypeSpecifierFunctionPointer>(
                                                                                       std::move($1),
                                                                                       std::move($2),
@@ -2455,8 +2479,7 @@ type_specifier
                                                                                       std::move($5),
                                                                                       std::move($6),
                                                                                       std::move($7),
-                                                                                      std::move($8),
-                                                                                      std::move($9)
+                                                                                      std::move($8)
                                                                                       );
                 const Gyoji::frontend::ast::SyntaxNode &sn = *(expr);
                 $$ = std::make_unique<Gyoji::frontend::tree::TypeSpecifier>(std::move(expr), sn);
