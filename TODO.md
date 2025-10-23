@@ -39,6 +39,9 @@ to do with the language.
   Probably some type of HornSAT solver, possibly even one that
   we can incorporate into the standard library so we can
   write the borrow checker in Gyoji itself instead of in C
+  Look into CFG-SSA and the "dominating" relation for graphs.
+  This is going to provide a good foundation for establishing
+  reasoning and flowing facts through the flow control graph.
 
 ## Semantic processing
   * Support const-ness of variables and protect them
@@ -46,17 +49,27 @@ to do with the language.
 
   * Analysis for initialization before use to make sure
     we're not reading data before we assign it somewhere.
-    * Constructors need to assign everything.
+
+    * Composite type initialization: Provide a protocol for this
+      to initialize classes and return classes from functions,
+      hopefully following the C ABI (which is going to be complicated).
+      We're not doing constructors, but we still need a way to initialize
+      everything.  Probably just through named-values in a 'struct initializer'
+      style syntax.  Maybe like a 'struct literal?' or a 'struct immediate'
+      value?  Like an un-named type whose syntax REQUIRES initial values?
+      Maybe it could be as simple as "constructor" syntax that is logic-free?
+      
     * Local variables must be written before read (except arguments
       which are initialized when they are passed in)
+      The logic here is mostly established, but needs cleanup
+      specifically for arguments and error reporting.
 
   * Merge blocks for assignments in control-flow statements.
     i.e. the PHI operation in LLVM (trinary operations)
 
-  * Clean up the interface to basic blocks so it's easier to grok
-
   * Finish/audit syntax tree parsing
-    * Global variables, etc.
+    * Global variables are still missing.
+    * Trinary operations are still missing.
 
   * Include enough semantic information like 'live' and 'dead'
     storage as well as use and mutation of borrwowed items
@@ -80,9 +93,16 @@ to do with the language.
     later as time allows, but we should have basic calculation
     and conditional support for this first pass.
 
-  * Support classes and enums since those aren't supported yet.
-    * Constructors and destructors should be supported.
+  * Support class single inheritance
+    * Each inherited class is just another class
+      with a member that is the supertype.
+      Initialization can proceed in the obvious way by
+      initializing the supertype member.
+
+  * Enums since those aren't supported yet.
     * Enum = symbol with constant typed integers.
+    * Scope and namespace concerns.
+    * Should 'lower' to just 'constant integer' values.
 
   * Build some tests that verify compatibility with
     most of the expectations of the C-style
