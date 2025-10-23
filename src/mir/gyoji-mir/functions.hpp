@@ -483,7 +483,7 @@ namespace Gyoji::mir {
 	 */
 	size_t tmpvar_define(const Type *tmpvar_type);
 
-	Operation * tmpvar_get_operation(size_t tmpvar);
+	const Operation * tmpvar_get_operation(size_t tmpvar) const;
 
 	/**
 	 * @brief Duplicate a temporary variable/reigster.

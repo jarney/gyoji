@@ -249,11 +249,6 @@ bool AnalysisPassUseBeforeAssignment::true_at(
 	if (check_at.block_id == true_point.block_id &&
 	    check_at.operation_index > true_point.operation_index) {
 	    found_in_same_block = true;
-	    fprintf(stderr, "Found in same block (%ld, %ld) (%ld, %ld)\n",
-		    check_at.block_id,
-		    check_at.operation_index,
-		    true_point.block_id,
-		    true_point.operation_index);
 	}
     }
     // It was true in the current block, so it's true.
@@ -262,13 +257,11 @@ bool AnalysisPassUseBeforeAssignment::true_at(
     }
     const std::vector<size_t> & predecessors = function.get_basic_block(check_at.block_id).get_reachable_from();
     if (predecessors.size() == 0) {
-	fprintf(stderr, "No predecessors of %ld to check, so we never found a place where it was true\n", check_at.block_id);
 	return false;
     }
     
     // If it wasn't true in the current block, try all predecessors.
     for (const auto & predecessor : predecessors) {
-	fprintf(stderr, "Checking pred %ld\n", predecessor);
 	ProgramPoint pred_point(predecessor, function.get_basic_block(predecessor).get_operations().size());
 
 	bool is_true;
@@ -281,7 +274,6 @@ bool AnalysisPassUseBeforeAssignment::true_at(
 	    already_checked.insert(std::pair(pred_point.block_id, is_true));
 	}
 	if (!is_true) {
-	    fprintf(stderr, "It was not true in block %ld\n", predecessor);
 	    return false;
 	}
     }
@@ -297,9 +289,6 @@ void AnalysisPassUseBeforeAssignment::check(const Function & function) const
     // basic blocks where an assignment took place.
     VariableTmpvarVisitor id_visitor;
     function.iterate_operations(id_visitor);
-    for (const auto & it : id_visitor.get_tmpvars()) {
-	fprintf(stderr, "Tmpvar %ld %s\n", it.first, it.second.c_str());
-    }
     
     VariableUseVisitor visitor(id_visitor.get_tmpvars());
     function.iterate_operations(visitor);
@@ -308,10 +297,6 @@ void AnalysisPassUseBeforeAssignment::check(const Function & function) const
 
     std::map<std::string, std::vector<ProgramPoint>> store_points_by_variable;
     for (const auto & store : visitor.get_stores()) {
-	fprintf(stderr, "tmpvar store %s block %ld index %ld\n",
-		store.variable_name.c_str(),
-		store.program_point.block_id,
-		store.program_point.operation_index);
 	store_points_by_variable[store.variable_name].push_back(store.program_point);
     }
     for (const auto & load : visitor.get_loads()) {
@@ -319,11 +304,6 @@ void AnalysisPassUseBeforeAssignment::check(const Function & function) const
 	if (load.variable_name == std::string("argc")) {
 	    continue;
 	}
-	fprintf(stderr, "Variable load var %s block %ld index %ld\n",
-		load.variable_name.c_str(),
-		load.program_point.block_id,
-		load.program_point.operation_index);
-	
 	std::map<size_t, bool> already_checked;
 	bool is_true = true_at(function, already_checked, store_points_by_variable[load.variable_name], load.program_point);
 	if (!is_true) {

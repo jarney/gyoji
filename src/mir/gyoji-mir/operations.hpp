@@ -1699,10 +1699,11 @@ namespace Gyoji::mir {
 	    std::vector<std::pair<std::string, size_t>> _fields
 	    );
 	virtual ~OperationAnonymousStructure();
+	const std::map<std::string, size_t> & get_fields() const;
     protected:
 	virtual std::string get_description() const;
     private:
-	std::vector<std::string> fields;
+	std::map<std::string, size_t> fields;
     };
     
     /**

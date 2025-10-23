@@ -860,21 +860,25 @@ OperationAnonymousStructure::OperationAnonymousStructure(
 {
     fprintf(stderr, "Constructing anonymous structure of length %ld\n", _fields.size());
     for (const auto & p : _fields) {
-	fields.push_back(p.first);
+	fields.insert(p);
 	operands.push_back(p.second);
     }
 }
 OperationAnonymousStructure::~OperationAnonymousStructure()
 {}
 
+const std::map<std::string, size_t> &
+OperationAnonymousStructure::get_fields() const
+{ return fields; }
+
 std::string
 OperationAnonymousStructure::get_description() const
 {
     std::vector<std::string> field_desc;
     
-    for (size_t i = 0; i < operands.size(); i++) {
-	size_t tmpvar = operands.at(i);
-	std::string name = fields.at(i);
+    for (const auto & p : fields) {
+	size_t tmpvar = p.second;
+	std::string name = p.first;
 	field_desc.push_back(std::string(name) + std::string(": _") + std::to_string(tmpvar));
     }
     std::string fdesc = Gyoji::misc::join(field_desc, ", ");

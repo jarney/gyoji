@@ -455,6 +455,17 @@ namespace Gyoji::mir {
 	     * down to primitive types.
 	     */
 	    TYPE_COMPOSITE,
+
+	    /**
+	     * This is a pseudo-type that is a 'composite' type
+	     * used to initialize actual types.  This is an anonymous
+	     * structure containing some number of fields.  It's not actually
+	     * storable and exists only in the MIR.  It should not be
+	     * lowered to the physical machine as it's only used
+	     * during the code-generation stage as a container
+	     * for pointers to the actual values.
+	     */
+	    TYPE_ANONYMOUS_STRUCTURE,
 	    
 	    /**
 	     * This is a pointer to another type or to a primitive
@@ -619,6 +630,13 @@ namespace Gyoji::mir {
 	 * or structure.
 	 */
 	bool is_composite() const;
+
+        /**
+	 * This returns true if this is
+	 * the anonymous structure pseudo-type.
+	 */
+	bool is_anonymous() const;
+	
 	/**
 	 * This returns true if the type is
 	 * a pointer to a function.

@@ -1280,7 +1280,7 @@ FunctionDefinitionResolver::extract_from_expression_postfix_function_call(
     // will return.
     
     // Pull out any of the 'partial' operations.
-    Operation* function_operation = function->tmpvar_get_operation(function_type_tmpvar);
+    const Operation* function_operation = function->tmpvar_get_operation(function_type_tmpvar);
 
     if (function_operation != nullptr) {
 	for (const size_t & operand : function_operation->get_operands()) {
@@ -2271,21 +2271,23 @@ FunctionDefinitionResolver::handle_binary_operation_assignment(
 	    // even inside an unsafe block.
 	}
 	// Should we model anonymous structures as types for the purposes of assignment?
-	else if (atype->is_composite() && btype->is_composite()) {
+	else if (atype->is_composite() && btype->is_anonymous()) {
 	    if (btype->get_members().size() != btype->get_members().size()) {
+		fprintf(stderr, "Anonymous assignment error\n");
 		compiler_context
 		    .get_errors()
 		    .add_simple_error(
 			_src_ref,
 			"Type mismatch in assignment operation, wrong number of fields.",
 			std::string("The operands of an assignment should be the same type, but were: a=") + atype->get_name() + std::string(" b=") + btype->get_name()
-			);		
+			);
+		return false;
 	    }
 	    // It's ok to proceed with an assignment, let the
 	    // codegen layer deal with making the copy.
-
 	}
 	else {
+	    fprintf(stderr, "Class to class assignment error %s %s.\n", atype->get_name().c_str(), btype->get_name().c_str());
 	    compiler_context
 		.get_errors()
 		.add_simple_error(
@@ -2306,19 +2308,6 @@ FunctionDefinitionResolver::handle_binary_operation_assignment(
 		);
 	return false;
     }
-#if 0
-    if (atype->is_composite()) {
-	compiler_context
-	    .get_errors()
-	    .add_simple_error(
-		_src_ref,
-		"Type mismatch in assignment operation",
-		std::string("The operands of an assignment must not be composite structures or classes, but were: a=") + atype->get_name() + std::string(" b=") + btype->get_name()
-		);
-	return false;
-    }
-#endif
-    
     // Notably, we never widen a shift operation.
     // Instead, we operate on whatever it is because
     // it will end up being masked down to an 8-bit
@@ -2960,7 +2949,7 @@ FunctionDefinitionResolver::extract_from_struct_initializer(
 
     std::string field_desc_str = Gyoji::misc::join(field_types, ", ");
     std::string anonymous_structure_type_name = std::string("<anonymous_structure>{") + field_desc_str + std::string("}");
-    Type *anonymous_structure_type = type_resolver.get_or_create(anonymous_structure_type_name, Type::TYPE_COMPOSITE, false, struct_initializer_expression.get_source_ref());
+    Type *anonymous_structure_type = type_resolver.get_or_create(anonymous_structure_type_name, Type::TYPE_ANONYMOUS_STRUCTURE, false, struct_initializer_expression.get_source_ref());
     if (!anonymous_structure_type->is_complete()) {
 	std::map<std::string, TypeMethod> methods; // No methods for anonymous types.
 	anonymous_structure_type->complete_composite_definition(
@@ -3053,6 +3042,13 @@ FunctionDefinitionResolver::extract_from_statement_variable_declaration(
 		return false;
 	    }
 	    source_ref = &initializer_expression.get_struct_initializer_expression().get_source_ref();
+	}
+	else {
+	    // The author has chosen to defer initialization,
+	    // so we're done with the initialization part.
+	    // We just have to trust that the author will initialize
+	    // later.
+	    return true;
 	}
     }
     else {

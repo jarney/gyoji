@@ -203,6 +203,9 @@ Type::is_enum() const
 bool
 Type::is_composite() const
 { return (type == TYPE_COMPOSITE); }
+bool
+Type::is_anonymous() const
+{ return (type == TYPE_ANONYMOUS_STRUCTURE); }
 
 bool
 Type::is_function_pointer() const
@@ -386,8 +389,11 @@ Type::dump(FILE *out) const
     else if (is_primitive()) {
 	type_desc = std::string("primitive");
     }
-    else if (type == TYPE_COMPOSITE) {
+    else if (is_composite()) {
 	type_desc = std::string("class");
+    }
+    else if (is_anonymous()) {
+	type_desc = std::string("anonymous structure");
     }
     else if (is_pointer()) {
 	type_desc = std::string("pointer");
@@ -420,8 +426,7 @@ Type::dump(FILE *out) const
 	exit(1);
     }
 
-    
-    if (is_composite()) {
+    if (is_composite() || is_anonymous()) {
         fprintf(out, "    %s : %s {\n", name.c_str(), type_desc.c_str());
 	for (const auto & m : members) {
 	    fprintf(out, "        %s : %s\n", m.get_name().c_str(), m.get_type()->get_name().c_str());

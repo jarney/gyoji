@@ -135,10 +135,14 @@ const Type *
 Function::tmpvar_get(size_t tmpvar_id) const
 { return tmpvars.at(tmpvar_id); }
 
-Operation *
-Function::tmpvar_get_operation(size_t tmpvar)
+const Operation *
+Function::tmpvar_get_operation(size_t tmpvar) const
 {
-    return tmpvar_operations[tmpvar];
+    const auto & it = tmpvar_operations.find(tmpvar);
+    if (it == tmpvar_operations.end()) {
+	return nullptr;
+    }
+    return it->second;
 }
 
 size_t

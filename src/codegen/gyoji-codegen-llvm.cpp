@@ -351,6 +351,13 @@ CodeGeneratorLLVMContext::create_types(const MIR & _mir)
 	if (!type->is_complete()) {
 	    continue;
 	}
+	if (type->is_anonymous()) {
+	    // This isn't a real type, so we don't actually
+	    // create an LLVM type for it.  We never need
+	    // to actually store it in LLVM since we only use it
+	    // at the MIR layer.
+	    continue;
+	}
 	create_type(type);
     }
 }
@@ -1416,45 +1423,43 @@ CodeGeneratorLLVMContext::generate_operation_assign(
 	llvm::Value * a_value = tmp_values[operation.get_a()];
 	llvm::Value * a_lvalue = tmp_lvalues[operation.get_a()];
 	llvm::Value * b_value = tmp_values[operation.get_b()];
-	llvm::Value *assigned_value = Builder->CreateStore(b_value, a_lvalue);
+	/* nobody wants the result */ Builder->CreateStore(b_value, a_lvalue);
 	tmp_values.insert(std::pair(operation.get_result(), a_value));
 	tmp_lvalues.insert(std::pair(operation.get_result(), a_lvalue));
     }
     // Generate the code for assigning
     // structure members to each other.
-    else if (atype->is_composite() && btype->is_composite()) {
+    else if (atype->is_composite() && btype->is_anonymous()) {
 	// Iterate the fields of each one and emit the load and store
 	// for each field based on the index of the field element.
 
-	llvm::Value *value_a = tmp_lvalues[operation.get_a()];
-	    
-	size_t nmembers = btype->get_members().size();
-	for (size_t i = 0; i < nmembers; i++) {
-	    const auto & b_member = btype->get_members().at(i);
-	    const auto & a_member = *atype->member_get(b_member.get_name());
+	llvm::Type *a_llvm_type = types[atype->get_name()];
+	
+	OperationAnonymousStructure * op = (OperationAnonymousStructure*)mir_function.tmpvar_get_operation(operation.get_b());
+	const std::map<std::string, size_t> & anonymous_fields = op->get_fields();
+	
+	for (const auto & anonymous_field : anonymous_fields) {
+	    const TypeMember *a_member_ptr = atype->member_get(anonymous_field.first);
+	    if (a_member_ptr == nullptr) {
+		fprintf(stderr, "No such field %s\n", anonymous_field.first.c_str());
+		exit(1);
+	    }
+	    const TypeMember & a_member = *a_member_ptr;
+
+	    size_t b_tmpvar = anonymous_field.second;
+	    llvm::Value *b_value = tmp_values[b_tmpvar];
 	    
 	    size_t a_member_index = a_member.get_index();
-	    size_t b_member_index = b_member.get_index();
+	    llvm::Value *a_lvalue = tmp_lvalues[operation.get_a()];
 
-	    llvm::Value * a_value = tmp_values[operation.get_a()];
-	    llvm::Value * a_lvalue = tmp_lvalues[operation.get_a()];
-	    llvm::Value * b_value = tmp_values[operation.get_b()];
-
-	    llvm::Type *a_type = types[b_member.get_type()->get_name()];
-	    llvm::Type *b_type = types[a_member.get_type()->get_name()];
-	    
-	    llvm::Value *b_member_value = Builder->CreateConstInBoundsGEP2_32(b_type, a_value, 0, b_member_index);
-	    llvm::Value *a_member_value = Builder->CreateConstInBoundsGEP2_32(a_type, b_value, 0, a_member_index);
-	    
-	    llvm::Value *load_value = Builder->CreateLoad(types[b_member.get_type()->get_name()], b_member_value);
-	    llvm::Value *store_value = Builder->CreateStore(a_member_value, load_value);
+	    llvm::Value *a_member_value = Builder->CreateConstInBoundsGEP2_32(a_llvm_type, a_lvalue, 0, a_member_index);
+	    /*nobody wants the result */ Builder->CreateStore(b_value, a_member_value);
 	}
-
     }
     else {
 	llvm::Value * a_lvalue = tmp_lvalues[operation.get_a()];
 	llvm::Value * b_value = tmp_values[operation.get_b()];
-	llvm::Value *assigned_value = Builder->CreateStore(b_value, a_lvalue);
+	/* nobody wants the result */ Builder->CreateStore(b_value, a_lvalue);
 	
 	// TODO: Assigning an lvalue results in an lvalue.
 	const auto & b_lvalue = tmp_lvalues.find(operation.get_b());

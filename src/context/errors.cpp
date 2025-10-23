@@ -72,7 +72,7 @@ Error::~Error()
 void
 Error::print()
 {
-    const std::string filename = messages.size() > 0 ? messages.back()->get_source_ref().get_filename() : std::string("unknown filename");
+    std::string filename = messages.size() > 0 ? messages.back()->get_source_ref().get_filename() : std::string("unknown filename");
     fprintf(stderr, "%s: Error: %s\n", filename.c_str(), error_title.c_str());
     for (const Gyoji::owned<ErrorMessage> & msg : messages) {
 	msg->print();

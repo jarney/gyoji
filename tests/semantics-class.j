@@ -69,11 +69,11 @@ u32 main(u32 argc, u8**argv)
 {
         u32 x = 8u32;
         x = 19;
-//	Foo cl(537);
+	
 	Foo cl = {
 	    .a = x;
 	    .b = 0u8;
-	    .c = "something";
+	    .s = "something";
 	};
 
 // We do allow function calls in static context.
@@ -85,7 +85,7 @@ u32 main(u32 argc, u8**argv)
 	fptr = Foo::set_something;
 
 // Indirect calls through function pointers work now also.
-//	fptr(&cl, 57, 84, 92);
+	fptr(&cl, 57, 84, 92);
 	
 // Destructors cannot be called directly.
 //	Foo::~Foo(&cl);
