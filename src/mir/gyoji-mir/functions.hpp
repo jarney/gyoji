@@ -403,18 +403,10 @@ namespace Gyoji::mir {
 	 * may dump core if the blockid does not exist.
 	 */
 	const BasicBlock & get_basic_block(size_t blockid) const;
-	/**
-	 * @brief Get a mutable block by ID.
-	 *
-	 * @details
-	 * Returns a mutable basic block from
-	 * the function by its ID.  Note that
-	 * it is assumed that the blockid exists, and this may
-	 * dump core if the blockid does not exist.
-	 */
-	BasicBlock & get_basic_block(size_t blockid);
 
 	void add_operation(size_t blockid, Gyoji::owned<Operation> operation);
+
+	void insert_operation(size_t blockid, size_t operation_index, Gyoji::owned<Operation> operation);
 	
 	/**
 	 * @brief Creates a new basic block and returns the ID.

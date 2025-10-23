@@ -482,8 +482,7 @@ FunctionDefinitionResolver::resolve()
 	    auto unwind_operation = std::make_unique<OperationLocalUndeclare>(
 		goto_operation->get_source_ref(),
 		unwind->get_variable_name());
-	    function->get_basic_block(basic_block_id)
-		.insert_operation(location, std::move(unwind_operation));
+	    function->insert_operation(basic_block_id, location, std::move(unwind_operation));
 	    
 	    // This increment is what makes sure that
 	    // the unwind operations are emitted in the
@@ -531,10 +530,12 @@ FunctionDefinitionResolver::resolve()
 		std::vector<std::string> unwind_scope = scope_tracker.get_variables_to_unwind_for_scope();
 		leave_scope(function_definition.get_scope_body().get_source_ref(), unwind_scope);
 	
-		auto operation = std::make_unique<OperationReturnVoid>(
-		    *return_type_source_ref
+		function->add_operation(
+		    block_it.first,
+		    std::make_unique<OperationReturnVoid>(
+			*return_type_source_ref
+			)
 		    );
-		function->get_basic_block(block_it.first).add_operation(std::move(operation));
 	    }
 	    else {
 		std::unique_ptr<Gyoji::context::Error> error = std::make_unique<Gyoji::context::Error>("Control reaches end of non-void function");
@@ -606,13 +607,16 @@ FunctionDefinitionResolver::extract_from_expression_primary_identifier(
 	const LocalVariable *localvar = scope_tracker.get_variable(local_variable_name);
 	if (localvar != nullptr) {
 	    returned_tmpvar = function->tmpvar_define(localvar->get_type());
-	    auto operation = std::make_unique<OperationLocalVariable>(
-		expression.get_identifier().get_source_ref(),
-		returned_tmpvar,
-		local_variable_name,
-		localvar->get_type()
+	    function->add_operation(
+		current_block,
+		std::make_unique<OperationLocalVariable>(
+		    expression.get_identifier().get_source_ref(),
+		    returned_tmpvar,
+		    local_variable_name,
+		    localvar->get_type()
+		    )
 		);
-	    function->get_basic_block(current_block).add_operation(std::move(operation));
+
 
 	    return true;
 	}
@@ -623,36 +627,39 @@ FunctionDefinitionResolver::extract_from_expression_primary_identifier(
 	    // by dereferencing 'this'.
 	    if (member != nullptr) {
 		size_t this_tmpvar = function->tmpvar_define(class_pointer_type);
-		auto this_operation = std::make_unique<OperationLocalVariable>(
-		    expression.get_identifier().get_source_ref(),
-		    this_tmpvar,
-		    "<this>",
-		    class_pointer_type
+
+		function->add_operation(
+		    current_block,
+		    std::make_unique<OperationLocalVariable>(
+			expression.get_identifier().get_source_ref(),
+			this_tmpvar,
+			"<this>",
+			class_pointer_type
+			)
 		    );
-		function->get_basic_block(current_block).add_operation(std::move(this_operation));
 
 		size_t this_reference_tmpvar = function->tmpvar_define(class_type);
-		auto dereference_operation = std::make_unique<OperationUnary>(
-		    Operation::OP_DEREFERENCE,
-		    expression.get_source_ref(),
-		    this_reference_tmpvar,
-		    this_tmpvar
+		function->add_operation(
+		    current_block,
+		    std::make_unique<OperationUnary>(
+			Operation::OP_DEREFERENCE,
+			expression.get_source_ref(),
+			this_reference_tmpvar,
+			this_tmpvar
+			)
 		    );
 		
-		function
-		    ->get_basic_block(current_block)
-		    .add_operation(std::move(dereference_operation));
 		
 		returned_tmpvar = function->tmpvar_define(member->get_type());
-		auto operation = std::make_unique<OperationDot>(
-		    expression.get_source_ref(),
-		    returned_tmpvar,
-		    this_reference_tmpvar,
-		    local_variable_name
+		function->add_operation(
+		    current_block,
+		    std::make_unique<OperationDot>(
+			expression.get_source_ref(),
+			returned_tmpvar,
+			this_reference_tmpvar,
+			local_variable_name
+			)
 		    );
-		function
-		    ->get_basic_block(current_block)
-		    .add_operation(std::move(operation));
 		return true;
 	    }
 	}
@@ -700,13 +707,15 @@ FunctionDefinitionResolver::extract_from_expression_primary_identifier(
 	// What if a 'symbol' actually contained
 	// other objects as 'partial' operands
 	// to the function.
-	auto operation = std::make_unique<OperationSymbol>(
-	    expression.get_identifier().get_source_ref(),
-	    returned_tmpvar,
-	    partials,
-	    fully_qualified_name
+	function->add_operation(
+	    current_block,
+	    std::make_unique<OperationSymbol>(
+		expression.get_identifier().get_source_ref(),
+		returned_tmpvar,
+		partials,
+		fully_qualified_name
+		)
 	    );
-	function->add_operation(current_block, std::move(operation));
 	return true;
     }
     return false;
@@ -764,15 +773,15 @@ FunctionDefinitionResolver::extract_from_expression_primary_literal_char(
 
     
     returned_tmpvar = function->tmpvar_define(mir.get_types().get_type("u8"));
-    auto operation = std::make_unique<OperationLiteralChar>(
-	expression.get_source_ref(),
-	returned_tmpvar,
-	c
+    function->add_operation(
+	current_block,
+	std::make_unique<OperationLiteralChar>(
+	    expression.get_source_ref(),
+	    returned_tmpvar,
+	    c
+	    )
 	);
 
-    function
-	->get_basic_block(current_block)
-	.add_operation(std::move(operation));
     return true;
 }
 
@@ -807,14 +816,14 @@ FunctionDefinitionResolver::extract_from_expression_primary_literal_string(
     
     
     returned_tmpvar = function->tmpvar_define(mir.get_types().get_type("u8*"));
-    auto operation = std::make_unique<OperationLiteralString>(
-	expression.get_source_ref(),
-	returned_tmpvar,
-	string_unescaped
+    function->add_operation(
+	current_block,
+	std::make_unique<OperationLiteralString>(
+	    expression.get_source_ref(),
+	    returned_tmpvar,
+	    string_unescaped
+	    )
 	);
-    function
-	->get_basic_block(current_block)
-	.add_operation(std::move(operation));
     return true;
 }
 
@@ -969,9 +978,7 @@ FunctionDefinitionResolver::create_constant_integer(
 		);
 	return false;
     }
-    function
-	->get_basic_block(current_block)
-	.add_operation(std::move(operation));
+    function->add_operation(current_block, std::move(operation));
 
     return true;
 }
@@ -1085,9 +1092,7 @@ FunctionDefinitionResolver::extract_from_expression_primary_literal_float(
 	    converted_value
 	    );
     }
-    function
-	->get_basic_block(current_block)
-	.add_operation(std::move(operation));
+    function->add_operation(current_block, std::move(operation));
     return true;
 }
 
@@ -1130,15 +1135,15 @@ FunctionDefinitionResolver::extract_from_expression_postfix_array_index(
     }
     
     returned_tmpvar = function->tmpvar_define(array_type->get_pointer_target());
-    auto operation = std::make_unique<OperationArrayIndex>(
-	expression.get_source_ref(),
-	returned_tmpvar,
-	array_tmpvar,
-	index_tmpvar
+    function->add_operation(
+	current_block,
+	std::make_unique<OperationArrayIndex>(
+	    expression.get_source_ref(),
+	    returned_tmpvar,
+	    array_tmpvar,
+	    index_tmpvar
+	    )
 	);
-    function
-	->get_basic_block(current_block)
-	.add_operation(std::move(operation));
 
     return true;
 }
@@ -1277,7 +1282,6 @@ FunctionDefinitionResolver::extract_from_expression_postfix_function_call(
     // Pull out any of the 'partial' operations.
     Operation* function_operation = function->tmpvar_get_operation(function_type_tmpvar);
 
-    // TODO: Make sure to cut over from bb->add_operation() to function->add_operation().
     if (function_operation != nullptr) {
 	for (const size_t & operand : function_operation->get_operands()) {
 	    passed_arguments.insert(passed_arguments.begin(), operand);
@@ -1290,25 +1294,27 @@ FunctionDefinitionResolver::extract_from_expression_postfix_function_call(
     if (is_method()) {
 	if (passed_arguments.size() == function_pointer_type->get_argument_types().size()-1) {
 	    size_t this_tmpvar = function->tmpvar_define(class_type);
-	    auto this_operation = std::make_unique<OperationLocalVariable>(
-		expression.get_source_ref(),
-		this_tmpvar,
-		"<this>",
-		class_pointer_type
+	    function->add_operation(
+		current_block,
+		std::make_unique<OperationLocalVariable>(
+		    expression.get_source_ref(),
+		    this_tmpvar,
+		    "<this>",
+		    class_pointer_type
+		    )
 		);
-	    function->add_operation(current_block, std::move(this_operation));
 	    
 	    const Type *this_pointer_type = mir.get_types().get_pointer_to(class_type, expression.get_source_ref());
 	    size_t this_pointer_tmpvar = function->tmpvar_define(this_pointer_type);
-	    auto operation_this_pointer = std::make_unique<OperationUnary>(
-		Operation::OP_ADDRESSOF,
-		expression.get_source_ref(),
-		this_pointer_tmpvar,
-		this_tmpvar
+	    function->add_operation(
+		current_block,
+		std::make_unique<OperationUnary>(
+		    Operation::OP_ADDRESSOF,
+		    expression.get_source_ref(),
+		    this_pointer_tmpvar,
+		    this_tmpvar
+		    )
 		);
-	    function
-		->get_basic_block(current_block)
-		.add_operation(std::move(operation_this_pointer));
 	    
 	    passed_arguments.insert(passed_arguments.begin(), this_pointer_tmpvar);
 	    passed_src_refs.insert(passed_src_refs.begin(), &expression.get_source_ref());
@@ -1321,17 +1327,17 @@ FunctionDefinitionResolver::extract_from_expression_postfix_function_call(
 	return false;
     }
     
-    auto operation = std::make_unique<OperationFunctionCall>(
-	Operation::OP_FUNCTION_CALL,
-	expression.get_source_ref(),
-	returned_tmpvar,
-	function_type_tmpvar,
-	passed_arguments
+    function->add_operation(
+	current_block,
+	std::make_unique<OperationFunctionCall>(
+	    Operation::OP_FUNCTION_CALL,
+	    expression.get_source_ref(),
+	    returned_tmpvar,
+	    function_type_tmpvar,
+	    passed_arguments
+	    )
 	);
     
-    function
-	->get_basic_block(current_block)
-	.add_operation(std::move(operation));
     
     return true;
 }
@@ -1362,15 +1368,15 @@ FunctionDefinitionResolver::extract_from_expression_postfix_dot(
     const TypeMember *member = class_type->member_get(member_name);
     if (member != nullptr) {
 	returned_tmpvar = function->tmpvar_define(member->get_type());
-	auto operation = std::make_unique<OperationDot>(
-	    expression.get_source_ref(),
-	    returned_tmpvar,
-	    class_tmpvar,
-	    member_name
+	function->add_operation(
+	    current_block,
+	    std::make_unique<OperationDot>(
+		expression.get_source_ref(),
+		returned_tmpvar,
+		class_tmpvar,
+		member_name
+		)
 	    );
-	function
-	    ->get_basic_block(current_block)
-	    .add_operation(std::move(operation));
 	return true;
     }
     
@@ -1392,25 +1398,29 @@ FunctionDefinitionResolver::extract_from_expression_postfix_dot(
 	const Type * class_pointer_type = mir.get_types().get_pointer_to(class_type, expression.get_source_ref());
 
 	size_t class_pointer_tmpvar = function->tmpvar_define(class_pointer_type);
-	auto dereference_operation = std::make_unique<OperationUnary>(
-	    Operation::OP_ADDRESSOF,
-	    expression.get_source_ref(),
-	    class_pointer_tmpvar,
-	    class_tmpvar
+	function->add_operation(
+	    current_block,
+	    std::make_unique<OperationUnary>(
+		Operation::OP_ADDRESSOF,
+		expression.get_source_ref(),
+		class_pointer_tmpvar,
+		class_tmpvar
+		)
 	    );
-	function->add_operation(current_block, std::move(dereference_operation));
 
 	std::vector<size_t> partial_operands;
 	partial_operands.push_back(class_pointer_tmpvar);
 	
 	returned_tmpvar = function->tmpvar_define(symbol->get_mir_type());
-	auto operation_symbol = std::make_unique<OperationSymbol>(
-	    expression.get_expression().get_source_ref(),
-	    returned_tmpvar,
-	    partial_operands,
-	    fully_qualified_function_name
+	function->add_operation(
+	    current_block,
+	    std::make_unique<OperationSymbol>(
+		expression.get_expression().get_source_ref(),
+		returned_tmpvar,
+		partial_operands,
+		fully_qualified_function_name
+		)
 	    );
-	function->add_operation(current_block, std::move(operation_symbol));
 	return true;
     }
     compiler_context
@@ -1471,16 +1481,16 @@ FunctionDefinitionResolver::extract_from_expression_postfix_arrow(
     // First takes 'operand' as a pointer
     // and de-references it into an lvalue.
     size_t class_reference_tmpvar = function->tmpvar_define(class_type);
-    auto dereference_operation = std::make_unique<OperationUnary>(
+    function->add_operation(
+	current_block,
+	std::make_unique<OperationUnary>(
 	    Operation::OP_DEREFERENCE,
 	    expression.get_source_ref(),
 	    class_reference_tmpvar,
 	    classptr_tmpvar
-	    );
+	    )
+	);
     
-    function
-	->get_basic_block(current_block)
-	.add_operation(std::move(dereference_operation));
     
     const std::string & member_name = expression.get_identifier().get_name();
     const TypeMember *member = class_type->member_get(member_name);
@@ -1496,15 +1506,15 @@ FunctionDefinitionResolver::extract_from_expression_postfix_arrow(
     }
     
     returned_tmpvar = function->tmpvar_define(member->get_type());
-    auto dot_operation = std::make_unique<OperationDot>(
-	expression.get_source_ref(),
-	returned_tmpvar,
-	class_reference_tmpvar,
-	member_name
+    function->add_operation(
+	current_block,
+	std::make_unique<OperationDot>(
+	    expression.get_source_ref(),
+	    returned_tmpvar,
+	    class_reference_tmpvar,
+	    member_name
+	    )
 	);
-    function
-	->get_basic_block(current_block)
-	.add_operation(std::move(dot_operation));
     return true;
 
 }
@@ -1558,43 +1568,43 @@ FunctionDefinitionResolver::create_incdec_operation(
     
     size_t addresult_tmpvar = function->tmpvar_duplicate(operand_tmpvar);
     if (is_increment) {
-	auto operation = std::make_unique<OperationBinary>(
-	    Operation::OP_ADD,
-	    src_ref,
-	    addresult_tmpvar,
-	    operand_tmpvar,
-	    constant_one_tmpvar
+	function->add_operation(
+	    current_block, 
+	    std::make_unique<OperationBinary>(
+		Operation::OP_ADD,
+		src_ref,
+		addresult_tmpvar,
+		operand_tmpvar,
+		constant_one_tmpvar
+		)
 	    );
-	function
-	    ->get_basic_block(current_block)
-	    .add_operation(std::move(operation));
     }
     else {
-	auto operation = std::make_unique<OperationBinary>(
-	    Operation::OP_SUBTRACT,
-	    src_ref,
-	    addresult_tmpvar,
-	    operand_tmpvar,
-	    constant_one_tmpvar
+	function->add_operation(
+	    current_block,
+	    std::make_unique<OperationBinary>(
+		Operation::OP_SUBTRACT,
+		src_ref,
+		addresult_tmpvar,
+		operand_tmpvar,
+		constant_one_tmpvar
+		)
 	    );
-	function
-	    ->get_basic_block(current_block)
-	    .add_operation(std::move(operation));
     }
 
     // We perform a 'store' to store
     // the value back into the variable.
     size_t ignore_tmpvar = function->tmpvar_duplicate(operand_tmpvar);
-    auto operation_store = std::make_unique<OperationBinary>(
-	Operation::OP_ASSIGN,
-	src_ref,
-	ignore_tmpvar,
-	operand_tmpvar,
-	addresult_tmpvar
+    function->add_operation(
+	current_block,
+	std::make_unique<OperationBinary>(
+	    Operation::OP_ASSIGN,
+	    src_ref,
+	    ignore_tmpvar,
+	    operand_tmpvar,
+	    addresult_tmpvar
+	    )
 	);
-    function
-	->get_basic_block(current_block)
-	.add_operation(std::move(operation_store));
     
     // This is a post-decrement, so we return
     // the value as it was before we incremented
@@ -1660,15 +1670,15 @@ FunctionDefinitionResolver::extract_from_expression_unary_prefix(
         {
 	const Type * pointer_to_operand_type = mir.get_types().get_pointer_to(operand_type, expression.get_source_ref());
 	returned_tmpvar = function->tmpvar_define(pointer_to_operand_type);
-	auto operation = std::make_unique<OperationUnary>(
-	    Operation::OP_ADDRESSOF,
-	    expression.get_source_ref(),
-	    returned_tmpvar,
-	    operand_tmpvar
+	function->add_operation(
+	    current_block,
+	    std::make_unique<OperationUnary>(
+		Operation::OP_ADDRESSOF,
+		expression.get_source_ref(),
+		returned_tmpvar,
+		operand_tmpvar
+		)
 	    );
-	function
-	    ->get_basic_block(current_block)
-	    .add_operation(std::move(operation));
 	}
         break;
     case ExpressionUnaryPrefix::DEREFERENCE:
@@ -1698,15 +1708,15 @@ FunctionDefinitionResolver::extract_from_expression_unary_prefix(
 		return false;
 	    }
 	    returned_tmpvar = function->tmpvar_define(operand_type->get_pointer_target());
-	    auto operation = std::make_unique<OperationUnary>(
-		Operation::OP_DEREFERENCE,
-		expression.get_source_ref(),
-		returned_tmpvar,
-		operand_tmpvar
+	    function->add_operation(
+		current_block,
+		std::make_unique<OperationUnary>(
+		    Operation::OP_DEREFERENCE,
+		    expression.get_source_ref(),
+		    returned_tmpvar,
+		    operand_tmpvar
+		    )
 		);
-	    function
-		->get_basic_block(current_block)
-		.add_operation(std::move(operation));
         }
         break;
     case ExpressionUnaryPrefix::PLUS:
@@ -1720,29 +1730,29 @@ FunctionDefinitionResolver::extract_from_expression_unary_prefix(
     case ExpressionUnaryPrefix::MINUS:
         {
 	returned_tmpvar = function->tmpvar_duplicate(operand_tmpvar);
-	auto operation = std::make_unique<OperationUnary>(
-	    Operation::OP_NEGATE,
-	    expression.get_source_ref(),	    
-	    returned_tmpvar,
-	    operand_tmpvar
+	function->add_operation(
+	    current_block,
+	    std::make_unique<OperationUnary>(
+		Operation::OP_NEGATE,
+		expression.get_source_ref(),	    
+		returned_tmpvar,
+		operand_tmpvar
+		)
 	    );
-	function
-	    ->get_basic_block(current_block)
-	    .add_operation(std::move(operation));
         }
         break;
     case ExpressionUnaryPrefix::BITWISE_NOT:
         {
 	returned_tmpvar = function->tmpvar_duplicate(operand_tmpvar);
-	auto operation = std::make_unique<OperationUnary>(
-	    Operation::OP_BITWISE_NOT,
-	    expression.get_source_ref(),	    
-	    returned_tmpvar,
-	    operand_tmpvar
+	function->add_operation(
+	    current_block,
+	    std::make_unique<OperationUnary>(
+		Operation::OP_BITWISE_NOT,
+		expression.get_source_ref(),	    
+		returned_tmpvar,
+		operand_tmpvar
+		)
 	    );
-	function
-	    ->get_basic_block(current_block)
-	    .add_operation(std::move(operation));
         }
         break;
     case ExpressionUnaryPrefix::LOGICAL_NOT:
@@ -1757,15 +1767,15 @@ FunctionDefinitionResolver::extract_from_expression_unary_prefix(
 		    );
 	}
 	returned_tmpvar = function->tmpvar_duplicate(operand_tmpvar);
-	auto operation = std::make_unique<OperationUnary>(
-	    Operation::OP_LOGICAL_NOT,
-	    expression.get_source_ref(),	    
-	    returned_tmpvar,
-	    operand_tmpvar
+	function->add_operation(
+	    current_block,
+	    std::make_unique<OperationUnary>(
+		Operation::OP_LOGICAL_NOT,
+		expression.get_source_ref(),	    
+		returned_tmpvar,
+		operand_tmpvar
+		)
 	    );
-	function
-	    ->get_basic_block(current_block)
-	    .add_operation(std::move(operation));
 	}
         break;
     default:
@@ -1788,14 +1798,14 @@ FunctionDefinitionResolver::extract_from_expression_unary_sizeof_type(
     const Type * operand_type = type_resolver.extract_from_type_specifier(expression.get_type_specifier());
     const Type * u64_type = mir.get_types().get_type("u64");
     returned_tmpvar = function->tmpvar_define(u64_type);
-    auto operation = std::make_unique<OperationSizeofType>(
-	expression.get_source_ref(),	    
-	returned_tmpvar,
-	operand_type
+    function->add_operation(
+	current_block,
+	std::make_unique<OperationSizeofType>(
+	    expression.get_source_ref(),	    
+	    returned_tmpvar,
+	    operand_type
+	    )
 	);
-    function
-	->get_basic_block(current_block)
-	.add_operation(std::move(operation));
     return true;
 }
 
@@ -1824,16 +1834,16 @@ FunctionDefinitionResolver::numeric_widen(
     }
     
     size_t widened_var = function->tmpvar_define(widen_to);
-    auto operation = std::make_unique<OperationCast>(
-	widen_type,
-	_src_ref,
-	widened_var,
-	_widen_var,
-	widen_to
+    function->add_operation(
+	current_block,
+	std::make_unique<OperationCast>(
+	    widen_type,
+	    _src_ref,
+	    widened_var,
+	    _widen_var,
+	    widen_to
+	    )
 	);
-    function
-	->get_basic_block(current_block)
-	.add_operation(std::move(operation));
     _widen_var = widened_var;
     return true;
 }
@@ -1990,16 +2000,16 @@ FunctionDefinitionResolver::handle_binary_operation_arithmetic(
     // The back-end may assume that the operand types are both
     // integer or floating point of the same type and
     // the return type will also be of the same type.
-    auto operation = std::make_unique<OperationBinary>(
-	type,
-	_src_ref,
-	returned_tmpvar,
-	a_tmpvar,
-	b_tmpvar
+    function->add_operation(
+	current_block,
+	std::make_unique<OperationBinary>(
+	    type,
+	    _src_ref,
+	    returned_tmpvar,
+	    a_tmpvar,
+	    b_tmpvar
+	    )
 	);
-    function
-	->get_basic_block(current_block)
-	.add_operation(std::move(operation));
     
     return true;
 }
@@ -2026,16 +2036,16 @@ FunctionDefinitionResolver::handle_binary_operation_logical(
 		);
 	return false;
     }
-    auto operation = std::make_unique<OperationBinary>(
-	type,
-	_src_ref,
-	returned_tmpvar,
-	a_tmpvar,
-	b_tmpvar
+    function->add_operation(
+	current_block,
+	std::make_unique<OperationBinary>(
+	    type,
+	    _src_ref,
+	    returned_tmpvar,
+	    a_tmpvar,
+	    b_tmpvar
+	    )
 	);
-    function
-	->get_basic_block(current_block)
-	.add_operation(std::move(operation));
     return true;
 }
 
@@ -2076,16 +2086,16 @@ FunctionDefinitionResolver::handle_binary_operation_bitwise(
     // The back-end may assume that the operand types are both
     // integer or floating point of the same type and
     // the return type will also be of the same type.
-    auto operation = std::make_unique<OperationBinary>(
-	type,
-	_src_ref,
-	returned_tmpvar,
-	a_tmpvar,
-	b_tmpvar
+    function->add_operation(
+	current_block, 
+	std::make_unique<OperationBinary>(
+	    type,
+	    _src_ref,
+	    returned_tmpvar,
+	    a_tmpvar,
+	    b_tmpvar
+	    )
 	);
-    function
-	->get_basic_block(current_block)
-	.add_operation(std::move(operation));
     
     return true;
 }
@@ -2128,16 +2138,16 @@ FunctionDefinitionResolver::handle_binary_operation_shift(
     // The back-end may assume that the operand types are both
     // integer or floating point of the same type and
     // the return type will also be of the same type.
-    auto operation = std::make_unique<OperationBinary>(
-	type,
-	_src_ref,
-	returned_tmpvar,
-	a_tmpvar,
-	b_tmpvar
+    function->add_operation(
+	current_block,
+	std::make_unique<OperationBinary>(
+	    type,
+	    _src_ref,
+	    returned_tmpvar,
+	    a_tmpvar,
+	    b_tmpvar
+	    )
 	);
-    function
-	->get_basic_block(current_block)
-	.add_operation(std::move(operation));
     
     return true;
 }
@@ -2215,16 +2225,16 @@ FunctionDefinitionResolver::handle_binary_operation_compare(
     // The back-end may assume that the operand types are both
     // integer or floating point of the same type and
     // the return type will also be of the same type.
-    auto operation = std::make_unique<OperationBinary>(
-	type,
-	_src_ref,
-	returned_tmpvar,
-	a_tmpvar,
-	b_tmpvar
+    function->add_operation(
+	current_block,
+	std::make_unique<OperationBinary>(
+	    type,
+	    _src_ref,
+	    returned_tmpvar,
+	    a_tmpvar,
+	    b_tmpvar
+	    )
 	);
-    function
-	->get_basic_block(current_block)
-	.add_operation(std::move(operation));
     
     return true;
 }
@@ -2306,19 +2316,19 @@ FunctionDefinitionResolver::handle_binary_operation_assignment(
     // The back-end may assume that the operand types are both
     // integer or floating point of the same type and
     // the return type will also be of the same type.
-    auto operation = std::make_unique<OperationBinary>(
-	type,
-	_src_ref,
-	returned_tmpvar,
-	// a_tmpvar is an lvalue and b_tmpvar is an rvalue
-	// should we wait to resolve the rvalue
-	// until we actually consume it?
-	a_tmpvar,
-	b_tmpvar
+    function->add_operation(
+	current_block,
+	std::make_unique<OperationBinary>(
+	    type,
+	    _src_ref,
+	    returned_tmpvar,
+	    // a_tmpvar is an lvalue and b_tmpvar is an rvalue
+	    // should we wait to resolve the rvalue
+	    // until we actually consume it?
+	    a_tmpvar,
+	    b_tmpvar
+	    )
 	);
-    function
-	->get_basic_block(current_block)
-	.add_operation(std::move(operation));
     
     return true;
 }
@@ -2878,12 +2888,14 @@ FunctionDefinitionResolver::local_declare_or_error(
 {
     scope_tracker.add_variable(name, mir_type, source_ref);
     
-    auto operation = std::make_unique<OperationLocalDeclare>(
-	source_ref,
-	name,
-	mir_type
+    function->add_operation(
+	current_block,
+	std::make_unique<OperationLocalDeclare>(
+	    source_ref,
+	    name,
+	    mir_type
+	    )
 	);
-    function->get_basic_block(current_block).add_operation(std::move(operation));
 
     return true;
 }
@@ -2931,13 +2943,15 @@ FunctionDefinitionResolver::extract_from_statement_variable_declaration(
     // 2) Evaluate the expression
     // 3) Perform an assignment.
     size_t variable_tmpvar = function->tmpvar_define(mir_type);
-    auto operation = std::make_unique<OperationLocalVariable>(
-	statement.get_source_ref(),
-	variable_tmpvar,
-	statement.get_identifier().get_name(),
-	mir_type
+    function->add_operation(
+	current_block,
+	std::make_unique<OperationLocalVariable>(
+	    statement.get_source_ref(),
+	    variable_tmpvar,
+	    statement.get_identifier().get_name(),
+	    mir_type
+	    )
 	);
-    function->get_basic_block(current_block).add_operation(std::move(operation));
     
     size_t initial_value_tmpvar;
     if (!extract_from_expression(initial_value_tmpvar, *expression)) {
@@ -2986,24 +3000,28 @@ FunctionDefinitionResolver::extract_from_statement_ifelse(
 	// If we have an 'else', then
 	// dump to it based on the condition.
 	blockid_else = function->add_block();
-	auto operation = std::make_unique<OperationJumpConditional>(
-	    statement.get_source_ref(),
-	    condition_tmpvar,
-	    blockid_if,
-	    blockid_else
+	function->add_operation(
+	    current_block,
+	    std::make_unique<OperationJumpConditional>(
+		statement.get_source_ref(),
+		condition_tmpvar,
+		blockid_if,
+		blockid_else
+		)
 	    );
-	function->get_basic_block(current_block).add_operation(std::move(operation));
     }
     else {
 	// Otherwise, jump to done
 	// based on condition.
-	auto operation = std::make_unique<OperationJumpConditional>(
-	    statement.get_source_ref(),
-	    condition_tmpvar,
-	    blockid_if,
-	    blockid_done
+	function->add_operation(
+	    current_block,
+	    std::make_unique<OperationJumpConditional>(
+		statement.get_source_ref(),
+		condition_tmpvar,
+		blockid_if,
+		blockid_done
+		)
 	    );
-	function->get_basic_block(current_block).add_operation(std::move(operation));
     }
     
     current_block = blockid_if;
@@ -3025,11 +3043,13 @@ FunctionDefinitionResolver::extract_from_statement_ifelse(
     // unless the block is alreayd terminated by
     // another jump or a return.
     if (!function->get_basic_block(current_block).contains_terminator()) {
-	auto operation = std::make_unique<OperationJump>(
-	    statement.get_source_ref(),
-	    blockid_done
+	function->add_operation(
+	    current_block,
+	    std::make_unique<OperationJump>(
+		statement.get_source_ref(),
+		blockid_done
+		)
 	    );
-	function->get_basic_block(current_block).add_operation(std::move(operation));
     }
     
     if (statement.has_else()) {
@@ -3051,11 +3071,13 @@ FunctionDefinitionResolver::extract_from_statement_ifelse(
 	// Jump to the 'done' block when the 'else' block is finished
 	// unless it has terminated already.
 	if (!function->get_basic_block(blockid_else).contains_terminator()) {
-	    auto operation = std::make_unique<OperationJump>(
-		statement.get_source_ref(),
-		blockid_done
+	    function->add_operation(
+		blockid_else,
+		std::make_unique<OperationJump>(
+		    statement.get_source_ref(),
+		    blockid_done
+		    )
 		);
-	    function->get_basic_block(blockid_else).add_operation(std::move(operation));
 	}
     }
     else if (statement.has_else_if()) {
@@ -3080,11 +3102,13 @@ FunctionDefinitionResolver::extract_from_statement_while(
     size_t blockid_if = function->add_block();
     size_t blockid_done = function->add_block();
 
-    auto operation_jump_initial = std::make_unique<OperationJump>(
-	statement.get_source_ref(),
-	blockid_evaluate_expression
+    function->add_operation(
+	current_block,
+	std::make_unique<OperationJump>(
+	    statement.get_source_ref(),
+	    blockid_evaluate_expression
+	    )
 	);
-    function->get_basic_block(current_block).add_operation(std::move(operation_jump_initial));
 
     current_block = blockid_evaluate_expression;
     
@@ -3092,13 +3116,15 @@ FunctionDefinitionResolver::extract_from_statement_while(
 	return false;
     }
 
-    auto operation_jump_conditional = std::make_unique<OperationJumpConditional>(
-	statement.get_source_ref(),
-	condition_tmpvar,
-	blockid_if,
-	blockid_done
+    function->add_operation(
+	current_block,
+	std::make_unique<OperationJumpConditional>(
+	    statement.get_source_ref(),
+	    condition_tmpvar,
+	    blockid_if,
+	    blockid_done
+	    )
 	);
-    function->get_basic_block(current_block).add_operation(std::move(operation_jump_conditional));
 
     // Push a loop scope.
     current_block = blockid_if;
@@ -3116,11 +3142,13 @@ FunctionDefinitionResolver::extract_from_statement_while(
     // Pop back from the scope.
     scope_tracker.scope_pop();
     
-    auto operation_jump_to_evaluate = std::make_unique<OperationJump>(
-	statement.get_source_ref(),
-	blockid_evaluate_expression
+    function->add_operation(
+	current_block,
+	std::make_unique<OperationJump>(
+	    statement.get_source_ref(),
+	    blockid_evaluate_expression
+	    )
 	);
-    function->get_basic_block(current_block).add_operation(std::move(operation_jump_to_evaluate));
     
     current_block = blockid_done;
     
@@ -3155,11 +3183,13 @@ FunctionDefinitionResolver::extract_from_statement_for(
 	return false;
     }
     
-    auto operation_jump_initial = std::make_unique<OperationJump>(
-	statement.get_source_ref(),
-	blockid_evaluate_expression_termination
+    function->add_operation(
+	current_block,
+	std::make_unique<OperationJump>(
+	    statement.get_source_ref(),
+	    blockid_evaluate_expression_termination
+	    )
 	);
-    function->get_basic_block(current_block).add_operation(std::move(operation_jump_initial));
 
     // Evaluate the termination condition.
     size_t blockid_tmp = current_block;
@@ -3169,13 +3199,15 @@ FunctionDefinitionResolver::extract_from_statement_for(
     }
     current_block = blockid_tmp;
 
-    auto operation_jump_conditional = std::make_unique<OperationJumpConditional>(
-	statement.get_source_ref(),
-	condition_tmpvar,
-	blockid_if,
-	blockid_done
+    function->add_operation(
+	blockid_evaluate_expression_termination, 
+	std::make_unique<OperationJumpConditional>(
+	    statement.get_source_ref(),
+	    condition_tmpvar,
+	    blockid_if,
+	    blockid_done
+	    )
 	);
-    function->get_basic_block(blockid_evaluate_expression_termination).add_operation(std::move(operation_jump_conditional));
 
     scope_tracker.scope_push_loop(
 	statement.get_scope_body().get_source_ref(),
@@ -3200,11 +3232,13 @@ FunctionDefinitionResolver::extract_from_statement_for(
     }
     current_block = blockid_tmp_if;
     
-    auto operation_jump_to_evaluate = std::make_unique<OperationJump>(
-	statement.get_source_ref(),
-	blockid_evaluate_expression_termination
+    function->add_operation(
+	blockid_if,
+	std::make_unique<OperationJump>(
+	    statement.get_source_ref(),
+	    blockid_evaluate_expression_termination
+	    )
 	);
-    function->get_basic_block(blockid_if).add_operation(std::move(operation_jump_to_evaluate));
     
     current_block = blockid_done;
 
@@ -3274,28 +3308,28 @@ FunctionDefinitionResolver::extract_from_statement_switch(
 		is_ok = false;
 	    }
 	    size_t condition_tmpvar = function->tmpvar_define(mir.get_types().get_type("bool"));
-	    auto operation_compare_equal = std::make_unique<OperationBinary>(
-		Operation::OP_COMPARE_EQUAL,
-		block_ptr->get_source_ref(),
-		condition_tmpvar,
-		test_value_tmpvar,
-		switch_value_tmpvar
+	    function->add_operation(
+		current_block,
+		std::make_unique<OperationBinary>(
+		    Operation::OP_COMPARE_EQUAL,
+		    block_ptr->get_source_ref(),
+		    condition_tmpvar,
+		    test_value_tmpvar,
+		    switch_value_tmpvar
+		    )
 		);
-	    function
-		->get_basic_block(current_block)
-		.add_operation(std::move(operation_compare_equal));
 	    
 	    size_t blockid_if = function->add_block();
 	    blockid_else = function->add_block();
-	    auto operation_jump_if = std::make_unique<OperationJumpConditional>(
-		block_ptr->get_source_ref(),
-		condition_tmpvar,
-		blockid_if,
-		blockid_else
+	    function->add_operation(
+		current_block,
+		std::make_unique<OperationJumpConditional>(
+		    block_ptr->get_source_ref(),
+		    condition_tmpvar,
+		    blockid_if,
+		    blockid_else
+		    )
 		);
-	    function
-		->get_basic_block(current_block)
-		.add_operation(std::move(operation_jump_if));
 	    
 	    current_block = blockid_if;
 	}
@@ -3313,11 +3347,13 @@ FunctionDefinitionResolver::extract_from_statement_switch(
 	// then it's safe to leave off the jump back
 	// to outside the switch.
 	if (!function->get_basic_block(current_block).contains_terminator()) {
-	    auto operation_jump_to_done = std::make_unique<OperationJump>(
-		block_ptr->get_source_ref(),
-		blockid_done
+	    function->add_operation(
+		current_block,
+		std::make_unique<OperationJump>(
+		    block_ptr->get_source_ref(),
+		    blockid_done
+		    )
 		);
-	    function->get_basic_block(current_block).add_operation(std::move(operation_jump_to_done));
 	}
 	current_block = blockid_else;
 
@@ -3330,11 +3366,13 @@ FunctionDefinitionResolver::extract_from_statement_switch(
     if (!has_default) {
 	// This just handles the end case where there are no more
 	// conditions, so we unconditionaly jump back to done.
-	auto operation_jump_to_done = std::make_unique<OperationJump>(
-	    statement.get_source_ref(),
-	    blockid_done
+	function->add_operation(
+	    current_block,
+	    std::make_unique<OperationJump>(
+		statement.get_source_ref(),
+		blockid_done
+		)
 	    );
-	function->get_basic_block(current_block).add_operation(std::move(operation_jump_to_done));
 	current_block = blockid_done;
     }
     
@@ -3360,11 +3398,13 @@ FunctionDefinitionResolver::extract_from_statement_break(
     std::vector<std::string> unwind_break = scope_tracker.get_variables_to_unwind_for_break();
     leave_scope(statement.get_source_ref(), unwind_break);
     
-    auto operation_jump_to_break = std::make_unique<OperationJump>(
-	statement.get_source_ref(),
-	scope_tracker.get_loop_break_blockid()
+    function->add_operation(
+	current_block,
+	std::make_unique<OperationJump>(
+	    statement.get_source_ref(),
+	    scope_tracker.get_loop_break_blockid()
+	    )
 	);
-    function->get_basic_block(current_block).add_operation(std::move(operation_jump_to_break));
     
     return true;
 }
@@ -3383,11 +3423,13 @@ FunctionDefinitionResolver::extract_from_statement_continue(
 		);
 	return true;
     }
-    auto operation_jump_to_continue = std::make_unique<OperationJump>(
-	statement.get_source_ref(),
-	scope_tracker.get_loop_continue_blockid()
+    function->add_operation(
+	current_block,
+	std::make_unique<OperationJump>(
+	    statement.get_source_ref(),
+	    scope_tracker.get_loop_continue_blockid()
+	    )
 	);
-    function->get_basic_block(current_block).add_operation(std::move(operation_jump_to_continue));
     
     return true;
 }
@@ -3427,11 +3469,13 @@ FunctionDefinitionResolver::extract_from_statement_label(
 	    return true;
 	}
     }
-    auto operation = std::make_unique<OperationJump>(
-	statement.get_source_ref(),
-	label_block
+    function->add_operation(
+	current_block,
+	std::make_unique<OperationJump>(
+	    statement.get_source_ref(),
+	    label_block
+	    )
 	);
-    function->get_basic_block(current_block).add_operation(std::move(operation));
     // Then whatever we add next will be in this new block.
     current_block = label_block;
     
@@ -3461,11 +3505,13 @@ FunctionDefinitionResolver::extract_from_statement_goto(
     Gyoji::owned<FunctionPoint> function_point = std::make_unique<FunctionPoint>(current_block, function->get_basic_block(current_block).size());
     scope_tracker.add_goto(label_name, std::move(function_point), statement.get_label_source_ref());
     
-    auto operation = std::make_unique<OperationJump>(
-	statement.get_source_ref(),
-	label_block
+    function->add_operation(
+	current_block,
+	std::make_unique<OperationJump>(
+	    statement.get_source_ref(),
+	    label_block
+	    )
 	);
-    function->get_basic_block(current_block).add_operation(std::move(operation));
     // This jump ends the basic block, so it's terminated.
     return true;
 }
@@ -3479,10 +3525,12 @@ FunctionDefinitionResolver::extract_from_statement_return(
 
     if (statement.is_void()) {
 	leave_scope(statement.get_source_ref(), unwind_root);
-	auto operation = std::make_unique<OperationReturnVoid>(
-	    statement.get_source_ref()
+	function->add_operation(
+	    current_block,
+	    std::make_unique<OperationReturnVoid>(
+		statement.get_source_ref()
+		)
 	    );
-	function->get_basic_block(current_block).add_operation(std::move(operation));
     }
     else {
 	size_t expression_tmpvar;
@@ -3490,11 +3538,13 @@ FunctionDefinitionResolver::extract_from_statement_return(
 	    return false;
 	}
 	leave_scope(statement.get_source_ref(), unwind_root);
-	auto operation = std::make_unique<OperationReturn>(
-	    statement.get_source_ref(),
-	    expression_tmpvar
+	function->add_operation(
+	    current_block,
+	    std::make_unique<OperationReturn>(
+		statement.get_source_ref(),
+		expression_tmpvar
+		)
 	    );
-	function->get_basic_block(current_block).add_operation(std::move(operation));
     }
     return true;
 }
@@ -3529,57 +3579,66 @@ FunctionDefinitionResolver::leave_scope(
 		std::vector<size_t> passed_arguments;
 		
 		size_t variable_tmpvar = function->tmpvar_define(class_type);
-		auto op_variable = std::make_unique<OperationLocalVariable>(
-		    src_ref,
-		    variable_tmpvar,
-		    variable_name,
-		    class_type
+		function->add_operation(
+		    current_block,
+		    std::make_unique<OperationLocalVariable>(
+			src_ref,
+			variable_tmpvar,
+			variable_name,
+			class_type
+			)
 		    );
-		function->get_basic_block(current_block).add_operation(std::move(op_variable));
 		
 		const Type *variable_pointer_type = mir.get_types().get_pointer_to(class_type, src_ref);
 		size_t variable_pointer_tmpvar = function->tmpvar_define(variable_pointer_type);
-		auto operation_this_pointer = std::make_unique<OperationUnary>(
-		    Operation::OP_ADDRESSOF,
-		    src_ref,
-		    variable_pointer_tmpvar,
-		    variable_tmpvar
+		function->add_operation(
+		    current_block,
+		    std::make_unique<OperationUnary>(
+			Operation::OP_ADDRESSOF,
+			src_ref,
+			variable_pointer_tmpvar,
+			variable_tmpvar
+			)
 		    );
-		function
-		    ->get_basic_block(current_block)
-		    .add_operation(std::move(operation_this_pointer));
 
 		passed_arguments.push_back(variable_pointer_tmpvar);
 
 		// Emitting destructor call.
 		size_t destructor_fptr_tmpvar = function->tmpvar_define(destructor_fptr_type);
 		std::vector<size_t> partial_operands;
-		auto operation_get_destructor_function = std::make_unique<OperationSymbol>(
-		    src_ref,
-		    destructor_fptr_tmpvar,
-		    partial_operands,
-		    fully_qualified_function_name
+		function->add_operation(
+		    current_block,
+		    std::make_unique<OperationSymbol>(
+			src_ref,
+			destructor_fptr_tmpvar,
+			partial_operands,
+			fully_qualified_function_name
+			)
 		    );
-		function->get_basic_block(current_block).add_operation(std::move(operation_get_destructor_function));
 		
 		// This is what the function pointer type should return.
 		size_t destructor_result_tmpvar = function->tmpvar_define(destructor_fptr_type->get_return_type());
-		auto op_destructor = std::make_unique<OperationFunctionCall>(
-		    Operation::OP_DESTRUCTOR,
-		    src_ref,
-		    destructor_result_tmpvar,
-		    destructor_fptr_tmpvar,
-		    passed_arguments
+		function->add_operation(
+		    current_block,
+		    std::make_unique<OperationFunctionCall>(
+			Operation::OP_DESTRUCTOR,
+			src_ref,
+			destructor_result_tmpvar,
+			destructor_fptr_tmpvar,
+			passed_arguments
+			)
 		    );
-		function->get_basic_block(current_block).add_operation(std::move(op_destructor));
 		
 	    }
 	}
 	
-	auto operation = std::make_unique<OperationLocalUndeclare>(
-	    src_ref,
-	    variable_name);
-	function->get_basic_block(current_block).add_operation(std::move(operation));
+	function->add_operation(
+	    current_block,
+	    std::make_unique<OperationLocalUndeclare>(
+		src_ref,
+		variable_name
+		)
+	    );
     }
     unwind.clear();
 }

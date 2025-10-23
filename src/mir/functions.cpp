@@ -95,18 +95,26 @@ Function::get_basic_block(size_t blockid) const
     return *(it->second);
 }
 
-BasicBlock &
-Function::get_basic_block(size_t blockid)
+void
+Function::add_operation(size_t block_id, Gyoji::owned<Operation> operation)
 {
-    const auto & it = blocks.find(blockid);
-    return *(it->second);
+    tmpvar_operations[operation->get_result()] = operation.get();
+    const auto & it = blocks.find(block_id);
+    if (it == blocks.end()) {
+	return;
+    }
+    it->second->add_operation(std::move(operation));
 }
 
 void
-Function::add_operation(size_t blockid, Gyoji::owned<Operation> operation)
+Function::insert_operation(size_t block_id, size_t operation_index, Gyoji::owned<Operation> operation)
 {
     tmpvar_operations[operation->get_result()] = operation.get();
-    get_basic_block(blockid).add_operation(std::move(operation));
+    const auto & it = blocks.find(block_id);
+    if (it == blocks.end()) {
+	return;
+    }
+    it->second->insert_operation(operation_index, std::move(operation));
 }
 
 
