@@ -54,6 +54,7 @@ void Gyoji::mir::operation_static_init()
     op_type_names.insert(std::pair(Operation::OP_LITERAL_FLOAT, "literal-float"));
     op_type_names.insert(std::pair(Operation::OP_LITERAL_BOOL, "literal-bool"));
     op_type_names.insert(std::pair(Operation::OP_LITERAL_NULL, "literal-null"));
+    op_type_names.insert(std::pair(Operation::OP_ANONYMOUS_STRUCTURE, "anonymous-structure"));
     
     // Unary operations
     op_type_names.insert(std::pair(Operation::OP_ADDRESSOF, "addressof"));
@@ -846,7 +847,42 @@ OperationLiteralNull::get_description() const
     std::string desc = std::string("_") + std::to_string(result) + std::string(" = ") + op_name + std::string(" ( )");
     return desc;
 }
+//////////////////////////////////////////////
+// OperationAnonymousStructure
+//////////////////////////////////////////////
 
+OperationAnonymousStructure::OperationAnonymousStructure(
+    const Gyoji::context::SourceReference & _src_ref,
+    size_t _result,
+    std::vector<std::pair<std::string, size_t>> _fields
+    )
+    : Operation(OP_ANONYMOUS_STRUCTURE, _src_ref, _result)
+{
+    for (const auto & p : _fields) {
+	fields.push_back(p.first);
+	operands.push_back(p.second);
+    }
+}
+OperationAnonymousStructure::~OperationAnonymousStructure()
+{}
+
+std::string
+OperationAnonymousStructure::get_description() const
+{
+    std::vector<std::string> field_desc;
+    
+    for (size_t i = 0; i < operands.size(); i++) {
+	size_t tmpvar = operands.at(i);
+	std::string name = fields.at(i);
+	field_desc.push_back(std::string(name) + std::string(": _") + std::to_string(tmpvar));
+    }
+    std::string fdesc = Gyoji::misc::join(field_desc, ", ");
+    
+    const auto & it = op_type_names.find(type);
+    const std::string & op_name = it->second;
+    std::string desc = std::string("_") + std::to_string(result) + std::string(" = ") + op_name + std::string(" (") + fdesc + std::string(" )");
+    return desc;
+}
 
 //////////////////////////////////////////////
 // OperationJumpConditional

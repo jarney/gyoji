@@ -109,6 +109,9 @@ namespace Gyoji::frontend::tree {
   class StatementList;
     class Statement;
         class InitializerExpression;
+          class StructInitializerExpression;
+            class StructInitializerFieldList;
+              class StructInitializerFieldExpression;
       class StatementVariableDeclaration;
       class StatementBlock;
       class StatementExpression;
@@ -204,6 +207,9 @@ namespace Gyoji::frontend::tree {
         Gyoji::frontend::tree::StatementList*,                              \
         Gyoji::frontend::tree::  Statement*,                                \
         Gyoji::frontend::tree::      InitializerExpression*,                \
+        Gyoji::frontend::tree::        StructInitializerExpression*,        \
+        Gyoji::frontend::tree::          StructInitializerFieldList*,       \
+        Gyoji::frontend::tree::            StructInitializerFieldExpression*, \
         Gyoji::frontend::tree::    StatementVariableDeclaration*,           \
         Gyoji::frontend::tree::    StatementBlock*,                         \
         Gyoji::frontend::tree::    StatementExpression*,                    \

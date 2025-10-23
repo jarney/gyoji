@@ -616,9 +616,22 @@ InitializerExpression::InitializerExpression(
     : SyntaxNode(NONTERMINAL_initializer_expression, this, _expression->get_source_ref())
     , equals_token(std::move(_equals_token))
     , expression(std::move(_expression))
+    , struct_initializer_expression(nullptr)
 {
     add_child(*equals_token);
     add_child(*expression);
+}
+InitializerExpression::InitializerExpression(
+    Gyoji::owned<Terminal> _equals_token,
+    Gyoji::owned<StructInitializerExpression> _struct_initializer_expression
+    )
+    : SyntaxNode(NONTERMINAL_initializer_expression, this, _struct_initializer_expression->get_source_ref())
+    , equals_token(std::move(_equals_token))
+    , expression(nullptr)
+    , struct_initializer_expression(std::move(_struct_initializer_expression))
+{
+    add_child(*equals_token);
+    add_child(*struct_initializer_expression);
 }
 InitializerExpression::~InitializerExpression()
 {}
@@ -630,6 +643,87 @@ InitializerExpression::has_expression() const
 const Expression &
 InitializerExpression::get_expression() const
 { return *expression; }
+
+bool
+InitializerExpression::has_struct_expression() const
+{ return struct_initializer_expression != nullptr; }
+
+const StructInitializerExpression &
+InitializerExpression::get_struct_initializer_expression() const
+{ return *struct_initializer_expression; }
+
+
+///////////////////////////////////////////////////
+StructInitializerExpression::StructInitializerExpression(
+    Gyoji::owned<Terminal> _brace_l_token,
+    Gyoji::owned<StructInitializerFieldList> _field_list,
+    Gyoji::owned<Terminal> _brace_r_token
+    )
+    : SyntaxNode(NONTERMINAL_struct_initializer_expression, this, _brace_l_token->get_source_ref())
+    , brace_l_token(std::move(_brace_l_token))
+    , field_list(std::move(_field_list))
+    , brace_r_token(std::move(_brace_r_token))
+{
+    add_child(*brace_l_token);
+    add_child(*field_list);
+    add_child(*brace_r_token);
+}
+StructInitializerExpression::~StructInitializerExpression()
+{}
+
+const StructInitializerFieldList &
+StructInitializerExpression::get_field_list() const
+{ return *field_list; }
+    
+///////////////////////////////////////////////////
+StructInitializerFieldList::StructInitializerFieldList(
+    const Gyoji::context::SourceReference & _source_ref
+    )
+    : SyntaxNode(NONTERMINAL_struct_initializer_field_list, this, _source_ref)
+{}
+StructInitializerFieldList::~StructInitializerFieldList()
+{}
+
+void
+StructInitializerFieldList::add_field(Gyoji::owned<StructInitializerFieldExpression> field)
+{}
+
+const std::vector<Gyoji::owned<StructInitializerFieldExpression>> &
+StructInitializerFieldList::get_fields() const
+{ return fields; }
+    
+
+///////////////////////////////////////////////////
+StructInitializerFieldExpression::StructInitializerFieldExpression(
+    Gyoji::owned<Terminal> _dot_token,
+    Gyoji::owned<Terminal> _identifier_token,
+    Gyoji::owned<Expression> _expression,
+    Gyoji::owned<Terminal> _semicolon_token
+    )
+    : SyntaxNode(NONTERMINAL_struct_initializer_field_expression, this, _identifier_token->get_source_ref())
+    , dot_token(std::move(_dot_token))
+    , identifier_token(std::move(_identifier_token))
+    , expression(std::move(_expression))
+    , semicolon_token(std::move(_semicolon_token))
+{
+    add_child(*dot_token);
+    add_child(*identifier_token);
+    add_child(*expression);
+    add_child(*semicolon_token);
+}
+
+StructInitializerFieldExpression::~StructInitializerFieldExpression()
+{}
+
+const Terminal &
+StructInitializerFieldExpression::get_identifier() const
+{ return *identifier_token; }
+
+const Expression &
+StructInitializerFieldExpression::get_expression() const
+{ return *expression; }
+
+///////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////
 StatementVariableDeclaration::StatementVariableDeclaration(

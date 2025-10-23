@@ -292,6 +292,9 @@
 %nterm <Gyoji::owned<Gyoji::frontend::tree::Expression>> expression_assignment;
 
 %nterm <Gyoji::owned<Gyoji::frontend::tree::InitializerExpression>> initializer_expression;
+%nterm <Gyoji::owned<Gyoji::frontend::tree::StructInitializerExpression>> struct_initializer_expression;
+%nterm <Gyoji::owned<Gyoji::frontend::tree::StructInitializerFieldList>> struct_field_list;
+%nterm <Gyoji::owned<Gyoji::frontend::tree::StructInitializerFieldExpression>> struct_field_expression;
 
 %nterm <Gyoji::owned<Gyoji::frontend::tree::TypeSpecifier>> type_specifier;
 %nterm <Gyoji::owned<Gyoji::frontend::tree::TypeSpecifierCallArgs>> type_specifier_call_args;
@@ -509,7 +512,6 @@ global_initializer_struct_initializer_list
         }
         ;
 
-
 opt_struct_initializer_list
         : /**/ {
                 $$ = std::make_unique<Gyoji::frontend::tree::StructInitializerList>(return_data.compiler_context.get_token_stream().get_current_source_ref());
@@ -523,7 +525,7 @@ opt_struct_initializer_list
 
 struct_initializer_list
         : struct_initializer {
-                $$ = std::make_unique<Gyoji::frontend::tree::StructInitializerList>($1->get_source_ref());
+                $$ = std::make_unique<Gyoji::frontend::tree::StructInitializerList>(return_data.compiler_context.get_token_stream().get_current_source_ref());
                 $$->add_initializer(std::move($1));
                 PRINT_NONTERMINALS($$);
         }
@@ -1111,18 +1113,62 @@ statement
         ;
 
 initializer_expression
-: /**/ {
-    $$ = std::make_unique<Gyoji::frontend::tree::InitializerExpression>(return_data.compiler_context.get_token_stream().get_current_source_ref());
-    PRINT_NONTERMINALS($$);
-}
-| ASSIGNMENT expression {
-    $$ = std::make_unique<Gyoji::frontend::tree::InitializerExpression>(
-	std::move($1),
-	std::move($2)
-	);
-    PRINT_NONTERMINALS($$);
-}
-;
+        : /**/ {
+                $$ = std::make_unique<Gyoji::frontend::tree::InitializerExpression>(return_data.compiler_context.get_token_stream().get_current_source_ref());
+                PRINT_NONTERMINALS($$);
+        }
+        | ASSIGNMENT expression {
+                $$ = std::make_unique<Gyoji::frontend::tree::InitializerExpression>(
+                        std::move($1),
+                        std::move($2)
+                        );
+                PRINT_NONTERMINALS($$);
+        }
+        | ASSIGNMENT struct_initializer_expression {
+                $$ = std::make_unique<Gyoji::frontend::tree::InitializerExpression>(
+                        std::move($1),
+                        std::move($2)
+                        );	    
+        }
+        ;
+
+struct_initializer_expression
+        : BRACE_L struct_field_list BRACE_R {
+                $$ = std::make_unique<Gyoji::frontend::tree::StructInitializerExpression>(
+                        std::move($1),
+                        std::move($2),
+                        std::move($3)
+                );
+                PRINT_NONTERMINALS($$);
+        }
+        ;
+
+struct_field_list
+        : /**/ {
+                $$ = std::make_unique<Gyoji::frontend::tree::StructInitializerFieldList>(
+                        return_data.compiler_context.get_token_stream().get_current_source_ref()
+                );
+                PRINT_NONTERMINALS($$);
+        }
+        | struct_field_list struct_field_expression {
+                $$ = std::move($1);
+                $$->add_field(std::move($2));
+                PRINT_NONTERMINALS($$);
+        }
+        ;
+
+struct_field_expression
+        : DOT IDENTIFIER expression SEMICOLON {
+                $$ = std::make_unique<Gyoji::frontend::tree::StructInitializerFieldExpression>(
+                        std::move($1),
+                        std::move($2),
+                        std::move($3),
+                        std::move($4)
+                );
+                PRINT_NONTERMINALS($$);
+        }
+        ;
+
 
 statement_variable_declaration
         : type_specifier IDENTIFIER initializer_expression SEMICOLON {

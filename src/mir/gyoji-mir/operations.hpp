@@ -436,6 +436,18 @@ namespace Gyoji::mir {
 	     * @endcode
 	     */
 	    OP_LITERAL_NULL,
+
+	    /**
+	     * @brief Anonymous structures
+	     *
+	     * @details
+	     * This creates an anonymous structure that can be used
+	     * to initialize a class with initial values.  The field
+	     * names and types must match the class being initialized
+	     * and may contain nested classes for the case of
+	     * initializing classes with nested elements.
+	     */
+	    OP_ANONYMOUS_STRUCTURE,
 	    
 	    /**
 	     * @brief Returns the address of the given variable.
@@ -1664,6 +1676,34 @@ namespace Gyoji::mir {
     private:
     };
 
+    /**
+     * @brief This class represents an anonymous structure.
+     *
+     * @details
+     * An anonymous structure is a collection of field names
+     * along with corresponding temporary variables that can
+     * be used to initialize a class.  This is provided in order
+     * to allow assignment of composite data-types in order
+     * to initialize them.  Each field is a "name" along with
+     * its corresponding tmpvar value.  This anonymous structure
+     * can be used in an OP_ASSIGNMENT as an lvalue when assigning
+     * a class structure instead of assigning from another class
+     * of the same type.  This is mainly intended to be used
+     * during the declaration/assignment of a class.
+     */
+    class OperationAnonymousStructure : public Operation {
+	OperationAnonymousStructure(
+	    const Gyoji::context::SourceReference & _src_ref,
+	    size_t _result,
+	    std::vector<std::pair<std::string, size_t>> _fields
+	    );
+	virtual ~OperationAnonymousStructure();
+    protected:
+	virtual std::string get_description() const;
+    private:
+	std::vector<std::string> fields;
+    };
+    
     /**
      * @brief The operation for obtaining the storage size of a type.
      *

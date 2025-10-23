@@ -9,10 +9,11 @@ It is also intended to use many concepts from Rust like the borrow-checker
 without going "too far" and making too many assumptions about the
 "standard" library, the environment, or the way it should be used.
 
-It uses the C ABI (largely thanks to LLVM) and does NOT introduce exceptions
-or other constructs which would break ABI compatibility.  It does NOT
-ever "panic" or halt execution without the programmer's explicit instruction
-to do so.
+It uses the C ABI(*) (largely thanks to LLVM) and does NOT introduce exceptions
+or other constructs which would break ABI compatibility.  Note that structure-based
+arguments and returns are NOT compliant with the C ABI.  Fortunately, these are rare,
+but this is not a solved problem yet. It does NOT ever "panic" or halt execution
+without the programmer's explicit instruction to do so.
 
 The syntax will be "familiar" to users of C, Java, C++, borrowing many ideas
 from prior art, but is not intended to be backward-compatible with any of them.

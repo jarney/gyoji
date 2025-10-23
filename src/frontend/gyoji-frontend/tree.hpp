@@ -1036,12 +1036,63 @@ namespace Gyoji::frontend::tree {
 	    Gyoji::owned<Terminal> _equals_token,
 	    Gyoji::owned<Expression> _expression
 	    );
+	InitializerExpression(
+	    Gyoji::owned<Terminal> _equals_token,
+	    Gyoji::owned<StructInitializerExpression> _struct_initializer_expression
+	    );
 	~InitializerExpression();
 	bool has_expression() const;
+	bool has_struct_expression() const;
 	const Expression & get_expression() const;
+	const StructInitializerExpression & get_struct_initializer_expression() const;
     private:
 	Gyoji::owned<Terminal> equals_token;
 	Gyoji::owned<Expression> expression;
+	Gyoji::owned<StructInitializerExpression> struct_initializer_expression;
+    };
+
+    class StructInitializerExpression : public Gyoji::frontend::ast::SyntaxNode {
+    public:
+	StructInitializerExpression(
+	    Gyoji::owned<Terminal> _brace_l_token,
+	    Gyoji::owned<StructInitializerFieldList> _field_list,
+	    Gyoji::owned<Terminal> _brace_r_token
+	    );
+	~StructInitializerExpression();
+	const StructInitializerFieldList & get_field_list() const;
+    private:
+	Gyoji::owned<Terminal> brace_l_token;
+	Gyoji::owned<StructInitializerFieldList> field_list;
+	Gyoji::owned<Terminal> brace_r_token;
+	
+    };
+    
+    class StructInitializerFieldList : public Gyoji::frontend::ast::SyntaxNode {
+    public:
+	StructInitializerFieldList(const Gyoji::context::SourceReference & _source_ref);
+	~StructInitializerFieldList();
+	void add_field(Gyoji::owned<StructInitializerFieldExpression> field);
+	const std::vector<Gyoji::owned<StructInitializerFieldExpression>> & get_fields() const;
+    private:
+	std::vector<Gyoji::owned<StructInitializerFieldExpression>> fields;
+    };
+    
+    class StructInitializerFieldExpression : public Gyoji::frontend::ast::SyntaxNode {
+    public:
+	StructInitializerFieldExpression(
+	    Gyoji::owned<Terminal> _dot_token,
+	    Gyoji::owned<Terminal> _identifier_token,
+	    Gyoji::owned<Expression> _expression,
+	    Gyoji::owned<Terminal> _semicolon_token
+	);
+	~StructInitializerFieldExpression();
+	const Terminal & get_identifier() const;
+	const Expression & get_expression() const;
+    private:
+	Gyoji::owned<Terminal> dot_token;
+	Gyoji::owned<Terminal> identifier_token;
+	Gyoji::owned<Expression> expression;
+	Gyoji::owned<Terminal> semicolon_token;
     };
     
     //! Represents the declaration of a variable inside the scope of a function or block.
