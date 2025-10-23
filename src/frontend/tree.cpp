@@ -697,17 +697,20 @@ StructInitializerFieldList::get_fields() const
 StructInitializerFieldExpression::StructInitializerFieldExpression(
     Gyoji::owned<Terminal> _dot_token,
     Gyoji::owned<Terminal> _identifier_token,
+    Gyoji::owned<Terminal> _assignment_token,
     Gyoji::owned<Expression> _expression,
     Gyoji::owned<Terminal> _semicolon_token
     )
     : SyntaxNode(NONTERMINAL_struct_initializer_field_expression, this, _identifier_token->get_source_ref())
     , dot_token(std::move(_dot_token))
     , identifier_token(std::move(_identifier_token))
+    , assignment_token(std::move(_assignment_token))
     , expression(std::move(_expression))
     , semicolon_token(std::move(_semicolon_token))
 {
     add_child(*dot_token);
     add_child(*identifier_token);
+    add_child(*assignment_token);
     add_child(*expression);
     add_child(*semicolon_token);
 }

@@ -1082,6 +1082,7 @@ namespace Gyoji::frontend::tree {
 	StructInitializerFieldExpression(
 	    Gyoji::owned<Terminal> _dot_token,
 	    Gyoji::owned<Terminal> _identifier_token,
+	    Gyoji::owned<Terminal> _assignment_token,
 	    Gyoji::owned<Expression> _expression,
 	    Gyoji::owned<Terminal> _semicolon_token
 	);
@@ -1091,6 +1092,7 @@ namespace Gyoji::frontend::tree {
     private:
 	Gyoji::owned<Terminal> dot_token;
 	Gyoji::owned<Terminal> identifier_token;
+	Gyoji::owned<Terminal> assignment_token;
 	Gyoji::owned<Expression> expression;
 	Gyoji::owned<Terminal> semicolon_token;
     };

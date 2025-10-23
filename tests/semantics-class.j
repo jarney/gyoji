@@ -70,7 +70,11 @@ u32 main(u32 argc, u8**argv)
         u32 x = 8u32;
         x = 19;
 //	Foo cl(537);
-	Foo cl;
+	Foo cl = {
+	    .a = x;
+	    .b = 0u8;
+	    .c = "something";
+	};
 
 // We do allow function calls in static context.
 //	Foo::set_something(&cl, 0, 0, 0);

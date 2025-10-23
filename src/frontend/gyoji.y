@@ -1158,12 +1158,13 @@ struct_field_list
         ;
 
 struct_field_expression
-        : DOT IDENTIFIER expression SEMICOLON {
+        : DOT IDENTIFIER ASSIGNMENT expression SEMICOLON {
                 $$ = std::make_unique<Gyoji::frontend::tree::StructInitializerFieldExpression>(
                         std::move($1),
                         std::move($2),
                         std::move($3),
-                        std::move($4)
+                        std::move($4),
+                        std::move($5)
                 );
                 PRINT_NONTERMINALS($$);
         }
