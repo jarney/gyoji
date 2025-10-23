@@ -1692,6 +1692,7 @@ namespace Gyoji::mir {
      * during the declaration/assignment of a class.
      */
     class OperationAnonymousStructure : public Operation {
+    public:
 	OperationAnonymousStructure(
 	    const Gyoji::context::SourceReference & _src_ref,
 	    size_t _result,

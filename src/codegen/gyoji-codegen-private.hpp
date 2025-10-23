@@ -138,6 +138,10 @@ namespace Gyoji::codegen {
 	void generate_operation_literal_null(
 	    const Gyoji::mir::Function & mir_function,
 	    const Gyoji::mir::OperationLiteralNull & operation
+	    );	
+	void generate_operation_anonymous_structure(
+	    const Gyoji::mir::Function & mir_function,
+	    const Gyoji::mir::OperationAnonymousStructure &operation
 	    );
 
 	// Unary operations

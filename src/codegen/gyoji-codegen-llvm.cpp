@@ -688,6 +688,14 @@ CodeGeneratorLLVMContext::generate_operation_literal_null(
     tmp_values.insert(std::pair(operation.get_result(), result));
 }
 
+void
+CodeGeneratorLLVMContext::generate_operation_anonymous_structure(
+    const Gyoji::mir::Function & mir_function,
+    const Gyoji::mir::OperationAnonymousStructure &operation
+    )
+{
+}
+
 
 // Unary operations
 void
@@ -1412,6 +1420,37 @@ CodeGeneratorLLVMContext::generate_operation_assign(
 	tmp_values.insert(std::pair(operation.get_result(), a_value));
 	tmp_lvalues.insert(std::pair(operation.get_result(), a_lvalue));
     }
+    // Generate the code for assigning
+    // structure members to each other.
+    else if (atype->is_composite() && btype->is_composite()) {
+	// Iterate the fields of each one and emit the load and store
+	// for each field based on the index of the field element.
+
+	llvm::Value *value_a = tmp_lvalues[operation.get_a()];
+	    
+	size_t nmembers = btype->get_members().size();
+	for (size_t i = 0; i < nmembers; i++) {
+	    const auto & b_member = btype->get_members().at(i);
+	    const auto & a_member = *atype->member_get(b_member.get_name());
+	    
+	    size_t a_member_index = a_member.get_index();
+	    size_t b_member_index = b_member.get_index();
+
+	    llvm::Value * a_value = tmp_values[operation.get_a()];
+	    llvm::Value * a_lvalue = tmp_lvalues[operation.get_a()];
+	    llvm::Value * b_value = tmp_values[operation.get_b()];
+
+	    llvm::Type *a_type = types[b_member.get_type()->get_name()];
+	    llvm::Type *b_type = types[a_member.get_type()->get_name()];
+	    
+	    llvm::Value *b_member_value = Builder->CreateConstInBoundsGEP2_32(b_type, a_value, 0, b_member_index);
+	    llvm::Value *a_member_value = Builder->CreateConstInBoundsGEP2_32(a_type, b_value, 0, a_member_index);
+	    
+	    llvm::Value *load_value = Builder->CreateLoad(types[b_member.get_type()->get_name()], b_member_value);
+	    llvm::Value *store_value = Builder->CreateStore(a_member_value, load_value);
+	}
+
+    }
     else {
 	llvm::Value * a_lvalue = tmp_lvalues[operation.get_a()];
 	llvm::Value * b_value = tmp_values[operation.get_b()];
@@ -1530,7 +1569,9 @@ CodeGeneratorLLVMContext::generate_basic_block(
 	case Operation::OP_LITERAL_NULL:
 	    generate_operation_literal_null(mir_function, (const OperationLiteralNull &)operation);
 	    break;
-	    
+	case Operation::OP_ANONYMOUS_STRUCTURE:
+	    generate_operation_anonymous_structure(mir_function, (const OperationAnonymousStructure &)operation);
+	    break;
         // Unary operations	    
 	case Operation::OP_ADDRESSOF:
 	    generate_operation_addressof(mir_function, (const OperationUnary &)operation);

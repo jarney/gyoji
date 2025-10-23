@@ -686,7 +686,7 @@ StructInitializerFieldList::~StructInitializerFieldList()
 
 void
 StructInitializerFieldList::add_field(Gyoji::owned<StructInitializerFieldExpression> field)
-{}
+{ fields.push_back(std::move(field)); }
 
 const std::vector<Gyoji::owned<StructInitializerFieldExpression>> &
 StructInitializerFieldList::get_fields() const

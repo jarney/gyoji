@@ -2227,6 +2227,10 @@ expression_assignment
                 $$ = std::make_unique<Gyoji::frontend::tree::Expression>(std::move(expr), sn);
                 PRINT_NONTERMINALS($$);
         }
+// We can also allow deferred assignment of classes, but we're not doing this right now.
+//        | expression_unary ASSIGNMENT struct_initializer_expression {
+//	    $$ = std::move($1);
+//        }
 	;
 
 operator_assignment

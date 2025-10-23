@@ -858,6 +858,7 @@ OperationAnonymousStructure::OperationAnonymousStructure(
     )
     : Operation(OP_ANONYMOUS_STRUCTURE, _src_ref, _result)
 {
+    fprintf(stderr, "Constructing anonymous structure of length %ld\n", _fields.size());
     for (const auto & p : _fields) {
 	fields.push_back(p.first);
 	operands.push_back(p.second);

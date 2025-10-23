@@ -2270,6 +2270,21 @@ FunctionDefinitionResolver::handle_binary_operation_assignment(
 	    // Nothing to do.  This is a valid assignment
 	    // even inside an unsafe block.
 	}
+	// Should we model anonymous structures as types for the purposes of assignment?
+	else if (atype->is_composite() && btype->is_composite()) {
+	    if (btype->get_members().size() != btype->get_members().size()) {
+		compiler_context
+		    .get_errors()
+		    .add_simple_error(
+			_src_ref,
+			"Type mismatch in assignment operation, wrong number of fields.",
+			std::string("The operands of an assignment should be the same type, but were: a=") + atype->get_name() + std::string(" b=") + btype->get_name()
+			);		
+	    }
+	    // It's ok to proceed with an assignment, let the
+	    // codegen layer deal with making the copy.
+
+	}
 	else {
 	    compiler_context
 		.get_errors()
@@ -2291,6 +2306,7 @@ FunctionDefinitionResolver::handle_binary_operation_assignment(
 		);
 	return false;
     }
+#if 0
     if (atype->is_composite()) {
 	compiler_context
 	    .get_errors()
@@ -2301,7 +2317,8 @@ FunctionDefinitionResolver::handle_binary_operation_assignment(
 		);
 	return false;
     }
-
+#endif
+    
     // Notably, we never widen a shift operation.
     // Instead, we operate on whatever it is because
     // it will end up being masked down to an 8-bit
@@ -2901,6 +2918,74 @@ FunctionDefinitionResolver::local_declare_or_error(
 }
 
 bool
+FunctionDefinitionResolver::extract_from_struct_initializer(
+    size_t & initial_value_tmpvar,
+    const Gyoji::frontend::tree::StructInitializerExpression & struct_initializer_expression
+    )
+{
+    const auto & field_list = struct_initializer_expression.get_field_list();
+    const auto & fields = field_list.get_fields();
+
+    std::vector<std::pair<std::string, size_t>> field_values;
+    bool is_ok = true;
+    std::vector<std::string> field_types;
+    std::vector<TypeMember> members;
+    size_t index = 0;
+    for (const auto & field : fields) {
+	std::string name = field->get_identifier().get_name();
+	size_t tmpvar;
+	if (!extract_from_expression(
+		tmpvar,
+		field->get_expression())) {
+	    is_ok = false;
+	}
+	else {
+	    const Type *member_type = function->tmpvar_get(tmpvar);
+	    field_types.push_back(member_type->get_name());
+	    field_values.push_back(std::pair(name, tmpvar));
+	    members.push_back(
+		TypeMember(
+		    name,
+		    index,
+		    member_type,
+		    field->get_expression().get_source_ref()
+		    )
+		);
+	}
+	index++;
+    }
+    if (!is_ok) {
+	return false;
+    }
+
+    std::string field_desc_str = Gyoji::misc::join(field_types, ", ");
+    std::string anonymous_structure_type_name = std::string("<anonymous_structure>{") + field_desc_str + std::string("}");
+    Type *anonymous_structure_type = type_resolver.get_or_create(anonymous_structure_type_name, Type::TYPE_COMPOSITE, false, struct_initializer_expression.get_source_ref());
+    if (!anonymous_structure_type->is_complete()) {
+	std::map<std::string, TypeMethod> methods; // No methods for anonymous types.
+	anonymous_structure_type->complete_composite_definition(
+	    members,
+	    methods,
+	    struct_initializer_expression.get_source_ref()
+	    );
+    }
+    
+    // We model this as a 'void' type.
+    initial_value_tmpvar = function->tmpvar_define(anonymous_structure_type);
+    function->add_operation(
+	current_block,
+	std::make_unique<OperationAnonymousStructure>(
+	    struct_initializer_expression.get_source_ref(),
+	    initial_value_tmpvar,
+	    field_values
+	    )
+	);
+
+    return true;
+}
+	
+
+bool
 FunctionDefinitionResolver::extract_from_statement_variable_declaration(
     const StatementVariableDeclaration & statement
     )
@@ -2924,20 +3009,10 @@ FunctionDefinitionResolver::extract_from_statement_variable_declaration(
 	return false;
     }
 
-    const Expression *expression = nullptr;
+    // We don't assign here because we want the compiler
+    // to detect lack of initialization.
+    const SourceReference * source_ref;
     
-    // This is an equals-style
-    // initialization of a primitive variable.
-    const auto & initializer_expression = statement.get_initializer_expression();
-    if (initializer_expression.has_expression()) {
-	expression = &initializer_expression.get_expression();
-    }
-    else {
-	// The author has chosen to defer initialization,
-	// so we're done with the initialization part.
-	return true;
-    }
-
     // From here, we need to:
     // 1) call LocalVariable
     // 2) Evaluate the expression
@@ -2952,17 +3027,71 @@ FunctionDefinitionResolver::extract_from_statement_variable_declaration(
 	    mir_type
 	    )
 	);
-    
     size_t initial_value_tmpvar;
-    if (!extract_from_expression(initial_value_tmpvar, *expression)) {
-	return false;
-    }
     
+    const auto & initializer_expression = statement.get_initializer_expression();
+    
+    // This is an equals-style
+    // initialization of a primitive variable.
+    if (mir_type->is_composite()) {
+	if (initializer_expression.has_expression()) {
+	    // This isn't valid for composite types.
+	    compiler_context
+		.get_errors()
+		.add_simple_error(
+		    initializer_expression.get_source_ref(),
+		    "Composite types may not be initialized with simple expressions",
+		    "Composite types must be initialized with structure initializers like { field = value; };"
+		    );
+	    return false;
+	}
+	else if (initializer_expression.has_struct_expression()) {
+	    if (!extract_from_struct_initializer(
+		initial_value_tmpvar,
+		initializer_expression.get_struct_initializer_expression()
+		    )) {
+		return false;
+	    }
+	    source_ref = &initializer_expression.get_struct_initializer_expression().get_source_ref();
+	}
+    }
+    else {
+	if (initializer_expression.has_expression()) {
+	    if (!extract_from_expression(
+		    initial_value_tmpvar,
+		    initializer_expression.get_expression())) {
+		return false;
+	    }
+	    source_ref = &initializer_expression.get_expression().get_source_ref();
+	}
+	else if (initializer_expression.has_struct_expression()) {
+	    // This isn't valid for primitive types.
+	    compiler_context
+		.get_errors()
+		.add_simple_error(
+		    initializer_expression.get_source_ref(),
+		    "Primitive types may not be initialized with structures",
+		    "Primitive types may not be initialized with structures, but must be initialized with other primitive values"
+		    );
+	    return false;
+	}
+	else {
+	    // The author has chosen to defer initialization,
+	    // so we're done with the initialization part.
+	    // We just have to trust that the author will initialize
+	    // later.
+	    return true;
+	}
+    }
+    // Early-out for debugging purposes.
+//    if (initializer_expression.has_struct_expression()) {
+//	return true;
+//    }
     size_t returned_tmpvar; // We don't save the returned val because nobody wants it.
     if (!handle_binary_operation_assignment(
-	    expression->get_source_ref(),
+	    *source_ref,
 	    Operation::OP_ASSIGN,
-		returned_tmpvar,
+	    returned_tmpvar,
 	    variable_tmpvar,
 	    initial_value_tmpvar
 	    )) {

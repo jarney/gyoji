@@ -62,6 +62,14 @@ namespace Gyoji::frontend::lowering {
 	 * type, it may be referenced in a function.
 	 */
 	const Gyoji::mir::Type * extract_from_type_specifier(const Gyoji::frontend::tree::TypeSpecifier & type_specifier);
+
+	Gyoji::mir::Type *get_or_create(
+	    std::string pointer_name,
+	    Gyoji::mir::Type::TypeType type_type,
+	    bool complete,
+	    const Gyoji::context::SourceReference & source_ref
+	    );
+
     private:
 	Gyoji::mir::MIR & mir;
 	Gyoji::context::CompilerContext & compiler_context;
@@ -107,12 +115,6 @@ namespace Gyoji::frontend::lowering {
 	void extract_from_function_definition(const Gyoji::frontend::tree::FileStatementFunctionDefinition & function_definition);
 	void extract_from_function_declaration(const Gyoji::frontend::tree::FileStatementFunctionDeclaration & function_declaration);
 	
-	Gyoji::mir::Type *get_or_create(
-	    std::string pointer_name,
-	    Gyoji::mir::Type::TypeType type_type,
-	    bool complete,
-	    const Gyoji::context::SourceReference & source_ref
-	    );
 	
 	// Move to analysis
 	void check_complete_type(Gyoji::mir::Type *type) const;

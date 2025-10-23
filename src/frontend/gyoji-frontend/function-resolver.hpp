@@ -264,6 +264,11 @@ namespace Gyoji::frontend::lowering {
 	    size_t & returned_tmpvar,
 	    const Gyoji::frontend::tree::Expression & expression
 	    );
+
+	bool extract_from_struct_initializer(
+	    size_t & initial_value_tmpvar,
+	    const Gyoji::frontend::tree::StructInitializerExpression & struct_initializer_expression
+	    );
 	
 	bool extract_from_statement_variable_declaration(
 	    const Gyoji::frontend::tree::StatementVariableDeclaration & statement
