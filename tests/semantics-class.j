@@ -69,7 +69,7 @@ u32 main(u32 argc, u8**argv)
 {
         u32 x = 8u32;
         x = 19;
-	
+
 	Foo cl = {
 	    .a = x;
 	    .b = 0u8;
@@ -77,7 +77,7 @@ u32 main(u32 argc, u8**argv)
 	};
 
 // We do allow function calls in static context.
-//	Foo::set_something(&cl, 0, 0, 0);
+	Foo::set_something(&cl, 0, 0, 0);
 
 // We can also assign function pointer types to functions
 // and call them.

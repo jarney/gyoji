@@ -68,7 +68,7 @@ namespace Gyoji::analysis {
 
     class VariableTmpvarVisitor : public OperationVisitor {
     public:
-	VariableTmpvarVisitor();
+	VariableTmpvarVisitor(const std::map<std::string, std::string> & _ignore_arguments);
 	~VariableTmpvarVisitor();
 	void visit(
 	    size_t block_id,
@@ -79,6 +79,7 @@ namespace Gyoji::analysis {
 	const std::map<size_t, std::string> & get_tmpvars() const;
     private:
 	std::map<size_t, std::string> tmpvars;
+	const std::map<std::string, std::string> & ignore_arguments;
     };
         
     // First, we need to just build a map
@@ -211,7 +212,11 @@ void VariableUseVisitor::visit(
 	}
     }
 }
-VariableTmpvarVisitor::VariableTmpvarVisitor()
+VariableTmpvarVisitor::VariableTmpvarVisitor(
+    const std::map<std::string, std::string> & _ignore_arguments
+    )
+    : tmpvars()
+    , ignore_arguments(_ignore_arguments)
 {}
 
 VariableTmpvarVisitor::~VariableTmpvarVisitor()
@@ -225,11 +230,22 @@ VariableTmpvarVisitor::visit(
     const Operation & operation
     )
 {
-    if (operation.get_type() == Operation::OP_LOCAL_VARIABLE) {
-	const OperationLocalVariable &operation_local = (const OperationLocalVariable &)operation;
-	// Just keep track of the tmpvars that map to local variables.
-	tmpvars[operation_local.get_result()] = operation_local.get_symbol_name();
+    if (operation.get_type() != Operation::OP_LOCAL_VARIABLE) {
+	return;
     }
+    const OperationLocalVariable &operation_local = (const OperationLocalVariable &)operation;
+    const std::string & varname = operation_local.get_symbol_name();
+
+    // Check to see if it's an argument and we
+    // can ignore it since arguments get initialized
+    // when the function begins.
+    const auto & it = ignore_arguments.find(varname);
+    if (it != ignore_arguments.end()) {
+	return;
+    }
+
+    // Just keep track of the tmpvars that map to local variables.
+    tmpvars[operation_local.get_result()] = varname;
 }
 
 const std::map<size_t, std::string> &
@@ -283,31 +299,39 @@ bool AnalysisPassUseBeforeAssignment::true_at(
 
 void AnalysisPassUseBeforeAssignment::check(const Function & function) const
 {
-    // TODO:
-    // For each 'use' operation, we need to
-    // check whether there exists a path 'backward' up the chain of
-    // basic blocks where an assignment took place.
-    VariableTmpvarVisitor id_visitor;
+    std::map<std::string, std::string> ignore_arguments;
+    for (const auto & arg : function.get_arguments()) {
+	ignore_arguments[arg.get_name()] = arg.get_name();
+    }
+    
+    VariableTmpvarVisitor id_visitor(ignore_arguments);
     function.iterate_operations(id_visitor);
     
     VariableUseVisitor visitor(id_visitor.get_tmpvars());
     function.iterate_operations(visitor);
     
-    fprintf(stderr, "Function %s\n", function.get_name().c_str());
-
     std::map<std::string, std::vector<ProgramPoint>> store_points_by_variable;
     for (const auto & store : visitor.get_stores()) {
 	store_points_by_variable[store.variable_name].push_back(store.program_point);
     }
+    
     for (const auto & load : visitor.get_loads()) {
-	// TODO: Rule out arguments because they're initialized always by caller.
-	if (load.variable_name == std::string("argc")) {
-	    continue;
-	}
 	std::map<size_t, bool> already_checked;
 	bool is_true = true_at(function, already_checked, store_points_by_variable[load.variable_name], load.program_point);
 	if (!is_true) {
-	    fprintf(stderr, "Uninitialized %s\n", load.variable_name.c_str());
+	    std::unique_ptr<Gyoji::context::Error> error = std::make_unique<Gyoji::context::Error>("Variable use before initialization.");
+	    const SourceReference & source_ref =
+		function.get_basic_block(load.program_point.block_id).get_operations().at(load.program_point.operation_index)->get_source_ref();
+
+	    error->add_message(
+		source_ref,
+		std::string("Variable ")
+		+ load.variable_name
+		+ std::string(" is uninitialized.  This would result in undefined behavior.  Note that if this appears on a 'return' line, then it is most likely a destructor call.")
+		);
+	    get_compiler_context()
+		.get_errors()
+		.add_error(std::move(error));
 	}
 	already_checked.insert(std::pair(load.program_point.block_id, is_true));
     }
