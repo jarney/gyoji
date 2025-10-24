@@ -437,7 +437,6 @@ FunctionDefinitionResolver::resolve()
 	arguments,
 	is_unsafe,
 	function_definition.get_source_ref());
-
     
     // Create a new basic block for the start
     
@@ -471,25 +470,14 @@ FunctionDefinitionResolver::resolve()
 	size_t basic_block_id = goto_operation->get_goto_point().get_basic_block_id();
 	size_t location = goto_operation->get_goto_point().get_location();
 	for (const auto & unwind : fixup.second) {
-	    fprintf(stderr, "Unwinding variable %s\n", unwind->get_variable_name().c_str());
-
-	    // TODO:
-	    // when we implement destructors, they will be called here
-	    // just before we undeclare the variables.
-	    
 	    // Insert the 'undeclare' operation to mark that
 	    // this variable is no longer in scope.
-	    auto unwind_operation = std::make_unique<OperationLocalUndeclare>(
-		goto_operation->get_source_ref(),
-		unwind->get_variable_name());
-	    function->insert_operation(basic_block_id, location, std::move(unwind_operation));
-	    
-	    // This increment is what makes sure that
-	    // the unwind operations are emitted in the
-	    // correct order so that variable destructors
-	    // are called in the reverse order as the
-	    // declarations.
-	    location++;
+	    location += undeclare_local(
+		unwind->get_variable_name(),
+		unwind->get_variable_type(),
+		basic_block_id,
+		location,
+		goto_operation->get_source_ref());
 	}
     }
 
@@ -500,6 +488,9 @@ FunctionDefinitionResolver::resolve()
     // of non-terminating blocks so we know if we need
     // to add return statements to them
     // or if they can just be culled.
+    //
+    // This 'reachability' graph is really implementing the
+    // 'dominating' relation on the CFG graph.
     function->calculate_block_reachability();
 
     // Case: Reachable block with no terminator.
@@ -528,7 +519,7 @@ FunctionDefinitionResolver::resolve()
 	    ) {
 	    if (return_type->is_void()) {
 		std::vector<std::string> unwind_scope = scope_tracker.get_variables_to_unwind_for_scope();
-		leave_scope(function_definition.get_scope_body().get_source_ref(), unwind_scope);
+		leave_scope(unwind_scope, function_definition.get_scope_body().get_source_ref());
 	
 		function->add_operation(
 		    block_it.first,
@@ -3521,7 +3512,7 @@ FunctionDefinitionResolver::extract_from_statement_break(
     }
 
     std::vector<std::string> unwind_break = scope_tracker.get_variables_to_unwind_for_break();
-    leave_scope(statement.get_source_ref(), unwind_break);
+    leave_scope(unwind_break, statement.get_source_ref());
     
     function->add_operation(
 	current_block,
@@ -3649,7 +3640,7 @@ FunctionDefinitionResolver::extract_from_statement_return(
     std::vector<std::string> unwind_root = scope_tracker.get_variables_to_unwind_for_root();
 
     if (statement.is_void()) {
-	leave_scope(statement.get_source_ref(), unwind_root);
+	leave_scope(unwind_root, statement.get_source_ref());
 	function->add_operation(
 	    current_block,
 	    std::make_unique<OperationReturnVoid>(
@@ -3662,7 +3653,7 @@ FunctionDefinitionResolver::extract_from_statement_return(
 	if (!extract_from_expression(expression_tmpvar, statement.get_expression())) {
 	    return false;
 	}
-	leave_scope(statement.get_source_ref(), unwind_root);
+	leave_scope(unwind_root, statement.get_source_ref());
 	function->add_operation(
 	    current_block,
 	    std::make_unique<OperationReturn>(
@@ -3674,17 +3665,16 @@ FunctionDefinitionResolver::extract_from_statement_return(
     return true;
 }
 
-
-void
-FunctionDefinitionResolver::leave_scope(
-    const SourceReference & src_ref,
-    std::vector<std::string> & unwind)
+size_t
+FunctionDefinitionResolver::undeclare_local(
+    const std::string & variable_name,
+    const Type *class_type,
+    size_t basic_block_id,
+    size_t location,
+    const SourceReference & src_ref
+    )
 {
-    
-    for (const auto & variable_name : unwind) {
-	// Get the type of the unwound variable.  If it's a class, call the destructor.
-	const LocalVariable *localvar = scope_tracker.get_variable(variable_name);
-	const Type *class_type = localvar->get_type();
+	size_t n = 0;
 	if (class_type->is_composite()) {
 	    // Look to see if a destructor is declared.
 	    fprintf(stderr, "Looking for destructor for %s\n", class_type->get_name().c_str());
@@ -3704,8 +3694,9 @@ FunctionDefinitionResolver::leave_scope(
 		std::vector<size_t> passed_arguments;
 		
 		size_t variable_tmpvar = function->tmpvar_define(class_type);
-		function->add_operation(
-		    current_block,
+		function->insert_operation(
+		    basic_block_id,
+		    location,
 		    std::make_unique<OperationLocalVariable>(
 			src_ref,
 			variable_tmpvar,
@@ -3713,11 +3704,14 @@ FunctionDefinitionResolver::leave_scope(
 			class_type
 			)
 		    );
+		location++;
+		n++;
 		
 		const Type *variable_pointer_type = mir.get_types().get_pointer_to(class_type, src_ref);
 		size_t variable_pointer_tmpvar = function->tmpvar_define(variable_pointer_type);
-		function->add_operation(
-		    current_block,
+		function->insert_operation(
+		    basic_block_id,
+		    location,
 		    std::make_unique<OperationUnary>(
 			Operation::OP_ADDRESSOF,
 			src_ref,
@@ -3725,14 +3719,17 @@ FunctionDefinitionResolver::leave_scope(
 			variable_tmpvar
 			)
 		    );
+		location++;
+		n++;
 
 		passed_arguments.push_back(variable_pointer_tmpvar);
 
 		// Emitting destructor call.
 		size_t destructor_fptr_tmpvar = function->tmpvar_define(destructor_fptr_type);
 		std::vector<size_t> partial_operands;
-		function->add_operation(
-		    current_block,
+		function->insert_operation(
+		    basic_block_id,
+		    location,
 		    std::make_unique<OperationSymbol>(
 			src_ref,
 			destructor_fptr_tmpvar,
@@ -3740,11 +3737,14 @@ FunctionDefinitionResolver::leave_scope(
 			fully_qualified_function_name
 			)
 		    );
-		
+		location++;
+		n++;
+
 		// This is what the function pointer type should return.
 		size_t destructor_result_tmpvar = function->tmpvar_define(destructor_fptr_type->get_return_type());
-		function->add_operation(
-		    current_block,
+		function->insert_operation(
+		    basic_block_id,
+		    location,
 		    std::make_unique<OperationFunctionCall>(
 			Operation::OP_DESTRUCTOR,
 			src_ref,
@@ -3753,17 +3753,37 @@ FunctionDefinitionResolver::leave_scope(
 			passed_arguments
 			)
 		    );
+		location++;
+		n++;
 		
 	    }
 	}
 	
-	function->add_operation(
-	    current_block,
+	function->insert_operation(
+	    basic_block_id,
+	    location,
 	    std::make_unique<OperationLocalUndeclare>(
 		src_ref,
 		variable_name
 		)
 	    );
+	location++;
+	n++;
+	return n;
+}
+
+void
+FunctionDefinitionResolver::leave_scope(
+    std::vector<std::string> & unwind,
+    const SourceReference & src_ref
+    )
+{
+    const BasicBlock & block = function->get_basic_block(current_block);
+    size_t location = block.get_operations().size();
+    for (const auto & variable_name : unwind) {
+	const LocalVariable *localvar = scope_tracker.get_variable(variable_name);
+	const Type *class_type = localvar->get_type();
+	location += undeclare_local(variable_name, class_type, current_block, location, src_ref);
     }
     unwind.clear();
 }
@@ -3884,7 +3904,8 @@ FunctionDefinitionResolver::extract_from_statement_list(
     // the function (if it is reachable)
     if (!current_block_terminated && automatic_unwind) {
 	std::vector<std::string> unwind_scope = scope_tracker.get_variables_to_unwind_for_scope();
-	leave_scope(statement_list.get_source_ref(), unwind_scope);
+	// Get the type of the unwound variable.  If it's a class, call the destructor.
+	leave_scope(unwind_scope, statement_list.get_source_ref());
     }
 
     return true;

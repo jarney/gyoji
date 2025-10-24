@@ -114,6 +114,7 @@ namespace Gyoji::frontend::lowering {
 	const FunctionPoint & get_goto_point() const;
 	
 	const std::string & get_variable_name() const;
+	const Gyoji::mir::Type *get_variable_type() const;
 	const Scope *get_child() const;
 
 	const Gyoji::context::SourceReference & get_source_ref() const;
@@ -128,7 +129,6 @@ namespace Gyoji::frontend::lowering {
 
 	const Gyoji::context::SourceReference & source_ref;
 
-	LocalVariable *local_variable;
 	const Gyoji::mir::Type *variable_type;
 	std::string variable_name;
 	

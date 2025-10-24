@@ -309,11 +309,24 @@ namespace Gyoji::frontend::lowering {
 	bool extract_from_statement_return(
 	    const Gyoji::frontend::tree::StatementReturn & statement
 	    );
-	
-	void
-	leave_scope(
-	    const Gyoji::context::SourceReference & src_ref,
-	    std::vector<std::string> & unwind);
+
+	/**
+	 * This handles un-declaring variables at the end of their scope.
+	 * If there is an applicable destructor, it is called to
+	 * ensure any associated cleanup is done.
+	 */
+	size_t undeclare_local(
+	    const std::string & variable_name,
+	    const Gyoji::mir::Type *class_type,
+	    size_t basic_block_id,
+	    size_t location,
+	    const Gyoji::context::SourceReference & src_ref
+	    );
+
+	void leave_scope(
+	    std::vector<std::string> & unwind,
+	    const Gyoji::context::SourceReference & src_ref
+	    );
 	
 	bool extract_from_statement_list(
 	    bool automatic_unwind,

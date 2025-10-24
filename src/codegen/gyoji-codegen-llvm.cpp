@@ -701,6 +701,10 @@ CodeGeneratorLLVMContext::generate_operation_anonymous_structure(
     const Gyoji::mir::OperationAnonymousStructure &operation
     )
 {
+    // This isn't a real machine opcode,
+    // it exists in the MIR solely for the purpose
+    // of communicating inside the code generator,
+    // but does not inherently emit its own object code.
 }
 
 

@@ -104,6 +104,10 @@ const std::string &
 ScopeOperation::get_variable_name() const
 { return variable_name; }
 
+const Gyoji::mir::Type *
+ScopeOperation::get_variable_type() const
+{ return variable_type; }
+
 Gyoji::owned<ScopeOperation>
 ScopeOperation::create_variable(
     std::string _variable_name,
