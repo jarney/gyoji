@@ -54,6 +54,20 @@ u32 main(u32 argc, u8**argv)
 	Foo asdf = Foo::construct();
 	print_value(asdf.member);
 
+	// Transparent member access through references.
+	Foo &ref = asdf;
+	print_value(ref.member);
+
+	Foo bar = *ref;
+	bar.member = bar.member+1;
+	print_value(bar.member);
+
+	// Use of reference by de-referencing it explicitly.
+	u32 &ref_prim = a;
+	print_value(*ref_prim);
+	print_value(*ref_prim);
+	print_value(*ref_prim);
+
 // We should somehow be able to get this
 // in safe mode, but the unsafe rules currently
 // prohibit getting a reference to an object

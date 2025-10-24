@@ -1349,6 +1349,22 @@ FunctionDefinitionResolver::extract_from_expression_postfix_dot(
     }
 
     const Type *class_type = function->tmpvar_get(class_tmpvar);
+    if (class_type->get_type() == Type::TYPE_REFERENCE) {
+	const Type * target = class_type->get_pointer_target();
+	size_t class_reference_tmpvar = function->tmpvar_define(target);
+	function->add_operation(
+	    current_block,
+	    std::make_unique<OperationUnary>(
+		Operation::OP_DEREFERENCE,
+		expression.get_source_ref(),
+		class_reference_tmpvar,
+		class_tmpvar
+		)
+	    );
+	class_type = target;
+	class_tmpvar = class_reference_tmpvar;
+    }
+    
     if (class_type->get_type() != Type::TYPE_COMPOSITE) {
 	compiler_context
 	    .get_errors()
@@ -2261,6 +2277,23 @@ FunctionDefinitionResolver::handle_binary_operation_assignment(
 			);
 		return false;
 	    }
+	}
+	// If we're assigning a reference to anything else,
+	// we're 'borrowing' from that thing.
+	// Only thing is, we have to do the 'addressof' here.
+	else if (atype->is_reference()) {
+	    const Type *variable_pointer_type = mir.get_types().get_pointer_to(btype, _src_ref);
+	    size_t variable_pointer_tmpvar = function->tmpvar_define(variable_pointer_type);
+	    function->add_operation(
+		current_block,
+		std::make_unique<OperationUnary>(
+		    Operation::OP_ADDRESSOF,
+		    _src_ref,
+		    variable_pointer_tmpvar,
+		    b_tmpvar
+		    )
+		);
+	    b_tmpvar = variable_pointer_tmpvar;
 	}
 	else if (atype->is_pointer() && btype->is_reference()) {
 	    // Nothing to do.  This is a valid assignment
