@@ -32,21 +32,21 @@ Types::Types()
     // it's a good enough place for now that I don't care
     // until we have a type system we can plug into this
     
-    define_type(std::make_unique<Type>("i8", Type::TYPE_PRIMITIVE_i8, true, zero_source_ref));
-    define_type(std::make_unique<Type>("i16", Type::TYPE_PRIMITIVE_i16, true, zero_source_ref));
-    define_type(std::make_unique<Type>("i32", Type::TYPE_PRIMITIVE_i32, true, zero_source_ref));
-    define_type(std::make_unique<Type>("i64", Type::TYPE_PRIMITIVE_i64, true, zero_source_ref));
+    define_type(Gyoji::owned_new<Type>("i8", Type::TYPE_PRIMITIVE_i8, true, zero_source_ref));
+    define_type(Gyoji::owned_new<Type>("i16", Type::TYPE_PRIMITIVE_i16, true, zero_source_ref));
+    define_type(Gyoji::owned_new<Type>("i32", Type::TYPE_PRIMITIVE_i32, true, zero_source_ref));
+    define_type(Gyoji::owned_new<Type>("i64", Type::TYPE_PRIMITIVE_i64, true, zero_source_ref));
     
-    define_type(std::make_unique<Type>("u8", Type::TYPE_PRIMITIVE_u8, true, zero_source_ref));
-    define_type(std::make_unique<Type>("u16", Type::TYPE_PRIMITIVE_u16, true, zero_source_ref));
-    define_type(std::make_unique<Type>("u32", Type::TYPE_PRIMITIVE_u32, true, zero_source_ref));
-    define_type(std::make_unique<Type>("u64", Type::TYPE_PRIMITIVE_u64, true, zero_source_ref));
+    define_type(Gyoji::owned_new<Type>("u8", Type::TYPE_PRIMITIVE_u8, true, zero_source_ref));
+    define_type(Gyoji::owned_new<Type>("u16", Type::TYPE_PRIMITIVE_u16, true, zero_source_ref));
+    define_type(Gyoji::owned_new<Type>("u32", Type::TYPE_PRIMITIVE_u32, true, zero_source_ref));
+    define_type(Gyoji::owned_new<Type>("u64", Type::TYPE_PRIMITIVE_u64, true, zero_source_ref));
     
-    define_type(std::make_unique<Type>("f32", Type::TYPE_PRIMITIVE_f32, true, zero_source_ref));
-    define_type(std::make_unique<Type>("f64", Type::TYPE_PRIMITIVE_f64, true, zero_source_ref));
+    define_type(Gyoji::owned_new<Type>("f32", Type::TYPE_PRIMITIVE_f32, true, zero_source_ref));
+    define_type(Gyoji::owned_new<Type>("f64", Type::TYPE_PRIMITIVE_f64, true, zero_source_ref));
     
-    define_type(std::make_unique<Type>("bool", Type::TYPE_PRIMITIVE_bool, true, zero_source_ref));
-    define_type(std::make_unique<Type>("void", Type::TYPE_PRIMITIVE_void, true, zero_source_ref));
+    define_type(Gyoji::owned_new<Type>("bool", Type::TYPE_PRIMITIVE_bool, true, zero_source_ref));
+    define_type(Gyoji::owned_new<Type>("void", Type::TYPE_PRIMITIVE_void, true, zero_source_ref));
 }
 
 Types::~Types()
@@ -69,7 +69,7 @@ Types::get_pointer_to(const Type *_type, const SourceReference & src_ref)
     if (pointer_type != nullptr) {
 	return pointer_type;
     }
-    Gyoji::owned<Type> pointer_owned = std::make_unique<Type>(pointer_type_name, Type::TYPE_POINTER, false, src_ref);
+    Gyoji::owned<Type> pointer_owned = Gyoji::owned_new<Type>(pointer_type_name, Type::TYPE_POINTER, false, src_ref);
     pointer_type = pointer_owned.get();
     pointer_owned->complete_pointer_definition(_type, src_ref);
     define_type(std::move(pointer_owned));
@@ -85,7 +85,7 @@ Types::get_reference_to(const Type *_type, const SourceReference & src_ref)
     if (pointer_type != nullptr) {
 	return pointer_type;
     }
-    Gyoji::owned<Type> pointer_owned = std::make_unique<Type>(pointer_type_name, Type::TYPE_REFERENCE, false, src_ref);
+    Gyoji::owned<Type> pointer_owned = Gyoji::owned_new<Type>(pointer_type_name, Type::TYPE_REFERENCE, false, src_ref);
     pointer_type = pointer_owned.get();
     pointer_owned->complete_pointer_definition(_type, src_ref);
     define_type(std::move(pointer_owned));
@@ -104,7 +104,7 @@ Types::get_array_of(
     if (array_type != nullptr) {
 	return array_type;
     }
-    Gyoji::owned<Type> array_owned = std::make_unique<Type>(array_type_name, Type::TYPE_ARRAY, false, _src_ref);
+    Gyoji::owned<Type> array_owned = Gyoji::owned_new<Type>(array_type_name, Type::TYPE_ARRAY, false, _src_ref);
     array_type = array_owned.get();
     array_owned->complete_array_definition(_type, _length, _src_ref);
     define_type(std::move(array_owned));

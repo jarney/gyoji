@@ -73,11 +73,11 @@ int main(int argc, char **argv)
     // actually have 'complete' definitions.
     std::vector<Gyoji::owned<AnalysisPass>> analysis_passes;
     
-    analysis_passes.push_back(std::make_unique<AnalysisPassTypeResolution>(context));
-    analysis_passes.push_back(std::make_unique<AnalysisPassUnreachable>(context));
-    analysis_passes.push_back(std::make_unique<AnalysisPassReturnValues>(context));
-    analysis_passes.push_back(std::make_unique<AnalysisPassUseBeforeAssignment>(context));
-    analysis_passes.push_back(std::make_unique<AnalysisPassBorrowChecker>(context));
+    analysis_passes.push_back(Gyoji::owned_new<AnalysisPassTypeResolution>(context));
+    analysis_passes.push_back(Gyoji::owned_new<AnalysisPassUnreachable>(context));
+    analysis_passes.push_back(Gyoji::owned_new<AnalysisPassReturnValues>(context));
+    analysis_passes.push_back(Gyoji::owned_new<AnalysisPassUseBeforeAssignment>(context));
+    analysis_passes.push_back(Gyoji::owned_new<AnalysisPassBorrowChecker>(context));
 
     
     for (const auto & analysis_pass : analysis_passes) {

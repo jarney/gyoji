@@ -32,8 +32,8 @@ Parser::parse(
     Gyoji::misc::InputSource & _input_source
     )
 {
-    auto ns2_context = std::make_unique<Gyoji::frontend::namespaces::NS2Context>();
-    Gyoji::owned<ParseResult> result = std::make_unique<ParseResult>(
+    auto ns2_context = Gyoji::owned_new<Gyoji::frontend::namespaces::NS2Context>();
+    Gyoji::owned<ParseResult> result = Gyoji::owned_new<ParseResult>(
 	_compiler_context,
 	std::move(ns2_context)
 	);
@@ -67,7 +67,7 @@ Parser::parse_to_mir(
     // and should report a syntax error at the
     // higher level.
     Gyoji::owned<ParseResult> parse_result = parse(_compiler_context, _input_source);
-    Gyoji::owned<MIR> mir = std::make_unique<MIR>();
+    Gyoji::owned<MIR> mir = Gyoji::owned_new<MIR>();
     
     if (!parse_result->has_translation_unit()) {
 	// It's harmless to return an empty mir

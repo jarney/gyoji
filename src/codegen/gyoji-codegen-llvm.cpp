@@ -24,7 +24,7 @@ CodeGeneratorLLVM::CodeGeneratorLLVM(
     const Gyoji::context::CompilerContext & _compiler_context,
     const Gyoji::mir::MIR & _mir
     )
-    : context(std::make_unique<CodeGeneratorLLVMContext>(_compiler_context, _mir))
+    : context(Gyoji::owned_new<CodeGeneratorLLVMContext>(_compiler_context, _mir))
 {}
 
 CodeGeneratorLLVM::~CodeGeneratorLLVM()
@@ -58,10 +58,10 @@ void
 CodeGeneratorLLVMContext::initialize()
 {
     // Open a new context and module.
-    TheContext = std::make_unique<llvm::LLVMContext>();
-    TheModule = std::make_unique<llvm::Module>("gyoji LLVM Code Generator", *TheContext);
+    TheContext = Gyoji::owned_new<llvm::LLVMContext>();
+    TheModule = Gyoji::owned_new<llvm::Module>("gyoji LLVM Code Generator", *TheContext);
     // Create a new builder for the module.
-    Builder = std::make_unique<llvm::IRBuilder<>>(*TheContext);
+    Builder = Gyoji::owned_new<llvm::IRBuilder<>>(*TheContext);
     
     //  register_type_builtins();
     //  register_operator_builtins();

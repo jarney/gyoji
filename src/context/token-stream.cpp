@@ -91,7 +91,7 @@ TokenStream::add_token(
     size_t _column
     )
 {
-    Gyoji::owned<Token> token = std::make_unique<Token>(_typestr, _value, _filename, _line, _column, _value.size());
+    Gyoji::owned<Token> token = Gyoji::owned_new<Token>(_typestr, _value, _filename, _line, _column, _value.size());
     const Token & token_ref = *token;
     tokens_by_lineno[_line].push_back(token.get());
     tokens.push_back(std::move(token));

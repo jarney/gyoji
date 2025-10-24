@@ -245,7 +245,7 @@ FunctionDefinitionLowering::lower()
 	if (is_method() && !is_static) {
 	    const TypeMember *member = class_type->member_get(name);
 	    if (member != nullptr) {
-		std::unique_ptr<Gyoji::context::Error> error = std::make_unique<Gyoji::context::Error>("Variable Name Conflict");
+		Gyoji::owned<Gyoji::context::Error> error = Gyoji::owned_new<Gyoji::context::Error>("Variable Name Conflict");
 		error->add_message(
 		    function_definition_arg->get_identifier().get_source_ref(),
 		    std::string("Method defined argument ") + name + std::string(" which would conflict with class member name.")
@@ -283,7 +283,7 @@ FunctionDefinitionLowering::lower()
     if (is_method()) {
 	// Argument mismatch from method.
 	if (arguments.size() != method->get_arguments().size()) {
-		std::unique_ptr<Gyoji::context::Error> error = std::make_unique<Gyoji::context::Error>("Method argument mismatch");
+		Gyoji::owned<Gyoji::context::Error> error = Gyoji::owned_new<Gyoji::context::Error>("Method argument mismatch");
 		error->add_message(
 		    function_definition.get_source_ref(),
 		    std::string("Method has ") + std::to_string(arguments.size()-1) + std::string(" arguments defined")
@@ -300,7 +300,7 @@ FunctionDefinitionLowering::lower()
 	}
 	bool arg_error = false;
 	if (method->get_return_type()->get_name() != return_type->get_name()) {
-	    std::unique_ptr<Gyoji::context::Error> error = std::make_unique<Gyoji::context::Error>("Return-value does not match declaration");
+	    Gyoji::owned<Gyoji::context::Error> error = Gyoji::owned_new<Gyoji::context::Error>("Return-value does not match declaration");
 	    error->add_message(
 		*return_type_source_ref,
 		std::string("Return-value defined as ") + return_type->get_name() + std::string(".")
@@ -319,7 +319,7 @@ FunctionDefinitionLowering::lower()
 	    const FunctionArgument & fa = arguments.at(i);
 	    const Argument & ma = method->get_arguments().at(i);
 	    if (fa.get_type()->get_name() != ma.get_type()->get_name()) {
-		std::unique_ptr<Gyoji::context::Error> error = std::make_unique<Gyoji::context::Error>("Method argument mismatch");
+		Gyoji::owned<Gyoji::context::Error> error = Gyoji::owned_new<Gyoji::context::Error>("Method argument mismatch");
 		error->add_message(
 		    fa.get_type_source_ref(),
 		    std::string("Argument defined as ") + fa.get_type()->get_name() + std::string(" does not match declaration.")
@@ -349,7 +349,7 @@ FunctionDefinitionLowering::lower()
 	    // it is the correct type and matches the function signature.
 	    const Type *symbol_type = symbol->get_mir_type();
 	    if (symbol_type->get_type() != Type::TYPE_FUNCTION_POINTER) {
-		std::unique_ptr<Gyoji::context::Error> error = std::make_unique<Gyoji::context::Error>("Symbol is not a function");
+		Gyoji::owned<Gyoji::context::Error> error = Gyoji::owned_new<Gyoji::context::Error>("Symbol is not a function");
 		error->add_message(
 		    function_definition.get_source_ref(),
 		    std::string("Symbol ") + fully_qualified_function_name + std::string(" is not declared as a function.")
@@ -362,7 +362,7 @@ FunctionDefinitionLowering::lower()
 	    const std::vector<Argument> & function_arguments = symbol_type->get_argument_types();
 
 	    if (arguments.size() != function_arguments.size()) {
-		std::unique_ptr<Gyoji::context::Error> error = std::make_unique<Gyoji::context::Error>("Function argument mismatch");
+		Gyoji::owned<Gyoji::context::Error> error = Gyoji::owned_new<Gyoji::context::Error>("Function argument mismatch");
 		error->add_message(
 		    function_definition.get_source_ref(),
 		    std::string("Function has ") + std::to_string(arguments.size()) + std::string(" arguments defined")
@@ -380,7 +380,7 @@ FunctionDefinitionLowering::lower()
 	    bool arg_error = false;
 
 	    if (symbol_type->is_unsafe() != is_unsafe) {
-		std::unique_ptr<Gyoji::context::Error> error = std::make_unique<Gyoji::context::Error>("Function safety modifier does not match declaration.");
+		Gyoji::owned<Gyoji::context::Error> error = Gyoji::owned_new<Gyoji::context::Error>("Function safety modifier does not match declaration.");
 		error->add_message(
 		    *return_type_source_ref,
 		    std::string("Function defined as ") + (is_unsafe ? std::string("unsafe") : std::string("not unsafe")) + std::string(".")
@@ -396,7 +396,7 @@ FunctionDefinitionLowering::lower()
 	    }
 	    
 	    if (symbol_type->get_return_type()->get_name() != return_type->get_name()) {
-		std::unique_ptr<Gyoji::context::Error> error = std::make_unique<Gyoji::context::Error>("Return-value does not match declaration");
+		Gyoji::owned<Gyoji::context::Error> error = Gyoji::owned_new<Gyoji::context::Error>("Return-value does not match declaration");
 		error->add_message(
 		    *return_type_source_ref,
 		    std::string("Return-value defined as ") + return_type->get_name() + std::string(".")
@@ -415,7 +415,7 @@ FunctionDefinitionLowering::lower()
 		const FunctionArgument & fa = arguments.at(i);
 		const Argument & ma = function_arguments.at(i);
 		if (fa.get_type()->get_name() != ma.get_type()->get_name()) {
-		    std::unique_ptr<Gyoji::context::Error> error = std::make_unique<Gyoji::context::Error>("Method argument mismatch");
+		    Gyoji::owned<Gyoji::context::Error> error = Gyoji::owned_new<Gyoji::context::Error>("Method argument mismatch");
 		    error->add_message(
 			fa.get_type_source_ref(),
 			std::string("Argument defined as ") + fa.get_type()->get_name() + std::string(" does not match declaration.")
@@ -436,7 +436,7 @@ FunctionDefinitionLowering::lower()
 	}
     }
     
-    function = std::make_unique<Function>(
+    function = Gyoji::owned_new<Function>(
 	fully_qualified_function_name,
 	return_type,
 	arguments,
@@ -528,13 +528,13 @@ FunctionDefinitionLowering::lower()
 	
 		function->add_operation(
 		    block_it.first,
-		    std::make_unique<OperationReturnVoid>(
+		    Gyoji::owned_new<OperationReturnVoid>(
 			*return_type_source_ref
 			)
 		    );
 	    }
 	    else {
-		std::unique_ptr<Gyoji::context::Error> error = std::make_unique<Gyoji::context::Error>("Control reaches end of non-void function");
+		Gyoji::owned<Gyoji::context::Error> error = Gyoji::owned_new<Gyoji::context::Error>("Control reaches end of non-void function");
 		error->add_message(
 		    function_definition.get_scope_body().get_end_source_ref(),
 		    std::string("Function ")
@@ -605,7 +605,7 @@ FunctionDefinitionLowering::extract_from_expression_primary_identifier(
 	    returned_tmpvar = function->tmpvar_define(localvar->get_type());
 	    function->add_operation(
 		current_block,
-		std::make_unique<OperationLocalVariable>(
+		Gyoji::owned_new<OperationLocalVariable>(
 		    expression.get_identifier().get_source_ref(),
 		    returned_tmpvar,
 		    local_variable_name,
@@ -626,7 +626,7 @@ FunctionDefinitionLowering::extract_from_expression_primary_identifier(
 
 		function->add_operation(
 		    current_block,
-		    std::make_unique<OperationLocalVariable>(
+		    Gyoji::owned_new<OperationLocalVariable>(
 			expression.get_identifier().get_source_ref(),
 			this_tmpvar,
 			"<this>",
@@ -637,7 +637,7 @@ FunctionDefinitionLowering::extract_from_expression_primary_identifier(
 		size_t this_reference_tmpvar = function->tmpvar_define(class_type);
 		function->add_operation(
 		    current_block,
-		    std::make_unique<OperationUnary>(
+		    Gyoji::owned_new<OperationUnary>(
 			Operation::OP_DEREFERENCE,
 			expression.get_source_ref(),
 			this_reference_tmpvar,
@@ -649,7 +649,7 @@ FunctionDefinitionLowering::extract_from_expression_primary_identifier(
 		returned_tmpvar = function->tmpvar_define(member->get_type());
 		function->add_operation(
 		    current_block,
-		    std::make_unique<OperationDot>(
+		    Gyoji::owned_new<OperationDot>(
 			expression.get_source_ref(),
 			returned_tmpvar,
 			this_reference_tmpvar,
@@ -705,7 +705,7 @@ FunctionDefinitionLowering::extract_from_expression_primary_identifier(
 	// to the function.
 	function->add_operation(
 	    current_block,
-	    std::make_unique<OperationSymbol>(
+	    Gyoji::owned_new<OperationSymbol>(
 		expression.get_identifier().get_source_ref(),
 		returned_tmpvar,
 		partials,
@@ -771,7 +771,7 @@ FunctionDefinitionLowering::extract_from_expression_primary_literal_char(
     returned_tmpvar = function->tmpvar_define(mir.get_types().get_type("u8"));
     function->add_operation(
 	current_block,
-	std::make_unique<OperationLiteralChar>(
+	Gyoji::owned_new<OperationLiteralChar>(
 	    expression.get_source_ref(),
 	    returned_tmpvar,
 	    c
@@ -814,7 +814,7 @@ FunctionDefinitionLowering::extract_from_expression_primary_literal_string(
     returned_tmpvar = function->tmpvar_define(mir.get_types().get_type("u8*"));
     function->add_operation(
 	current_block,
-	std::make_unique<OperationLiteralString>(
+	Gyoji::owned_new<OperationLiteralString>(
 	    expression.get_source_ref(),
 	    returned_tmpvar,
 	    string_unescaped
@@ -885,7 +885,7 @@ FunctionDefinitionLowering::create_constant_integer(
     switch (type_part->get_type()) {
     case Type::TYPE_PRIMITIVE_u8:
     {
-	operation = std::make_unique<OperationLiteralInt>(
+	operation = Gyoji::owned_new<OperationLiteralInt>(
 	    _src_ref,
 	    returned_tmpvar,
 	    type_part->get_type(),
@@ -894,7 +894,7 @@ FunctionDefinitionLowering::create_constant_integer(
     }
     case Type::TYPE_PRIMITIVE_u16:
     {
-	operation = std::make_unique<OperationLiteralInt>(
+	operation = Gyoji::owned_new<OperationLiteralInt>(
 	    _src_ref,
 	    returned_tmpvar,
 	    type_part->get_type(),
@@ -904,7 +904,7 @@ FunctionDefinitionLowering::create_constant_integer(
 	break;
     case Type::TYPE_PRIMITIVE_u32:
     {
-	operation = std::make_unique<OperationLiteralInt>(
+	operation = Gyoji::owned_new<OperationLiteralInt>(
 	    _src_ref,
 	    returned_tmpvar,
 	    type_part->get_type(),
@@ -914,7 +914,7 @@ FunctionDefinitionLowering::create_constant_integer(
 	break;
     case Type::TYPE_PRIMITIVE_u64:
     {
-	operation = std::make_unique<OperationLiteralInt>(
+	operation = Gyoji::owned_new<OperationLiteralInt>(
 	    _src_ref,
 	    returned_tmpvar,
 	    type_part->get_type(),
@@ -926,7 +926,7 @@ FunctionDefinitionLowering::create_constant_integer(
     // Signed
     case Type::TYPE_PRIMITIVE_i8:
     {
-	operation = std::make_unique<OperationLiteralInt>(
+	operation = Gyoji::owned_new<OperationLiteralInt>(
 	    _src_ref,
 	    returned_tmpvar,
 	    type_part->get_type(),
@@ -935,7 +935,7 @@ FunctionDefinitionLowering::create_constant_integer(
     }
     case Type::TYPE_PRIMITIVE_i16:
     {
-	operation = std::make_unique<OperationLiteralInt>(
+	operation = Gyoji::owned_new<OperationLiteralInt>(
 	    _src_ref,
 	    returned_tmpvar,
 	    type_part->get_type(),
@@ -945,7 +945,7 @@ FunctionDefinitionLowering::create_constant_integer(
 	break;
     case Type::TYPE_PRIMITIVE_i32:
     {
-	operation = std::make_unique<OperationLiteralInt>(
+	operation = Gyoji::owned_new<OperationLiteralInt>(
 	    _src_ref,
 	    returned_tmpvar,
 	    type_part->get_type(),
@@ -955,7 +955,7 @@ FunctionDefinitionLowering::create_constant_integer(
 	break;
     case Type::TYPE_PRIMITIVE_i64:
     {
-	operation = std::make_unique<OperationLiteralInt>(
+	operation = Gyoji::owned_new<OperationLiteralInt>(
 	    _src_ref,
 	    returned_tmpvar,
 	    type_part->get_type(),
@@ -1054,7 +1054,7 @@ FunctionDefinitionLowering::extract_from_expression_primary_literal_float(
 		    );
 	    return false;
 	}
-	operation = std::make_unique<OperationLiteralFloat>(
+	operation = Gyoji::owned_new<OperationLiteralFloat>(
 	    expression.get_source_ref(),
 	    returned_tmpvar,
 	    (float)converted_value
@@ -1082,7 +1082,7 @@ FunctionDefinitionLowering::extract_from_expression_primary_literal_float(
 		    );
 	    return false;
 	}
-	operation = std::make_unique<OperationLiteralFloat>(
+	operation = Gyoji::owned_new<OperationLiteralFloat>(
 	    expression.get_source_ref(),
 	    returned_tmpvar,
 	    converted_value
@@ -1133,7 +1133,7 @@ FunctionDefinitionLowering::extract_from_expression_postfix_array_index(
     returned_tmpvar = function->tmpvar_define(array_type->get_pointer_target());
     function->add_operation(
 	current_block,
-	std::make_unique<OperationArrayIndex>(
+	Gyoji::owned_new<OperationArrayIndex>(
 	    expression.get_source_ref(),
 	    returned_tmpvar,
 	    array_tmpvar,
@@ -1161,7 +1161,7 @@ FunctionDefinitionLowering::check_function_call_signature(
     bool is_ok = true;
     
     if (passed_arguments.size() != function_pointer_args.size()) {
-	std::unique_ptr<Gyoji::context::Error> error = std::make_unique<Gyoji::context::Error>(
+	Gyoji::owned<Gyoji::context::Error> error = Gyoji::owned_new<Gyoji::context::Error>(
 	    (is_method ?
 	     std::string("Wrong number of arguments passed to method call.") :
 	     std::string("Wrong number of arguments passed to function call.")
@@ -1187,7 +1187,7 @@ FunctionDefinitionLowering::check_function_call_signature(
     // then we cannot call an unsafe function.
     if (!scope_tracker.is_unsafe()) {
 	if (function_pointer_type->is_unsafe()) {
-	    std::unique_ptr<Gyoji::context::Error> error = std::make_unique<Gyoji::context::Error>(
+	    Gyoji::owned<Gyoji::context::Error> error = Gyoji::owned_new<Gyoji::context::Error>(
 		(is_method ?
 		 std::string("Calling an unsafe method from a safe context.") : 
 		 std::string("Calling an unsafe function from a safe context.")
@@ -1211,7 +1211,7 @@ FunctionDefinitionLowering::check_function_call_signature(
 	const Argument & arg = function_pointer_args.at(i);
 	const Type *required_type = arg.get_type();
 	if (required_type->get_name() != passed_type->get_name()) {
-	    std::unique_ptr<Gyoji::context::Error> error = std::make_unique<Gyoji::context::Error>("Incorrect argument type passed to call");
+	    Gyoji::owned<Gyoji::context::Error> error = Gyoji::owned_new<Gyoji::context::Error>("Incorrect argument type passed to call");
 	    error->add_message(passed_src_ref,
 			       std::string("Passing type ")
 			       + passed_type->get_name()
@@ -1292,7 +1292,7 @@ FunctionDefinitionLowering::extract_from_expression_postfix_function_call(
 	    size_t this_tmpvar = function->tmpvar_define(class_type);
 	    function->add_operation(
 		current_block,
-		std::make_unique<OperationLocalVariable>(
+		Gyoji::owned_new<OperationLocalVariable>(
 		    expression.get_source_ref(),
 		    this_tmpvar,
 		    "<this>",
@@ -1304,7 +1304,7 @@ FunctionDefinitionLowering::extract_from_expression_postfix_function_call(
 	    size_t this_pointer_tmpvar = function->tmpvar_define(this_pointer_type);
 	    function->add_operation(
 		current_block,
-		std::make_unique<OperationUnary>(
+		Gyoji::owned_new<OperationUnary>(
 		    Operation::OP_ADDRESSOF,
 		    expression.get_source_ref(),
 		    this_pointer_tmpvar,
@@ -1325,7 +1325,7 @@ FunctionDefinitionLowering::extract_from_expression_postfix_function_call(
     
     function->add_operation(
 	current_block,
-	std::make_unique<OperationFunctionCall>(
+	Gyoji::owned_new<OperationFunctionCall>(
 	    Operation::OP_FUNCTION_CALL,
 	    expression.get_source_ref(),
 	    returned_tmpvar,
@@ -1354,7 +1354,7 @@ FunctionDefinitionLowering::extract_from_expression_postfix_dot(
 	size_t class_reference_tmpvar = function->tmpvar_define(target);
 	function->add_operation(
 	    current_block,
-	    std::make_unique<OperationUnary>(
+	    Gyoji::owned_new<OperationUnary>(
 		Operation::OP_DEREFERENCE,
 		expression.get_source_ref(),
 		class_reference_tmpvar,
@@ -1382,7 +1382,7 @@ FunctionDefinitionLowering::extract_from_expression_postfix_dot(
 	returned_tmpvar = function->tmpvar_define(member->get_type());
 	function->add_operation(
 	    current_block,
-	    std::make_unique<OperationDot>(
+	    Gyoji::owned_new<OperationDot>(
 		expression.get_source_ref(),
 		returned_tmpvar,
 		class_tmpvar,
@@ -1412,7 +1412,7 @@ FunctionDefinitionLowering::extract_from_expression_postfix_dot(
 	size_t class_pointer_tmpvar = function->tmpvar_define(class_pointer_type);
 	function->add_operation(
 	    current_block,
-	    std::make_unique<OperationUnary>(
+	    Gyoji::owned_new<OperationUnary>(
 		Operation::OP_ADDRESSOF,
 		expression.get_source_ref(),
 		class_pointer_tmpvar,
@@ -1426,7 +1426,7 @@ FunctionDefinitionLowering::extract_from_expression_postfix_dot(
 	returned_tmpvar = function->tmpvar_define(symbol->get_mir_type());
 	function->add_operation(
 	    current_block,
-	    std::make_unique<OperationSymbol>(
+	    Gyoji::owned_new<OperationSymbol>(
 		expression.get_expression().get_source_ref(),
 		returned_tmpvar,
 		partial_operands,
@@ -1495,7 +1495,7 @@ FunctionDefinitionLowering::extract_from_expression_postfix_arrow(
     size_t class_reference_tmpvar = function->tmpvar_define(class_type);
     function->add_operation(
 	current_block,
-	std::make_unique<OperationUnary>(
+	Gyoji::owned_new<OperationUnary>(
 	    Operation::OP_DEREFERENCE,
 	    expression.get_source_ref(),
 	    class_reference_tmpvar,
@@ -1520,7 +1520,7 @@ FunctionDefinitionLowering::extract_from_expression_postfix_arrow(
     returned_tmpvar = function->tmpvar_define(member->get_type());
     function->add_operation(
 	current_block,
-	std::make_unique<OperationDot>(
+	Gyoji::owned_new<OperationDot>(
 	    expression.get_source_ref(),
 	    returned_tmpvar,
 	    class_reference_tmpvar,
@@ -1582,7 +1582,7 @@ FunctionDefinitionLowering::create_incdec_operation(
     if (is_increment) {
 	function->add_operation(
 	    current_block, 
-	    std::make_unique<OperationBinary>(
+	    Gyoji::owned_new<OperationBinary>(
 		Operation::OP_ADD,
 		src_ref,
 		addresult_tmpvar,
@@ -1594,7 +1594,7 @@ FunctionDefinitionLowering::create_incdec_operation(
     else {
 	function->add_operation(
 	    current_block,
-	    std::make_unique<OperationBinary>(
+	    Gyoji::owned_new<OperationBinary>(
 		Operation::OP_SUBTRACT,
 		src_ref,
 		addresult_tmpvar,
@@ -1609,7 +1609,7 @@ FunctionDefinitionLowering::create_incdec_operation(
     size_t ignore_tmpvar = function->tmpvar_duplicate(operand_tmpvar);
     function->add_operation(
 	current_block,
-	std::make_unique<OperationBinary>(
+	Gyoji::owned_new<OperationBinary>(
 	    Operation::OP_ASSIGN,
 	    src_ref,
 	    ignore_tmpvar,
@@ -1684,7 +1684,7 @@ FunctionDefinitionLowering::extract_from_expression_unary_prefix(
 	returned_tmpvar = function->tmpvar_define(pointer_to_operand_type);
 	function->add_operation(
 	    current_block,
-	    std::make_unique<OperationUnary>(
+	    Gyoji::owned_new<OperationUnary>(
 		Operation::OP_ADDRESSOF,
 		expression.get_source_ref(),
 		returned_tmpvar,
@@ -1722,7 +1722,7 @@ FunctionDefinitionLowering::extract_from_expression_unary_prefix(
 	    returned_tmpvar = function->tmpvar_define(operand_type->get_pointer_target());
 	    function->add_operation(
 		current_block,
-		std::make_unique<OperationUnary>(
+		Gyoji::owned_new<OperationUnary>(
 		    Operation::OP_DEREFERENCE,
 		    expression.get_source_ref(),
 		    returned_tmpvar,
@@ -1744,7 +1744,7 @@ FunctionDefinitionLowering::extract_from_expression_unary_prefix(
 	returned_tmpvar = function->tmpvar_duplicate(operand_tmpvar);
 	function->add_operation(
 	    current_block,
-	    std::make_unique<OperationUnary>(
+	    Gyoji::owned_new<OperationUnary>(
 		Operation::OP_NEGATE,
 		expression.get_source_ref(),	    
 		returned_tmpvar,
@@ -1758,7 +1758,7 @@ FunctionDefinitionLowering::extract_from_expression_unary_prefix(
 	returned_tmpvar = function->tmpvar_duplicate(operand_tmpvar);
 	function->add_operation(
 	    current_block,
-	    std::make_unique<OperationUnary>(
+	    Gyoji::owned_new<OperationUnary>(
 		Operation::OP_BITWISE_NOT,
 		expression.get_source_ref(),	    
 		returned_tmpvar,
@@ -1781,7 +1781,7 @@ FunctionDefinitionLowering::extract_from_expression_unary_prefix(
 	returned_tmpvar = function->tmpvar_duplicate(operand_tmpvar);
 	function->add_operation(
 	    current_block,
-	    std::make_unique<OperationUnary>(
+	    Gyoji::owned_new<OperationUnary>(
 		Operation::OP_LOGICAL_NOT,
 		expression.get_source_ref(),	    
 		returned_tmpvar,
@@ -1812,7 +1812,7 @@ FunctionDefinitionLowering::extract_from_expression_unary_sizeof_type(
     returned_tmpvar = function->tmpvar_define(u64_type);
     function->add_operation(
 	current_block,
-	std::make_unique<OperationSizeofType>(
+	Gyoji::owned_new<OperationSizeofType>(
 	    expression.get_source_ref(),	    
 	    returned_tmpvar,
 	    operand_type
@@ -1848,7 +1848,7 @@ FunctionDefinitionLowering::numeric_widen(
     size_t widened_var = function->tmpvar_define(widen_to);
     function->add_operation(
 	current_block,
-	std::make_unique<OperationCast>(
+	Gyoji::owned_new<OperationCast>(
 	    widen_type,
 	    _src_ref,
 	    widened_var,
@@ -2014,7 +2014,7 @@ FunctionDefinitionLowering::handle_binary_operation_arithmetic(
     // the return type will also be of the same type.
     function->add_operation(
 	current_block,
-	std::make_unique<OperationBinary>(
+	Gyoji::owned_new<OperationBinary>(
 	    type,
 	    _src_ref,
 	    returned_tmpvar,
@@ -2050,7 +2050,7 @@ FunctionDefinitionLowering::handle_binary_operation_logical(
     }
     function->add_operation(
 	current_block,
-	std::make_unique<OperationBinary>(
+	Gyoji::owned_new<OperationBinary>(
 	    type,
 	    _src_ref,
 	    returned_tmpvar,
@@ -2100,7 +2100,7 @@ FunctionDefinitionLowering::handle_binary_operation_bitwise(
     // the return type will also be of the same type.
     function->add_operation(
 	current_block, 
-	std::make_unique<OperationBinary>(
+	Gyoji::owned_new<OperationBinary>(
 	    type,
 	    _src_ref,
 	    returned_tmpvar,
@@ -2152,7 +2152,7 @@ FunctionDefinitionLowering::handle_binary_operation_shift(
     // the return type will also be of the same type.
     function->add_operation(
 	current_block,
-	std::make_unique<OperationBinary>(
+	Gyoji::owned_new<OperationBinary>(
 	    type,
 	    _src_ref,
 	    returned_tmpvar,
@@ -2239,7 +2239,7 @@ FunctionDefinitionLowering::handle_binary_operation_compare(
     // the return type will also be of the same type.
     function->add_operation(
 	current_block,
-	std::make_unique<OperationBinary>(
+	Gyoji::owned_new<OperationBinary>(
 	    type,
 	    _src_ref,
 	    returned_tmpvar,
@@ -2286,7 +2286,7 @@ FunctionDefinitionLowering::handle_binary_operation_assignment(
 	    size_t variable_pointer_tmpvar = function->tmpvar_define(variable_pointer_type);
 	    function->add_operation(
 		current_block,
-		std::make_unique<OperationUnary>(
+		Gyoji::owned_new<OperationUnary>(
 		    Operation::OP_ADDRESSOF,
 		    _src_ref,
 		    variable_pointer_tmpvar,
@@ -2353,7 +2353,7 @@ FunctionDefinitionLowering::handle_binary_operation_assignment(
     // the return type will also be of the same type.
     function->add_operation(
 	current_block,
-	std::make_unique<OperationBinary>(
+	Gyoji::owned_new<OperationBinary>(
 	    type,
 	    _src_ref,
 	    returned_tmpvar,
@@ -2925,7 +2925,7 @@ FunctionDefinitionLowering::local_declare_or_error(
     
     function->add_operation(
 	current_block,
-	std::make_unique<OperationLocalDeclare>(
+	Gyoji::owned_new<OperationLocalDeclare>(
 	    source_ref,
 	    name,
 	    mir_type
@@ -2992,7 +2992,7 @@ FunctionDefinitionLowering::extract_from_struct_initializer(
     initial_value_tmpvar = function->tmpvar_define(anonymous_structure_type);
     function->add_operation(
 	current_block,
-	std::make_unique<OperationAnonymousStructure>(
+	Gyoji::owned_new<OperationAnonymousStructure>(
 	    struct_initializer_expression.get_source_ref(),
 	    initial_value_tmpvar,
 	    field_values
@@ -3038,7 +3038,7 @@ FunctionDefinitionLowering::extract_from_statement_variable_declaration(
     size_t variable_tmpvar = function->tmpvar_define(mir_type);
     function->add_operation(
 	current_block,
-	std::make_unique<OperationLocalVariable>(
+	Gyoji::owned_new<OperationLocalVariable>(
 	    statement.get_source_ref(),
 	    variable_tmpvar,
 	    statement.get_identifier().get_name(),
@@ -3088,7 +3088,7 @@ FunctionDefinitionLowering::extract_from_statement_variable_declaration(
 	for (const auto & s : lhs_uninitialized) {
 	    const TypeMember *m = mir_type->member_get(s);
 	    
-	    std::unique_ptr<Gyoji::context::Error> error = std::make_unique<Gyoji::context::Error>("Uninitialized class member");
+	    Gyoji::owned<Gyoji::context::Error> error = Gyoji::owned_new<Gyoji::context::Error>("Uninitialized class member");
 	    error->add_message(
 		initializer_expression.get_source_ref(),
 		std::string("Class member ") + s + std::string(" is missing from initializer")
@@ -3104,7 +3104,7 @@ FunctionDefinitionLowering::extract_from_statement_variable_declaration(
 	}
 	for (const auto & s : rhs_unused) {
 	    const TypeMember *m = initializer_type->member_get(s);
-	    std::unique_ptr<Gyoji::context::Error> error = std::make_unique<Gyoji::context::Error>("Unused Initializer");
+	    Gyoji::owned<Gyoji::context::Error> error = Gyoji::owned_new<Gyoji::context::Error>("Unused Initializer");
 	    error->add_message(
 		m->get_source_ref(),
 		std::string("Initializer ") + s + std::string(" is not a member of class ") + mir_type->get_name()
@@ -3194,7 +3194,7 @@ FunctionDefinitionLowering::extract_from_statement_ifelse(
 	blockid_else = function->add_block();
 	function->add_operation(
 	    current_block,
-	    std::make_unique<OperationJumpConditional>(
+	    Gyoji::owned_new<OperationJumpConditional>(
 		statement.get_source_ref(),
 		condition_tmpvar,
 		blockid_if,
@@ -3207,7 +3207,7 @@ FunctionDefinitionLowering::extract_from_statement_ifelse(
 	// based on condition.
 	function->add_operation(
 	    current_block,
-	    std::make_unique<OperationJumpConditional>(
+	    Gyoji::owned_new<OperationJumpConditional>(
 		statement.get_source_ref(),
 		condition_tmpvar,
 		blockid_if,
@@ -3237,7 +3237,7 @@ FunctionDefinitionLowering::extract_from_statement_ifelse(
     if (!function->get_basic_block(current_block).contains_terminator()) {
 	function->add_operation(
 	    current_block,
-	    std::make_unique<OperationJump>(
+	    Gyoji::owned_new<OperationJump>(
 		statement.get_source_ref(),
 		blockid_done
 		)
@@ -3265,7 +3265,7 @@ FunctionDefinitionLowering::extract_from_statement_ifelse(
 	if (!function->get_basic_block(blockid_else).contains_terminator()) {
 	    function->add_operation(
 		blockid_else,
-		std::make_unique<OperationJump>(
+		Gyoji::owned_new<OperationJump>(
 		    statement.get_source_ref(),
 		    blockid_done
 		    )
@@ -3296,7 +3296,7 @@ FunctionDefinitionLowering::extract_from_statement_while(
 
     function->add_operation(
 	current_block,
-	std::make_unique<OperationJump>(
+	Gyoji::owned_new<OperationJump>(
 	    statement.get_source_ref(),
 	    blockid_evaluate_expression
 	    )
@@ -3310,7 +3310,7 @@ FunctionDefinitionLowering::extract_from_statement_while(
 
     function->add_operation(
 	current_block,
-	std::make_unique<OperationJumpConditional>(
+	Gyoji::owned_new<OperationJumpConditional>(
 	    statement.get_source_ref(),
 	    condition_tmpvar,
 	    blockid_if,
@@ -3336,7 +3336,7 @@ FunctionDefinitionLowering::extract_from_statement_while(
     
     function->add_operation(
 	current_block,
-	std::make_unique<OperationJump>(
+	Gyoji::owned_new<OperationJump>(
 	    statement.get_source_ref(),
 	    blockid_evaluate_expression
 	    )
@@ -3372,7 +3372,7 @@ FunctionDefinitionLowering::extract_from_statement_for(
 	size_t variable_tmpvar = function->tmpvar_define(mir_type);
 	function->add_operation(
 	    current_block,
-	    std::make_unique<OperationLocalVariable>(
+	    Gyoji::owned_new<OperationLocalVariable>(
 		statement.get_identifier().get_source_ref(),
 		variable_tmpvar,
 		statement.get_identifier().get_name(),
@@ -3405,7 +3405,7 @@ FunctionDefinitionLowering::extract_from_statement_for(
     
     function->add_operation(
 	current_block,
-	std::make_unique<OperationJump>(
+	Gyoji::owned_new<OperationJump>(
 	    statement.get_source_ref(),
 	    blockid_evaluate_expression_termination
 	    )
@@ -3421,7 +3421,7 @@ FunctionDefinitionLowering::extract_from_statement_for(
 
     function->add_operation(
 	blockid_evaluate_expression_termination, 
-	std::make_unique<OperationJumpConditional>(
+	Gyoji::owned_new<OperationJumpConditional>(
 	    statement.get_source_ref(),
 	    condition_tmpvar,
 	    blockid_if,
@@ -3454,7 +3454,7 @@ FunctionDefinitionLowering::extract_from_statement_for(
     
     function->add_operation(
 	blockid_if,
-	std::make_unique<OperationJump>(
+	Gyoji::owned_new<OperationJump>(
 	    statement.get_source_ref(),
 	    blockid_evaluate_expression_termination
 	    )
@@ -3513,7 +3513,7 @@ FunctionDefinitionLowering::extract_from_statement_switch(
 	    }
 	    const Type *test_value_type = function->tmpvar_get(test_value_tmpvar);
 	    if (test_value_type->get_name() != switch_value_type->get_name()) {
-		std::unique_ptr<Gyoji::context::Error> error = std::make_unique<Gyoji::context::Error>("Case must match switch type");
+		Gyoji::owned<Gyoji::context::Error> error = Gyoji::owned_new<Gyoji::context::Error>("Case must match switch type");
 		error->add_message(
 		    block_ptr->get_source_ref(),
 		    std::string("Case type ") + test_value_type->get_name() + std::string(" must match switch type ") + switch_value_type->get_name()
@@ -3530,7 +3530,7 @@ FunctionDefinitionLowering::extract_from_statement_switch(
 	    size_t condition_tmpvar = function->tmpvar_define(mir.get_types().get_type("bool"));
 	    function->add_operation(
 		current_block,
-		std::make_unique<OperationBinary>(
+		Gyoji::owned_new<OperationBinary>(
 		    Operation::OP_COMPARE_EQUAL,
 		    block_ptr->get_source_ref(),
 		    condition_tmpvar,
@@ -3543,7 +3543,7 @@ FunctionDefinitionLowering::extract_from_statement_switch(
 	    blockid_else = function->add_block();
 	    function->add_operation(
 		current_block,
-		std::make_unique<OperationJumpConditional>(
+		Gyoji::owned_new<OperationJumpConditional>(
 		    block_ptr->get_source_ref(),
 		    condition_tmpvar,
 		    blockid_if,
@@ -3569,7 +3569,7 @@ FunctionDefinitionLowering::extract_from_statement_switch(
 	if (!function->get_basic_block(current_block).contains_terminator()) {
 	    function->add_operation(
 		current_block,
-		std::make_unique<OperationJump>(
+		Gyoji::owned_new<OperationJump>(
 		    block_ptr->get_source_ref(),
 		    blockid_done
 		    )
@@ -3588,7 +3588,7 @@ FunctionDefinitionLowering::extract_from_statement_switch(
 	// conditions, so we unconditionaly jump back to done.
 	function->add_operation(
 	    current_block,
-	    std::make_unique<OperationJump>(
+	    Gyoji::owned_new<OperationJump>(
 		statement.get_source_ref(),
 		blockid_done
 		)
@@ -3620,7 +3620,7 @@ FunctionDefinitionLowering::extract_from_statement_break(
     
     function->add_operation(
 	current_block,
-	std::make_unique<OperationJump>(
+	Gyoji::owned_new<OperationJump>(
 	    statement.get_source_ref(),
 	    scope_tracker.get_loop_break_blockid()
 	    )
@@ -3645,7 +3645,7 @@ FunctionDefinitionLowering::extract_from_statement_continue(
     }
     function->add_operation(
 	current_block,
-	std::make_unique<OperationJump>(
+	Gyoji::owned_new<OperationJump>(
 	    statement.get_source_ref(),
 	    scope_tracker.get_loop_continue_blockid()
 	    )
@@ -3678,7 +3678,7 @@ FunctionDefinitionLowering::extract_from_statement_label(
 	    label_block = label->get_block();
 	}
 	else {
-	    std::unique_ptr<Gyoji::context::Error> error = std::make_unique<Gyoji::context::Error>("Labels in functions must be unique");
+	    Gyoji::owned<Gyoji::context::Error> error = Gyoji::owned_new<Gyoji::context::Error>("Labels in functions must be unique");
 	    error->add_message(statement.get_name_source_ref(),
 			       std::string("Duplicate label ") + label_name);
 	    error->add_message(label->get_source_ref(),
@@ -3691,7 +3691,7 @@ FunctionDefinitionLowering::extract_from_statement_label(
     }
     function->add_operation(
 	current_block,
-	std::make_unique<OperationJump>(
+	Gyoji::owned_new<OperationJump>(
 	    statement.get_source_ref(),
 	    label_block
 	    )
@@ -3722,12 +3722,12 @@ FunctionDefinitionLowering::extract_from_statement_goto(
     // We need to track what point
     // in the MIR the goto appears so that
     // we can insert the unwindings before that point.
-    Gyoji::owned<FunctionPoint> function_point = std::make_unique<FunctionPoint>(current_block, function->get_basic_block(current_block).size());
+    Gyoji::owned<FunctionPoint> function_point = Gyoji::owned_new<FunctionPoint>(current_block, function->get_basic_block(current_block).size());
     scope_tracker.add_goto(label_name, std::move(function_point), statement.get_label_source_ref());
     
     function->add_operation(
 	current_block,
-	std::make_unique<OperationJump>(
+	Gyoji::owned_new<OperationJump>(
 	    statement.get_source_ref(),
 	    label_block
 	    )
@@ -3747,7 +3747,7 @@ FunctionDefinitionLowering::extract_from_statement_return(
 	leave_scope(unwind_root, statement.get_source_ref());
 	function->add_operation(
 	    current_block,
-	    std::make_unique<OperationReturnVoid>(
+	    Gyoji::owned_new<OperationReturnVoid>(
 		statement.get_source_ref()
 		)
 	    );
@@ -3760,7 +3760,7 @@ FunctionDefinitionLowering::extract_from_statement_return(
 	leave_scope(unwind_root, statement.get_source_ref());
 	function->add_operation(
 	    current_block,
-	    std::make_unique<OperationReturn>(
+	    Gyoji::owned_new<OperationReturn>(
 		statement.get_source_ref(),
 		expression_tmpvar
 		)
@@ -3801,7 +3801,7 @@ FunctionDefinitionLowering::undeclare_local(
 		function->insert_operation(
 		    basic_block_id,
 		    location,
-		    std::make_unique<OperationLocalVariable>(
+		    Gyoji::owned_new<OperationLocalVariable>(
 			src_ref,
 			variable_tmpvar,
 			variable_name,
@@ -3816,7 +3816,7 @@ FunctionDefinitionLowering::undeclare_local(
 		function->insert_operation(
 		    basic_block_id,
 		    location,
-		    std::make_unique<OperationUnary>(
+		    Gyoji::owned_new<OperationUnary>(
 			Operation::OP_ADDRESSOF,
 			src_ref,
 			variable_pointer_tmpvar,
@@ -3834,7 +3834,7 @@ FunctionDefinitionLowering::undeclare_local(
 		function->insert_operation(
 		    basic_block_id,
 		    location,
-		    std::make_unique<OperationSymbol>(
+		    Gyoji::owned_new<OperationSymbol>(
 			src_ref,
 			destructor_fptr_tmpvar,
 			partial_operands,
@@ -3849,7 +3849,7 @@ FunctionDefinitionLowering::undeclare_local(
 		function->insert_operation(
 		    basic_block_id,
 		    location,
-		    std::make_unique<OperationFunctionCall>(
+		    Gyoji::owned_new<OperationFunctionCall>(
 			Operation::OP_DESTRUCTOR,
 			src_ref,
 			destructor_result_tmpvar,
@@ -3866,7 +3866,7 @@ FunctionDefinitionLowering::undeclare_local(
 	function->insert_operation(
 	    basic_block_id,
 	    location,
-	    std::make_unique<OperationLocalUndeclare>(
+	    Gyoji::owned_new<OperationLocalUndeclare>(
 		src_ref,
 		variable_name
 		)

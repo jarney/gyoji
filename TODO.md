@@ -65,6 +65,13 @@ to do with the language.
   * Finish/audit syntax tree parsing
     * Global variables are still missing.
     * Trinary operations are still missing.
+    * Cast and conversion operations
+      * Cast is just a raw bitcast of bits from one type to another (but only for primitive types)
+      * Cast of pointers to other pointers, but this is only available in unsafe mode.
+      * References cannot be cast or converted at all because this would interfere with borrow rules.
+      * Convert allows sign-extending and zero-extending number
+      * Convert allows type conversion of floating-point numbers.
+      * Classes can't be cast at all, this is unsafe.
 
   * Include enough semantic information like 'live' and 'dead'
     storage as well as use and mutation of borrwowed items

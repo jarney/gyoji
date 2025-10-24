@@ -45,7 +45,7 @@ void TypeLowering::lower()
 void
 TypeLowering::extract_from_class_declaration(const ClassDeclaration & declaration)
 {
-    Gyoji::owned<Type> type = std::make_unique<Type>(
+    Gyoji::owned<Type> type = Gyoji::owned_new<Type>(
 	declaration.get_fully_qualified_name(),
 	Type::TYPE_COMPOSITE,
 	false,
@@ -61,7 +61,7 @@ TypeLowering::get_or_create(std::string pointer_name, Type::TypeType type_type, 
 	return pointer_type;
     }
     else {
-	Gyoji::owned<Type> pointer_type_created = std::make_unique<Type>(pointer_name, type_type, complete, source_ref);
+	Gyoji::owned<Type> pointer_type_created = Gyoji::owned_new<Type>(pointer_name, type_type, complete, source_ref);
 	pointer_type = pointer_type_created.get();
 	mir.get_types().define_type(std::move(pointer_type_created));
 	return pointer_type;
@@ -73,7 +73,7 @@ TypeLowering::extract_from_type_specifier_simple(const TypeSpecifierSimple & typ
 {
     const auto & type_name = type_specifier.get_type_name();
     if (type_name.is_expression()) {
-	auto error = std::make_unique<Gyoji::context::Error>("Could not resolve type");
+	auto error = Gyoji::owned_new<Gyoji::context::Error>("Could not resolve type");
 	error->add_message(type_name.get_name_source_ref(), "Specifying types from expressions is not yet supported.");
 	compiler_context.get_errors().add_error(std::move(error));
 	return nullptr;
@@ -355,7 +355,7 @@ TypeLowering::extract_from_class_members(Type & class_type, const ClassDefinitio
 	    else {
 		const auto existing_member_it = members_by_name.find(member_variable->get_name());
 		if (existing_member_it != members_by_name.end()) {
-		    std::unique_ptr<Gyoji::context::Error> error = std::make_unique<Gyoji::context::Error>("Duplicate member variable in class.");
+		    Gyoji::owned<Gyoji::context::Error> error = Gyoji::owned_new<Gyoji::context::Error>("Duplicate member variable in class.");
 		    error->add_message(member_variable->get_name_source_ref(),
 				       std::string("Member variable ") +
 				       member_variable->get_name() +
@@ -469,7 +469,7 @@ TypeLowering::extract_from_class_definition(const ClassDefinition & definition)
     if (it == mir.get_types().get_types().end()) {
 	// Case 1: No forward declaration exists, fill in the definition
 	// from the class.
-	Gyoji::owned<Type> type = std::make_unique<Type>(
+	Gyoji::owned<Type> type = Gyoji::owned_new<Type>(
 	    definition.get_fully_qualified_name(),
 	    definition.get_name(),
 	    Type::TYPE_COMPOSITE,
@@ -488,7 +488,7 @@ TypeLowering::extract_from_class_definition(const ClassDefinition & definition)
 	else {
 	    // Case 3: Class is declared and complete, but does not match our current definition,
 	    // so this is a duplicate.  Raise an error to avoid ambiguity.
-	    std::unique_ptr<Gyoji::context::Error> error = std::make_unique<Gyoji::context::Error>(std::string("Duplicate class definition: ") + definition.get_fully_qualified_name());
+	    Gyoji::owned<Gyoji::context::Error> error = Gyoji::owned_new<Gyoji::context::Error>(std::string("Duplicate class definition: ") + definition.get_fully_qualified_name());
 	    error->add_message(type.get_defined_source_ref(),
 			       "Originally defined here"
 		);
@@ -509,7 +509,7 @@ TypeLowering::extract_from_enum_definition(const EnumDefinition & enum_definitio
     const auto it = mir.get_types().get_types().find(enum_definition.get_name());
     if (it == mir.get_types().get_types().end()) {
 	// No definition exists, create it.
-	Gyoji::owned<Type> type = std::make_unique<Type>(enum_definition.get_name(), Type::TYPE_ENUM, true, enum_definition.get_name_source_ref());
+	Gyoji::owned<Type> type = Gyoji::owned_new<Type>(enum_definition.get_name(), Type::TYPE_ENUM, true, enum_definition.get_name_source_ref());
 	mir.get_types().define_type(std::move(type));
 
 	for (const auto & ev : enum_definition.get_value_list().get_values()) {
@@ -525,7 +525,7 @@ TypeLowering::extract_from_enum_definition(const EnumDefinition & enum_definitio
 	// Case 3: Class is declared and complete, but does not match our current definition,
 	// so this is a duplicate.  Raise an error to avoid ambiguity.
 	auto & type = *it->second;
-	std::unique_ptr<Gyoji::context::Error> error = std::make_unique<Gyoji::context::Error>(std::string("Duplicate enum definition: ") + enum_definition.get_name());
+	Gyoji::owned<Gyoji::context::Error> error = Gyoji::owned_new<Gyoji::context::Error>(std::string("Duplicate enum definition: ") + enum_definition.get_name());
 	error->add_message(type.get_defined_source_ref(),
 			   "Originally defined here"
 	    );
@@ -551,7 +551,7 @@ TypeLowering::extract_from_type_definition(const TypeDefinition & type_definitio
 	// so that we can later modify the type by "instantiating"
 	// it as a generic with specific type parameters
 	// when we get to that point.
-	Gyoji::owned<Type> type = std::make_unique<Type>(
+	Gyoji::owned<Type> type = Gyoji::owned_new<Type>(
 	    type_definition.get_name(),
 	    type_definition.get_name(),
 	    type_definition.get_type_specifier().get_source_ref(),
@@ -564,7 +564,7 @@ TypeLowering::extract_from_type_definition(const TypeDefinition & type_definitio
 	// Case 3: Class is declared and complete, but does not match our current definition,
 	// so this is a duplicate.  Raise an error to avoid ambiguity.
 	auto & type = *it->second;
-	std::unique_ptr<Gyoji::context::Error> error = std::make_unique<Gyoji::context::Error>(std::string("Duplicate enum definition: ") + type_definition.get_name());
+	Gyoji::owned<Gyoji::context::Error> error = Gyoji::owned_new<Gyoji::context::Error>(std::string("Duplicate enum definition: ") + type_definition.get_name());
 	error->add_message(type.get_defined_source_ref(),
 			   "Originally defined here"
 	    );

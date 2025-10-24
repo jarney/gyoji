@@ -274,7 +274,7 @@ null         {PROCESS_NODE(LITERAL_NULL);}
 "/*"        {
   BEGIN(COMMENT);
   TOKEN_ADD(comment);
-  Gyoji::owned<TerminalNonSyntax> nsd = std::make_unique<TerminalNonSyntax>(
+  Gyoji::owned<TerminalNonSyntax> nsd = Gyoji::owned_new<TerminalNonSyntax>(
         TerminalNonSyntax::TerminalNonSyntax::Type::EXTRA_COMMENT_MULTI_LINE,
         tok
         );
@@ -294,7 +294,7 @@ null         {PROCESS_NODE(LITERAL_NULL);}
 \/\/.* {
 // Single-line comment:
     TOKEN_ADD(single_line_comment);
-    Gyoji::owned<TerminalNonSyntax> nsd = std::make_unique<TerminalNonSyntax>(
+    Gyoji::owned<TerminalNonSyntax> nsd = Gyoji::owned_new<TerminalNonSyntax>(
         TerminalNonSyntax::Type::EXTRA_COMMENT_SINGLE_LINE,
         tok
     );
@@ -302,7 +302,7 @@ null         {PROCESS_NODE(LITERAL_NULL);}
 }
 [ \t]+ {
     TOKEN_ADD(whitespace);
-    Gyoji::owned<TerminalNonSyntax> nsd = std::make_unique<TerminalNonSyntax>(
+    Gyoji::owned<TerminalNonSyntax> nsd = Gyoji::owned_new<TerminalNonSyntax>(
         TerminalNonSyntax::Type::EXTRA_WHITESPACE, 
         tok
     );
@@ -310,7 +310,7 @@ null         {PROCESS_NODE(LITERAL_NULL);}
 }
 \n {
     TOKEN_ADD(newline);
-    Gyoji::owned<TerminalNonSyntax> nsd = std::make_unique<TerminalNonSyntax>(
+    Gyoji::owned<TerminalNonSyntax> nsd = Gyoji::owned_new<TerminalNonSyntax>(
         TerminalNonSyntax::Type::EXTRA_WHITESPACE, 
         tok
     );
@@ -328,7 +328,7 @@ null         {PROCESS_NODE(LITERAL_NULL);}
     // the error to the correct line of YACC code and not necessarily
     // to the source file being compiled.
     TOKEN_ADD(file_metadata)
-    Gyoji::owned<TerminalNonSyntax> nsd = std::make_unique<TerminalNonSyntax>(
+    Gyoji::owned<TerminalNonSyntax> nsd = Gyoji::owned_new<TerminalNonSyntax>(
         TerminalNonSyntax::Type::EXTRA_FILE_METADATA,
         tok
     );
@@ -336,7 +336,7 @@ null         {PROCESS_NODE(LITERAL_NULL);}
 }
 \#.*\n {
     TOKEN_ADD(file_metadata)
-    Gyoji::owned<TerminalNonSyntax> nsd = std::make_unique<TerminalNonSyntax>(
+    Gyoji::owned<TerminalNonSyntax> nsd = Gyoji::owned_new<TerminalNonSyntax>(
         TerminalNonSyntax::Type::EXTRA_FILE_METADATA,
         tok
     );

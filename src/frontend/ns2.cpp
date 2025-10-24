@@ -81,7 +81,7 @@ NS2Entity::add_identifier(
 	return nullptr;
     }
     
-    Gyoji::owned<NS2Entity> entity = std::make_unique<NS2Entity>(_name, NS2Entity::ENTITY_TYPE_IDENTIFIER, this, _source_ref);
+    Gyoji::owned<NS2Entity> entity = Gyoji::owned_new<NS2Entity>(_name, NS2Entity::ENTITY_TYPE_IDENTIFIER, this, _source_ref);
     NS2Entity *ret = entity.get();
     elements.insert(std::pair(_name, std::move(entity)));
     return ret;
@@ -99,7 +99,7 @@ NS2Entity::add_type(
 	return nullptr;
     }
 
-    Gyoji::owned<NS2Entity> entity = std::make_unique<NS2Entity>(_name, NS2Entity::ENTITY_TYPE_TYPE, this, _source_ref);
+    Gyoji::owned<NS2Entity> entity = Gyoji::owned_new<NS2Entity>(_name, NS2Entity::ENTITY_TYPE_TYPE, this, _source_ref);
     NS2Entity *ret = entity.get();
     elements.insert(std::pair(_name, std::move(entity)));
     return ret;
@@ -116,7 +116,7 @@ NS2Entity::add_class(
 	fprintf(stderr, "Identifier already defined in namespace %s\n", _name.c_str());
 	return nullptr;
     }
-    Gyoji::owned<NS2Entity> entity = std::make_unique<NS2Entity>(_name, NS2Entity::ENTITY_TYPE_CLASS, this, _source_ref);
+    Gyoji::owned<NS2Entity> entity = Gyoji::owned_new<NS2Entity>(_name, NS2Entity::ENTITY_TYPE_CLASS, this, _source_ref);
     NS2Entity *ret = entity.get();
     elements.insert(std::pair(_name, std::move(entity)));
     return ret;
@@ -128,7 +128,7 @@ NS2Entity::add_namespace(
     const Gyoji::context::SourceReference & _source_ref
     )
 {
-    Gyoji::owned<NS2Entity> entity = std::make_unique<NS2Entity>(_namespace, NS2Entity::ENTITY_TYPE_NAMESPACE, this, _source_ref);
+    Gyoji::owned<NS2Entity> entity = Gyoji::owned_new<NS2Entity>(_namespace, NS2Entity::ENTITY_TYPE_NAMESPACE, this, _source_ref);
     NS2Entity *ret = entity.get();
     elements.insert(std::pair(_namespace, std::move(entity)));
     return ret;
@@ -234,7 +234,7 @@ static std::string internal_filename("builtin");
 static const Gyoji::context::SourceReference zero_source_ref(internal_filename, 1, 0, 0);
 
 NS2Context::NS2Context()
-    : root(std::make_unique<NS2Entity>(
+    : root(Gyoji::owned_new<NS2Entity>(
 	       "root",
 	       NS2Entity::ENTITY_TYPE_NAMESPACE,
 	       nullptr,
@@ -242,7 +242,7 @@ NS2Context::NS2Context()
 	       )
 	)
 {
-    Gyoji::owned<NS2SearchPaths> search_paths = std::make_unique<NS2SearchPaths>();
+    Gyoji::owned<NS2SearchPaths> search_paths = Gyoji::owned_new<NS2SearchPaths>();
     stack.push_back(std::pair(root.get(), std::move(search_paths)));
 
     root->add_type("i8", zero_source_ref);
@@ -365,7 +365,7 @@ NS2Context::namespace_push(NS2Entity *ns)
 {
     // We are now in the context of this
     // namespace with our own search path.
-    Gyoji::owned<NS2SearchPaths> search_paths = std::make_unique<NS2SearchPaths>();
+    Gyoji::owned<NS2SearchPaths> search_paths = Gyoji::owned_new<NS2SearchPaths>();
     stack.push_back(
 	std::pair(
 	    ns,

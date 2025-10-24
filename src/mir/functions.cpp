@@ -121,7 +121,7 @@ Function::insert_operation(size_t block_id, size_t operation_index, Gyoji::owned
 size_t
 Function::add_block()
 {
-    blocks[blockid] = std::make_unique<BasicBlock>();
+    blocks[blockid] = Gyoji::owned_new<BasicBlock>();
     size_t blockid_created = blockid;
     blockid++;
     return blockid_created;

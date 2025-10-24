@@ -33,13 +33,13 @@ int main(int argc, char **argv)
 
     {
     SourceReference src_ref(std::string("asdf.h"), (size_t)3, (size_t)9, 8);
-    std::unique_ptr<Error> error = std::make_unique<Error>("Syntax Error");
+    Gyoji::owned<Error> error = Gyoji::owned_new<Error>("Syntax Error");
     error->add_message(src_ref, "Invalid namespace asdfsdf");
     errors.add_error(std::move(error));
     }
     {
     SourceReference src_ref(std::string("asdf.h"), (size_t)5, (size_t)5, 1);
-    std::unique_ptr<Error> error = std::make_unique<Error>("Syntax Error");
+    Gyoji::owned<Error> error = Gyoji::owned_new<Error>("Syntax Error");
     error->add_message(src_ref, "Undeclared identifier y");
     errors.add_error(std::move(error));
     }

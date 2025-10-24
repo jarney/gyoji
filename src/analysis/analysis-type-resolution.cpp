@@ -44,7 +44,7 @@ AnalysisPassTypeResolution::check_type(const Type & type) const
     if (type.get_type() == Type::TYPE_COMPOSITE) {
 	for (const auto & member : type.get_members()) {
 	    if (!member.get_type()->is_complete()) {
-		std::unique_ptr<Gyoji::context::Error> error = std::make_unique<Gyoji::context::Error>("Class contains incomplete type");
+		Gyoji::owned<Gyoji::context::Error> error = Gyoji::owned_new<Gyoji::context::Error>("Class contains incomplete type");
 		error->add_message(member.get_source_ref(),
 				   std::string("Incomplete type in member ") + member.get_name() + std::string(" of type ") + type.get_name());
 		error->add_message(member.get_type()->get_declared_source_ref(),

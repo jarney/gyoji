@@ -75,5 +75,11 @@ namespace Gyoji {
      * </pre>   
      */
     template <class T> using owned = std::unique_ptr<T>;
+
+    template< class T, class... Args >
+    owned<T> owned_new(Args&&... args) {
+	return std::make_unique<T>(std::forward<Args>(args)...);
+    }
+
 };
 

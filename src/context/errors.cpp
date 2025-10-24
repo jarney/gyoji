@@ -84,7 +84,7 @@ Error::add_message(
     const SourceReference & _src_ref,
     std::string _errormsg)
 {
-    Gyoji::owned<ErrorMessage> message = std::make_unique<ErrorMessage>(
+    Gyoji::owned<ErrorMessage> message = Gyoji::owned_new<ErrorMessage>(
 	_src_ref,
 	_errormsg
 	);
@@ -99,7 +99,7 @@ Errors::add_simple_error(
     std::string _error_message
     )
 {
-    auto error = std::make_unique<Gyoji::context::Error>(_error_title);
+    auto error = Gyoji::owned_new<Gyoji::context::Error>(_error_title);
     error->add_message(_src_ref, _error_message);
     add_error(std::move(error));
 }

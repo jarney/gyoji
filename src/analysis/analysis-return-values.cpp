@@ -80,7 +80,7 @@ void ReturnOperationVisitor::visit(
     if (operation.get_type() == Operation::OP_RETURN) {
 	const Type *operation_type = function.tmpvar_get(operation.get_operands().at(0));
 	if (return_type->get_name() != operation_type->get_name()) {
-	    std::unique_ptr<Gyoji::context::Error> error = std::make_unique<Gyoji::context::Error>("Return statement returns incorrec type.");
+	    Gyoji::owned<Gyoji::context::Error> error = Gyoji::owned_new<Gyoji::context::Error>("Return statement returns incorrec type.");
 	    error->add_message(
 		operation.get_source_ref(),
 		std::string("Return statement returns value of type ") + operation_type->get_name() + std::string(" but function is declared to return ") + return_type->get_name()
@@ -96,7 +96,7 @@ void ReturnOperationVisitor::visit(
     }
     else if (operation.get_type() == Operation::OP_RETURN_VOID) {
 	if (!return_type->is_void()) {
-	    std::unique_ptr<Gyoji::context::Error> error = std::make_unique<Gyoji::context::Error>("Return statement returns incorrec type.");
+	    Gyoji::owned<Gyoji::context::Error> error = Gyoji::owned_new<Gyoji::context::Error>("Return statement returns incorrec type.");
 	    error->add_message(
 		operation.get_source_ref(),
 		std::string("Return statement returns void (no value), but function is declared to return ") + return_type->get_name()

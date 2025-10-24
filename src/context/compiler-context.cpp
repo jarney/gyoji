@@ -18,8 +18,8 @@ using namespace Gyoji::context;
 
 CompilerContext::CompilerContext(std::string _filename)
 {
-    token_stream = std::make_unique<TokenStream>();
-    errors = std::make_unique<Errors>(*token_stream);
+    token_stream = Gyoji::owned_new<TokenStream>();
+    errors = Gyoji::owned_new<Errors>(*token_stream);
     filenames.push_back(_filename);
 }
 CompilerContext::~CompilerContext()

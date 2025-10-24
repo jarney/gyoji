@@ -223,7 +223,7 @@ Scope::get_loop_continue_blockid() const
 void
 Scope::add_variable(std::string name, const Gyoji::mir::Type *mir_type, const Gyoji::context::SourceReference & source_ref)
 {
-    Gyoji::owned<LocalVariable> local_variable = std::make_unique<LocalVariable>(mir_type, source_ref);
+    Gyoji::owned<LocalVariable> local_variable = Gyoji::owned_new<LocalVariable>(mir_type, source_ref);
     variables.insert(std::pair(name, std::move(local_variable)));
     variables_in_declaration_order.push_back(name);
 }
@@ -250,7 +250,7 @@ Scope::set_parent(Scope *_parent)
 ScopeTracker::ScopeTracker(
     bool _root_is_unsafe,
     const Gyoji::context::CompilerContext & _compiler_context)
-    : root(std::make_unique<Scope>(_root_is_unsafe))
+    : root(Gyoji::owned_new<Scope>(_root_is_unsafe))
     , compiler_context(_compiler_context)
     , tracker_prior_point()
     , tracker_backward_edges()
@@ -268,7 +268,7 @@ ScopeTracker::~ScopeTracker()
 void
 ScopeTracker::scope_push(bool _is_unsafe, const Gyoji::context::SourceReference & _source_ref)
 {
-    auto child_scope = std::make_unique<Scope>(_is_unsafe);
+    auto child_scope = Gyoji::owned_new<Scope>(_is_unsafe);
     Scope *new_current = child_scope.get();
     child_scope->set_parent(current);
     auto child_op = ScopeOperation::create_child(std::move(child_scope), _source_ref);
@@ -283,7 +283,7 @@ ScopeTracker::scope_push_loop(const Gyoji::context::SourceReference & _source_re
     // Scopes associated with loops cannot directly
     // be declared as unsafe, so if you want that, you should
     // do it in the parent scope of the loop.
-    auto child_scope = std::make_unique<Scope>(false, true, _loop_break_blockid, _loop_continue_blockid);
+    auto child_scope = Gyoji::owned_new<Scope>(false, true, _loop_break_blockid, _loop_continue_blockid);
     Scope *new_current = child_scope.get();
     child_scope->set_parent(current);
     auto child_op = ScopeOperation::create_child(std::move(child_scope), _source_ref);
@@ -345,7 +345,7 @@ ScopeTracker::label_define(
     const Gyoji::context::SourceReference & _source_ref
     )
 {
-    Gyoji::owned<FunctionLabel> new_label = std::make_unique<FunctionLabel>(label_blockid);
+    Gyoji::owned<FunctionLabel> new_label = Gyoji::owned_new<FunctionLabel>(label_blockid);
     new_label->resolve(_source_ref);
     labels.insert(std::pair(label_name, std::move(new_label)));
 
@@ -361,7 +361,7 @@ ScopeTracker::label_define(
 void
 ScopeTracker::label_declare(std::string label_name, size_t label_blockid)
 {
-    Gyoji::owned<FunctionLabel> new_label = std::make_unique<FunctionLabel>(label_blockid);
+    Gyoji::owned<FunctionLabel> new_label = Gyoji::owned_new<FunctionLabel>(label_blockid);
     labels_forward_declared.insert(std::pair(label_name, std::move(new_label)));
 }
 
@@ -480,7 +480,7 @@ ScopeTracker::add_variable(std::string variable_name, const Gyoji::mir::Type *mi
     const LocalVariable *maybe_existing = get_variable(variable_name);
 
     if (maybe_existing != nullptr) {
-	std::unique_ptr<Gyoji::context::Error> error = std::make_unique<Gyoji::context::Error>("Duplicate Local Variable.");
+	Gyoji::owned<Gyoji::context::Error> error = Gyoji::owned_new<Gyoji::context::Error>("Duplicate Local Variable.");
 	error->add_message(source_ref,
 			   std::string("Variable with name ") + variable_name + " is already in scope and cannot be duplicated.");
 	error->add_message(maybe_existing->get_source_ref(),
@@ -592,7 +592,7 @@ ScopeTracker::check(
 	const ScopeOperation *goto_operation = tracker_flat.at(goto_point.first);
 	const FunctionLabel *function_label = get_label(goto_operation->get_goto_label());
 	if (function_label == nullptr || !function_label->is_resolved()) {
-	    std::unique_ptr<Gyoji::context::Error> error = std::make_unique<Gyoji::context::Error>("Goto for an un-defined label.");
+	    Gyoji::owned<Gyoji::context::Error> error = Gyoji::owned_new<Gyoji::context::Error>("Goto for an un-defined label.");
 	    error->add_message(goto_operation->get_source_ref(),
 			       std::string("Goto label ") + goto_operation->get_goto_label() + " had an undefined destination.");
 	    compiler_context
@@ -621,7 +621,7 @@ ScopeTracker::check(
 	evaluate_scope_changes(tracker_flat, prior_to_goto, prior_to_label, skipped_initializations, unwind_variables);
 
 	if (skipped_initializations.size() > 0) {
-	    std::unique_ptr<Gyoji::context::Error> error = std::make_unique<Gyoji::context::Error>("Goto would skip initialization.");
+	    Gyoji::owned<Gyoji::context::Error> error = Gyoji::owned_new<Gyoji::context::Error>("Goto would skip initialization.");
 	    error->add_message(goto_operation->get_source_ref(),
 			       std::string("Goto label ") + goto_operation->get_goto_label() + std::string(" would skip initialization of variables in destination scope."));
 	    error->add_message(function_label->get_source_ref(),

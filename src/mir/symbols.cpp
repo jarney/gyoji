@@ -57,7 +57,7 @@ Symbols::define_symbol(
     if (it != symbols.end()) {
 	return;
     }
-    symbols.insert(std::pair(name, std::make_unique<Symbol>(name, type, mir_type)));
+    symbols.insert(std::pair(name, Gyoji::owned_new<Symbol>(name, type, mir_type)));
 }
 
 void

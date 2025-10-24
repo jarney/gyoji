@@ -334,7 +334,7 @@
 /*** Rules Section ***/
 translation_unit
         : opt_file_statement_list YYEOF {
-          $$ = std::make_unique<Gyoji::frontend::tree::TranslationUnit>(std::move($1), std::move($2));
+          $$ = Gyoji::owned_new<Gyoji::frontend::tree::TranslationUnit>(std::move($1), std::move($2));
           PRINT_NONTERMINALS($$);
           return_data.set_translation_unit(std::move($$));
         }
@@ -342,7 +342,7 @@ translation_unit
 
 opt_file_statement_list 
         : /**/ YYEOF {
-          $$ = std::make_unique<Gyoji::frontend::tree::FileStatementList>(std::move($1));
+          $$ = Gyoji::owned_new<Gyoji::frontend::tree::FileStatementList>(std::move($1));
           PRINT_NONTERMINALS($$);
         }
         | file_statement_list {
@@ -353,7 +353,7 @@ opt_file_statement_list
 
 file_statement_list 
         : file_statement {
-          $$ = std::make_unique<Gyoji::frontend::tree::FileStatementList>(return_data.compiler_context.get_token_stream().get_current_source_ref());
+          $$ = Gyoji::owned_new<Gyoji::frontend::tree::FileStatementList>(return_data.compiler_context.get_token_stream().get_current_source_ref());
           $$->add_statement(std::move($1));
           PRINT_NONTERMINALS($$);
         }
@@ -367,7 +367,7 @@ file_statement_list
 file_statement
         : file_statement_function_definition {
                 const Gyoji::frontend::ast::SyntaxNode &sn = *($1);
-                $$ = std::make_unique<Gyoji::frontend::tree::FileStatement>(
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::FileStatement>(
                                                                                std::move($1),
                                                                                sn
                                                                                );
@@ -375,7 +375,7 @@ file_statement
         }
         | file_statement_function_declaration {
                 const Gyoji::frontend::ast::SyntaxNode &sn = *($1);
-                $$ = std::make_unique<Gyoji::frontend::tree::FileStatement>(
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::FileStatement>(
                                                                                std::move($1),
                                                                                sn
                                                                                );
@@ -383,7 +383,7 @@ file_statement
         }
         | file_statement_global_definition {
                 const Gyoji::frontend::ast::SyntaxNode &sn = *($1);
-                $$ = std::make_unique<Gyoji::frontend::tree::FileStatement>(
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::FileStatement>(
                                                                                std::move($1),
                                                                                sn
                                                                                );
@@ -391,7 +391,7 @@ file_statement
         }
         | class_declaration {
                 const Gyoji::frontend::ast::SyntaxNode &sn = *($1);
-                $$ = std::make_unique<Gyoji::frontend::tree::FileStatement>(
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::FileStatement>(
                                                                             std::move($1),
                                                                             sn
                                                                             );
@@ -399,7 +399,7 @@ file_statement
         }
         | class_definition {
                 const Gyoji::frontend::ast::SyntaxNode &sn = *($1);
-                $$ = std::make_unique<Gyoji::frontend::tree::FileStatement>(
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::FileStatement>(
                                                                                std::move($1),
                                                                                sn
                                                                                );
@@ -407,7 +407,7 @@ file_statement
         }
         | enum_definition {
                 const Gyoji::frontend::ast::SyntaxNode &sn = *($1);
-                $$ = std::make_unique<Gyoji::frontend::tree::FileStatement>(
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::FileStatement>(
                                                                                std::move($1),
                                                                                sn
                                                                                );
@@ -415,7 +415,7 @@ file_statement
         }
         | type_definition {
                 const Gyoji::frontend::ast::SyntaxNode &sn = *($1);
-                $$ = std::make_unique<Gyoji::frontend::tree::FileStatement>(
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::FileStatement>(
                                                                                std::move($1),
                                                                                sn
                                                                                );
@@ -423,7 +423,7 @@ file_statement
         }
         | file_statement_namespace {
                 const Gyoji::frontend::ast::SyntaxNode &sn = *($1);
-                $$ = std::make_unique<Gyoji::frontend::tree::FileStatement>(
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::FileStatement>(
                                                                                std::move($1),
                                                                                sn
                                                                                );
@@ -431,7 +431,7 @@ file_statement
         }
         | file_statement_using {
                 const Gyoji::frontend::ast::SyntaxNode &sn = *($1);
-                $$ = std::make_unique<Gyoji::frontend::tree::FileStatement>(
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::FileStatement>(
                                                                                std::move($1),
                                                                                sn
                                                                                );
@@ -445,7 +445,7 @@ file_statement_global_definition
 		NS2Entity *ns2_entity = return_data.identifier_get_or_create($4->get_value(), true, $4->get_source_ref());
 		$4->set_ns2_entity(ns2_entity);
 	
-	        $$ = std::make_unique<Gyoji::frontend::tree::FileStatementGlobalDefinition>(
+	        $$ = Gyoji::owned_new<Gyoji::frontend::tree::FileStatementGlobalDefinition>(
                                                                                       std::move($1),
                                                                                       std::move($2),
                                                                                       std::move($3),
@@ -459,7 +459,7 @@ file_statement_global_definition
 
 opt_global_initializer
         : /**/ {
-                $$ = std::make_unique<Gyoji::frontend::tree::GlobalInitializer>(return_data.compiler_context.get_token_stream().get_current_source_ref());
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::GlobalInitializer>(return_data.compiler_context.get_token_stream().get_current_source_ref());
                 PRINT_NONTERMINALS($$);
         }
         | global_initializer {
@@ -471,21 +471,21 @@ opt_global_initializer
 global_initializer
         : global_initializer_expression_primary {
                 const Gyoji::frontend::ast::SyntaxNode &sn = *($1);
-                $$ = std::make_unique<Gyoji::frontend::tree::GlobalInitializer>(std::move($1), sn);
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::GlobalInitializer>(std::move($1), sn);
         }
         | global_initializer_addressof_expression_primary {
                 const Gyoji::frontend::ast::SyntaxNode &sn = *($1);
-                $$ = std::make_unique<Gyoji::frontend::tree::GlobalInitializer>(std::move($1), sn);
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::GlobalInitializer>(std::move($1), sn);
         }
         | global_initializer_struct_initializer_list {
                 const Gyoji::frontend::ast::SyntaxNode &sn = *($1);
-                $$ = std::make_unique<Gyoji::frontend::tree::GlobalInitializer>(std::move($1), sn);
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::GlobalInitializer>(std::move($1), sn);
         }
         ;
 
 global_initializer_expression_primary
         : ASSIGNMENT expression_primary {
-          $$ = std::make_unique<Gyoji::frontend::tree::GlobalInitializerExpressionPrimary>(std::move($1),
+          $$ = Gyoji::owned_new<Gyoji::frontend::tree::GlobalInitializerExpressionPrimary>(std::move($1),
                                                                                               std::move($2));
           PRINT_NONTERMINALS($$);
         }
@@ -493,7 +493,7 @@ global_initializer_expression_primary
 
 global_initializer_addressof_expression_primary
         : ASSIGNMENT ANDPERSAND expression_primary {
-          $$ = std::make_unique<Gyoji::frontend::tree::GlobalInitializerAddressofExpressionPrimary>(std::move($1),
+          $$ = Gyoji::owned_new<Gyoji::frontend::tree::GlobalInitializerAddressofExpressionPrimary>(std::move($1),
                                                                                                        std::move($2),
                                                                                                        std::move($3)
                                                                                                        );
@@ -503,7 +503,7 @@ global_initializer_addressof_expression_primary
 
 global_initializer_struct_initializer_list
         : ASSIGNMENT BRACE_L opt_struct_initializer_list BRACE_R {
-          $$ = std::make_unique<Gyoji::frontend::tree::GlobalInitializerStructInitializerList>(std::move($1),
+          $$ = Gyoji::owned_new<Gyoji::frontend::tree::GlobalInitializerStructInitializerList>(std::move($1),
                                                                                                   std::move($2),
                                                                                                   std::move($3),
                                                                                                   std::move($4)
@@ -514,7 +514,7 @@ global_initializer_struct_initializer_list
 
 opt_struct_initializer_list
         : /**/ {
-                $$ = std::make_unique<Gyoji::frontend::tree::StructInitializerList>(return_data.compiler_context.get_token_stream().get_current_source_ref());
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::StructInitializerList>(return_data.compiler_context.get_token_stream().get_current_source_ref());
                 PRINT_NONTERMINALS($$);
         }
         | struct_initializer_list {
@@ -525,7 +525,7 @@ opt_struct_initializer_list
 
 struct_initializer_list
         : struct_initializer {
-                $$ = std::make_unique<Gyoji::frontend::tree::StructInitializerList>(return_data.compiler_context.get_token_stream().get_current_source_ref());
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::StructInitializerList>(return_data.compiler_context.get_token_stream().get_current_source_ref());
                 $$->add_initializer(std::move($1));
                 PRINT_NONTERMINALS($$);
         }
@@ -540,7 +540,7 @@ struct_initializer
         : DOT IDENTIFIER global_initializer SEMICOLON {
 	        $2->set_identifier_type(Gyoji::frontend::tree::Terminal::IDENTIFIER_LOCAL_SCOPE);
 		
-                $$ = std::make_unique<Gyoji::frontend::tree::StructInitializer>(
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::StructInitializer>(
                                                                                    std::move($1),
                                                                                    std::move($2),
                                                                                    std::move($3),
@@ -552,11 +552,11 @@ struct_initializer
 
 opt_access_modifier
         : /**/ {
-                $$ = std::make_unique<Gyoji::frontend::tree::AccessModifier>(return_data.compiler_context.get_token_stream().get_current_source_ref());
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::AccessModifier>(return_data.compiler_context.get_token_stream().get_current_source_ref());
                 PRINT_NONTERMINALS($$);
         }
         | access_modifier {
-                $$ = std::make_unique<Gyoji::frontend::tree::AccessModifier>(
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::AccessModifier>(
                                                                              std::move($1)
                                                                              );
                 PRINT_NONTERMINALS($$);
@@ -584,7 +584,7 @@ namespace_declaration
 		$3->set_ns2_entity(ns);
 		return_data.ns2_context->namespace_push(ns);
 		
-                $$ = std::make_unique<Gyoji::frontend::tree::NamespaceDeclaration>(
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::NamespaceDeclaration>(
                                                                                       std::move($1),
                                                                                       std::move($2),
                                                                                       std::move($3)
@@ -596,7 +596,7 @@ namespace_declaration
 		Gyoji::frontend::namespaces::NS2Entity *ns = return_data.ns2_context->namespace_find($3->get_value());
 		return_data.ns2_context->namespace_push(ns);
 		
-                $$ = std::make_unique<Gyoji::frontend::tree::NamespaceDeclaration>(
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::NamespaceDeclaration>(
                                                                                       std::move($1),
                                                                                       std::move($2),
                                                                                       std::move($3)
@@ -607,7 +607,7 @@ namespace_declaration
 
 file_statement_namespace
         : namespace_declaration BRACE_L opt_file_statement_list BRACE_R SEMICOLON {
-                $$ = std::make_unique<Gyoji::frontend::tree::FileStatementNamespace>(
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::FileStatementNamespace>(
                                                                                         std::move($1),
                                                                                         std::move($2),
                                                                                         std::move($3),
@@ -621,11 +621,11 @@ file_statement_namespace
 
 opt_as
         : /**/ {
-                $$ = std::make_unique<Gyoji::frontend::tree::UsingAs>(return_data.compiler_context.get_token_stream().get_current_source_ref());
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::UsingAs>(return_data.compiler_context.get_token_stream().get_current_source_ref());
                 PRINT_NONTERMINALS($$);
         }
         | AS IDENTIFIER {
-                $$ = std::make_unique<Gyoji::frontend::tree::UsingAs>(
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::UsingAs>(
                                                                 std::move($1),
                                                                 std::move($2)
                                                                 );
@@ -639,14 +639,14 @@ file_statement_using
                 std::string as_name = $5->get_using_name();
 		NS2Entity *entity = return_data.ns2_context->namespace_find(namespace_name);
 		if (entity == nullptr) {
-		    auto error = std::make_unique<Gyoji::context::Error>(std::string("Invalid identifier") + namespace_name + std::string("."));
+		    auto error = Gyoji::owned_new<Gyoji::context::Error>(std::string("Invalid identifier") + namespace_name + std::string("."));
 		    error->add_message($4->get_source_ref(), std::string("") + namespace_name + std::string(" is not a namespace."));
 		    return_data.get_compiler_context().get_errors().add_error(std::move(error));
 		    return -1;
 		}
 		return_data.ns2_context->namespace_using(as_name, entity);
 
-                $$ = std::make_unique<Gyoji::frontend::tree::FileStatementUsing>(
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::FileStatementUsing>(
                                                                                     std::move($1),
                                                                                     std::move($2),
                                                                                     std::move($3),
@@ -662,14 +662,14 @@ file_statement_using
 
 		NS2Entity *entity = return_data.ns2_context->namespace_find(namespace_name);
 		if (entity == nullptr) {
-		    auto error = std::make_unique<Gyoji::context::Error>(std::string("Invalid identifier") + namespace_name + std::string("."));
+		    auto error = Gyoji::owned_new<Gyoji::context::Error>(std::string("Invalid identifier") + namespace_name + std::string("."));
 		    error->add_message($4->get_source_ref(), std::string("") + namespace_name + std::string(" is not a namespace."));
 		    return_data.get_compiler_context().get_errors().add_error(std::move(error));
 		    return -1;
 		}
 		return_data.ns2_context->namespace_using(as_name, entity);
 		
-                $$ = std::make_unique<Gyoji::frontend::tree::FileStatementUsing>(
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::FileStatementUsing>(
                                                                                     std::move($1),
                                                                                     std::move($2),
                                                                                     std::move($3),
@@ -690,7 +690,7 @@ class_decl_start
 		NS2Entity *ns2_entity = return_data.class_get_or_create($3->get_value(), $3->get_source_ref());
 		$3->set_ns2_entity(ns2_entity);
 		return_data.ns2_context->namespace_push(ns2_entity);
-                $$ = std::make_unique<Gyoji::frontend::tree::ClassDeclStart>(
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::ClassDeclStart>(
                                                                          std::move($1),
                                                                          std::move($2),
                                                                          std::move($3),
@@ -702,7 +702,7 @@ class_decl_start
         }
         | opt_access_modifier CLASS TYPE_NAME opt_class_argument_list {
 	        return_data.ns2_context->namespace_push($3->get_ns2_entity());
-                $$ = std::make_unique<Gyoji::frontend::tree::ClassDeclStart>(
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::ClassDeclStart>(
                                                                          std::move($1),
                                                                          std::move($2),
                                                                          std::move($3),
@@ -713,7 +713,7 @@ class_decl_start
 
 opt_class_argument_list
         : /**/ {
-                $$ = std::make_unique<Gyoji::frontend::tree::ClassArgumentList>(return_data.compiler_context.get_token_stream().get_current_source_ref());
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::ClassArgumentList>(return_data.compiler_context.get_token_stream().get_current_source_ref());
                 PRINT_NONTERMINALS($$);
         }
         | COMPARE_LESS class_argument_list COMPARE_GREATER {
@@ -731,7 +731,7 @@ class_argument_list
         : IDENTIFIER {
                 NS2Entity *ns2_entity = return_data.identifier_get_or_create($1->get_value(), true, $1->get_source_ref());
 		$1->set_ns2_entity(ns2_entity);
-                $$ = std::make_unique<Gyoji::frontend::tree::ClassArgumentList>(
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::ClassArgumentList>(
                                                                                   std::move($1)
                                                                                   );
                 PRINT_NONTERMINALS($$);
@@ -748,7 +748,7 @@ class_argument_list
 // Forwar-declaration of a class.
 class_declaration
         : class_decl_start SEMICOLON {
-                $$ = std::make_unique<Gyoji::frontend::tree::ClassDeclaration>(
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::ClassDeclaration>(
 		    std::move($1),
 		    std::move($2)
 		    );
@@ -759,7 +759,7 @@ class_declaration
 
 class_definition
         : class_decl_start BRACE_L opt_class_member_declaration_list BRACE_R SEMICOLON {
-                $$ = std::make_unique<Gyoji::frontend::tree::ClassDefinition>(
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::ClassDefinition>(
                                                                                  std::move($1),
                                                                                  std::move($2),
                                                                                  std::move($3),
@@ -776,7 +776,7 @@ type_definition
                 Gyoji::frontend::namespaces::NS2Entity *ns2_entity = return_data.type_get_or_create($4->get_value(), $4->get_source_ref());
                 $4->set_ns2_entity(ns2_entity);
 		fprintf(stderr, "Defined type %s\n", $4->get_fully_qualified_name().c_str());
-                $$ = std::make_unique<Gyoji::frontend::tree::TypeDefinition>(
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::TypeDefinition>(
                                                                                std::move($1),
                                                                                std::move($2),
                                                                                std::move($3),
@@ -793,7 +793,7 @@ enum_definition
         : opt_access_modifier ENUM TYPE_NAME IDENTIFIER BRACE_L opt_enum_value_list BRACE_R SEMICOLON {
                 Gyoji::frontend::namespaces::NS2Entity *ns2_entity = return_data.type_get_or_create($4->get_value(), $4->get_source_ref());
 		$4->set_ns2_entity(ns2_entity);
-                $$ = std::make_unique<Gyoji::frontend::tree::EnumDefinition>(
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::EnumDefinition>(
                                                                                 std::move($1),
                                                                                 std::move($2),
                                                                                 std::move($3),
@@ -809,7 +809,7 @@ enum_definition
 
 opt_enum_value_list
         : /**/ {
-                $$ = std::make_unique<Gyoji::frontend::tree::EnumDefinitionValueList>(return_data.compiler_context.get_token_stream().get_current_source_ref());
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::EnumDefinitionValueList>(return_data.compiler_context.get_token_stream().get_current_source_ref());
                 PRINT_NONTERMINALS($$);
         }
         | enum_value_list {
@@ -820,7 +820,7 @@ opt_enum_value_list
 
 enum_value_list
         : enum_value {
-                $$ = std::make_unique<Gyoji::frontend::tree::EnumDefinitionValueList>(return_data.compiler_context.get_token_stream().get_current_source_ref());
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::EnumDefinitionValueList>(return_data.compiler_context.get_token_stream().get_current_source_ref());
                 $$->add_value(std::move($1));
                 PRINT_NONTERMINALS($$);
         }
@@ -835,7 +835,7 @@ enum_value
         : IDENTIFIER ASSIGNMENT expression_primary SEMICOLON {
                 Gyoji::frontend::namespaces::NS2Entity *ns2_entity = return_data.type_get_or_create($1->get_value(), $1->get_source_ref());
 		$1->set_ns2_entity(ns2_entity);
-                $$ = std::make_unique<Gyoji::frontend::tree::EnumDefinitionValue>(
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::EnumDefinitionValue>(
                                                                                     std::move($1),
                                                                                     std::move($2),
                                                                                     std::move($3),
@@ -847,11 +847,11 @@ enum_value
   
 opt_unsafe
         : /**/ {
-                $$ = std::make_unique<Gyoji::frontend::tree::UnsafeModifier>(return_data.compiler_context.get_token_stream().get_current_source_ref());
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::UnsafeModifier>(return_data.compiler_context.get_token_stream().get_current_source_ref());
                 PRINT_NONTERMINALS($$);
         }
         | UNSAFE {
-                $$ = std::make_unique<Gyoji::frontend::tree::UnsafeModifier>(std::move($1));
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::UnsafeModifier>(std::move($1));
                 PRINT_NONTERMINALS($$);
         }
         ;
@@ -864,7 +864,7 @@ file_statement_function_declaration
 	        // to have to care about how we name functions.
 	        // In future, we may support name mangling, but again, that's not the concern of the
 	        // back-end layers.
-                $$ = std::make_unique<Gyoji::frontend::tree::FileStatementFunctionDeclaration>(
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::FileStatementFunctionDeclaration>(
                                                                                                  std::move($1),
                                                                                                  std::move($2),
                                                                                                  std::move($3),
@@ -884,7 +884,7 @@ function_decl_start
 		}
 		$4->set_ns2_entity(ns2_entity);
 		return_data.ns2_context->namespace_push(ns2_entity->get_parent());
-		$$ = std::make_unique<Gyoji::frontend::tree::FileStatementFunctionDeclStart>(
+		$$ = Gyoji::owned_new<Gyoji::frontend::tree::FileStatementFunctionDeclStart>(
                         std::move($1),
                         std::move($2),
                         std::move($3),
@@ -899,7 +899,7 @@ function_decl_start
 		}
 		$3->set_ns2_entity(ns2_entity);
 		return_data.ns2_context->namespace_push(ns2_entity);
-		$$ = std::make_unique<Gyoji::frontend::tree::FileStatementFunctionDeclStart>(
+		$$ = Gyoji::owned_new<Gyoji::frontend::tree::FileStatementFunctionDeclStart>(
                         std::move($1),
                         std::move($2),
                         std::move($3)
@@ -919,7 +919,7 @@ function_decl_start
 //		}
 //		$4->set_ns2_entity(ns2_entity);
 //		return_data.ns2_context->namespace_push(ns2_entity);
-//		$$ = std::make_unique<Gyoji::frontend::tree::FileStatementFunctionDeclStart>(
+//		$$ = Gyoji::owned_new<Gyoji::frontend::tree::FileStatementFunctionDeclStart>(
 //                        std::move($1),
 //                        std::move($2),
 //                        std::move($4)
@@ -933,7 +933,7 @@ function_decl_start
 //		}
 //		$5->set_ns2_entity(ns2_entity);
 //		return_data.ns2_context->namespace_push(ns2_entity);
-//		$$ = std::make_unique<Gyoji::frontend::tree::FileStatementFunctionDeclStart>(
+//		$$ = Gyoji::owned_new<Gyoji::frontend::tree::FileStatementFunctionDeclStart>(
 //                        std::move($1),
 //                        std::move($2),
 //                        std::move($5)
@@ -955,7 +955,7 @@ file_statement_function_definition
 		// a class' namespace. but that needs to happen before we actually push the scope
 		// and function identifiers.
 
-                $$ = std::make_unique<Gyoji::frontend::tree::FileStatementFunctionDefinition>(
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::FileStatementFunctionDefinition>(
                                                                                                 std::move($1),
                                                                                                 std::move($2),
                                                                                                 std::move($3),
@@ -969,7 +969,7 @@ file_statement_function_definition
 
 opt_type_specifier_list
         : /**/ {
-                $$ = std::make_unique<Gyoji::frontend::tree::TypeSpecifierList>(return_data.compiler_context.get_token_stream().get_current_source_ref());
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::TypeSpecifierList>(return_data.compiler_context.get_token_stream().get_current_source_ref());
         }
         | type_specifier_list {
                 $$ = std::move($1);
@@ -978,7 +978,7 @@ opt_type_specifier_list
 
 type_specifier_list
         : type_specifier {
-                $$ = std::make_unique<Gyoji::frontend::tree::TypeSpecifierList>($1->get_source_ref());
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::TypeSpecifierList>($1->get_source_ref());
                 $$->add_argument(std::move($1));
                 PRINT_NONTERMINALS($$);
         }
@@ -992,7 +992,7 @@ type_specifier_list
 
 opt_function_definition_arg_list
         : /**/ {
-                $$ = std::make_unique<Gyoji::frontend::tree::FunctionDefinitionArgList>(return_data.compiler_context.get_token_stream().get_current_source_ref());
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::FunctionDefinitionArgList>(return_data.compiler_context.get_token_stream().get_current_source_ref());
                 PRINT_NONTERMINALS($$);
         }
         | function_definition_arg_list {
@@ -1003,7 +1003,7 @@ opt_function_definition_arg_list
 
 function_definition_arg_list
         : function_definition_arg {
-                $$ = std::make_unique<Gyoji::frontend::tree::FunctionDefinitionArgList>($1->get_source_ref());
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::FunctionDefinitionArgList>($1->get_source_ref());
                 $$->add_argument(std::move($1));
                 PRINT_NONTERMINALS($$);
         }
@@ -1018,7 +1018,7 @@ function_definition_arg
         : type_specifier IDENTIFIER {
                 NS2Entity *ns2_entity = return_data.identifier_get_or_create($2->get_value(), true, $2->get_source_ref());
 	        $2->set_ns2_entity(ns2_entity);
-                $$ = std::make_unique<Gyoji::frontend::tree::FunctionDefinitionArg>(
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::FunctionDefinitionArg>(
 		    std::move($1),
 		    std::move($2)
 		    );
@@ -1028,7 +1028,7 @@ function_definition_arg
 
 scope_body
         : BRACE_L statement_list BRACE_R {
-                $$ = std::make_unique<Gyoji::frontend::tree::ScopeBody>(
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::ScopeBody>(
                                                                            std::move($1),
                                                                            std::move($2),
                                                                            std::move($3)
@@ -1039,7 +1039,7 @@ scope_body
 
 statement_list
         : /**/ {
-                $$ = std::make_unique<Gyoji::frontend::tree::StatementList>(return_data.compiler_context.get_token_stream().get_current_source_ref());
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::StatementList>(return_data.compiler_context.get_token_stream().get_current_source_ref());
                 PRINT_NONTERMINALS($$);
         }
         | statement_list statement {
@@ -1052,80 +1052,80 @@ statement_list
 statement
         : statement_variable_declaration {
                 const Gyoji::frontend::ast::SyntaxNode &sn = *($1);
-                $$ = std::make_unique<Gyoji::frontend::tree::Statement>(std::move($1), sn);
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::Statement>(std::move($1), sn);
                 PRINT_NONTERMINALS($$);
         }
         | statement_block {
                 const Gyoji::frontend::ast::SyntaxNode &sn = *($1);
-                $$ = std::make_unique<Gyoji::frontend::tree::Statement>(std::move($1), sn);
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::Statement>(std::move($1), sn);
                 PRINT_NONTERMINALS($$);
         }
         | statement_expression {
                 const Gyoji::frontend::ast::SyntaxNode &sn = *($1);
-                $$ = std::make_unique<Gyoji::frontend::tree::Statement>(std::move($1), sn);
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::Statement>(std::move($1), sn);
                 PRINT_NONTERMINALS($$);
         }
         | statement_ifelse {
                 const Gyoji::frontend::ast::SyntaxNode &sn = *($1);
-                $$ = std::make_unique<Gyoji::frontend::tree::Statement>(std::move($1), sn);
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::Statement>(std::move($1), sn);
                 PRINT_NONTERMINALS($$);
         }
         | statement_while {
                 const Gyoji::frontend::ast::SyntaxNode &sn = *($1);
-                $$ = std::make_unique<Gyoji::frontend::tree::Statement>(std::move($1), sn);
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::Statement>(std::move($1), sn);
                 PRINT_NONTERMINALS($$);
         }
         | statement_for {
                 const Gyoji::frontend::ast::SyntaxNode &sn = *($1);
-                $$ = std::make_unique<Gyoji::frontend::tree::Statement>(std::move($1), sn);
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::Statement>(std::move($1), sn);
                 PRINT_NONTERMINALS($$);
         }
         | statement_switch {
                 const Gyoji::frontend::ast::SyntaxNode &sn = *($1);
-                $$ = std::make_unique<Gyoji::frontend::tree::Statement>(std::move($1), sn);
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::Statement>(std::move($1), sn);
                 PRINT_NONTERMINALS($$);
         }
         | statement_label {
                 const Gyoji::frontend::ast::SyntaxNode &sn = *($1);
-                $$ = std::make_unique<Gyoji::frontend::tree::Statement>(std::move($1), sn);
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::Statement>(std::move($1), sn);
                 PRINT_NONTERMINALS($$);
         }
         | statement_goto {
                 const Gyoji::frontend::ast::SyntaxNode &sn = *($1);
-                $$ = std::make_unique<Gyoji::frontend::tree::Statement>(std::move($1), sn);
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::Statement>(std::move($1), sn);
                 PRINT_NONTERMINALS($$);
         }
         | statement_break {
                 const Gyoji::frontend::ast::SyntaxNode &sn = *($1);
-                $$ = std::make_unique<Gyoji::frontend::tree::Statement>(std::move($1), sn);
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::Statement>(std::move($1), sn);
                 PRINT_NONTERMINALS($$);
         }
         | statement_continue {
                 const Gyoji::frontend::ast::SyntaxNode &sn = *($1);
-                $$ = std::make_unique<Gyoji::frontend::tree::Statement>(std::move($1), sn);
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::Statement>(std::move($1), sn);
                 PRINT_NONTERMINALS($$);
         }
         | statement_return {
                 const Gyoji::frontend::ast::SyntaxNode &sn = *($1);
-                $$ = std::make_unique<Gyoji::frontend::tree::Statement>(std::move($1), sn);
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::Statement>(std::move($1), sn);
                 PRINT_NONTERMINALS($$);
         }
         ;
 
 initializer_expression
         : /**/ {
-                $$ = std::make_unique<Gyoji::frontend::tree::InitializerExpression>(return_data.compiler_context.get_token_stream().get_current_source_ref());
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::InitializerExpression>(return_data.compiler_context.get_token_stream().get_current_source_ref());
                 PRINT_NONTERMINALS($$);
         }
         | ASSIGNMENT expression {
-                $$ = std::make_unique<Gyoji::frontend::tree::InitializerExpression>(
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::InitializerExpression>(
                         std::move($1),
                         std::move($2)
                         );
                 PRINT_NONTERMINALS($$);
         }
         | ASSIGNMENT struct_initializer_expression {
-                $$ = std::make_unique<Gyoji::frontend::tree::InitializerExpression>(
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::InitializerExpression>(
                         std::move($1),
                         std::move($2)
                         );	    
@@ -1134,7 +1134,7 @@ initializer_expression
 
 struct_initializer_expression
         : BRACE_L struct_field_list BRACE_R {
-                $$ = std::make_unique<Gyoji::frontend::tree::StructInitializerExpression>(
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::StructInitializerExpression>(
                         std::move($1),
                         std::move($2),
                         std::move($3)
@@ -1145,7 +1145,7 @@ struct_initializer_expression
 
 struct_field_list
         : /**/ {
-                $$ = std::make_unique<Gyoji::frontend::tree::StructInitializerFieldList>(
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::StructInitializerFieldList>(
                         return_data.compiler_context.get_token_stream().get_current_source_ref()
                 );
                 PRINT_NONTERMINALS($$);
@@ -1159,7 +1159,7 @@ struct_field_list
 
 struct_field_expression
         : DOT IDENTIFIER ASSIGNMENT expression SEMICOLON {
-                $$ = std::make_unique<Gyoji::frontend::tree::StructInitializerFieldExpression>(
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::StructInitializerFieldExpression>(
                         std::move($1),
                         std::move($2),
                         std::move($3),
@@ -1175,7 +1175,7 @@ statement_variable_declaration
         : type_specifier IDENTIFIER initializer_expression SEMICOLON {
                 NS2Entity *ns2_entity = return_data.identifier_get_or_create($2->get_value(), true, $2->get_source_ref());
 	        $2->set_ns2_entity(ns2_entity);
-                $$ = std::make_unique<Gyoji::frontend::tree::StatementVariableDeclaration>(
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::StatementVariableDeclaration>(
 		    std::move($1),
 		    std::move($2),
 		    std::move($3),
@@ -1187,7 +1187,7 @@ statement_variable_declaration
 
 statement_block
         : opt_unsafe scope_body {
-                $$ = std::make_unique<Gyoji::frontend::tree::StatementBlock>(
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::StatementBlock>(
                                                                                 std::move($1),
                                                                                 std::move($2)
                                                                                 );
@@ -1197,7 +1197,7 @@ statement_block
 
 statement_expression
         : expression SEMICOLON {
-                $$ = std::make_unique<Gyoji::frontend::tree::StatementExpression>(
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::StatementExpression>(
                                                                                 std::move($1),
                                                                                 std::move($2)
                                                                                 );
@@ -1208,7 +1208,7 @@ statement_goto
         : GOTO IDENTIFIER SEMICOLON {
                 NS2Entity *ns2_entity = return_data.identifier_get_or_create($2->get_value(), true, $2->get_source_ref());
 		$2->set_ns2_entity(ns2_entity);
-                $$ = std::make_unique<Gyoji::frontend::tree::StatementGoto>(
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::StatementGoto>(
                                                                                std::move($1),
                                                                                std::move($2),
                                                                                std::move($3)
@@ -1218,7 +1218,7 @@ statement_goto
         ;
 statement_break
         : BREAK SEMICOLON {
-                $$ = std::make_unique<Gyoji::frontend::tree::StatementBreak>(
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::StatementBreak>(
                                                                                 std::move($1),
                                                                                 std::move($2)
                                                                                 );
@@ -1227,7 +1227,7 @@ statement_break
         ;
 statement_continue
         : CONTINUE SEMICOLON {
-                $$ = std::make_unique<Gyoji::frontend::tree::StatementContinue>(
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::StatementContinue>(
                                                                                 std::move($1),
                                                                                 std::move($2)
                                                                                 );
@@ -1238,7 +1238,7 @@ statement_label
         : LABEL IDENTIFIER COLON {
                 NS2Entity *ns2_entity = return_data.identifier_get_or_create($2->get_value(), true, $2->get_source_ref());
 		$2->set_ns2_entity(ns2_entity);
-                $$ = std::make_unique<Gyoji::frontend::tree::StatementLabel>(
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::StatementLabel>(
                                                                                 std::move($1),
                                                                                 std::move($2),
                                                                                 std::move($3)
@@ -1249,7 +1249,7 @@ statement_label
 
 statement_return
         : RETURN expression SEMICOLON {
-                $$ = std::make_unique<Gyoji::frontend::tree::StatementReturn>(
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::StatementReturn>(
                                                                                  std::move($1),
                                                                                  std::move($2),
                                                                                  std::move($3)
@@ -1257,7 +1257,7 @@ statement_return
                 PRINT_NONTERMINALS($$);
         }
         | RETURN SEMICOLON {
-	        $$ = std::make_unique<Gyoji::frontend::tree::StatementReturn>(
+	        $$ = Gyoji::owned_new<Gyoji::frontend::tree::StatementReturn>(
 		    std::move($1),
                     std::move($2)
 		);
@@ -1268,7 +1268,7 @@ statement_return
 
 statement_ifelse
         : IF PAREN_L expression PAREN_R scope_body {
-                $$ = std::make_unique<Gyoji::frontend::tree::StatementIfElse>(
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::StatementIfElse>(
                                                                                  std::move($1),
                                                                                  std::move($2),
                                                                                  std::move($3),
@@ -1278,7 +1278,7 @@ statement_ifelse
                 PRINT_NONTERMINALS($$);
         }
         | IF PAREN_L expression PAREN_R scope_body ELSE statement_ifelse {
-                $$ = std::make_unique<Gyoji::frontend::tree::StatementIfElse>(
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::StatementIfElse>(
                                                                                  std::move($1),
                                                                                  std::move($2),
                                                                                  std::move($3),
@@ -1290,7 +1290,7 @@ statement_ifelse
                 PRINT_NONTERMINALS($$);
         }
         | IF PAREN_L expression PAREN_R scope_body ELSE scope_body {
-                $$ = std::make_unique<Gyoji::frontend::tree::StatementIfElse>(
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::StatementIfElse>(
                                                                                  std::move($1),
                                                                                  std::move($2),
                                                                                  std::move($3),
@@ -1305,7 +1305,7 @@ statement_ifelse
 
 statement_while
         : WHILE PAREN_L expression PAREN_R scope_body {
-                $$ = std::make_unique<Gyoji::frontend::tree::StatementWhile>(
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::StatementWhile>(
                                                                                 std::move($1),
                                                                                 std::move($2),
                                                                                 std::move($3),
@@ -1319,7 +1319,7 @@ statement_while
 statement_for
         : FOR PAREN_L expression SEMICOLON expression SEMICOLON expression PAREN_R scope_body {
                 // This variation is just a plain expression.
-                $$ = std::make_unique<Gyoji::frontend::tree::StatementFor>(
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::StatementFor>(
                                                                                 std::move($1),
                                                                                 std::move($2),
                                                                                 std::move($3),
@@ -1336,7 +1336,7 @@ statement_for
                 NS2Entity *ns2_entity = return_data.identifier_get_or_create($4->get_value(), true, $4->get_source_ref());
 		$2->set_ns2_entity(ns2_entity);
                 // This variation is a declaration and assignment
-                $$ = std::make_unique<Gyoji::frontend::tree::StatementFor>(
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::StatementFor>(
                                                                                 std::move($1),
                                                                                 std::move($2),
                                                                                 std::move($3),
@@ -1356,7 +1356,7 @@ statement_for
 
 statement_switch
         : SWITCH PAREN_L expression PAREN_R BRACE_L opt_statement_switch_content BRACE_R {
-                $$ = std::make_unique<Gyoji::frontend::tree::StatementSwitch>(
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::StatementSwitch>(
                                                                                 std::move($1),
                                                                                 std::move($2),
                                                                                 std::move($3),
@@ -1371,7 +1371,7 @@ statement_switch
 
 opt_statement_switch_content
         : /**/ {
-                $$ = std::make_unique<Gyoji::frontend::tree::StatementSwitchContent>(return_data.compiler_context.get_token_stream().get_current_source_ref());
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::StatementSwitchContent>(return_data.compiler_context.get_token_stream().get_current_source_ref());
                 PRINT_NONTERMINALS($$);
         }
         | statement_switch_content {
@@ -1382,7 +1382,7 @@ opt_statement_switch_content
 
 statement_switch_content
         : statement_switch_block {
-                $$ = std::make_unique<Gyoji::frontend::tree::StatementSwitchContent>($1->get_source_ref());
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::StatementSwitchContent>($1->get_source_ref());
                 $$->add_block(std::move($1));
                 PRINT_NONTERMINALS($$);
         }
@@ -1395,7 +1395,7 @@ statement_switch_content
 
 statement_switch_block
         : DEFAULT COLON scope_body {
-                $$ = std::make_unique<Gyoji::frontend::tree::StatementSwitchBlock>(
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::StatementSwitchBlock>(
                                                                                       std::move($1),
                                                                                       std::move($2),
                                                                                       std::move($3)
@@ -1403,7 +1403,7 @@ statement_switch_block
                 PRINT_NONTERMINALS($$);
         }
         | CASE expression COLON scope_body {
-                $$ = std::make_unique<Gyoji::frontend::tree::StatementSwitchBlock>(
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::StatementSwitchBlock>(
                                                                                       std::move($1),
                                                                                       std::move($2),
                                                                                       std::move($3),
@@ -1416,42 +1416,42 @@ statement_switch_block
 expression_primary
         : expression_primary_identifier {
                 const Gyoji::frontend::ast::SyntaxNode &sn = *($1);
-                $$ = std::make_unique<Gyoji::frontend::tree::Expression>(std::move($1), sn);
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::Expression>(std::move($1), sn);
                 PRINT_NONTERMINALS($$);
         }
         | expression_primary_nested {
                 const Gyoji::frontend::ast::SyntaxNode &sn = *($1);
-                $$ = std::make_unique<Gyoji::frontend::tree::Expression>(std::move($1), sn);
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::Expression>(std::move($1), sn);
                 PRINT_NONTERMINALS($$);
         }
         | expression_primary_literal_int {
                 const Gyoji::frontend::ast::SyntaxNode &sn = *($1);
-                $$ = std::make_unique<Gyoji::frontend::tree::Expression>(std::move($1), sn);
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::Expression>(std::move($1), sn);
                 PRINT_NONTERMINALS($$);
         }
         | expression_primary_literal_char {
                 const Gyoji::frontend::ast::SyntaxNode &sn = *($1);
-                $$ = std::make_unique<Gyoji::frontend::tree::Expression>(std::move($1), sn);
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::Expression>(std::move($1), sn);
                 PRINT_NONTERMINALS($$);
         }
         | expression_primary_literal_string {
                 const Gyoji::frontend::ast::SyntaxNode &sn = *($1);
-                $$ = std::make_unique<Gyoji::frontend::tree::Expression>(std::move($1), sn);
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::Expression>(std::move($1), sn);
                 PRINT_NONTERMINALS($$);
         }
         | expression_primary_literal_float {
                 const Gyoji::frontend::ast::SyntaxNode &sn = *($1);
-                $$ = std::make_unique<Gyoji::frontend::tree::Expression>(std::move($1), sn);
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::Expression>(std::move($1), sn);
                 PRINT_NONTERMINALS($$);
         }
         | expression_primary_literal_bool {
                 const Gyoji::frontend::ast::SyntaxNode &sn = *($1);
-                $$ = std::make_unique<Gyoji::frontend::tree::Expression>(std::move($1), sn);
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::Expression>(std::move($1), sn);
                 PRINT_NONTERMINALS($$);
         }
         | expression_primary_literal_null {
                 const Gyoji::frontend::ast::SyntaxNode &sn = *($1);
-                $$ = std::make_unique<Gyoji::frontend::tree::Expression>(std::move($1), sn);
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::Expression>(std::move($1), sn);
                 PRINT_NONTERMINALS($$);
         }
         ;
@@ -1493,26 +1493,26 @@ expression_primary_identifier
 		    break;
 		}
 #endif
-                $$ = std::make_unique<Gyoji::frontend::tree::ExpressionPrimaryIdentifier>(std::move($1));
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::ExpressionPrimaryIdentifier>(std::move($1));
                 PRINT_NONTERMINALS($$);
         }
         ;
 
 expression_primary_literal_int
         : LITERAL_INT {
-                $$ = std::make_unique<Gyoji::frontend::tree::ExpressionPrimaryLiteralInt>(std::move($1));
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::ExpressionPrimaryLiteralInt>(std::move($1));
                 PRINT_NONTERMINALS($$);
         }
         ;
 expression_primary_literal_char
         : LITERAL_CHAR {
-                $$ = std::make_unique<Gyoji::frontend::tree::ExpressionPrimaryLiteralChar>(std::move($1));
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::ExpressionPrimaryLiteralChar>(std::move($1));
                 PRINT_NONTERMINALS($$);
         }
         ;
 expression_primary_literal_string
         : LITERAL_STRING {
-                $$ = std::make_unique<Gyoji::frontend::tree::ExpressionPrimaryLiteralString>(std::move($1));
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::ExpressionPrimaryLiteralString>(std::move($1));
                 PRINT_NONTERMINALS($$);
         }
         | expression_primary_literal_string LITERAL_STRING {
@@ -1524,28 +1524,28 @@ expression_primary_literal_string
 
 expression_primary_literal_float
         : LITERAL_FLOAT {
-                $$ = std::make_unique<Gyoji::frontend::tree::ExpressionPrimaryLiteralFloat>(std::move($1));
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::ExpressionPrimaryLiteralFloat>(std::move($1));
                 PRINT_NONTERMINALS($$);
         }
         ;
 
 expression_primary_literal_bool
         : LITERAL_BOOL {
-                $$ = std::make_unique<Gyoji::frontend::tree::ExpressionPrimaryLiteralBool>(std::move($1));
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::ExpressionPrimaryLiteralBool>(std::move($1));
                 PRINT_NONTERMINALS($$);
         }
         ;
 
 expression_primary_literal_null
         : LITERAL_NULL {
-                $$ = std::make_unique<Gyoji::frontend::tree::ExpressionPrimaryLiteralNull>(std::move($1));
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::ExpressionPrimaryLiteralNull>(std::move($1));
                 PRINT_NONTERMINALS($$);
         }
         ;
 
 expression_primary_nested
         : PAREN_L expression PAREN_R {
-                $$ = std::make_unique<Gyoji::frontend::tree::ExpressionPrimaryNested>(
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::ExpressionPrimaryNested>(
                                                                                          std::move($1),
                                                                                          std::move($2),
                                                                                          std::move($3)
@@ -1594,28 +1594,28 @@ expression_postfix_primary
 
 expression_postfix_arrayindex
         : expression_postfix BRACKET_L expression BRACKET_R {
-                auto expr = std::make_unique<Gyoji::frontend::tree::ExpressionPostfixArrayIndex>(
+                auto expr = Gyoji::owned_new<Gyoji::frontend::tree::ExpressionPostfixArrayIndex>(
                                                                                              std::move($1),
                                                                                              std::move($2),
                                                                                              std::move($3),
                                                                                              std::move($4)
                                                                                              );
                 const Gyoji::frontend::ast::SyntaxNode &sn = *(expr);
-                $$ = std::make_unique<Gyoji::frontend::tree::Expression>(std::move(expr), sn);
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::Expression>(std::move(expr), sn);
                 PRINT_NONTERMINALS($$);
         }
         ;
 
 expression_postfix_function_call
         : expression_postfix PAREN_L opt_argument_expression_list PAREN_R {
-                auto expr = std::make_unique<Gyoji::frontend::tree::ExpressionPostfixFunctionCall>(
+                auto expr = Gyoji::owned_new<Gyoji::frontend::tree::ExpressionPostfixFunctionCall>(
                                                                                                std::move($1),
                                                                                                std::move($2),
                                                                                                std::move($3),
                                                                                                std::move($4)
                                                                                                );
                 const Gyoji::frontend::ast::SyntaxNode &sn = *(expr);
-                $$ = std::make_unique<Gyoji::frontend::tree::Expression>(std::move(expr), sn);
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::Expression>(std::move(expr), sn);
                 PRINT_NONTERMINALS($$);
         }
         ;
@@ -1623,13 +1623,13 @@ expression_postfix_function_call
 expression_postfix_dot
         : expression_postfix DOT IDENTIFIER {
 	        $3->set_identifier_type(Gyoji::frontend::tree::Terminal::IDENTIFIER_LOCAL_SCOPE);
-                auto expr = std::make_unique<Gyoji::frontend::tree::ExpressionPostfixDot>(
+                auto expr = Gyoji::owned_new<Gyoji::frontend::tree::ExpressionPostfixDot>(
                                                                                       std::move($1),
                                                                                       std::move($2),
                                                                                       std::move($3)
                                                                                       );
                 const Gyoji::frontend::ast::SyntaxNode &sn = *(expr);
-                $$ = std::make_unique<Gyoji::frontend::tree::Expression>(std::move(expr), sn);
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::Expression>(std::move(expr), sn);
                 PRINT_NONTERMINALS($$);
         }
         ;
@@ -1637,39 +1637,39 @@ expression_postfix_dot
 expression_postfix_arrow
         : expression_postfix PTR_OP IDENTIFIER {
 	        $3->set_identifier_type(Gyoji::frontend::tree::Terminal::IDENTIFIER_LOCAL_SCOPE);
-                auto expr = std::make_unique<Gyoji::frontend::tree::ExpressionPostfixArrow>(
+                auto expr = Gyoji::owned_new<Gyoji::frontend::tree::ExpressionPostfixArrow>(
                                                                                         std::move($1),
                                                                                         std::move($2),
                                                                                         std::move($3)
                                                                                         );
                 const Gyoji::frontend::ast::SyntaxNode &sn = *(expr);
-                $$ = std::make_unique<Gyoji::frontend::tree::Expression>(std::move(expr), sn);
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::Expression>(std::move(expr), sn);
                 PRINT_NONTERMINALS($$);
         }
         ;
 
 expression_postfix_increment
         : expression_postfix INC_OP {
-                auto expr = std::make_unique<Gyoji::frontend::tree::ExpressionPostfixIncDec>(
+                auto expr = Gyoji::owned_new<Gyoji::frontend::tree::ExpressionPostfixIncDec>(
                                                                                          std::move($1),
                                                                                          std::move($2),
                                                                                          Gyoji::frontend::tree::ExpressionPostfixIncDec::INCREMENT
                                                                                          );
                 const Gyoji::frontend::ast::SyntaxNode &sn = *(expr);
-                $$ = std::make_unique<Gyoji::frontend::tree::Expression>(std::move(expr), sn);
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::Expression>(std::move(expr), sn);
                 PRINT_NONTERMINALS($$);
         }
         ;
 
 expression_postfix_decrement
         : expression_postfix DEC_OP {
-                auto expr = std::make_unique<Gyoji::frontend::tree::ExpressionPostfixIncDec>(
+                auto expr = Gyoji::owned_new<Gyoji::frontend::tree::ExpressionPostfixIncDec>(
                                                                                          std::move($1),
                                                                                          std::move($2),
                                                                                          Gyoji::frontend::tree::ExpressionPostfixIncDec::DECREMENT
                                                                                          );
                 const Gyoji::frontend::ast::SyntaxNode &sn = *(expr);
-                $$ = std::make_unique<Gyoji::frontend::tree::Expression>(std::move(expr), sn);
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::Expression>(std::move(expr), sn);
                 PRINT_NONTERMINALS($$);
         }
 	;
@@ -1699,50 +1699,50 @@ expression_unary
 
 expression_unary_increment
         : INC_OP expression_unary {
-                auto expr = std::make_unique<Gyoji::frontend::tree::ExpressionUnaryPrefix>(
+                auto expr = Gyoji::owned_new<Gyoji::frontend::tree::ExpressionUnaryPrefix>(
                                                                                        std::move($1),
                                                                                        std::move($2),
                                                                                        Gyoji::frontend::tree::ExpressionUnaryPrefix::INCREMENT
                                                                                        );
                 const Gyoji::frontend::ast::SyntaxNode &sn = *(expr);
-                $$ = std::make_unique<Gyoji::frontend::tree::Expression>(std::move(expr), sn);
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::Expression>(std::move(expr), sn);
                 PRINT_NONTERMINALS($$);
         }
         ;
 expression_unary_decrement
         : DEC_OP expression_unary {
-                auto expr = std::make_unique<Gyoji::frontend::tree::ExpressionUnaryPrefix>(
+                auto expr = Gyoji::owned_new<Gyoji::frontend::tree::ExpressionUnaryPrefix>(
                                                                                        std::move($1),
                                                                                        std::move($2),
                                                                                        Gyoji::frontend::tree::ExpressionUnaryPrefix::DECREMENT
                                                                                        );
                 const Gyoji::frontend::ast::SyntaxNode &sn = *(expr);
-                $$ = std::make_unique<Gyoji::frontend::tree::Expression>(std::move(expr), sn);
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::Expression>(std::move(expr), sn);
                 PRINT_NONTERMINALS($$);
         }
         ;
 expression_unary_prefix
         : operator_unary expression_cast {
-                auto expr = std::make_unique<Gyoji::frontend::tree::ExpressionUnaryPrefix>(
+                auto expr = Gyoji::owned_new<Gyoji::frontend::tree::ExpressionUnaryPrefix>(
                                                                                        std::move($1.second),
                                                                                        std::move($2),
                                                                                        $1.first
                                                                                        );
                 const Gyoji::frontend::ast::SyntaxNode &sn = *(expr);
-                $$ = std::make_unique<Gyoji::frontend::tree::Expression>(std::move(expr), sn);
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::Expression>(std::move(expr), sn);
                 PRINT_NONTERMINALS($$);
         }
         ;
 expression_unary_sizeof_type
         : SIZEOF PAREN_L type_specifier PAREN_R {
-                auto expr = std::make_unique<Gyoji::frontend::tree::ExpressionUnarySizeofType>(
+                auto expr = Gyoji::owned_new<Gyoji::frontend::tree::ExpressionUnarySizeofType>(
                                                                                        std::move($1),
                                                                                        std::move($2),
                                                                                        std::move($3),
                                                                                        std::move($4)
                                                                                        );
                 const Gyoji::frontend::ast::SyntaxNode &sn = *(expr);
-                $$ = std::make_unique<Gyoji::frontend::tree::Expression>(std::move(expr), sn);
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::Expression>(std::move(expr), sn);
                 PRINT_NONTERMINALS($$);
         }
         ;
@@ -1814,7 +1814,7 @@ expression_cast_unary
 
 expression_cast_cast
         : CAST PAREN_L type_specifier COMMA expression PAREN_R {
-                auto expr = std::make_unique<Gyoji::frontend::tree::ExpressionCast>(
+                auto expr = Gyoji::owned_new<Gyoji::frontend::tree::ExpressionCast>(
                                                                                 std::move($1),
                                                                                 std::move($2),
                                                                                 std::move($3),
@@ -1823,7 +1823,7 @@ expression_cast_cast
                                                                                 std::move($6)
                                                                                 );
                 const Gyoji::frontend::ast::SyntaxNode &sn = *(expr);
-                $$ = std::make_unique<Gyoji::frontend::tree::Expression>(std::move(expr), sn);
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::Expression>(std::move(expr), sn);
                 PRINT_NONTERMINALS($$);
         }
 	;
@@ -1856,40 +1856,40 @@ expression_multiplicative_cast
         ;
 expression_multiplicative_multiply
         : expression_multiplicative STAR expression_cast {
-                auto expr = std::make_unique<Gyoji::frontend::tree::ExpressionBinary>(
+                auto expr = Gyoji::owned_new<Gyoji::frontend::tree::ExpressionBinary>(
                                                                                          std::move($1),
                                                                                          std::move($2),
                                                                                          std::move($3),
                                                                                          Gyoji::frontend::tree::ExpressionBinary::MULTIPLY
                                                                                          );
                 const Gyoji::frontend::ast::SyntaxNode &sn = *(expr);
-                $$ = std::make_unique<Gyoji::frontend::tree::Expression>(std::move(expr), sn);
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::Expression>(std::move(expr), sn);
                 PRINT_NONTERMINALS($$);
         }
         ;
 expression_multiplicative_divide
         : expression_multiplicative SLASH expression_cast {
-                auto expr = std::make_unique<Gyoji::frontend::tree::ExpressionBinary>(
+                auto expr = Gyoji::owned_new<Gyoji::frontend::tree::ExpressionBinary>(
                                                                                          std::move($1),
                                                                                          std::move($2),
                                                                                          std::move($3),
                                                                                          Gyoji::frontend::tree::ExpressionBinary::DIVIDE
                                                                                          );
                 const Gyoji::frontend::ast::SyntaxNode &sn = *(expr);
-                $$ = std::make_unique<Gyoji::frontend::tree::Expression>(std::move(expr), sn);
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::Expression>(std::move(expr), sn);
                 PRINT_NONTERMINALS($$);
         }
         ;
 expression_multiplicative_modulo
         : expression_multiplicative PERCENT expression_cast {
-                auto expr = std::make_unique<Gyoji::frontend::tree::ExpressionBinary>(
+                auto expr = Gyoji::owned_new<Gyoji::frontend::tree::ExpressionBinary>(
                                                                                          std::move($1),
                                                                                          std::move($2),
                                                                                          std::move($3),
                                                                                          Gyoji::frontend::tree::ExpressionBinary::MODULO
                                                                                          );
                 const Gyoji::frontend::ast::SyntaxNode &sn = *(expr);
-                $$ = std::make_unique<Gyoji::frontend::tree::Expression>(std::move(expr), sn);
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::Expression>(std::move(expr), sn);
                 PRINT_NONTERMINALS($$);
         }
         ;
@@ -1916,27 +1916,27 @@ expression_additive_multiplicative
         ;
 expression_additive_plus
         : expression_additive PLUS expression_multiplicative {
-                auto expr = std::make_unique<Gyoji::frontend::tree::ExpressionBinary>(
+                auto expr = Gyoji::owned_new<Gyoji::frontend::tree::ExpressionBinary>(
                                                                                          std::move($1),
                                                                                          std::move($2),
                                                                                          std::move($3),
                                                                                          Gyoji::frontend::tree::ExpressionBinary::ADD
                                                                                          );
                 const Gyoji::frontend::ast::SyntaxNode &sn = *(expr);
-                $$ = std::make_unique<Gyoji::frontend::tree::Expression>(std::move(expr), sn);
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::Expression>(std::move(expr), sn);
                 PRINT_NONTERMINALS($$);
         }
         ;
 expression_additive_minus
         : expression_additive MINUS expression_multiplicative {
-                auto expr = std::make_unique<Gyoji::frontend::tree::ExpressionBinary>(
+                auto expr = Gyoji::owned_new<Gyoji::frontend::tree::ExpressionBinary>(
                                                                                          std::move($1),
                                                                                          std::move($2),
                                                                                          std::move($3),
                                                                                          Gyoji::frontend::tree::ExpressionBinary::SUBTRACT
                                                                                          );
                 const Gyoji::frontend::ast::SyntaxNode &sn = *(expr);
-                $$ = std::make_unique<Gyoji::frontend::tree::Expression>(std::move(expr), sn);
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::Expression>(std::move(expr), sn);
                 PRINT_NONTERMINALS($$);
         }
         ;
@@ -1964,27 +1964,27 @@ expression_shift_additive
         ;
 expression_shift_left
         : expression_shift LEFT_OP expression_additive {
-                auto expr = std::make_unique<Gyoji::frontend::tree::ExpressionBinary>(
+                auto expr = Gyoji::owned_new<Gyoji::frontend::tree::ExpressionBinary>(
                                                                                          std::move($1),
                                                                                          std::move($2),
                                                                                          std::move($3),
                                                                                          Gyoji::frontend::tree::ExpressionBinary::SHIFT_LEFT
                                                                                          );
                 const Gyoji::frontend::ast::SyntaxNode &sn = *(expr);
-                $$ = std::make_unique<Gyoji::frontend::tree::Expression>(std::move(expr), sn);
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::Expression>(std::move(expr), sn);
                 PRINT_NONTERMINALS($$);
         }
         ;
 expression_shift_right
         : expression_shift RIGHT_OP expression_additive {
-                auto expr = std::make_unique<Gyoji::frontend::tree::ExpressionBinary>(
+                auto expr = Gyoji::owned_new<Gyoji::frontend::tree::ExpressionBinary>(
                                                                                          std::move($1),
                                                                                          std::move($2),
                                                                                          std::move($3),
                                                                                          Gyoji::frontend::tree::ExpressionBinary::SHIFT_RIGHT
                                                                                          );
                 const Gyoji::frontend::ast::SyntaxNode &sn = *(expr);
-                $$ = std::make_unique<Gyoji::frontend::tree::Expression>(std::move(expr), sn);
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::Expression>(std::move(expr), sn);
                 PRINT_NONTERMINALS($$);
         }
         ;
@@ -2021,53 +2021,53 @@ expression_relational_shift
         ;
 expression_relational_lt
         : expression_relational COMPARE_LESS expression_shift {
-                auto expr = std::make_unique<Gyoji::frontend::tree::ExpressionBinary>(
+                auto expr = Gyoji::owned_new<Gyoji::frontend::tree::ExpressionBinary>(
                                                                                          std::move($1),
                                                                                          std::move($2),
                                                                                          std::move($3),
                                                                                          Gyoji::frontend::tree::ExpressionBinary::COMPARE_LESS
                                                                                          );
                 const Gyoji::frontend::ast::SyntaxNode &sn = *(expr);
-                $$ = std::make_unique<Gyoji::frontend::tree::Expression>(std::move(expr), sn);
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::Expression>(std::move(expr), sn);
                 PRINT_NONTERMINALS($$);
         }
         ;
 expression_relational_gt
         : expression_relational COMPARE_GREATER expression_shift {
-                auto expr = std::make_unique<Gyoji::frontend::tree::ExpressionBinary>(
+                auto expr = Gyoji::owned_new<Gyoji::frontend::tree::ExpressionBinary>(
                                                                                          std::move($1),
                                                                                          std::move($2),
                                                                                          std::move($3),
                                                                                          Gyoji::frontend::tree::ExpressionBinary::COMPARE_GREATER
                                                                                          );
                 const Gyoji::frontend::ast::SyntaxNode &sn = *(expr);
-                $$ = std::make_unique<Gyoji::frontend::tree::Expression>(std::move(expr), sn);
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::Expression>(std::move(expr), sn);
                 PRINT_NONTERMINALS($$);
         }
         ;
 expression_relational_le
         : expression_relational COMPARE_LESS_EQUAL expression_shift {
-                auto expr = std::make_unique<Gyoji::frontend::tree::ExpressionBinary>(
+                auto expr = Gyoji::owned_new<Gyoji::frontend::tree::ExpressionBinary>(
                                                                                          std::move($1),
                                                                                          std::move($2),
                                                                                          std::move($3),
                                                                                          Gyoji::frontend::tree::ExpressionBinary::COMPARE_LESS_EQUAL
                                                                                          );
                 const Gyoji::frontend::ast::SyntaxNode &sn = *(expr);
-                $$ = std::make_unique<Gyoji::frontend::tree::Expression>(std::move(expr), sn);
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::Expression>(std::move(expr), sn);
                 PRINT_NONTERMINALS($$);
         }
         ;
 expression_relational_ge
         : expression_relational COMPARE_GREATER_EQUAL expression_shift {
-                auto expr = std::make_unique<Gyoji::frontend::tree::ExpressionBinary>(
+                auto expr = Gyoji::owned_new<Gyoji::frontend::tree::ExpressionBinary>(
                                                                                          std::move($1),
                                                                                          std::move($2),
                                                                                          std::move($3),
                                                                                          Gyoji::frontend::tree::ExpressionBinary::COMPARE_GREATER_EQUAL
                                                                                          );
                 const Gyoji::frontend::ast::SyntaxNode &sn = *(expr);
-                $$ = std::make_unique<Gyoji::frontend::tree::Expression>(std::move(expr), sn);
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::Expression>(std::move(expr), sn);
                 PRINT_NONTERMINALS($$);
         }
         ;
@@ -2078,25 +2078,25 @@ expression_equality
           PRINT_NONTERMINALS($$);
         }
         | expression_equality COMPARE_EQUAL expression_relational {
-                auto expr = std::make_unique<Gyoji::frontend::tree::ExpressionBinary>(
+                auto expr = Gyoji::owned_new<Gyoji::frontend::tree::ExpressionBinary>(
                                                                                          std::move($1),
                                                                                          std::move($2),
                                                                                          std::move($3),
                                                                                          Gyoji::frontend::tree::ExpressionBinary::COMPARE_EQUAL
                                                                                          );
                 const Gyoji::frontend::ast::SyntaxNode &sn = *(expr);
-                $$ = std::make_unique<Gyoji::frontend::tree::Expression>(std::move(expr), sn);
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::Expression>(std::move(expr), sn);
                 PRINT_NONTERMINALS($$);
         }
         | expression_equality COMPARE_NOT_EQUAL expression_relational {
-                auto expr = std::make_unique<Gyoji::frontend::tree::ExpressionBinary>(
+                auto expr = Gyoji::owned_new<Gyoji::frontend::tree::ExpressionBinary>(
                                                                                          std::move($1),
                                                                                          std::move($2),
                                                                                          std::move($3),
                                                                                          Gyoji::frontend::tree::ExpressionBinary::COMPARE_NOT_EQUAL
                                                                                          );
                 const Gyoji::frontend::ast::SyntaxNode &sn = *(expr);
-                $$ = std::make_unique<Gyoji::frontend::tree::Expression>(std::move(expr), sn);
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::Expression>(std::move(expr), sn);
                 PRINT_NONTERMINALS($$);
         }
 	;
@@ -2107,14 +2107,14 @@ expression_and
                 PRINT_NONTERMINALS($$);
         }
         | expression_and ANDPERSAND expression_equality {
-                auto expr = std::make_unique<Gyoji::frontend::tree::ExpressionBinary>(
+                auto expr = Gyoji::owned_new<Gyoji::frontend::tree::ExpressionBinary>(
                                                                                          std::move($1),
                                                                                          std::move($2),
                                                                                          std::move($3),
                                                                                          Gyoji::frontend::tree::ExpressionBinary::BITWISE_AND
                                                                                          );
                 const Gyoji::frontend::ast::SyntaxNode &sn = *(expr);
-                $$ = std::make_unique<Gyoji::frontend::tree::Expression>(std::move(expr), sn);
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::Expression>(std::move(expr), sn);
                 PRINT_NONTERMINALS($$);
         }
 	;
@@ -2125,14 +2125,14 @@ expression_exclusive_or
           PRINT_NONTERMINALS($$);
         }
         | expression_exclusive_or XOR_OP expression_and {
-                auto expr = std::make_unique<Gyoji::frontend::tree::ExpressionBinary>(
+                auto expr = Gyoji::owned_new<Gyoji::frontend::tree::ExpressionBinary>(
                                                                                          std::move($1),
                                                                                          std::move($2),
                                                                                          std::move($3),
                                                                                          Gyoji::frontend::tree::ExpressionBinary::BITWISE_XOR
                                                                                          );
                 const Gyoji::frontend::ast::SyntaxNode &sn = *(expr);
-                $$ = std::make_unique<Gyoji::frontend::tree::Expression>(std::move(expr), sn);
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::Expression>(std::move(expr), sn);
                 PRINT_NONTERMINALS($$);
         }
 	;
@@ -2143,14 +2143,14 @@ expression_inclusive_or
                 PRINT_NONTERMINALS($$);
         }
         | expression_inclusive_or PIPE expression_exclusive_or {
-                auto expr = std::make_unique<Gyoji::frontend::tree::ExpressionBinary>(
+                auto expr = Gyoji::owned_new<Gyoji::frontend::tree::ExpressionBinary>(
                                                                                          std::move($1),
                                                                                          std::move($2),
                                                                                          std::move($3),
                                                                                          Gyoji::frontend::tree::ExpressionBinary::BITWISE_OR
                                                                                          );
                 const Gyoji::frontend::ast::SyntaxNode &sn = *(expr);
-                $$ = std::make_unique<Gyoji::frontend::tree::Expression>(std::move(expr), sn);
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::Expression>(std::move(expr), sn);
                 PRINT_NONTERMINALS($$);
         }
 	;
@@ -2161,7 +2161,7 @@ expression_logical_and
                 PRINT_NONTERMINALS($$);
         }
         | expression_logical_and ANDPERSAND ANDPERSAND expression_inclusive_or {
-                auto expr = std::make_unique<Gyoji::frontend::tree::ExpressionBinary>(
+                auto expr = Gyoji::owned_new<Gyoji::frontend::tree::ExpressionBinary>(
                                                                                          std::move($1),
                                                                                          std::move($2),
                                                                                          std::move($3),
@@ -2169,7 +2169,7 @@ expression_logical_and
                                                                                          Gyoji::frontend::tree::ExpressionBinary::LOGICAL_AND
                                                                                          );
                 const Gyoji::frontend::ast::SyntaxNode &sn = *(expr);
-                $$ = std::make_unique<Gyoji::frontend::tree::Expression>(std::move(expr), sn);
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::Expression>(std::move(expr), sn);
                 PRINT_NONTERMINALS($$);
         }
 	;
@@ -2180,14 +2180,14 @@ expression_logical_or
                 PRINT_NONTERMINALS($$);
         }
         | expression_logical_or OR_OP expression_logical_and {
-                auto expr = std::make_unique<Gyoji::frontend::tree::ExpressionBinary>(
+                auto expr = Gyoji::owned_new<Gyoji::frontend::tree::ExpressionBinary>(
                                                                                          std::move($1),
                                                                                          std::move($2),
                                                                                          std::move($3),
                                                                                          Gyoji::frontend::tree::ExpressionBinary::LOGICAL_OR
                                                                                          );
                 const Gyoji::frontend::ast::SyntaxNode &sn = *(expr);
-                $$ = std::make_unique<Gyoji::frontend::tree::Expression>(std::move(expr), sn);
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::Expression>(std::move(expr), sn);
                 PRINT_NONTERMINALS($$);
         }
 	;
@@ -2198,7 +2198,7 @@ expression_conditional
                 PRINT_NONTERMINALS($$);
         }
         | expression_logical_or QUESTIONMARK expression COLON expression_conditional {
-                auto expr = std::make_unique<Gyoji::frontend::tree::ExpressionTrinary>(
+                auto expr = Gyoji::owned_new<Gyoji::frontend::tree::ExpressionTrinary>(
                                                                                          std::move($1),
                                                                                          std::move($2),
                                                                                          std::move($3),
@@ -2206,7 +2206,7 @@ expression_conditional
                                                                                          std::move($5)
                                                                                          );
                 const Gyoji::frontend::ast::SyntaxNode &sn = *(expr);
-                $$ = std::make_unique<Gyoji::frontend::tree::Expression>(std::move(expr), sn);
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::Expression>(std::move(expr), sn);
                 PRINT_NONTERMINALS($$);
         }
 	;
@@ -2217,14 +2217,14 @@ expression_assignment
                 PRINT_NONTERMINALS($$);
         }
         | expression_unary operator_assignment expression_assignment {
-                auto expr = std::make_unique<Gyoji::frontend::tree::ExpressionBinary>(
+                auto expr = Gyoji::owned_new<Gyoji::frontend::tree::ExpressionBinary>(
                                                                                          std::move($1),
                                                                                          std::move($2.second),
                                                                                          std::move($3),
                                                                                          $2.first
                                                                                          );
                 const Gyoji::frontend::ast::SyntaxNode &sn = *(expr);
-                $$ = std::make_unique<Gyoji::frontend::tree::Expression>(std::move(expr), sn);
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::Expression>(std::move(expr), sn);
                 PRINT_NONTERMINALS($$);
         }
 // We can also allow deferred assignment of classes, but we're not doing this right now.
@@ -2323,7 +2323,7 @@ expression
 
 type_name
         : TYPEOF PAREN_L expression PAREN_R {
-                $$ = std::make_unique<Gyoji::frontend::tree::TypeName>(
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::TypeName>(
                                                                           std::move($1),
                                                                           std::move($2),
                                                                           std::move($3),
@@ -2332,7 +2332,7 @@ type_name
                 PRINT_NONTERMINALS($$);
         }
         | TYPE_NAME {
-                $$ = std::make_unique<Gyoji::frontend::tree::TypeName>(
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::TypeName>(
                                                                           std::move($1)
                                                                           );
                 PRINT_NONTERMINALS($$);
@@ -2341,7 +2341,7 @@ type_name
 
 opt_class_member_declaration_list
         : /**/ {
-                $$ = std::make_unique<Gyoji::frontend::tree::ClassMemberDeclarationList>(return_data.compiler_context.get_token_stream().get_current_source_ref());
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::ClassMemberDeclarationList>(return_data.compiler_context.get_token_stream().get_current_source_ref());
                 PRINT_NONTERMINALS($$);
         }
         | class_member_declaration_list {
@@ -2352,7 +2352,7 @@ opt_class_member_declaration_list
 
 class_member_declaration_list
         : class_member_declaration {
-                $$ = std::make_unique<Gyoji::frontend::tree::ClassMemberDeclarationList>($1->get_source_ref());
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::ClassMemberDeclarationList>($1->get_source_ref());
                 $$->add_member(std::move($1));
                 PRINT_NONTERMINALS($$);
         }
@@ -2369,7 +2369,7 @@ class_member_declaration
 	        $4->set_identifier_type(Gyoji::frontend::tree::Terminal::IDENTIFIER_LOCAL_SCOPE);
 		NS2Entity *entity = return_data.identifier_get_or_create($4->get_value(), false, $4->get_source_ref());
 		$4->set_ns2_entity(entity);
-                auto expr = std::make_unique<Gyoji::frontend::tree::ClassMemberDeclarationVariable>(
+                auto expr = Gyoji::owned_new<Gyoji::frontend::tree::ClassMemberDeclarationVariable>(
                                                                                                        std::move($1),
                                                                                                        std::move($2),
                                                                                                        std::move($3),
@@ -2377,7 +2377,7 @@ class_member_declaration
                                                                                                        std::move($5)
                                                                                                        );
                 const Gyoji::frontend::ast::SyntaxNode &sn = *(expr);
-                $$ = std::make_unique<Gyoji::frontend::tree::ClassMemberDeclaration>(std::move(expr), sn);
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::ClassMemberDeclaration>(std::move(expr), sn);
                 PRINT_NONTERMINALS($$);
         }
         | STATIC opt_access_modifier opt_unsafe type_specifier IDENTIFIER PAREN_L opt_function_definition_arg_list PAREN_R SEMICOLON {
@@ -2385,7 +2385,7 @@ class_member_declaration
 		NS2Entity *entity = return_data.identifier_get_or_create($5->get_value(), false, $5->get_source_ref());
 		$5->set_ns2_entity(entity);
 		fprintf(stderr, "Defined entity %s\n", entity->get_fully_qualified_name().c_str());
-	        auto expr = std::make_unique<Gyoji::frontend::tree::ClassMemberDeclarationMethodStatic>(
+	        auto expr = Gyoji::owned_new<Gyoji::frontend::tree::ClassMemberDeclarationMethodStatic>(
                                                                                                      std::move($1),
                                                                                                      std::move($2),
                                                                                                      std::move($3),
@@ -2397,7 +2397,7 @@ class_member_declaration
                                                                                                      std::move($9)
 		);
                 const Gyoji::frontend::ast::SyntaxNode &sn = *(expr);
-                $$ = std::make_unique<Gyoji::frontend::tree::ClassMemberDeclaration>(std::move(expr), sn);
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::ClassMemberDeclaration>(std::move(expr), sn);
                 PRINT_NONTERMINALS($$);
         }
 	| opt_access_modifier opt_unsafe type_specifier IDENTIFIER PAREN_L opt_function_definition_arg_list PAREN_R SEMICOLON {
@@ -2405,7 +2405,7 @@ class_member_declaration
 	        $4->set_identifier_type(Gyoji::frontend::tree::Terminal::IDENTIFIER_LOCAL_SCOPE);
 		NS2Entity *entity = return_data.identifier_get_or_create($4->get_value(), false, $4->get_source_ref());
 		$4->set_ns2_entity(entity);
-                auto expr = std::make_unique<Gyoji::frontend::tree::ClassMemberDeclarationMethod>(
+                auto expr = Gyoji::owned_new<Gyoji::frontend::tree::ClassMemberDeclarationMethod>(
                                                                                                      std::move($1),
                                                                                                      std::move($2),
                                                                                                      std::move($3),
@@ -2416,12 +2416,12 @@ class_member_declaration
                                                                                                      std::move($8)
                                                                                                      );
                 const Gyoji::frontend::ast::SyntaxNode &sn = *(expr);
-                $$ = std::make_unique<Gyoji::frontend::tree::ClassMemberDeclaration>(std::move(expr), sn);
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::ClassMemberDeclaration>(std::move(expr), sn);
                 PRINT_NONTERMINALS($$);
         }
         | opt_access_modifier opt_unsafe TILDE type_specifier PAREN_L opt_function_definition_arg_list PAREN_R SEMICOLON {
                 // Destructor
-                auto expr = std::make_unique<Gyoji::frontend::tree::ClassMemberDeclarationDestructor>(
+                auto expr = Gyoji::owned_new<Gyoji::frontend::tree::ClassMemberDeclarationDestructor>(
                                                                                                          std::move($1),
                                                                                                          std::move($2),
                                                                                                          std::move($3),
@@ -2432,27 +2432,27 @@ class_member_declaration
                                                                                                          std::move($8)
                                                                                                          );
                 const Gyoji::frontend::ast::SyntaxNode &sn = *(expr);
-                $$ = std::make_unique<Gyoji::frontend::tree::ClassMemberDeclaration>(std::move(expr), sn);
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::ClassMemberDeclaration>(std::move(expr), sn);
                 PRINT_NONTERMINALS($$);
         }
         | class_declaration {
                 const Gyoji::frontend::ast::SyntaxNode &sn = *($1);
-                $$ = std::make_unique<Gyoji::frontend::tree::ClassMemberDeclaration>(std::move($1), sn);
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::ClassMemberDeclaration>(std::move($1), sn);
                 PRINT_NONTERMINALS($$);
         }
         | class_definition {
                 const Gyoji::frontend::ast::SyntaxNode &sn = *($1);
-                $$ = std::make_unique<Gyoji::frontend::tree::ClassMemberDeclaration>(std::move($1), sn);
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::ClassMemberDeclaration>(std::move($1), sn);
                 PRINT_NONTERMINALS($$);
         }
         | enum_definition {
                 const Gyoji::frontend::ast::SyntaxNode &sn = *($1);
-                $$ = std::make_unique<Gyoji::frontend::tree::ClassMemberDeclaration>(std::move($1), sn);
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::ClassMemberDeclaration>(std::move($1), sn);
                 PRINT_NONTERMINALS($$);
         }
         | type_definition {
                 const Gyoji::frontend::ast::SyntaxNode &sn = *($1);
-                $$ = std::make_unique<Gyoji::frontend::tree::ClassMemberDeclaration>(std::move($1), sn);
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::ClassMemberDeclaration>(std::move($1), sn);
                 PRINT_NONTERMINALS($$);
         }
         ;
@@ -2460,17 +2460,17 @@ class_member_declaration
 
 type_access_qualifier
         : /**/ {
-                $$ = std::make_unique<Gyoji::frontend::tree::AccessQualifier>(return_data.compiler_context.get_token_stream().get_current_source_ref());
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::AccessQualifier>(return_data.compiler_context.get_token_stream().get_current_source_ref());
                 PRINT_NONTERMINALS($$);
         }
         | CONST {
-                $$ = std::make_unique<Gyoji::frontend::tree::AccessQualifier>(
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::AccessQualifier>(
                                                                               std::move($1)
                                                                               );
                 PRINT_NONTERMINALS($$);
         }
         | VOLATILE {
-                $$ = std::make_unique<Gyoji::frontend::tree::AccessQualifier>(
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::AccessQualifier>(
                                                                                  std::move($1)
                                                                                  );
                 PRINT_NONTERMINALS($$);
@@ -2479,7 +2479,7 @@ type_access_qualifier
 
 type_specifier_call_args
         : type_specifier {
-                $$ = std::make_unique<Gyoji::frontend::tree::TypeSpecifierCallArgs>(return_data.compiler_context.get_token_stream().get_current_source_ref());
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::TypeSpecifierCallArgs>(return_data.compiler_context.get_token_stream().get_current_source_ref());
                 $$->add_argument(std::move($1));
                 PRINT_NONTERMINALS($$);
         }
@@ -2492,38 +2492,38 @@ type_specifier_call_args
 
 type_specifier
         : type_access_qualifier type_name {
-                auto expr = std::make_unique<Gyoji::frontend::tree::TypeSpecifierSimple>(
+                auto expr = Gyoji::owned_new<Gyoji::frontend::tree::TypeSpecifierSimple>(
                                                                                       std::move($1),
                                                                                       std::move($2)
                                                                                       );
                 const Gyoji::frontend::ast::SyntaxNode &sn = *(expr);
-                $$ = std::make_unique<Gyoji::frontend::tree::TypeSpecifier>(std::move(expr), sn);
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::TypeSpecifier>(std::move(expr), sn);
                 PRINT_NONTERMINALS($$);
         }
         | type_specifier BRACKET_L LITERAL_INT BRACKET_R {
-                auto expr = std::make_unique<Gyoji::frontend::tree::TypeSpecifierArray>(
+                auto expr = Gyoji::owned_new<Gyoji::frontend::tree::TypeSpecifierArray>(
 	                std::move($1),
 			std::move($2),
 			std::move($3),
 			std::move($4)
 		);
                 const Gyoji::frontend::ast::SyntaxNode &sn = *(expr);
-                $$ = std::make_unique<Gyoji::frontend::tree::TypeSpecifier>(std::move(expr), sn);
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::TypeSpecifier>(std::move(expr), sn);
                 PRINT_NONTERMINALS($$);
         }
         | type_specifier COMPARE_LESS type_specifier_call_args COMPARE_GREATER {
-                auto expr = std::make_unique<Gyoji::frontend::tree::TypeSpecifierTemplate>(
+                auto expr = Gyoji::owned_new<Gyoji::frontend::tree::TypeSpecifierTemplate>(
                                                                                       std::move($1),
                                                                                       std::move($2),
                                                                                       std::move($3),
                                                                                       std::move($4)
                                                                                       );
                 const Gyoji::frontend::ast::SyntaxNode &sn = *(expr);
-                $$ = std::make_unique<Gyoji::frontend::tree::TypeSpecifier>(std::move(expr), sn);
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::TypeSpecifier>(std::move(expr), sn);
                 PRINT_NONTERMINALS($$);
         }
         | type_specifier PAREN_L opt_unsafe STAR PAREN_R PAREN_L opt_type_specifier_list PAREN_R {
-                auto expr = std::make_unique<Gyoji::frontend::tree::TypeSpecifierFunctionPointer>(
+                auto expr = Gyoji::owned_new<Gyoji::frontend::tree::TypeSpecifierFunctionPointer>(
                                                                                       std::move($1),
                                                                                       std::move($2),
                                                                                       std::move($4),
@@ -2533,34 +2533,34 @@ type_specifier
                                                                                       std::move($8)
                                                                                       );
                 const Gyoji::frontend::ast::SyntaxNode &sn = *(expr);
-                $$ = std::make_unique<Gyoji::frontend::tree::TypeSpecifier>(std::move(expr), sn);
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::TypeSpecifier>(std::move(expr), sn);
                 PRINT_NONTERMINALS($$);
         }
         | type_specifier STAR type_access_qualifier {
-                auto expr = std::make_unique<Gyoji::frontend::tree::TypeSpecifierPointerTo>(
+                auto expr = Gyoji::owned_new<Gyoji::frontend::tree::TypeSpecifierPointerTo>(
                                                                                       std::move($1),
                                                                                       std::move($2),
                                                                                       std::move($3)
                                                                                       );
                 const Gyoji::frontend::ast::SyntaxNode &sn = *(expr);
-                $$ = std::make_unique<Gyoji::frontend::tree::TypeSpecifier>(std::move(expr), sn);
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::TypeSpecifier>(std::move(expr), sn);
                 PRINT_NONTERMINALS($$);
         }
         | type_specifier ANDPERSAND type_access_qualifier {
-                auto expr = std::make_unique<Gyoji::frontend::tree::TypeSpecifierReferenceTo>(
+                auto expr = Gyoji::owned_new<Gyoji::frontend::tree::TypeSpecifierReferenceTo>(
                                                                                       std::move($1),
                                                                                       std::move($2),
                                                                                       std::move($3)
                                                                                       );
                 const Gyoji::frontend::ast::SyntaxNode &sn = *(expr);
-                $$ = std::make_unique<Gyoji::frontend::tree::TypeSpecifier>(std::move(expr), sn);
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::TypeSpecifier>(std::move(expr), sn);
                 PRINT_NONTERMINALS($$);
         }
         ;
 
 opt_argument_expression_list
         : /**/ {
-                $$ = std::make_unique<Gyoji::frontend::tree::ArgumentExpressionList>(return_data.compiler_context.get_token_stream().get_current_source_ref());
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::ArgumentExpressionList>(return_data.compiler_context.get_token_stream().get_current_source_ref());
                 PRINT_NONTERMINALS($$);
         }
         | argument_expression_list {
@@ -2571,7 +2571,7 @@ opt_argument_expression_list
 
 argument_expression_list
         : expression {
-                $$ = std::make_unique<Gyoji::frontend::tree::ArgumentExpressionList>($1->get_source_ref());
+                $$ = Gyoji::owned_new<Gyoji::frontend::tree::ArgumentExpressionList>($1->get_source_ref());
                 $$->add_argument(std::move($1));
                 PRINT_NONTERMINALS($$);
         }
@@ -2611,7 +2611,7 @@ void Gyoji::frontend::yacc::YaccParser::error(const std::string& msg) {
 	}
     }
 #endif    
-    auto error = std::make_unique<Gyoji::context::Error>("Syntax Error");
+    auto error = Gyoji::owned_new<Gyoji::context::Error>("Syntax Error");
     error->add_message(src_ref, msg);
     return_data.compiler_context.get_errors().add_error(std::move(error));
 }

@@ -324,7 +324,7 @@ void AnalysisPassUseBeforeAssignment::check(const Function & function) const
 	std::map<size_t, bool> already_checked;
 	bool is_true = true_at(function, already_checked, store_points_by_variable[load.variable_name], load.program_point);
 	if (!is_true) {
-	    std::unique_ptr<Gyoji::context::Error> error = std::make_unique<Gyoji::context::Error>("Variable use before initialization.");
+	    Gyoji::owned<Gyoji::context::Error> error = Gyoji::owned_new<Gyoji::context::Error>("Variable use before initialization.");
 	    const SourceReference & source_ref =
 		function.get_basic_block(load.program_point.block_id).get_operations().at(load.program_point.operation_index)->get_source_ref();
 
