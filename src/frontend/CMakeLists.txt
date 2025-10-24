@@ -31,8 +31,8 @@ set(FRONTEND_PUBLIC_HEADERS_BOTTOM
     gyoji-frontend/parse-result.hpp
     gyoji-frontend/forward.hpp
     gyoji-frontend/parser.hpp
-    gyoji-frontend/type-resolver.hpp
-    gyoji-frontend/function-resolver.hpp
+    gyoji-frontend/type-lowering.hpp
+    gyoji-frontend/function-lowering.hpp
     gyoji-frontend/function-scope.hpp
     gyoji-frontend/lex-context.hpp
 )
@@ -46,8 +46,8 @@ set(FRONTEND_SOURCES
     parse-result.cpp
     lex-context.cpp
     parser.cpp
-    type-resolver.cpp
-    function-resolver.cpp
+    type-lowering.cpp
+    function-lowering.cpp
     function-scope.cpp
     parse-literal-int.cpp
     ${FRONTEND_PUBLIC_HEADERS_TOP}

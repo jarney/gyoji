@@ -12,7 +12,7 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-#include <gyoji-frontend/type-resolver.hpp>
+#include <gyoji-frontend/type-lowering.hpp>
 #include <variant>
 #include <stdio.h>
 #include <gyoji-misc/jstring.hpp>
@@ -23,7 +23,7 @@ using namespace Gyoji::frontend::tree;
 using namespace Gyoji::frontend::lowering;
 using namespace Gyoji::frontend::namespaces;
 
-TypeResolver::TypeResolver(
+TypeLowering::TypeLowering(
     Gyoji::context::CompilerContext & _compiler_context,
     const Gyoji::frontend::tree::TranslationUnit & _translation_unit,
     Gyoji::mir::MIR & _mir)
@@ -31,10 +31,10 @@ TypeResolver::TypeResolver(
     , compiler_context(_compiler_context)
     , translation_unit(_translation_unit)
 {}
-TypeResolver::~TypeResolver()
+TypeLowering::~TypeLowering()
 {}
 
-void TypeResolver::resolve()
+void TypeLowering::lower()
 {
     // To resolve the types, we need only iterate the
     // input parse tree and pull out any type declarations,
@@ -43,7 +43,7 @@ void TypeResolver::resolve()
 }
 
 void
-TypeResolver::extract_from_class_declaration(const ClassDeclaration & declaration)
+TypeLowering::extract_from_class_declaration(const ClassDeclaration & declaration)
 {
     Gyoji::owned<Type> type = std::make_unique<Type>(
 	declaration.get_fully_qualified_name(),
@@ -54,7 +54,7 @@ TypeResolver::extract_from_class_declaration(const ClassDeclaration & declaratio
 }
 
 Type *
-TypeResolver::get_or_create(std::string pointer_name, Type::TypeType type_type, bool complete, const SourceReference & source_ref)
+TypeLowering::get_or_create(std::string pointer_name, Type::TypeType type_type, bool complete, const SourceReference & source_ref)
 {
     Type *pointer_type = mir.get_types().get_type(pointer_name);
     if (pointer_type != nullptr) {
@@ -69,7 +69,7 @@ TypeResolver::get_or_create(std::string pointer_name, Type::TypeType type_type, 
 }
 
 const Type*
-TypeResolver::extract_from_type_specifier_simple(const TypeSpecifierSimple & type_specifier)
+TypeLowering::extract_from_type_specifier_simple(const TypeSpecifierSimple & type_specifier)
 {
     const auto & type_name = type_specifier.get_type_name();
     if (type_name.is_expression()) {
@@ -93,7 +93,7 @@ TypeResolver::extract_from_type_specifier_simple(const TypeSpecifierSimple & typ
 }
 
 const Type*
-TypeResolver::extract_from_type_specifier_template(const TypeSpecifierTemplate & type_specifier)
+TypeLowering::extract_from_type_specifier_template(const TypeSpecifierTemplate & type_specifier)
 {
     compiler_context
 	.get_errors()
@@ -105,7 +105,7 @@ TypeResolver::extract_from_type_specifier_template(const TypeSpecifierTemplate &
 }
 
 const Type*
-TypeResolver::extract_from_type_specifier_function_pointer(const TypeSpecifierFunctionPointer & type_specifier)
+TypeLowering::extract_from_type_specifier_function_pointer(const TypeSpecifierFunctionPointer & type_specifier)
 {
     const Type *return_type = extract_from_type_specifier(type_specifier.get_return_type());
 
@@ -139,7 +139,7 @@ TypeResolver::extract_from_type_specifier_function_pointer(const TypeSpecifierFu
 }
 
 const Type*
-TypeResolver::extract_from_type_specifier_pointer_to(const TypeSpecifierPointerTo & type_specifier)
+TypeLowering::extract_from_type_specifier_pointer_to(const TypeSpecifierPointerTo & type_specifier)
 {
     const Type *pointer_target = extract_from_type_specifier(type_specifier.get_type_specifier());
     if (pointer_target == nullptr) {
@@ -156,7 +156,7 @@ TypeResolver::extract_from_type_specifier_pointer_to(const TypeSpecifierPointerT
 }
 
 const Type*
-TypeResolver::extract_from_type_specifier_reference_to(const TypeSpecifierReferenceTo & type_specifier)
+TypeLowering::extract_from_type_specifier_reference_to(const TypeSpecifierReferenceTo & type_specifier)
 {
     const Type *pointer_target = extract_from_type_specifier(type_specifier.get_type_specifier());
     if (pointer_target == nullptr) {
@@ -173,7 +173,7 @@ TypeResolver::extract_from_type_specifier_reference_to(const TypeSpecifierRefere
 }
 
 const Type*
-TypeResolver::extract_from_type_specifier_array(const TypeSpecifierArray & type_specifier)
+TypeLowering::extract_from_type_specifier_array(const TypeSpecifierArray & type_specifier)
 {
     const Type *pointer_target = extract_from_type_specifier(type_specifier.get_type_specifier());
     if (pointer_target == nullptr) {
@@ -211,7 +211,7 @@ TypeResolver::extract_from_type_specifier_array(const TypeSpecifierArray & type_
 }
 
 const Type *
-TypeResolver::extract_from_type_specifier(const TypeSpecifier & type_specifier)
+TypeLowering::extract_from_type_specifier(const TypeSpecifier & type_specifier)
 {
     const auto & type_specifier_type = type_specifier.get_type();
     if (std::holds_alternative<Gyoji::owned<TypeSpecifierSimple>>(type_specifier_type)) {
@@ -252,7 +252,7 @@ TypeResolver::extract_from_type_specifier(const TypeSpecifier & type_specifier)
 }
 
 void
-TypeResolver::extract_from_class_method_types(
+TypeLowering::extract_from_class_method_types(
     Type &class_type,
     std::map<std::string, TypeMethod> & methods,
     std::string simple_name,
@@ -322,7 +322,7 @@ TypeResolver::extract_from_class_method_types(
 
 
 void
-TypeResolver::extract_from_class_members(Type & class_type, const ClassDefinition & class_definition)
+TypeLowering::extract_from_class_members(Type & class_type, const ClassDefinition & class_definition)
 {
     std::vector<TypeMember> members;
     std::map<std::string, const TypeMember*> members_by_name;
@@ -462,7 +462,7 @@ TypeResolver::extract_from_class_members(Type & class_type, const ClassDefinitio
 }
 
 void
-TypeResolver::extract_from_class_definition(const ClassDefinition & definition)
+TypeLowering::extract_from_class_definition(const ClassDefinition & definition)
 {
     const auto it = mir.get_types().get_types().find(definition.get_fully_qualified_name());
     
@@ -504,7 +504,7 @@ TypeResolver::extract_from_class_definition(const ClassDefinition & definition)
 }
 
 void
-TypeResolver::extract_from_enum_definition(const EnumDefinition & enum_definition)
+TypeLowering::extract_from_enum_definition(const EnumDefinition & enum_definition)
 {
     const auto it = mir.get_types().get_types().find(enum_definition.get_name());
     if (it == mir.get_types().get_types().end()) {
@@ -539,7 +539,7 @@ TypeResolver::extract_from_enum_definition(const EnumDefinition & enum_definitio
 }
 
 void
-TypeResolver::extract_from_type_definition(const TypeDefinition & type_definition)
+TypeLowering::extract_from_type_definition(const TypeDefinition & type_definition)
 {
     const auto it = mir.get_types().get_types().find(type_definition.get_name());
     if (it == mir.get_types().get_types().end()) {
@@ -579,7 +579,7 @@ TypeResolver::extract_from_type_definition(const TypeDefinition & type_definitio
 
 
 void
-TypeResolver::extract_from_function_specifications(
+TypeLowering::extract_from_function_specifications(
     const Terminal & name,
     Gyoji::mir::Symbol::SymbolType symbol_type,
     const Type *return_type,
@@ -649,7 +649,7 @@ TypeResolver::extract_from_function_specifications(
 }
 
 void
-TypeResolver::extract_from_function_definition(const FileStatementFunctionDefinition & function_definition)
+TypeLowering::extract_from_function_definition(const FileStatementFunctionDefinition & function_definition)
 {
     const Type *return_type;
     const SourceReference *return_type_source_ref;
@@ -681,7 +681,7 @@ TypeResolver::extract_from_function_definition(const FileStatementFunctionDefini
 }
 
 void
-TypeResolver::extract_from_function_declaration(const FileStatementFunctionDeclaration & function_declaration)
+TypeLowering::extract_from_function_declaration(const FileStatementFunctionDeclaration & function_declaration)
 {
     const Type *return_type;
     const SourceReference *return_type_source_ref;
@@ -713,14 +713,14 @@ TypeResolver::extract_from_function_declaration(const FileStatementFunctionDecla
 }
 
 void
-TypeResolver::extract_from_namespace(const FileStatementNamespace & namespace_declaration)
+TypeLowering::extract_from_namespace(const FileStatementNamespace & namespace_declaration)
 {
     const auto & statements = namespace_declaration.get_statement_list().get_statements();
     extract_types(statements);
 }
 
 void
-TypeResolver::extract_types(const std::vector<Gyoji::owned<FileStatement>> & statements)
+TypeLowering::extract_types(const std::vector<Gyoji::owned<FileStatement>> & statements)
 {
     for (const auto & statement : statements) {
 	const auto & file_statement = statement->get_statement();

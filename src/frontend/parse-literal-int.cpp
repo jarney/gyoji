@@ -41,7 +41,7 @@ bool Gyoji::frontend::integers::parse_literal_int(
     // so that the MIR layer knows what we mean.
     // Actually, the whole of this logic
     // should probably move down one notch to the
-    // construction OP_LITERAL in the FunctionResolver
+    // construction OP_LITERAL in the FunctionLowering
     result.parsed_type = nullptr;
 
     std::string integer_part;

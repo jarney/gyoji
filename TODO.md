@@ -35,6 +35,18 @@ to do with the language.
   the polonius rules and putting the 'facts' together
   that it will need.
 
+* Make sure we can control the 'copy' of references.  Maybe it's
+  enough just to prevent references from being copied
+  implicitly in structures, so a class containing a reference
+  just can't be copied, but other classes are copied
+  automatically by copying members.  We shouldn't have to worry
+  about providing a 'copy' or 'move' for classes.
+
+* Write up a list of safety guarantees to provide and a 'proof' that
+  the rules of the language enforce these rules.  i.e. use-before-initialize
+  would have a definition and the rules of the language should be 'provable'
+  to meet this definition.  Same for borrow rules.
+
 * Figure out the 'reasoning' engine we want to use for it.
   Probably some type of HornSAT solver, possibly even one that
   we can incorporate into the standard library so we can
@@ -46,23 +58,6 @@ to do with the language.
 ## Semantic processing
   * Support const-ness of variables and protect them
     from assignments.
-
-  * Analysis for initialization before use to make sure
-    we're not reading data before we assign it somewhere.
-
-    * Composite type initialization: Provide a protocol for this
-      to initialize classes and return classes from functions,
-      hopefully following the C ABI (which is going to be complicated).
-      We're not doing constructors, but we still need a way to initialize
-      everything.  Probably just through named-values in a 'struct initializer'
-      style syntax.  Maybe like a 'struct literal?' or a 'struct immediate'
-      value?  Like an un-named type whose syntax REQUIRES initial values?
-      Maybe it could be as simple as "constructor" syntax that is logic-free?
-      
-    * Local variables must be written before read (except arguments
-      which are initialized when they are passed in)
-      The logic here is mostly established, but needs cleanup
-      specifically for arguments and error reporting.
 
   * Merge blocks for assignments in control-flow statements.
     i.e. the PHI operation in LLVM (trinary operations)
@@ -94,6 +89,9 @@ to do with the language.
     and conditional support for this first pass.
 
   * Support class single inheritance
+    * Maybe just not support this at all.  Inheritance is
+      kind-of evil anyway and most people favor composition
+      nowadays anyway.
     * Each inherited class is just another class
       with a member that is the supertype.
       Initialization can proceed in the obvious way by
@@ -111,6 +109,9 @@ to do with the language.
     to make sure we get the same results in both cases.
 
     We have the basics of this, but we should try to
+    be more complete in terms of actually
+    verifying that it works the way we would expect
+    with things like operator precedence and such.
 
 ## Bootstrapping
   * Figure out what parts of the compiler we can *already* write
@@ -120,6 +121,14 @@ to do with the language.
 ## Marketing (after we've bootstrapped)
   * Figure out how to compile down to WASM modules so we can
     build a website that has the compiler inside it.
+
+# Code Generation
+  * We support composite types as return-values from functions,
+    and arguments to them, but they don't follow the C ABI
+    because LLVM doesn't do this for us.  We need to figure out
+    hopefully just in the code-generation layer how to actually
+    lower the MIR into ABI-compliant code for structure arguments
+    and return-values.
 
 # Compiler stability/elegance
 

@@ -20,7 +20,7 @@
 namespace Gyoji::frontend::lowering {
     
     /**
-     * @brief The TypeResolver is the lowering process for types.
+     * @brief The TypeLowering is the lowering process for types.
      * This function reads the result of a parse and produces
      * the set of types defined or referenced by it.  This is
      * essentially the process of 'lowering' for types where
@@ -32,9 +32,9 @@ namespace Gyoji::frontend::lowering {
      * in terms of primitive types (u32, f32,...), composite types (flattened)
      * and pointer types (represented as a u64).
      */
-    class TypeResolver {
+    class TypeLowering {
     public:
-	TypeResolver(
+	TypeLowering(
 	    Gyoji::context::CompilerContext & _compiler_context,
 	    const Gyoji::frontend::tree::TranslationUnit & _translation_unit,
 	    Gyoji::mir::MIR & _mir);
@@ -44,7 +44,7 @@ namespace Gyoji::frontend::lowering {
 	 * @details
 	 * Move along, nothing to see here.
 	 */
-	~TypeResolver();
+	~TypeLowering();
 
 	/**
 	 * This iterates the translation unit and creates a suitable MIR type
@@ -52,7 +52,7 @@ namespace Gyoji::frontend::lowering {
 	 * the MIR representation will now have type definitions suitable
 	 * for code-generation.
 	 */
-	void resolve();
+	void lower();
 	
 	/** Note, this is non-const because
 	 * it may create a type on the fly,

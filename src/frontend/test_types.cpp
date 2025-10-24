@@ -14,7 +14,7 @@
  */
 #include <gyoji-misc/input-source-file.hpp>
 #include <gyoji-frontend.hpp>
-#include <gyoji-frontend/type-resolver.hpp>
+#include <gyoji-frontend/type-lowering.hpp>
 #include <gyoji-mir.hpp>
 #include <gyoji-misc/test.hpp>
 

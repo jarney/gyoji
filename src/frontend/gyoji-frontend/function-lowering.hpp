@@ -35,7 +35,7 @@
  * particular program.
  */
 namespace Gyoji::frontend::lowering {
-    class TypeResolver;
+    class TypeLowering;
 
     /**
      * @brief Lowering for a function
@@ -48,15 +48,15 @@ namespace Gyoji::frontend::lowering {
      * Semantic errors are reported through the CompilerContext in the form
      * of context-aware messages that highlight where the error took place.
      */
-    class FunctionDefinitionResolver {
+    class FunctionDefinitionLowering {
     public:
-	FunctionDefinitionResolver(
+	FunctionDefinitionLowering(
 	    Gyoji::context::CompilerContext & _compiler_context,
 	    const Gyoji::frontend::tree::FileStatementFunctionDefinition & _function_definition,
 	    Gyoji::mir::MIR & _mir,
-	    TypeResolver & _type_resolver
+	    TypeLowering & _type_lowering
 	    );
-	~FunctionDefinitionResolver();
+	~FunctionDefinitionLowering();
 
 	/**
 	 * @brief Resolve a single function definition.
@@ -70,14 +70,14 @@ namespace Gyoji::frontend::lowering {
 	 * result in an invalid MIR, however, some constructs will make the
 	 * resulting MIR unsuitible for code generation.
 	 */
-	bool resolve();
+	bool lower();
 
     private:
 	// Private members
 	Gyoji::context::CompilerContext & compiler_context;
 	const Gyoji::frontend::tree::FileStatementFunctionDefinition & function_definition;
 	Gyoji::mir::MIR & mir;
-	TypeResolver & type_resolver;
+	TypeLowering & type_lowering;
         ScopeTracker scope_tracker;
 	const Gyoji::mir::Type * class_type;
 	const Gyoji::mir::Type * class_pointer_type;
@@ -346,25 +346,25 @@ namespace Gyoji::frontend::lowering {
      * code-generation.
      *
      * This process is mainly performed by using one
-     * FunctionDefinitionResolver for each function found in
+     * FunctionDefinitionLowering for each function found in
      * the translation unit.
      */
-    class FunctionResolver {
+    class FunctionLowering {
     public:
 	/**
 	 * @brief Construct a definition resolver.
 	 * Constructs a function resolver using the
 	 * compiler context, parse result, and an MIR
 	 * to act as the destination of the parse.
-	 * This makes use of the TypeResolver which will
+	 * This makes use of the TypeLowering which will
 	 * already have been used to extract type information
 	 * from the translation unit.
 	 */
-	FunctionResolver(
+	FunctionLowering(
 	    Gyoji::context::CompilerContext & _compiler_context,
 	    const Gyoji::frontend::ParseResult & _parse_result,
 	    Gyoji::mir::MIR & _mir,
-	    TypeResolver & _type_resolver
+	    TypeLowering & _type_lowering
 	    );
 	
 	/**
@@ -373,19 +373,19 @@ namespace Gyoji::frontend::lowering {
 	 * @details
 	 * Move along, nothing to see here.
 	 */
-	~FunctionResolver();
+	~FunctionLowering();
 
 	/**
 	 * Iterates all of the functions in the translation unit
 	 * given by the parse result and lowers each one of them,
 	 * inserting the results into the MIR.
 	 */
-	bool resolve();
+	bool lower();
     private:
 	Gyoji::context::CompilerContext & compiler_context;
 	const Gyoji::frontend::ParseResult & parse_result;
 	Gyoji::mir::MIR & mir;
-	TypeResolver & type_resolver;
+	TypeLowering & type_lowering;
 	
 	bool extract_from_class_definition(const Gyoji::frontend::tree::ClassDefinition & definition);
 	bool extract_from_namespace(

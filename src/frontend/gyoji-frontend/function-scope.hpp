@@ -312,7 +312,7 @@ namespace Gyoji::frontend::lowering {
      * violate the 'normal' scope rules about variable
      * declaration, so this is done in order to
      * first check that the jump is legal and then
-     * to provide the information to the FunctionDefinitionResolver
+     * to provide the information to the FunctionDefinitionLowering
      * about what variables would be leaving scope
      * when a goto occurs.  In addition, there is logic
      * here to deal with the fact that a 'goto' may

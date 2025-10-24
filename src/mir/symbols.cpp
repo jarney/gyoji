@@ -70,6 +70,9 @@ Symbols::dump(FILE *out) const
 	case Symbol::SYMBOL_STATIC_FUNCTION:
 	    type = std::string("static function");
 	    break;
+	case Symbol::SYMBOL_MEMBER_DESTRUCTOR:
+	    type = std::string("member destructor");
+	    break;
 	case Symbol::SYMBOL_MEMBER_METHOD:
 	    type = std::string("member method");
 	    break;

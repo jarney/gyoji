@@ -12,7 +12,7 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-#include <gyoji-frontend/function-resolver.hpp>
+#include <gyoji-frontend/function-lowering.hpp>
 #include <gyoji-misc/jstring.hpp>
 #include <variant>
 #include <set>
@@ -26,27 +26,27 @@ using namespace Gyoji::frontend::tree;
 using namespace Gyoji::frontend::lowering;
 using namespace Gyoji::frontend::namespaces;
 
-FunctionResolver::FunctionResolver(
+FunctionLowering::FunctionLowering(
     Gyoji::context::CompilerContext & _compiler_context,
     const Gyoji::frontend::ParseResult & _parse_result,
     Gyoji::mir::MIR & _mir,
-    Gyoji::frontend::lowering::TypeResolver & _type_resolver
+    Gyoji::frontend::lowering::TypeLowering & _type_lowering
     )
     : compiler_context(_compiler_context)
     , parse_result(_parse_result)
     , mir(_mir)
-    , type_resolver(_type_resolver)
+    , type_lowering(_type_lowering)
 {}
 
-FunctionResolver::~FunctionResolver()
+FunctionLowering::~FunctionLowering()
 {}
 
-bool FunctionResolver::resolve()
+bool FunctionLowering::lower()
 {
     return extract_functions(parse_result.get_translation_unit().get_statements());
 }
 bool
-FunctionResolver::extract_from_namespace(
+FunctionLowering::extract_from_namespace(
     const FileStatementNamespace & namespace_declaration)
 {
     const auto & statements = namespace_declaration.get_statement_list().get_statements();
@@ -54,13 +54,13 @@ FunctionResolver::extract_from_namespace(
 }
 
 bool
-FunctionResolver::extract_from_class_definition(const ClassDefinition & definition)
+FunctionLowering::extract_from_class_definition(const ClassDefinition & definition)
 {
     return true;
 }
 
 bool
-FunctionResolver::extract_functions(const std::vector<Gyoji::owned<FileStatement>> & statements)
+FunctionLowering::extract_functions(const std::vector<Gyoji::owned<FileStatement>> & statements)
 {
     for (const auto & statement : statements) {
 	const auto & file_statement = statement->get_statement();
@@ -71,23 +71,23 @@ FunctionResolver::extract_functions(const std::vector<Gyoji::owned<FileStatement
 	    // This is the only place that functions can be extracted from.
 	    // We make this a separate object because we want convenient
 	    // access to certain pieces of context used in resolution.
-	    FunctionDefinitionResolver function_def_resolver(
+	    FunctionDefinitionLowering function_def_lowering(
 		compiler_context,
 		*std::get<Gyoji::owned<FileStatementFunctionDefinition>>(file_statement),
 		mir,
-		type_resolver
+		type_lowering
 		);
-	    if (!function_def_resolver.resolve()) {
+	    if (!function_def_lowering.lower()) {
 		return false;
 	    }
 	}
 	else if (std::holds_alternative<Gyoji::owned<FileStatementGlobalDefinition>>(file_statement)) {
 	    // Nothing, no globals can exist here.
-	    // Global declarations should already be resolved by the type_resolver earlier.
+	    // Global declarations should already be resolved by the type_lowering earlier.
 	}
 	else if (std::holds_alternative<Gyoji::owned<ClassDeclaration>>(file_statement)) {
 	    // Nothing, no functions can exist here.
-	    // Class declarations should already be resolved by the type_resolver earlier.
+	    // Class declarations should already be resolved by the type_lowering earlier.
 	}
 	else if (std::holds_alternative<Gyoji::owned<ClassDefinition>>(file_statement)) {
 	    // Destructors, and methods are special cases.
@@ -97,11 +97,11 @@ FunctionResolver::extract_functions(const std::vector<Gyoji::owned<FileStatement
 	}
 	else if (std::holds_alternative<Gyoji::owned<EnumDefinition>>(file_statement)) {
 	    // Nothing, no functions can exist here.
-	    // Enums should already be resolved by the type_resolver earlier.
+	    // Enums should already be resolved by the type_lowering earlier.
 	}
 	else if (std::holds_alternative<Gyoji::owned<TypeDefinition>>(file_statement)) {
 	    // Nothing, no functions can exist here.
-	    // Typedefs should already be resolved by the type_resolver earlier.
+	    // Typedefs should already be resolved by the type_lowering earlier.
 	}
 	else if (std::holds_alternative<Gyoji::owned<FileStatementNamespace>>(file_statement)) {
 	    if (!extract_from_namespace(*std::get<Gyoji::owned<FileStatementNamespace>>(file_statement))) {
@@ -126,34 +126,34 @@ FunctionResolver::extract_functions(const std::vector<Gyoji::owned<FileStatement
 }
 
 ////////////////////////////////////////////////
-// FunctionDefinitionResolver
+// FunctionDefinitionLowering
 ////////////////////////////////////////////////
 
-FunctionDefinitionResolver::FunctionDefinitionResolver(
+FunctionDefinitionLowering::FunctionDefinitionLowering(
     Gyoji::context::CompilerContext & _compiler_context,
     const Gyoji::frontend::tree::FileStatementFunctionDefinition & _function_definition,
     Gyoji::mir::MIR & _mir,
-    Gyoji::frontend::lowering::TypeResolver & _type_resolver
+    Gyoji::frontend::lowering::TypeLowering & _type_lowering
     )
     : compiler_context(_compiler_context)
     , function_definition(_function_definition)
     , mir(_mir)
-    , type_resolver(_type_resolver)
+    , type_lowering(_type_lowering)
     , scope_tracker(_function_definition.get_unsafe_modifier().is_unsafe(), _compiler_context)
     , class_type(nullptr)
     , method(nullptr)
 {}
-FunctionDefinitionResolver::~FunctionDefinitionResolver()
+FunctionDefinitionLowering::~FunctionDefinitionLowering()
 {}
 
 bool
-FunctionDefinitionResolver::is_method() const
+FunctionDefinitionLowering::is_method() const
 {
     return class_type != nullptr;
 }
 
 bool
-FunctionDefinitionResolver::resolve()
+FunctionDefinitionLowering::lower()
 {
     std::string fully_qualified_function_name = 
 	function_definition.get_name().get_fully_qualified_name();
@@ -196,7 +196,7 @@ FunctionDefinitionResolver::resolve()
     }
     else {
 	const TypeSpecifier & return_type_specifier = function_definition.get_return_type();
-	return_type = type_resolver.extract_from_type_specifier(return_type_specifier);
+	return_type = type_lowering.extract_from_type_specifier(return_type_specifier);
 	return_type_source_ref = &return_type_specifier.get_source_ref();
     }
     
@@ -261,7 +261,7 @@ FunctionDefinitionResolver::resolve()
 	    }
 	}
 	    
-	const Gyoji::mir::Type * mir_type = type_resolver.extract_from_type_specifier(function_definition_arg->get_type_specifier());
+	const Gyoji::mir::Type * mir_type = type_lowering.extract_from_type_specifier(function_definition_arg->get_type_specifier());
 	
 	FunctionArgument arg(name, mir_type,
 			     function_definition_arg->get_identifier().get_source_ref(),
@@ -560,7 +560,7 @@ FunctionDefinitionResolver::resolve()
 }
 
 bool
-FunctionDefinitionResolver::extract_from_expression_primary_identifier(
+FunctionDefinitionLowering::extract_from_expression_primary_identifier(
     size_t & returned_tmpvar,
     const Gyoji::frontend::tree::ExpressionPrimaryIdentifier & expression
     )
@@ -718,7 +718,7 @@ FunctionDefinitionResolver::extract_from_expression_primary_identifier(
 }
 
 bool
-FunctionDefinitionResolver::extract_from_expression_primary_nested(
+FunctionDefinitionLowering::extract_from_expression_primary_nested(
     size_t & returned_tmpvar,
     const Gyoji::frontend::tree::ExpressionPrimaryNested & expression)
 {
@@ -730,7 +730,7 @@ FunctionDefinitionResolver::extract_from_expression_primary_nested(
 }
 
 bool
-FunctionDefinitionResolver::extract_from_expression_primary_literal_char(
+FunctionDefinitionLowering::extract_from_expression_primary_literal_char(
     size_t & returned_tmpvar,
     const Gyoji::frontend::tree::ExpressionPrimaryLiteralChar & expression)
 {
@@ -782,7 +782,7 @@ FunctionDefinitionResolver::extract_from_expression_primary_literal_char(
 }
 
 bool
-FunctionDefinitionResolver::extract_from_expression_primary_literal_string(
+FunctionDefinitionLowering::extract_from_expression_primary_literal_string(
     size_t & returned_tmpvar,
     const Gyoji::frontend::tree::ExpressionPrimaryLiteralString & expression)
 {
@@ -824,7 +824,7 @@ FunctionDefinitionResolver::extract_from_expression_primary_literal_string(
 }
 
 bool
-FunctionDefinitionResolver::create_constant_integer_one(
+FunctionDefinitionLowering::create_constant_integer_one(
     const Gyoji::mir::Type *type,
     size_t & returned_tmpvar,
     const Gyoji::context::SourceReference & _src_ref
@@ -872,7 +872,7 @@ FunctionDefinitionResolver::create_constant_integer_one(
 }
 
 bool
-FunctionDefinitionResolver::create_constant_integer(
+FunctionDefinitionLowering::create_constant_integer(
     const Gyoji::frontend::integers::ParseLiteralIntResult & parse_result,
     size_t & returned_tmpvar,
     const Gyoji::context::SourceReference & _src_ref
@@ -1002,7 +1002,7 @@ FunctionDefinitionResolver::create_constant_integer(
 //     u8 n = 0b23334u8;  // It's a binary number, but it's not really binary (and too big also).
 // SO many error messages so that the user knows PRECISELY what they did wrong and where.
 bool
-FunctionDefinitionResolver::extract_from_expression_primary_literal_int(
+FunctionDefinitionLowering::extract_from_expression_primary_literal_int(
     size_t & returned_tmpvar,
     const Gyoji::frontend::tree::ExpressionPrimaryLiteralInt & expression)
 {
@@ -1020,7 +1020,7 @@ FunctionDefinitionResolver::extract_from_expression_primary_literal_int(
 }
 
 bool
-FunctionDefinitionResolver::extract_from_expression_primary_literal_float(
+FunctionDefinitionLowering::extract_from_expression_primary_literal_float(
     size_t & returned_tmpvar,
     const Gyoji::frontend::tree::ExpressionPrimaryLiteralFloat & expression)
 {
@@ -1093,7 +1093,7 @@ FunctionDefinitionResolver::extract_from_expression_primary_literal_float(
 }
 
 bool
-FunctionDefinitionResolver::extract_from_expression_postfix_array_index(
+FunctionDefinitionLowering::extract_from_expression_postfix_array_index(
     size_t & returned_tmpvar,
     const ExpressionPostfixArrayIndex & expression)
 {
@@ -1146,7 +1146,7 @@ FunctionDefinitionResolver::extract_from_expression_postfix_array_index(
 
 
 bool
-FunctionDefinitionResolver::check_function_call_signature(
+FunctionDefinitionLowering::check_function_call_signature(
     bool is_method,
     const std::vector<size_t> & passed_arguments,
     const std::vector<const Gyoji::context::SourceReference *> & passed_src_refs,
@@ -1234,7 +1234,7 @@ FunctionDefinitionResolver::check_function_call_signature(
 }
 
 bool
-FunctionDefinitionResolver::extract_from_expression_postfix_function_call(
+FunctionDefinitionLowering::extract_from_expression_postfix_function_call(
     size_t & returned_tmpvar,
     const ExpressionPostfixFunctionCall & expression)
 {
@@ -1339,7 +1339,7 @@ FunctionDefinitionResolver::extract_from_expression_postfix_function_call(
 }
 
 bool
-FunctionDefinitionResolver::extract_from_expression_postfix_dot(
+FunctionDefinitionLowering::extract_from_expression_postfix_dot(
     size_t & returned_tmpvar,
     const ExpressionPostfixDot & expression)
 {
@@ -1447,7 +1447,7 @@ FunctionDefinitionResolver::extract_from_expression_postfix_dot(
 }
 
 bool
-FunctionDefinitionResolver::extract_from_expression_postfix_arrow(
+FunctionDefinitionLowering::extract_from_expression_postfix_arrow(
     size_t & returned_tmpvar,
     const ExpressionPostfixArrow & expression)
 {
@@ -1532,7 +1532,7 @@ FunctionDefinitionResolver::extract_from_expression_postfix_arrow(
 }
 
 bool
-FunctionDefinitionResolver::extract_from_expression_postfix_incdec(
+FunctionDefinitionLowering::extract_from_expression_postfix_incdec(
     size_t & returned_tmpvar,
     const ExpressionPostfixIncDec & expression)
 {
@@ -1551,7 +1551,7 @@ FunctionDefinitionResolver::extract_from_expression_postfix_incdec(
 }
 
 bool
-FunctionDefinitionResolver::create_incdec_operation(
+FunctionDefinitionLowering::create_incdec_operation(
     const Gyoji::context::SourceReference & src_ref,
     size_t & returned_tmpvar,
     const size_t & operand_tmpvar,
@@ -1626,7 +1626,7 @@ FunctionDefinitionResolver::create_incdec_operation(
 }
 
 bool
-FunctionDefinitionResolver::extract_from_expression_unary_prefix(
+FunctionDefinitionLowering::extract_from_expression_unary_prefix(
     size_t & returned_tmpvar,
     const ExpressionUnaryPrefix & expression)
 {
@@ -1803,11 +1803,11 @@ FunctionDefinitionResolver::extract_from_expression_unary_prefix(
     return true;
 }
 bool
-FunctionDefinitionResolver::extract_from_expression_unary_sizeof_type(
+FunctionDefinitionLowering::extract_from_expression_unary_sizeof_type(
     size_t & returned_tmpvar,
     const ExpressionUnarySizeofType & expression)
 {
-    const Type * operand_type = type_resolver.extract_from_type_specifier(expression.get_type_specifier());
+    const Type * operand_type = type_lowering.extract_from_type_specifier(expression.get_type_specifier());
     const Type * u64_type = mir.get_types().get_type("u64");
     returned_tmpvar = function->tmpvar_define(u64_type);
     function->add_operation(
@@ -1822,7 +1822,7 @@ FunctionDefinitionResolver::extract_from_expression_unary_sizeof_type(
 }
 
 bool
-FunctionDefinitionResolver::numeric_widen(
+FunctionDefinitionLowering::numeric_widen(
     const Gyoji::context::SourceReference & _src_ref,
     size_t & _widen_var,
     const Type *widen_to
@@ -1860,7 +1860,7 @@ FunctionDefinitionResolver::numeric_widen(
     return true;
 }
 bool
-FunctionDefinitionResolver::numeric_widen_binary_operation(
+FunctionDefinitionLowering::numeric_widen_binary_operation(
     const Gyoji::context::SourceReference & _src_ref,
     size_t & a_tmpvar,
     size_t & b_tmpvar,
@@ -1944,7 +1944,7 @@ FunctionDefinitionResolver::numeric_widen_binary_operation(
 }
 
 bool
-FunctionDefinitionResolver::handle_binary_operation_arithmetic(
+FunctionDefinitionLowering::handle_binary_operation_arithmetic(
     const Gyoji::context::SourceReference & _src_ref,
     Operation::OperationType type,
     size_t & returned_tmpvar,
@@ -2027,7 +2027,7 @@ FunctionDefinitionResolver::handle_binary_operation_arithmetic(
 }
 
 bool
-FunctionDefinitionResolver::handle_binary_operation_logical(
+FunctionDefinitionLowering::handle_binary_operation_logical(
     const Gyoji::context::SourceReference & _src_ref,
     Operation::OperationType type,
     size_t & returned_tmpvar,
@@ -2062,7 +2062,7 @@ FunctionDefinitionResolver::handle_binary_operation_logical(
 }
 
 bool
-FunctionDefinitionResolver::handle_binary_operation_bitwise(
+FunctionDefinitionLowering::handle_binary_operation_bitwise(
     const Gyoji::context::SourceReference & _src_ref,
     Operation::OperationType type,
     size_t & returned_tmpvar,
@@ -2114,7 +2114,7 @@ FunctionDefinitionResolver::handle_binary_operation_bitwise(
 
 
 bool
-FunctionDefinitionResolver::handle_binary_operation_shift(
+FunctionDefinitionLowering::handle_binary_operation_shift(
     const Gyoji::context::SourceReference & _src_ref,
     Operation::OperationType type,
     size_t & returned_tmpvar,
@@ -2165,7 +2165,7 @@ FunctionDefinitionResolver::handle_binary_operation_shift(
 }
 
 bool
-FunctionDefinitionResolver::handle_binary_operation_compare(
+FunctionDefinitionLowering::handle_binary_operation_compare(
     const Gyoji::context::SourceReference & _src_ref,
     Operation::OperationType type,
     size_t & returned_tmpvar,
@@ -2252,7 +2252,7 @@ FunctionDefinitionResolver::handle_binary_operation_compare(
 }
 
 bool
-FunctionDefinitionResolver::handle_binary_operation_assignment(
+FunctionDefinitionLowering::handle_binary_operation_assignment(
     const Gyoji::context::SourceReference & _src_ref,
     Operation::OperationType type,
     size_t & returned_tmpvar,
@@ -2369,7 +2369,7 @@ FunctionDefinitionResolver::handle_binary_operation_assignment(
 }
 
 bool
-FunctionDefinitionResolver::extract_from_expression_binary(
+FunctionDefinitionLowering::extract_from_expression_binary(
     size_t & returned_tmpvar,
     const ExpressionBinary & expression)
 {
@@ -2820,7 +2820,7 @@ FunctionDefinitionResolver::extract_from_expression_binary(
     return true;
 }
 bool
-FunctionDefinitionResolver::extract_from_expression_trinary(
+FunctionDefinitionLowering::extract_from_expression_trinary(
     size_t & returned_tmpvar,
     const ExpressionTrinary & expression)
 {
@@ -2828,7 +2828,7 @@ FunctionDefinitionResolver::extract_from_expression_trinary(
     return false;
 }
 bool
-FunctionDefinitionResolver::extract_from_expression_cast(
+FunctionDefinitionLowering::extract_from_expression_cast(
     size_t & returned_tmpvar,
     const ExpressionCast & expression)
 {
@@ -2838,7 +2838,7 @@ FunctionDefinitionResolver::extract_from_expression_cast(
 
 
 bool
-FunctionDefinitionResolver::extract_from_expression(
+FunctionDefinitionLowering::extract_from_expression(
     size_t & returned_tmpvar,
     const Expression & expression_container)
 {
@@ -2915,7 +2915,7 @@ FunctionDefinitionResolver::extract_from_expression(
 }
 
 bool
-FunctionDefinitionResolver::local_declare_or_error(
+FunctionDefinitionLowering::local_declare_or_error(
     const Gyoji::mir::Type *mir_type,
     const std::string & name,
     const SourceReference & source_ref
@@ -2936,7 +2936,7 @@ FunctionDefinitionResolver::local_declare_or_error(
 }
 
 bool
-FunctionDefinitionResolver::extract_from_struct_initializer(
+FunctionDefinitionLowering::extract_from_struct_initializer(
     size_t & initial_value_tmpvar,
     const Gyoji::frontend::tree::StructInitializerExpression & struct_initializer_expression
     )
@@ -2978,7 +2978,7 @@ FunctionDefinitionResolver::extract_from_struct_initializer(
 
     std::string field_desc_str = Gyoji::misc::join(field_types, ", ");
     std::string anonymous_structure_type_name = std::string("<anonymous_structure>{") + field_desc_str + std::string("}");
-    Type *anonymous_structure_type = type_resolver.get_or_create(anonymous_structure_type_name, Type::TYPE_ANONYMOUS_STRUCTURE, false, struct_initializer_expression.get_source_ref());
+    Type *anonymous_structure_type = type_lowering.get_or_create(anonymous_structure_type_name, Type::TYPE_ANONYMOUS_STRUCTURE, false, struct_initializer_expression.get_source_ref());
     if (!anonymous_structure_type->is_complete()) {
 	std::map<std::string, TypeMethod> methods; // No methods for anonymous types.
 	anonymous_structure_type->complete_composite_definition(
@@ -3004,7 +3004,7 @@ FunctionDefinitionResolver::extract_from_struct_initializer(
 	
 
 bool
-FunctionDefinitionResolver::extract_from_statement_variable_declaration(
+FunctionDefinitionLowering::extract_from_statement_variable_declaration(
     const StatementVariableDeclaration & statement
     )
 {
@@ -3015,7 +3015,7 @@ FunctionDefinitionResolver::extract_from_statement_variable_declaration(
     
     // Once the variable exists, we can start performing the initialization
     // and assigning the value to something.
-    const Gyoji::mir::Type * mir_type = type_resolver.extract_from_type_specifier(statement.get_type_specifier());
+    const Gyoji::mir::Type * mir_type = type_lowering.extract_from_type_specifier(statement.get_type_specifier());
     if (mir_type == nullptr) {
 	return false;
     }
@@ -3165,7 +3165,7 @@ FunctionDefinitionResolver::extract_from_statement_variable_declaration(
 }
 
 bool
-FunctionDefinitionResolver::extract_from_statement_ifelse(
+FunctionDefinitionLowering::extract_from_statement_ifelse(
     const StatementIfElse & statement
     )
 {
@@ -3284,7 +3284,7 @@ FunctionDefinitionResolver::extract_from_statement_ifelse(
 }
 
 bool
-FunctionDefinitionResolver::extract_from_statement_while(
+FunctionDefinitionLowering::extract_from_statement_while(
     const Gyoji::frontend::tree::StatementWhile & statement
     )
 {
@@ -3348,7 +3348,7 @@ FunctionDefinitionResolver::extract_from_statement_while(
 }
 
 bool
-FunctionDefinitionResolver::extract_from_statement_for(
+FunctionDefinitionLowering::extract_from_statement_for(
     const Gyoji::frontend::tree::StatementFor & statement
     )
 {
@@ -3359,7 +3359,7 @@ FunctionDefinitionResolver::extract_from_statement_for(
     size_t blockid_done = function->add_block();
 
     if (statement.is_declaration()) {
-	const Gyoji::mir::Type * mir_type = type_resolver.extract_from_type_specifier(statement.get_type_specifier());
+	const Gyoji::mir::Type * mir_type = type_lowering.extract_from_type_specifier(statement.get_type_specifier());
 	
 	if (!local_declare_or_error(
 		mir_type,
@@ -3438,7 +3438,7 @@ FunctionDefinitionResolver::extract_from_statement_for(
 }
 
 bool	
-FunctionDefinitionResolver::extract_from_statement_switch(
+FunctionDefinitionLowering::extract_from_statement_switch(
     const Gyoji::frontend::tree::StatementSwitch & statement
     )
 {
@@ -3573,7 +3573,7 @@ FunctionDefinitionResolver::extract_from_statement_switch(
 
 
 bool
-FunctionDefinitionResolver::extract_from_statement_break(
+FunctionDefinitionLowering::extract_from_statement_break(
     const Gyoji::frontend::tree::StatementBreak & statement
     )
 {
@@ -3602,7 +3602,7 @@ FunctionDefinitionResolver::extract_from_statement_break(
 }
 
 bool
-FunctionDefinitionResolver::extract_from_statement_continue(
+FunctionDefinitionLowering::extract_from_statement_continue(
     const Gyoji::frontend::tree::StatementContinue & statement
     )
 {
@@ -3628,7 +3628,7 @@ FunctionDefinitionResolver::extract_from_statement_continue(
 
 
 bool
-FunctionDefinitionResolver::extract_from_statement_label(
+FunctionDefinitionLowering::extract_from_statement_label(
     const Gyoji::frontend::tree::StatementLabel & statement
     )
 {
@@ -3675,7 +3675,7 @@ FunctionDefinitionResolver::extract_from_statement_label(
 }
 
 bool
-FunctionDefinitionResolver::extract_from_statement_goto(
+FunctionDefinitionLowering::extract_from_statement_goto(
     const Gyoji::frontend::tree::StatementGoto & statement
     )
 {
@@ -3709,7 +3709,7 @@ FunctionDefinitionResolver::extract_from_statement_goto(
 }
 	
 bool
-FunctionDefinitionResolver::extract_from_statement_return(
+FunctionDefinitionLowering::extract_from_statement_return(
     const StatementReturn & statement
     )
 {
@@ -3742,7 +3742,7 @@ FunctionDefinitionResolver::extract_from_statement_return(
 }
 
 size_t
-FunctionDefinitionResolver::undeclare_local(
+FunctionDefinitionLowering::undeclare_local(
     const std::string & variable_name,
     const Type *class_type,
     size_t basic_block_id,
@@ -3849,7 +3849,7 @@ FunctionDefinitionResolver::undeclare_local(
 }
 
 void
-FunctionDefinitionResolver::leave_scope(
+FunctionDefinitionLowering::leave_scope(
     std::vector<std::string> & unwind,
     const SourceReference & src_ref
     )
@@ -3865,7 +3865,7 @@ FunctionDefinitionResolver::leave_scope(
 }
 	    
 bool
-FunctionDefinitionResolver::extract_from_statement_list(
+FunctionDefinitionLowering::extract_from_statement_list(
     bool automatic_unwind,
     const StatementList & statement_list)
 {

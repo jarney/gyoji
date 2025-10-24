@@ -1980,7 +1980,7 @@ ExpressionPrimaryLiteralString::~ExpressionPrimaryLiteralString()
 // concatenate the strings together and return the
 // resulting string literal still escaped as it was
 // in the source file.  The unescape of the string
-// is delegated to the FunctionResolver because it
+// is delegated to the FunctionLowering because it
 // is in a position to return errors whereas this
 // class is mainly intended to be just a fairly
 // transparent data container with no "real" logic.

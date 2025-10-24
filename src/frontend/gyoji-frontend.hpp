@@ -35,8 +35,8 @@
 #include <gyoji-frontend/tree.hpp>
 #include <gyoji-frontend/parse-result.hpp>
 #include <gyoji-frontend/parser.hpp>
-#include <gyoji-frontend/type-resolver.hpp>
-#include <gyoji-frontend/function-resolver.hpp>
+#include <gyoji-frontend/type-lowering.hpp>
+#include <gyoji-frontend/function-lowering.hpp>
 #include <gyoji-frontend/lex-context.hpp>
 #undef _GYOJI_INTERNAL
 
