@@ -402,7 +402,8 @@ CodeGeneratorLLVMContext::generate_operation_function_call(
     // The actual function we're calling might be a function pointer.
     llvm::Function *function = (llvm::Function*)llvm_function;
     
-    Builder->CreateCall(function_type, function, llvm_args);
+    llvm::Value * return_value = Builder->CreateCall(function_type, function, llvm_args);
+    tmp_values.insert(std::pair(operation.get_result(), return_value));
 
 }
 

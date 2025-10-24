@@ -13,6 +13,15 @@ Foo::method()
     return 0;
 }
 
+Foo
+Foo::construct()
+{
+    Foo newfoo = {
+        .member = 989898;
+    };
+    return newfoo;
+}
+
 u32 main(u32 argc, u8**argv)
 {
 	u32 b;
@@ -42,6 +51,9 @@ u32 main(u32 argc, u8**argv)
 	};
 	g.method();
 
+	Foo asdf = Foo::construct();
+	print_value(asdf.member);
+
 // We should somehow be able to get this
 // in safe mode, but the unsafe rules currently
 // prohibit getting a reference to an object
@@ -49,6 +61,7 @@ u32 main(u32 argc, u8**argv)
 	      Foo x = {
 	          .member = 19;
 	      };
+	      print_value(x.member);
 	      x = g;
 	      print_value(x.member);
 //	}

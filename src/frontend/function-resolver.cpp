@@ -211,15 +211,19 @@ FunctionDefinitionResolver::resolve()
 	return false;
 	
     }
+    // We should to the same check
+    // against the function declaration for a 'plain' function.
+    const Gyoji::mir::Symbol *symbol = mir.get_symbols().get_symbol(fully_qualified_function_name);
+    bool is_static = symbol != nullptr && symbol->get_type() == Gyoji::mir::Symbol::SYMBOL_STATIC_FUNCTION;
+    
     std::vector<FunctionArgument> arguments;
-
     // If this is a method instead of a plain function,
     // we add the implicit '<this>' argument as the first argument
     // so that we can use it to get access to the class content.
     // Note that we do not expose 'this' or 'super' as a keyword here
     // in order to limit the damage the programmer can potentially do in
     // leaking the 'this' pointer elsewhere, particularly in a destructor.
-    if (is_method()) {
+    if (is_method() && !is_static) {
 	class_pointer_type = mir.get_types().get_pointer_to(class_type, function_definition.get_source_ref());
 	std::string this_arg_name("<this>");
 	FunctionArgument arg(this_arg_name, class_pointer_type,
@@ -232,12 +236,13 @@ FunctionDefinitionResolver::resolve()
     const auto & function_definition_args = function_argument_list.get_arguments();
 
     bool member_conflict_errors = false;
+
     for (const auto & function_definition_arg : function_definition_args) {
 	std::string name = function_definition_arg->get_identifier().get_name();
 
 	// If this is a method, we want to check that the arguments
 	// to the function don't conflict with member variable names.
-	if (is_method()) {
+	if (is_method() && !is_static) {
 	    const TypeMember *member = class_type->member_get(name);
 	    if (member != nullptr) {
 		std::unique_ptr<Gyoji::context::Error> error = std::make_unique<Gyoji::context::Error>("Variable Name Conflict");
@@ -285,7 +290,7 @@ FunctionDefinitionResolver::resolve()
 		    );
 		error->add_message(
 		    method->get_source_ref(),
-		    std::string("First declared here with ") + std::to_string(method->get_arguments().size()-1)
+		    std::string("First declared here with ") + std::to_string(method->get_arguments().size() - (is_static ? 0 : 1) )
 		    );
 		compiler_context
 		    .get_errors()
@@ -334,9 +339,6 @@ FunctionDefinitionResolver::resolve()
 	}
     }
     else {
-	// We should to the same check
-	// against the function declaration for a 'plain' function.
-	const Gyoji::mir::Symbol *symbol = mir.get_symbols().get_symbol(fully_qualified_function_name);
 	if (symbol == nullptr) {
 	    // This is perfectly fine.  It just
 	    // means that there was no forward declaration
@@ -3016,98 +3018,75 @@ FunctionDefinitionResolver::extract_from_statement_variable_declaration(
     
     // This is an equals-style
     // initialization of a primitive variable.
-    if (mir_type->is_composite()) {
-	if (initializer_expression.has_expression()) {
-	    // This isn't valid for composite types.
-	    compiler_context
-		.get_errors()
-		.add_simple_error(
-		    initializer_expression.get_source_ref(),
-		    "Composite types may not be initialized with simple expressions",
-		    "Composite types must be initialized with structure initializers like { field = value; };"
-		    );
-	    return false;
-	}
-	else if (initializer_expression.has_struct_expression()) {
-	    if (!extract_from_struct_initializer(
+    if (mir_type->is_composite() && initializer_expression.has_struct_expression()) {
+	if (!extract_from_struct_initializer(
 		initial_value_tmpvar,
 		initializer_expression.get_struct_initializer_expression()
-		    )) {
-		return false;
-	    }
-	    source_ref = &initializer_expression.get_struct_initializer_expression().get_source_ref();
-
-	    // TODO: Check that composite type and initializer expression
-	    // have matching signatures.
-	    const Type *initializer_type = function->tmpvar_get(initial_value_tmpvar);
-	    const std::vector<TypeMember> & lhs_members = mir_type->get_members();
-	    const std::vector<TypeMember> & rhs_members = initializer_type->get_members();
-
-	    std::set<std::string> lhs_vars;
-	    std::set<std::string> rhs_vars;
-	    for (const TypeMember & m : lhs_members) {
-		lhs_vars.insert(m.get_name());
-	    }
-	    for (const TypeMember & m : rhs_members) {
-		rhs_vars.insert(m.get_name());
-	    }
-	    std::vector<std::string> lhs_uninitialized;
-	    std::vector<std::string> rhs_unused;
-	    std::set_difference(
-		lhs_vars.begin(), lhs_vars.end(),
-		rhs_vars.begin(), rhs_vars.end(),
-		std::back_inserter(lhs_uninitialized)
-		);
-	    std::set_difference(
-		rhs_vars.begin(), rhs_vars.end(),
-		lhs_vars.begin(), lhs_vars.end(),
-		std::back_inserter(rhs_unused)
-		);
-	    bool is_ok = true;
-	    for (const auto & s : lhs_uninitialized) {
-		const TypeMember *m = mir_type->member_get(s);
-
-		std::unique_ptr<Gyoji::context::Error> error = std::make_unique<Gyoji::context::Error>("Uninitialized class member");
-		error->add_message(
-		    initializer_expression.get_source_ref(),
-		    std::string("Class member ") + s + std::string(" is missing from initializer")
-		    );
-		error->add_message(
-		    m->get_source_ref(),
-		    "Member declared here"
-		    );
-		compiler_context
-		    .get_errors()
-		    .add_error(std::move(error));
-		is_ok = false;
-	    }
-	    for (const auto & s : rhs_unused) {
-		const TypeMember *m = initializer_type->member_get(s);
-		std::unique_ptr<Gyoji::context::Error> error = std::make_unique<Gyoji::context::Error>("Unused Initializer");
-		error->add_message(
-		    m->get_source_ref(),
-		    std::string("Initializer ") + s + std::string(" is not a member of class ") + mir_type->get_name()
-		    );
-		error->add_message(
-		    mir_type->get_defined_source_ref(),
-		    "Class declared here"
-		    );
-		compiler_context
-		    .get_errors()
-		    .add_error(std::move(error));
-		is_ok = false;
-	    }
-	    if (!is_ok) {
-		return false;
-	    }
-	    
+		)) {
+	    return false;
 	}
-	else {
-	    // The author has chosen to defer initialization,
-	    // so we're done with the initialization part.
-	    // We just have to trust that the author will initialize
-	    // later.
-	    return true;
+	source_ref = &initializer_expression.get_struct_initializer_expression().get_source_ref();
+	
+	const Type *initializer_type = function->tmpvar_get(initial_value_tmpvar);
+	const std::vector<TypeMember> & lhs_members = mir_type->get_members();
+	const std::vector<TypeMember> & rhs_members = initializer_type->get_members();
+	
+	std::set<std::string> lhs_vars;
+	std::set<std::string> rhs_vars;
+	for (const TypeMember & m : lhs_members) {
+	    lhs_vars.insert(m.get_name());
+	}
+	for (const TypeMember & m : rhs_members) {
+	    rhs_vars.insert(m.get_name());
+	}
+	std::vector<std::string> lhs_uninitialized;
+	std::vector<std::string> rhs_unused;
+	std::set_difference(
+	    lhs_vars.begin(), lhs_vars.end(),
+	    rhs_vars.begin(), rhs_vars.end(),
+	    std::back_inserter(lhs_uninitialized)
+	    );
+	std::set_difference(
+	    rhs_vars.begin(), rhs_vars.end(),
+	    lhs_vars.begin(), lhs_vars.end(),
+	    std::back_inserter(rhs_unused)
+	    );
+	bool is_ok = true;
+	for (const auto & s : lhs_uninitialized) {
+	    const TypeMember *m = mir_type->member_get(s);
+	    
+	    std::unique_ptr<Gyoji::context::Error> error = std::make_unique<Gyoji::context::Error>("Uninitialized class member");
+	    error->add_message(
+		initializer_expression.get_source_ref(),
+		std::string("Class member ") + s + std::string(" is missing from initializer")
+		);
+	    error->add_message(
+		m->get_source_ref(),
+		"Member declared here"
+		);
+	    compiler_context
+		.get_errors()
+		.add_error(std::move(error));
+	    is_ok = false;
+	}
+	for (const auto & s : rhs_unused) {
+	    const TypeMember *m = initializer_type->member_get(s);
+	    std::unique_ptr<Gyoji::context::Error> error = std::make_unique<Gyoji::context::Error>("Unused Initializer");
+	    error->add_message(
+		m->get_source_ref(),
+		std::string("Initializer ") + s + std::string(" is not a member of class ") + mir_type->get_name()
+		);
+	    error->add_message(
+		mir_type->get_defined_source_ref(),
+		"Class declared here"
+		);
+	    compiler_context
+		.get_errors()
+		.add_error(std::move(error));
+	    is_ok = false;
+	}
+	if (!is_ok) {
+	    return false;
 	}
     }
     else {
@@ -3138,10 +3117,6 @@ FunctionDefinitionResolver::extract_from_statement_variable_declaration(
 	    return true;
 	}
     }
-    // Early-out for debugging purposes.
-//    if (initializer_expression.has_struct_expression()) {
-//	return true;
-//    }
     size_t returned_tmpvar; // We don't save the returned val because nobody wants it.
     if (!handle_binary_operation_assignment(
 	    *source_ref,
