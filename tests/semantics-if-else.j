@@ -29,7 +29,7 @@ u32 main(u32 argc, u8 **argv)
 	a = 19u32;
         preamble_function_call();
         if (a == 2u32) {
-	   u32 scope_var;
+	   u32 scope_var = 12;
            a_a();
            if (!(a == 19u32)) {
                nineteen();

@@ -3368,11 +3368,39 @@ FunctionDefinitionLowering::extract_from_statement_for(
 		)) {
 	    return false;
 	}
-    }
+
+	size_t variable_tmpvar = function->tmpvar_define(mir_type);
+	function->add_operation(
+	    current_block,
+	    std::make_unique<OperationLocalVariable>(
+		statement.get_identifier().get_source_ref(),
+		variable_tmpvar,
+		statement.get_identifier().get_name(),
+		mir_type
+		)
+	    );
     
-    // Evaluate the initialization expression
-    if (!extract_from_expression(condition_tmpvar, statement.get_expression_initial())) {
-	return false;
+	size_t initializer_tmpvar;
+	if (!extract_from_expression(initializer_tmpvar, statement.get_expression_initial())) {
+	    return false;
+	}
+
+	size_t ignore_tmpvar;
+	if (!handle_binary_operation_assignment(
+		statement.get_identifier().get_source_ref(),
+		Operation::OP_ASSIGN,
+		ignore_tmpvar,
+		variable_tmpvar,
+		initializer_tmpvar)) {
+	    return false;
+	}
+    }
+    else {
+	// Evaluate the initialization expression
+	size_t initializer_tmpvar;
+	if (!extract_from_expression(initializer_tmpvar, statement.get_expression_initial())) {
+	    return false;
+	}
     }
     
     function->add_operation(
