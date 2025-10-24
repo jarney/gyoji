@@ -188,13 +188,6 @@ Scope::add_operation(Gyoji::owned<ScopeOperation> op)
     operations.push_back(std::move(op));
 }
 
-#if 0
-void
-Scope::add_variable(std::string name, const Gyoji::mir::Type *type, const Gyoji::context::SourceReference & source_ref)
-{
-}
-#endif
-
 const LocalVariable *
 Scope::get_variable(std::string name) const
 {
@@ -223,9 +216,29 @@ size_t
 Scope::get_loop_continue_blockid() const
 { return loop_continue_blockid; }
 
+void
+Scope::add_variable(std::string name, const Gyoji::mir::Type *mir_type, const Gyoji::context::SourceReference & source_ref)
+{
+    Gyoji::owned<LocalVariable> local_variable = std::make_unique<LocalVariable>(mir_type, source_ref);
+    variables.insert(std::pair(name, std::move(local_variable)));
+    variables_in_declaration_order.push_back(name);
+}
+
 const std::map<std::string, Gyoji::owned<LocalVariable>> &
 Scope::get_variables() const
 { return variables; }
+
+const std::vector<std::string> &
+Scope::get_variables_in_declaration_order() const
+{ return variables_in_declaration_order; }
+
+Scope *
+Scope::get_parent() const
+{ return parent; }
+
+void
+Scope::set_parent(Scope *_parent)
+{ parent = _parent; }
 
 ///////////////////////////////////////////////////
 // ScopeTracker
@@ -253,7 +266,7 @@ ScopeTracker::scope_push(bool _is_unsafe, const Gyoji::context::SourceReference 
 {
     auto child_scope = std::make_unique<Scope>(_is_unsafe);
     Scope *new_current = child_scope.get();
-    child_scope->parent = current;
+    child_scope->set_parent(current);
     auto child_op = ScopeOperation::create_child(std::move(child_scope), _source_ref);
     current->add_operation(std::move(child_op));
     current = new_current;
@@ -268,7 +281,7 @@ ScopeTracker::scope_push_loop(const Gyoji::context::SourceReference & _source_re
     // do it in the parent scope of the loop.
     auto child_scope = std::make_unique<Scope>(false, true, _loop_break_blockid, _loop_continue_blockid);
     Scope *new_current = child_scope.get();
-    child_scope->parent = current;
+    child_scope->set_parent(current);
     auto child_op = ScopeOperation::create_child(std::move(child_scope), _source_ref);
     current->add_operation(std::move(child_op));
     current = new_current;    
@@ -279,7 +292,7 @@ ScopeTracker::scope_push_loop(const Gyoji::context::SourceReference & _source_re
 void
 ScopeTracker::scope_pop()
 {
-    current = current->parent;
+    current = current->get_parent();
     tracker_prior_point.pop_back();
 }
 
@@ -387,7 +400,7 @@ ScopeTracker::get_variable(std::string variable_name) const
 	if (existing_local_variable != nullptr) {
 	    return existing_local_variable;
 	}
-	s = s->parent;
+	s = s->get_parent();
     }
     return nullptr;
 }
@@ -398,10 +411,13 @@ ScopeTracker::get_variables_to_unwind_for_root() const
     std::vector<std::string> variables_to_unwind;
     const Scope *s = current;
     while (s) {
-	for (const auto & it : s->get_variables()) {
-	    variables_to_unwind.push_back(it.first);
+	// Reverse order because we want to
+	// call destructors in the reverse order of declaration.
+	auto & vars = s->get_variables_in_declaration_order();
+	for (std::vector<std::string>::const_reverse_iterator it = vars.rbegin(); it != vars.rend(); ++it) {
+	    variables_to_unwind.push_back(*it);
 	}
-	s = s->parent;
+	s = s->get_parent();
     }
     return variables_to_unwind;
 }
@@ -411,8 +427,9 @@ ScopeTracker::get_variables_to_unwind_for_scope() const
 {
     std::vector<std::string> variables_to_unwind;
     const Scope *s = current;
-    for (const auto & it : s->get_variables()) {
-	variables_to_unwind.push_back(it.first);
+    const auto & vars = s->get_variables_in_declaration_order();
+    for (std::vector<std::string>::const_reverse_iterator it = vars.rbegin(); it != vars.rend(); ++it) {
+	variables_to_unwind.push_back(*it);
     }
     return variables_to_unwind;
 }
@@ -423,10 +440,11 @@ ScopeTracker::get_variables_to_unwind_for_break() const
     std::vector<std::string> variables_to_unwind;
     const Scope *s = current;
     while (s && s->is_loop()) {
-	for (const auto & it : s->get_variables()) {
-	    variables_to_unwind.push_back(it.first);
+	const auto & vars = s->get_variables_in_declaration_order();
+	for (std::vector<std::string>::const_reverse_iterator it = vars.rbegin(); it != vars.rend(); ++it) {
+	    variables_to_unwind.push_back(*it);
 	}
-	s = s->parent;
+	s = s->get_parent();
     }
     return variables_to_unwind;
 
@@ -445,7 +463,7 @@ ScopeTracker::is_unsafe() const
 	if (cur->is_unsafe()) {
 	    return true;
 	}
-	cur = cur->parent;
+	cur = cur->get_parent();
     }
     return false;
 }
@@ -473,8 +491,7 @@ ScopeTracker::add_variable(std::string variable_name, const Gyoji::mir::Type *mi
     
     // Variable was not declared earlier, so we add it to
     // the current scope.
-    Gyoji::owned<LocalVariable> local_variable = std::make_unique<LocalVariable>(mir_type, source_ref);
-    current->variables.insert(std::pair(variable_name, std::move(local_variable)));
+    current->add_variable(variable_name, mir_type, source_ref);
     
     auto local_var_op = ScopeOperation::create_variable(variable_name, mir_type, source_ref);
     add_flat_op(local_var_op.get());
@@ -530,7 +547,7 @@ ScopeTracker::is_in_loop() const
 	if (s->is_loop()) {
 	    return true;
 	}
-	s = s->parent;
+	s = s->get_parent();
     }
     return false;
 }
@@ -543,7 +560,7 @@ ScopeTracker::get_loop_break_blockid() const
 	if (s->is_loop()) {
 	    return s->get_loop_break_blockid();
 	}
-	s = s->parent;
+	s = s->get_parent();
     }
     return 0;
 }
@@ -556,7 +573,7 @@ ScopeTracker::get_loop_continue_blockid() const
 	if (s->is_loop()) {
 	    return s->get_loop_continue_blockid();
 	}
-	s = s->parent;
+	s = s->get_parent();
     }
     return 0;
 }

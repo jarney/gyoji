@@ -18,7 +18,7 @@ u32 main(u32 argc, u8**argv)
 	}
 	print_value(b);
 
-	u32 a;
+	u32 a = 4;
 	while (argc == 0) {
 	      a = 10;
 	}
@@ -26,11 +26,23 @@ u32 main(u32 argc, u8**argv)
 
 // We should figure out how to deal
 // with class initialization.
-	Foo f;
+	Foo f = {
+		.member = 29;
+	};
 	f.member = 10;
 
-	Foo g;
+	Foo g = {
+	    .member = 18;
+	};
 	g.method();
+
+	{
+		u32 z;
+	}
+	{
+		u32 z = 10;
+		z = z + 19;
+	}
 
 	//
 // This could work for initialization,

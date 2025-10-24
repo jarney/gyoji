@@ -227,7 +227,16 @@ namespace Gyoji::frontend::lowering {
 	
 	size_t get_loop_continue_blockid() const;
 
+	void add_variable(std::string name, const Gyoji::mir::Type *mir_type, const Gyoji::context::SourceReference & source_ref);
+    
 	const std::map<std::string, Gyoji::owned<LocalVariable>> & get_variables() const;
+
+	const std::vector<std::string> & get_variables_in_declaration_order() const;
+
+	Scope *get_parent() const;
+	
+	void set_parent(Scope *_parent);
+	
     private:
 	friend ScopeTracker;
 	Scope *parent;
@@ -242,6 +251,7 @@ namespace Gyoji::frontend::lowering {
 	
 	std::vector<Gyoji::owned<ScopeOperation>> operations;
 	std::map<std::string, Gyoji::owned<LocalVariable>> variables;
+	std::vector<std::string> variables_in_declaration_order;
     };
 
     /**

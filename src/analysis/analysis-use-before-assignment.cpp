@@ -230,6 +230,11 @@ VariableTmpvarVisitor::visit(
     const Operation & operation
     )
 {
+    if (operation.get_type() == Operation::OP_LOCAL_DECLARE) {
+	const OperationLocalDeclare & local_declare = (const OperationLocalDeclare&)operation;
+//	variables.push_back(std::pair(local_declare.get_variable(), &local_declare.get_source_ref()));
+	return;
+    }
     if (operation.get_type() != Operation::OP_LOCAL_VARIABLE) {
 	return;
     }
