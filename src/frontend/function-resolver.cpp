@@ -15,6 +15,9 @@
 #include <gyoji-frontend/function-resolver.hpp>
 #include <gyoji-misc/jstring.hpp>
 #include <variant>
+#include <set>
+#include <algorithm>
+#include <iterator>
 #include <stdio.h>
 
 using namespace Gyoji::mir;
@@ -2928,7 +2931,7 @@ FunctionDefinitionResolver::extract_from_struct_initializer(
 		    name,
 		    index,
 		    member_type,
-		    field->get_expression().get_source_ref()
+		    field->get_identifier().get_source_ref()
 		    )
 		);
 	}
@@ -3033,6 +3036,71 @@ FunctionDefinitionResolver::extract_from_statement_variable_declaration(
 		return false;
 	    }
 	    source_ref = &initializer_expression.get_struct_initializer_expression().get_source_ref();
+
+	    // TODO: Check that composite type and initializer expression
+	    // have matching signatures.
+	    const Type *initializer_type = function->tmpvar_get(initial_value_tmpvar);
+	    const std::vector<TypeMember> & lhs_members = mir_type->get_members();
+	    const std::vector<TypeMember> & rhs_members = initializer_type->get_members();
+
+	    std::set<std::string> lhs_vars;
+	    std::set<std::string> rhs_vars;
+	    for (const TypeMember & m : lhs_members) {
+		lhs_vars.insert(m.get_name());
+	    }
+	    for (const TypeMember & m : rhs_members) {
+		rhs_vars.insert(m.get_name());
+	    }
+	    std::vector<std::string> lhs_uninitialized;
+	    std::vector<std::string> rhs_unused;
+	    std::set_difference(
+		lhs_vars.begin(), lhs_vars.end(),
+		rhs_vars.begin(), rhs_vars.end(),
+		std::back_inserter(lhs_uninitialized)
+		);
+	    std::set_difference(
+		rhs_vars.begin(), rhs_vars.end(),
+		lhs_vars.begin(), lhs_vars.end(),
+		std::back_inserter(rhs_unused)
+		);
+	    bool is_ok = true;
+	    for (const auto & s : lhs_uninitialized) {
+		const TypeMember *m = mir_type->member_get(s);
+
+		std::unique_ptr<Gyoji::context::Error> error = std::make_unique<Gyoji::context::Error>("Uninitialized class member");
+		error->add_message(
+		    initializer_expression.get_source_ref(),
+		    std::string("Class member ") + s + std::string(" is missing from initializer")
+		    );
+		error->add_message(
+		    m->get_source_ref(),
+		    "Member declared here"
+		    );
+		compiler_context
+		    .get_errors()
+		    .add_error(std::move(error));
+		is_ok = false;
+	    }
+	    for (const auto & s : rhs_unused) {
+		const TypeMember *m = initializer_type->member_get(s);
+		std::unique_ptr<Gyoji::context::Error> error = std::make_unique<Gyoji::context::Error>("Unused Initializer");
+		error->add_message(
+		    m->get_source_ref(),
+		    std::string("Initializer ") + s + std::string(" is not a member of class ") + mir_type->get_name()
+		    );
+		error->add_message(
+		    mir_type->get_defined_source_ref(),
+		    "Class declared here"
+		    );
+		compiler_context
+		    .get_errors()
+		    .add_error(std::move(error));
+		is_ok = false;
+	    }
+	    if (!is_ok) {
+		return false;
+	    }
+	    
 	}
 	else {
 	    // The author has chosen to defer initialization,
