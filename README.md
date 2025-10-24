@@ -86,33 +86,57 @@ some help doing it.
 
 ## Language Matrix
 
-This language matrix
+This language matrix is intended to explain some of the trade-offs between
+languages.  I wanted specifically to design for a specific set of
+constraints and I've not managed to find a language that
+meets all of the requirements, so I started making one.
 
-+----------+-------------+-------------------+-------------+------------------+------------+------------+--------+
-| Language | Compiles to | Safe Memory       | Bloated     | Assumes          | Stable ABI | Panic-free | GC     |
-|          | Assembly    | Management        | std library | standard library |            |            | Pause  |
-+----------+-------------+-------------------+-------------+------------------+------------+------------+--------+
-| C        | Yes         | No                | No(1)       | No               | Yes        | Yes        | No     |
-+----------+-------------+-------------------+-------------+------------------+------------+---------------------+
-| C++      | Yes         | No                | Yes         | Yes              | No(2)      | No         | No     |
-+----------+-------------+-------------------+-------------+------------------+------------+---------------------+
-| Rust     | Yes         | Yes               | Yes         | Yes              | No         | No         | No     |
-+----------+-------------+-------------------+-------------+------------------+------------+---------------------+
-| Java     | No(3)       | Safe              | Yes         | Yes              | Yes        | Yes        | Yes    |
-+----------+-------------+-------------------+-------------+------------------+------------+---------------------+
-| Gyoji    | Yes         | Yes               | No          | No               | Yes(4)     | Yes        | No     |
-+----------+-------------+-------------------+-------------+------------------+------------+---------------------+
-+----------+-------------+-------------------+-------------+------------------+------------+---------------------+
-|Javascript| No          | Yes               | No          | Yes              | N/A        | Yes-ish    | Yes    |
-+----------+-------------+-------------------+-------------+------------------+------------+---------------------+
-| Python   | No          | Yes               | No          | Yes              | N/A        | Yes-ish    | Yes    |
-+----------+-------------+-------------------+-------------+------------------+------------+---------------------+
+```
++----------+-------------+-------------+-------------+------------------+------------+----------+-----------+
+| Language | Compiles to | Safe Memory | Bloated     | Assumes          | Stable ABI | Panic    | Garbage   |
+|          | Assembly    | Management  | std library | standard library |            | free (6) | Collector |
+|          |             |             |             | exists(5)        |            |          |           |
++----------+-------------+-------------+-------------+------------------+------------+----------+-----------+
+| C        | Yes         | No          | No(1)       | No               | Yes        | Yes      | No        |
++----------+-------------+-------------+-------------+------------------+------------+----------+-----------+
+| C++      | Yes         | No          | Yes         | Yes              | No(2)      | No       | No        |
++----------+-------------+-------------+-------------+------------------+------------+----------+-----------+
+| Rust     | Yes         | Yes         | Yes         | Yes              | No         | No       | No        |
++----------+-------------+-------------+-------------+------------------+------------+----------+-----------+
+| Java     | No(3)       | Yes         | Yes         | Yes              | Yes        | Yes      | Yes       |
++----------+-------------+-------------+-------------+------------------+------------+----------+-----------+
+| Gyoji    | Yes         | Yes         | No          | No               | Yes(4)     | Yes      | No        |
++----------+-------------+-------------+-------------+------------------+------------+----------+-----------+
+|Javascript| No          | Yes         | No          | Yes              | N/A        | Yes-ish  | Yes       |
++----------+-------------+-------------+-------------+------------------+------------+----------+-----------+
+| Python   | No          | Yes         | No          | Yes              | N/A        | Yes-ish  | Yes       |
++----------+-------------+-------------+-------------+------------------+------------+----------------------+
 
 
 (1) Some would argue with this, but as standard libraries go, it's fairly minimal.
+
 (2) The C++ ABI isn't really standard across compilers because exception semantics differ
     between MSC++ and GCC/Clang  It's fairly close, but you can't really count on
     compatibility of exception semantics between compiler vendors.
+
 (3) Some would argue that the JIT makes this true, but it's not really a binary compiled language.
+
 (4) The Gyoji ABI is stable because it only uses the C ABI as its base and does not require
     additional ABI extensions.
+
+(5) Does the language assume the existence of a standard library.  For example,
+    the C++ language 'for' syntax for (auto x : iterable) assumes that it's going
+    to be generating specific code for a '.begin()' and '.end()' iterator
+    for the loops.  Rust assumes that certain traits exist and are implemented, for example,
+    the 'copy' and 'move' traits, not to mention it makes a lot of assumptions about
+    the existence of the 'panic' function and various other members of the 'core' library.
+    Rust basically cannot be used without its library.
+
+(6) Does the standard library or the language cause abrupt halt of execution?  Note that
+    of course, the CPU or kernel can cause abrupt halt by divide-by-zero or
+    receiving an OS signal, but that doesn't originate from the language itself.
+    I wanted to make sure that the language itself, nor its associated standard library
+    can be the originator of a panic.  Rust, for example, can panic on the standard
+    sqrt() function which is just a bizzare way to indicate an invalid value.
+
+```
