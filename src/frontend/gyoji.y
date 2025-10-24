@@ -716,7 +716,7 @@ opt_class_argument_list
                 $$ = std::make_unique<Gyoji::frontend::tree::ClassArgumentList>(return_data.compiler_context.get_token_stream().get_current_source_ref());
                 PRINT_NONTERMINALS($$);
         }
-        | PAREN_L class_argument_list PAREN_R {
+        | COMPARE_LESS class_argument_list COMPARE_GREATER {
                 $$ = std::move($2);
                 $$->add_parens(std::move($1), std::move($3));
                 PRINT_NONTERMINALS($$);
@@ -2511,7 +2511,7 @@ type_specifier
                 $$ = std::make_unique<Gyoji::frontend::tree::TypeSpecifier>(std::move(expr), sn);
                 PRINT_NONTERMINALS($$);
         }
-        | type_specifier PAREN_L type_specifier_call_args PAREN_R {
+        | type_specifier COMPARE_LESS type_specifier_call_args COMPARE_GREATER {
                 auto expr = std::make_unique<Gyoji::frontend::tree::TypeSpecifierTemplate>(
                                                                                       std::move($1),
                                                                                       std::move($2),

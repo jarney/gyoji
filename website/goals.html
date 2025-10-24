@@ -72,9 +72,8 @@
     <li>After a primitive value is declared, it must first be assigned a value
       before it is used in any expression.
     </li>
-    <li>After a class value is declared, it must call a constructor before it is used.</li>
-    <li>Every constructor must initialize every primitive member to some initial value.</li>
-    <li>Every constructor must call the constructor of every class member</li>
+    <li>After a class value is declared, it must be initialized before use AND every member of the class must be initialized.</li>
+    <li>TODO: Cover array initialization for safety.
   </ul>
 </p>
 <p>
@@ -90,7 +89,7 @@
 <h4>Scope Guards</h4>
 <p>
   Classes declared in a local scope will always call their corresponding
-  destructor at the end of the lexical scope in which it was declared.
+  destructor(if it exists) at the end of the lexical scope in which it was declared.
 </p>
 <p>
   This guarantee extends to the use of 'goto' and 'break' statements
@@ -100,6 +99,19 @@
   is left during execution.
 </p>
 
+<h4>Unsafe Memory Access</h4>
+<p>
+  TODO: Define this carefully for pointers, references, arrays.
+  <ul>
+    <li>Define heap access (malloc) and how we get pointers to it.
+    <li>Define stack access and how we get pointers, references to it.
+    <li>Define guarantees about accessing memory through pointers.
+    <li>Define how references must always track back to their original locations
+      and that the lifetime of references must never outlive their original
+      locations.
+  </ul>
+</p>
+
 <h4>Exceptions</h4>
 <p>
   Code compiled by Gyoji will not ORIGINATE any exceptions which
@@ -107,4 +119,6 @@
   exceptions are not possible.  Exceptions may still originate
   from C or C++ code called indirectly by Gyoji and care must
   be taken that the functions called do not raise exceptions.
+  Exceptions from C++ are NOT caught and the corresponding destructors
+  will NOT be called in this event.
 </p>
