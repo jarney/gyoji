@@ -21,6 +21,10 @@ namespace Gyoji::misc {
     
     std::vector<std::string> string_split(const std::string &str, const std::string &delimiter);
 
+    std::string pad_string(size_t length, std::string padder);
+    std::string wrap_text(size_t max_width, std::string input);    
+    std::string indent_text(size_t indent, std::string input);
+
     bool startswith(const std::string & s, const std::string & prefix);
     bool endswith(const std::string & s, const std::string & suffix);
     std::string join(const std::vector<std::string> & list, std::string delimiter);

@@ -14,8 +14,10 @@
  */
 #include <gyoji-context/errors.hpp>
 #include <gyoji-context/token-stream.hpp>
+#include <gyoji-misc/jstring.hpp>
 
 using namespace Gyoji::context;
+using namespace Gyoji::misc;
 
 //////////////////////////////////////////////////
 Errors::Errors(TokenStream & _token_stream)
@@ -162,15 +164,6 @@ ErrorMessage::get_line() const
 //  message goes here, wrapped -------+
 //  to indent level
 
-static std::string pad_string(size_t length, std::string padder)
-{
-    std::string prefix;
-    for (size_t i = 0; i < length; i++) {
-	prefix = prefix + padder;
-    }
-    return prefix;
-}
-
 static void draw_arrow(size_t column, size_t length)
 {
     std::string arrowhead_line("^");
@@ -182,49 +175,6 @@ static void draw_arrow(size_t column, size_t length)
 	arrowhead_line = arrowhead_line + std::string("^");
     }
     fprintf(stderr, "%s\n", arrowhead_line.c_str());
-}
-
-static std::string wrap_text(size_t max_width, std::string input)
-{
-    std::string wrapped;
-    
-    size_t linelen = 0;
-    for (size_t i = 0; i < input.size(); i++) {
-	char c = input[i];
-	linelen++;
-	if (isspace(c)) {
-	    if (linelen > max_width) {
-		wrapped += '\n';
-		linelen = 0;
-	    }
-	    else {
-		wrapped += c;
-	    }
-	}
-	else {
-	    wrapped += c;
-	}
-    }
-    
-    return wrapped;
-}
-
-static std::string indent_text(size_t indent, std::string input)
-{
-    std::string wrapped;
-    
-    std::string pad = pad_string(indent, std::string(" "));
-    wrapped.append(pad);
-    wrapped.append("|--");
-    for (size_t i = 0; i < input.size(); i++) {
-	char c = input[i];
-	wrapped += c;
-	if (c == '\n') {
-	    wrapped.append(pad);
-	}
-    }
-    
-    return wrapped;
 }
 
 void
@@ -243,12 +193,12 @@ ErrorMessage::print()
 	if (line == linepair.first) {
 	    draw_arrow(column+6, length);
 	    if (column < 40) {
-		std::string wrapped = wrap_text(80-column, errormsg);
+		std::string wrapped = wrap_text(80-column, std::string("|--") + errormsg);
 		std::string indented = indent_text(column+6, wrapped);
 		printf("%s\n", indented.c_str());
 	    }
 	    else {
-		std::string wrapped = wrap_text(column, errormsg);
+		std::string wrapped = wrap_text(column, std::string("|--") + errormsg);
 		std::string indented = indent_text(6, wrapped);
 		printf("%s\n", indented.c_str());
 	    }

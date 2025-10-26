@@ -38,6 +38,62 @@ std::vector<std::string> Gyoji::misc::string_split(const std::string &str, const
 }
 
 std::string
+Gyoji::misc::pad_string(size_t length, std::string padder)
+{
+    std::string prefix;
+    for (size_t i = 0; i < length; i++) {
+	prefix = prefix + padder;
+    }
+    return prefix;
+}
+
+std::string
+Gyoji::misc::wrap_text(size_t max_width, std::string input)
+{
+    std::string wrapped;
+    
+    size_t linelen = 0;
+    for (size_t i = 0; i < input.size(); i++) {
+	char c = input[i];
+	linelen++;
+	if (isspace(c)) {
+	    if (linelen > max_width) {
+		wrapped += '\n';
+		linelen = 0;
+	    }
+	    else {
+		wrapped += c;
+	    }
+	}
+	else {
+	    wrapped += c;
+	}
+    }
+    
+    return wrapped;
+}
+
+std::string
+Gyoji::misc::indent_text(size_t indent, std::string input)
+{
+    std::string wrapped;
+    
+    std::string pad = pad_string(indent, std::string(" "));
+    wrapped.append(pad);
+//    wrapped.append("|--");
+    for (size_t i = 0; i < input.size(); i++) {
+	char c = input[i];
+	wrapped += c;
+	if (c == '\n') {
+	    wrapped.append(pad);
+	}
+    }
+    
+    return wrapped;
+}
+
+
+std::string
 Gyoji::misc::join_nonempty(const std::string &a, const std::string & b, const std::string delimiter)
 {
     std::string ret;

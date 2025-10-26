@@ -32,6 +32,10 @@ target_include_directories(gyoji-context
             ${PROJECT_SOURCE_DIR}/src/context
             ${PROJECT_SOURCE_DIR}/src/misc
 )
+target_link_libraries(gyoji-context
+    PUBLIC
+	gyoji-misc
+)
 install(
     TARGETS
         gyoji-context
