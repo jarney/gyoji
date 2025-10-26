@@ -16,6 +16,7 @@
 
 #include <string>
 #include <vector>
+#include <map>
 #include <memory>
 
 #include <gyoji-misc/pointers.hpp>
@@ -72,6 +73,8 @@ namespace Gyoji::context {
 	std::string errormsg;
     };
 
+    typedef size_t ErrorId;
+    
     /**
      * @brief An error reported during compilation.
      * @details
@@ -99,6 +102,42 @@ namespace Gyoji::context {
 	 * Move along, nothing to see here.
 	 */
 	~Error();
+
+	/**
+	 * Return the unique ID of the error.
+	 * Uniqueness of error IDs isn't established
+	 * by this system, but each system that uses
+	 * errors must 'namespace' the error codes
+	 * carefully to avoid conflicts.
+	 * <pre>
+	 * 0x0000_0000 to 0x0000_ffff IO errors:
+	 *                            Errors that pertain to pre-processing
+	 *                            the input in the "CPP" layer or
+	 *                            having to do with the compiler's ability
+	 *                            to read input from a source.
+	 *
+	 * 0x0001_0000 to 0x0001_ffff Syntax errors:
+	 *                            Errors that pertain to converting
+	 *                            the source file into a structured
+	 *                            tree.
+	 *
+	 * 0x0002_0000 to 0x0002_ffff Semantic/lowering errors
+	 *                            related to converting the syntax
+	 *                            tree into the MIR representation.
+	 *
+	 * 0x0003_0000 to 0x0003_ffff Analysis/static analysis errors
+	 *                            Borrow checker, for example,
+	 *                            and use-before-initialization
+	 *                            would raise these errors.
+	 *
+	 * 0x0004_0000 to 0x0004_ffff Code generation errors
+	 *                            These should almost always be compiler
+	 *                            bugs because the prior layers should
+	 *                            make it impossible to receive these.
+	 * </pre>
+	 */
+	ErrorId get_id() const;
+	
 	/**
 	 * This adds a message to the error pointing out
 	 * the specific source location where the error occurred.
@@ -179,14 +218,35 @@ namespace Gyoji::context {
 	void print() const;
 	/**
 	 * This returns the number of errors reported so far.
+	 * We can remove this once get_errors_of_type() works.
 	 */
 	size_t size() const;
 	/**
 	 * This returns a reference to a single specific error.
+	 * We can remove this once get_errors_of_type() works
+	 * and we have errors associated by type to go through.
 	 */
 	const Error & get(size_t n) const;
+
+	/**
+	 * Returns true if there is at least one error reported.
+	 */
+	bool has_errors() const;
+	
+	/**
+	 * Returns true if there is an error of the
+	 * given type.
+	 */
+	bool has_errors_of_type(ErrorId error_type) const;
+	
+	/**
+	 * This returns all of the errors of a particular type.
+	 */
+	const std::vector<Error*> & get_errors_of_type(ErrorId error_type) const;
+	
     private:
 	std::vector<Gyoji::owned<Error>> errors;
+	std::map<ErrorId, std::vector<Error*>> errors_by_id;
 	const TokenStream & token_stream;
     };
     

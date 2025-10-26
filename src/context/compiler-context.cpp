@@ -27,7 +27,7 @@ CompilerContext::~CompilerContext()
 
 bool
 CompilerContext::has_errors() const
-{ return errors->size(); }
+{ return errors->has_errors(); }
 
 Errors &
 CompilerContext::get_errors() const

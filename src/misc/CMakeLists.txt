@@ -18,11 +18,13 @@ set(MISC_PUBLIC_HEADERS
     gyoji-misc/input-source-file.hpp
     gyoji-misc/jstring.hpp
     gyoji-misc/jstring.hpp
+    gyoji-misc/getopt.hpp
     gyoji-misc/test.hpp
     gyoji-misc/xml.hpp
 )
 set(MISC_SOURCES
     jstring.cpp
+    getopt.cpp
     input-source.cpp
     input-source-file.cpp
     xml.cpp
@@ -55,3 +57,7 @@ target_include_directories(test_xml PUBLIC ${PROJECT_SOURCE_DIR}/misc)
 target_link_libraries(test_xml gyoji-misc)
 add_test(NAME test_xml COMMAND test_xml)
 
+add_executable(test_getopt test_getopt.cpp)
+target_include_directories(test_getopt PUBLIC ${PROJECT_SOURCE_DIR}/misc)
+target_link_libraries(test_getopt gyoji-misc)
+add_test(NAME test_getopt COMMAND test_getopt)

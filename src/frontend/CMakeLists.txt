@@ -39,6 +39,7 @@ set(FRONTEND_PUBLIC_HEADERS_BOTTOM
 
 set(FRONTEND_SOURCES
     gyoji.l
+    gpp.l
     gyoji.y
     tree.cpp
     syntax-node.cpp
@@ -59,8 +60,10 @@ BISON_TARGET(gyoji_y gyoji.y ${CMAKE_BINARY_DIR}/gyoji.y.cpp
              DEFINES_FILE ${CMAKE_BINARY_DIR}/gyoji.y.hpp)
 FLEX_TARGET(gyoji_l gyoji.l ${CMAKE_BINARY_DIR}/gyoji.l.cpp
             DEFINES_FILE ${CMAKE_BINARY_DIR}/gyoji.l.hpp)
+FLEX_TARGET(gpp_l gpp.l ${CMAKE_BINARY_DIR}/gpp.l.cpp
+            DEFINES_FILE ${CMAKE_BINARY_DIR}/gpp.l.hpp)
 
-add_library(gyoji-frontend ${FRONTEND_SOURCES} ${BISON_gyoji_y_OUTPUTS} ${FLEX_gyoji_l_OUTPUTS})
+add_library(gyoji-frontend ${FRONTEND_SOURCES} ${BISON_gyoji_y_OUTPUTS} ${FLEX_gyoji_l_OUTPUTS} ${FLEX_gpp_l_OUTPUTS})
 target_include_directories(gyoji-frontend
     PUBLIC
         ${FRONTEND_INCLUDES}

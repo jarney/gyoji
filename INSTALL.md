@@ -1,5 +1,7 @@
 # Building from source
 
+## Dependencies
+
 In order to build from source, some dependencies are needed:
 
 ```
@@ -20,7 +22,28 @@ In order to install these dependencies on an Ubuntu or Debian system, this shoul
 apt-get install build-essential install bison flex cmake llvm valgrind
 ```
 
-## Why dependencies are needed
+## Building
+
+CMake is the build system, but for convenience, a top-level makefile is provided.
+This will build the compiler, tests, and utilties.  
+
+```
+make -j <threads>
+```
+
+Once built, it can be 'installed' to the install directory: in $(SOURCE_DIR)/install
+
+```
+make install
+```
+
+The unit-tests can be run with:
+```
+make test
+```
+
+
+## Why each of the dependencies are needed
 
 * Valgrind:
   This is needed because the tests perform a 'valgrind' check on some tests

@@ -57,11 +57,17 @@ Errors::size() const
     return errors.size();
 }
 
+bool
+Errors::has_errors() const
+{ return errors.size() != 0; }
+
+bool
+Errors::has_errors_of_type(ErrorId error_type) const
+{ return errors_by_id.find(error_type) != errors_by_id.end(); }
+
 const Error &
 Errors::get(size_t n) const
-{
-    return *errors.at(n);
-}
+{ return *errors.at(n); }
 
 //////////////////////////////////////////////////
 Error::Error(std::string _error_title)
