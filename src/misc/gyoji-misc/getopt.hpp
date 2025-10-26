@@ -56,17 +56,41 @@ namespace Gyoji::misc::cmdline {
     class OptionValues {
     public:
 	OptionValues(
-	    std::map<std::string, OptionValue> _values
+	    const std::map<std::string, bool> & _bool_arguments,
+	    const std::vector<std::pair<std::string, std::string>> & _named_arguments,
+	    const std::vector<std::string> & _positional_arguments
 	    );
 	
 	~OptionValues();
-	
-	const OptionValue * get_value(std::string option_id) const;
+	/**
+	 * Return a boolean value depending on whether a boolean
+	 * option is turned on or off.  This would be 'true' if the '--compile' argument
+	 * is passed or 'false' if '--no-compile' is passed.
+	 */
+	bool get_boolean(std::string boolean_option_id) const;
 
-	const std::map<std::string, OptionValue> & get_values() const;
+	/**
+	 * Return the list of 'string' arguments in the order they were specified.
+	 * This is used for things like -I or -l or -L where a number of string
+	 * arguments can be provided, each providing one element of a list like
+	 * include paths or link libraries.  If the '-I' option is named 'include-path'
+	 * then this would return -I <path1> would return 'std::pair("include-path", "<path1>");
+	 */
+	const std::vector<std::pair<std::string, std::string>> & get_named_arguments() const;
+
+	/**
+	 * Return the list of positional arguments, for example,
+	 * if the command wants <program> <options> <arg1> <arg2>,
+	 * this returns <arg1> and <arg2> as elements in the order
+	 * they were given on the command-line.
+	 */
+	const std::vector<std::string> & get_positional_arguments() const;
 	
     private:
-	std::map<std::string, OptionValue> values;
+	std::map<std::string, bool> bool_arguments;
+	std::vector<std::pair<std::string, std::string>> named_arguments;
+	std::vector<std::string> positional_arguments;
+	
     };
     
     /**
@@ -146,12 +170,17 @@ namespace Gyoji::misc::cmdline {
 	
 	void print_help(FILE *out);
 
+	/**
+	 * This parses the command-line and returns all of the options
+	 * that should be in force.  For boolean options,
+	 * they are always present in the output, but may be default
+	 * values.  For string values, they may be a single string or
+	 * there may be multiples selected (as in the case of -I or -l, for example)
+	 */
 	Gyoji::owned<OptionValues> getopt(int argc, char **argv);
     private:
 	// This is the set of options the user might want to select.
 	std::vector<Option> options;
     };
-
-
 };
 

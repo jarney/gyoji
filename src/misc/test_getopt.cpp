@@ -47,6 +47,16 @@ int main(int argc, char **argv)
 	    "Include an include directory"
 	    )
 	);
+    options.push_back(
+	Option::create_string(
+	    "do-link-libs",
+	    "l",
+	    "link",
+	    "",
+	    false, // Default boolean value
+	    "Include an include directory"
+	    )
+	);
     GetOptions get_options(options);
 
     auto selected_options = get_options.getopt(argc, argv);
@@ -55,17 +65,19 @@ int main(int argc, char **argv)
 	return 1;
     }
     
-    const auto & values = selected_options->get_values();
-    for (const auto & it : values) {
-	const OptionValue &val = it.second;
-	fprintf(stderr, "Option %s : %s %s %s\n",
-		it.first.c_str(),
-		(val.is_specified() ? "true" : "false"),
-		(val.get_bool_value() ? "true" : "false"),
-		(val.get_string_value().c_str())
+    fprintf(stderr, "Compile only: %s\n",
+	    (selected_options->get_boolean("do-compile-only") ? "true" : "false")
+	);
+    for (const auto & namearg : selected_options->get_named_arguments()) {
+	fprintf(stderr, "Named argument %s = %s\n",
+		namearg.first.c_str(),
+		namearg.second.c_str()
 	    );
     }
-    fprintf(stderr, "Getopt testing\n");
-
+    for (const auto & arg : selected_options->get_positional_arguments()) {
+	fprintf(stderr, "Positional argument %s\n",
+		arg.c_str());
+    }
+    
     return 0;
 }
