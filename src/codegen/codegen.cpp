@@ -17,15 +17,47 @@
 #include <stdio.h>
 
 using namespace Gyoji::mir;
+using namespace Gyoji::codegen;
 
 void Gyoji::codegen::generate_code(
     const Gyoji::context::CompilerContext & _compiler_context,
     const MIR & _mir,
-    const std::string & _filename
+    const CodeGeneratorLLVMOptions & _options
     )
 {
-    CodeGeneratorLLVM generator(_compiler_context, _mir);
-    generator.initialize();  
+    CodeGeneratorLLVM generator(_compiler_context, _mir, _options);
+    generator.initialize();
     generator.generate();
-    generator.output(_filename);
+    generator.output(_options.get_output_filename());
 }
+
+CodeGeneratorLLVMOptions::CodeGeneratorLLVMOptions()
+{}
+
+CodeGeneratorLLVMOptions::~CodeGeneratorLLVMOptions()
+{}
+	
+
+bool
+CodeGeneratorLLVMOptions::get_output_llvm_ir() const
+{ return output_llvm_ir; }
+
+void
+CodeGeneratorLLVMOptions::set_output_llvm_ir(bool _output_llvm_ir)
+{ output_llvm_ir = _output_llvm_ir; }
+
+const std::string &
+CodeGeneratorLLVMOptions::get_output_filename() const
+{ return output_filename; }
+
+void
+CodeGeneratorLLVMOptions::set_output_filename(std::string _output_filename)
+{ output_filename = _output_filename; }
+
+void
+CodeGeneratorLLVMOptions::set_optimization_level(int level)
+{ optimization_level = level; }
+
+int
+CodeGeneratorLLVMOptions::get_optimization_level() const
+{ return optimization_level; }

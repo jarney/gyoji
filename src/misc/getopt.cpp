@@ -224,19 +224,34 @@ GetOptions::print_help(std::string command, FILE *out)
     for (const auto & option : options) {
 	switch (option.get_type()) {
 	case Option::OPTION_BOOLEAN:
+	    if (option.get_shortname().size() > 0) {
             fprintf(out, "    -%s | --%s\n",
 		    option.get_shortname().c_str(),
 		    option.get_longname().c_str()
 		);
+	    }
+	    else {
+		fprintf(out, "    --%s\n",
+			option.get_longname().c_str()
+		    );
+	    }
 	    break;
 	case Option::OPTION_STRING_LIST:
 	case Option::OPTION_SINGLE_STRING:
-            fprintf(out, "    -%s <%s> | --%s <%s>\n",
-		    option.get_shortname().c_str(),
-		    option.get_id().c_str(),
-		    option.get_longname().c_str(),
-		    option.get_id().c_str()
-		);
+	    if (option.get_shortname().size() > 0) {
+		fprintf(out, "    -%s <%s> | --%s <%s>\n",
+			option.get_shortname().c_str(),
+			option.get_id().c_str(),
+			option.get_longname().c_str(),
+			option.get_id().c_str()
+		    );
+	    }
+	    else {
+		fprintf(out, "    --%s <%s>\n",
+			option.get_longname().c_str(),
+			option.get_id().c_str()
+		    );
+	    }
 	    break;
 	}
 	std::string help_wrapped = Gyoji::misc::wrap_text((size_t)70, option.get_help_text());

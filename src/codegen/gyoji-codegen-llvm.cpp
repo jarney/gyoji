@@ -22,9 +22,10 @@ using namespace Gyoji::mir;
 
 CodeGeneratorLLVM::CodeGeneratorLLVM(
     const Gyoji::context::CompilerContext & _compiler_context,
-    const Gyoji::mir::MIR & _mir
+    const Gyoji::mir::MIR & _mir,
+    const CodeGeneratorLLVMOptions & _options
     )
-    : context(Gyoji::owned_new<CodeGeneratorLLVMContext>(_compiler_context, _mir))
+    : context(Gyoji::owned_new<CodeGeneratorLLVMContext>(_compiler_context, _mir, _options))
 {}
 
 CodeGeneratorLLVM::~CodeGeneratorLLVM()
@@ -46,10 +47,12 @@ CodeGeneratorLLVM::output(const std::string & filename)
 /////////////////////////////////////
 CodeGeneratorLLVMContext::CodeGeneratorLLVMContext(
     const Gyoji::context::CompilerContext & _compiler_context,
-    const Gyoji::mir::MIR & _mir
+    const Gyoji::mir::MIR & _mir,
+    const CodeGeneratorLLVMOptions & _options
     )
     : compiler_context(_compiler_context)
     , mir(_mir)
+    , options(_options)
 {}
 CodeGeneratorLLVMContext::~CodeGeneratorLLVMContext()
 {}
@@ -1785,15 +1788,35 @@ CodeGeneratorLLVMContext::output(const std::string & filename)
 	return 1;
     } 
 
-    llvm::raw_fd_ostream  llvm_ll_ostream(filename + std::string(".ll"), EC);
-    TheModule->print(llvm_ll_ostream, nullptr);
+    if (options.get_output_llvm_ir()) {
+	llvm::raw_fd_ostream  llvm_ll_ostream(filename + std::string(".ll"), EC);
+	TheModule->print(llvm_ll_ostream, nullptr);
+    }
 
     // For now, until we have a cmdline parser
     // we will default to no optimization so we
     // can actually follow the generated assembly.
     // When we want to run a 'real' build, we will
     // want to turn on better optimizations.
-    TheTargetMachine->setOptLevel(CodeGenOptLevel::None);
+    CodeGenOptLevel opt_level;
+    switch (options.get_optimization_level()) {
+    case 0:
+	opt_level = CodeGenOptLevel::None;
+	break;
+    case 1:
+	opt_level = CodeGenOptLevel::Less;
+	break;
+    case 2:
+	opt_level = CodeGenOptLevel::Default;
+	break;
+    case 3:
+	opt_level = CodeGenOptLevel::Aggressive;
+	break;
+    default:
+	opt_level = CodeGenOptLevel::Default;
+	break;
+    }
+    TheTargetMachine->setOptLevel(opt_level);
     
     legacy::PassManager pass;
     auto FileType = CodeGenFileType::ObjectFile;

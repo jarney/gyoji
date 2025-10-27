@@ -40,7 +40,8 @@ namespace Gyoji::codegen {
     public:
 	CodeGeneratorLLVMContext(
 	    const Gyoji::context::CompilerContext & _context,
-	    const Gyoji::mir::MIR & _mir
+	    const Gyoji::mir::MIR & _mir,
+	    const CodeGeneratorLLVMOptions & _options
 	    );
 	~CodeGeneratorLLVMContext();
 	void initialize();
@@ -54,6 +55,7 @@ namespace Gyoji::codegen {
 	
 	const Gyoji::context::CompilerContext & compiler_context;
 	const Gyoji::mir::MIR & mir;
+	const CodeGeneratorLLVMOptions & options;
 	
 	std::map<std::string, llvm::Type *> types;
 	std::map<std::string, llvm::Value *> local_lvalues;

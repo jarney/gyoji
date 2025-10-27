@@ -14,31 +14,265 @@
  */
 #include <gyoji-frontend.hpp>
 #include <gyoji-misc/input-source-file.hpp>
+#include <gyoji-misc/getopt.hpp>
 #include <gyoji-analysis.hpp>
 #include <gyoji-codegen.hpp>
+#include <cstring>
 
 using namespace Gyoji::codegen;
 using namespace Gyoji::context;
 using namespace Gyoji::frontend;
 using namespace Gyoji::mir;
 using namespace Gyoji::analysis;
+using namespace Gyoji::misc::cmdline;
+
+class JCCOptions {
+public:
+    JCCOptions();
+    ~JCCOptions();
+
+    /**
+     * Name of the source file to compile.
+     */
+    const std::string & get_source_filename() const;
+    void set_source_filename(const std::string & _filename);
+
+    const std::string & get_output_filename() const;
+    void set_output_filename(const std::string & _filename);
+    
+    /**
+     * Whether to just compile the file or continue
+     * to the link stage.
+     */
+    void set_compile_only(bool _compile_only);
+    bool get_compile_only() const;
+
+    /**
+     * Whether to dump the MIR representation.
+     */
+    bool get_output_mir() const;
+    void set_output_mir(bool _output_mir);
+
+    /**
+     * Whether to dump the LLVM IR representation.
+     */
+    bool get_output_llvm_ir() const;
+    void set_output_llvm_ir(bool _output_llvm_ir);
+
+    int get_optimization_level() const;
+    void set_optimization_level(int level);
+    
+private:
+    std::string source_filename;
+    std::string output_filename;
+    bool compile_only;
+    bool output_mir;
+    bool output_llvm_ir;
+    int optimization_level; // 0,1,2,3
+};
+
+class JCCGetopt {
+public:
+    static const std::string JCC_OPTION_COMPILE_ONLY;
+    static const std::string JCC_OPTION_OUTPUT_MIR;
+    static const std::string JCC_OPTION_OUTPUT_LLVM_IR;
+    static const std::string JCC_OPTION_OPTIMIZATION_LEVEL;
+    static const std::string JCC_OPTION_OUTPUT_FILENAME;
+
+    static Gyoji::owned<JCCOptions> getopt(int argc, char **argv);
+};
+
+const std::string JCCGetopt::JCC_OPTION_COMPILE_ONLY = "compile-only";
+const std::string JCCGetopt::JCC_OPTION_OUTPUT_MIR = "output-mir";
+const std::string JCCGetopt::JCC_OPTION_OUTPUT_LLVM_IR = "output-llvm-ir";
+const std::string JCCGetopt::JCC_OPTION_OPTIMIZATION_LEVEL = "optimization-level";
+const std::string JCCGetopt::JCC_OPTION_OUTPUT_FILENAME = "output-filename";
+
+JCCOptions::JCCOptions()
+{}
+
+JCCOptions::~JCCOptions()
+{}
+
+const std::string &
+JCCOptions::get_source_filename() const
+{ return source_filename; }
+
+void
+JCCOptions::set_source_filename(const std::string & _filename)
+{ source_filename = _filename; }
+
+const std::string &
+JCCOptions::get_output_filename() const
+{ return output_filename; }
+
+void
+JCCOptions::set_output_filename(const std::string & _filename)
+{ output_filename = _filename; }
+
+bool
+JCCOptions::get_compile_only() const
+{ return compile_only; }
+
+void
+JCCOptions::set_compile_only(bool _compile_only)
+{ compile_only = _compile_only; }
+
+void
+JCCOptions::set_output_mir(bool _output_mir)
+{ output_mir = _output_mir; }
+
+bool
+JCCOptions::get_output_mir() const
+{ return output_mir; }
+
+bool
+JCCOptions::get_output_llvm_ir() const
+{ return output_llvm_ir; }
+
+void
+JCCOptions::set_output_llvm_ir(bool _output_llvm_ir)
+{ output_llvm_ir = _output_llvm_ir; }
+
+int
+JCCOptions::get_optimization_level() const
+{ return optimization_level; }
+
+void
+JCCOptions::set_optimization_level(int level)
+{ optimization_level = level; }
+
+Gyoji::owned<JCCOptions>
+JCCGetopt::getopt(int argc, char **argv)
+{
+    std::vector<Option> options;
+    options.push_back(
+	Option::create_boolean(
+	    JCC_OPTION_COMPILE_ONLY,
+	    "c",
+	    "compile",
+	    "Compile the source file to a .o object file"
+	    )
+	);
+    options.push_back(
+	Option::create_boolean(
+	    JCC_OPTION_OUTPUT_MIR,
+	    "",
+	    "output-mir",
+	    "Output the MIR representation of the program"
+	    )
+	);
+    options.push_back(
+	Option::create_boolean(
+	    JCC_OPTION_OUTPUT_LLVM_IR,
+	    "",
+	    "output-llvm-ir",
+	    "Output the LLVM IR representation of the program"
+	    )
+	);
+    options.push_back(
+	Option::create_string(
+	    JCC_OPTION_OPTIMIZATION_LEVEL,
+	    "O",
+	    "optimization-level",
+	    "0=None, 1=Less, 2=Default, 3=Aggressive"
+	    )
+	);
+    options.push_back(
+	Option::create_string(
+	    JCC_OPTION_OUTPUT_FILENAME,
+	    "o",
+	    "output",
+	    "Name of the output file to produce"
+	    )
+	);
+    std::vector<std::pair<std::string, std::string>> positional_options;
+    positional_options.push_back(std::pair(
+				     "filename", "Name of a source file to compile"
+				     )
+	);
+    
+    GetOptions get_options(
+	options,
+	positional_options
+	);
+
+    auto selected_options = get_options.getopt(argc, argv);
+    if (selected_options == nullptr) {
+	get_options.print_help("jcc", stderr);
+	return nullptr;
+    }
+
+    const std::vector<std::string> & positional_arguments = selected_options->get_positional_arguments();
+    if (positional_arguments.size() < 1) {
+	fprintf(stderr, "JCC requires a file to compile\n");
+	get_options.print_help("jcc", stderr);
+	return nullptr;
+    }
+    
+    Gyoji::owned<JCCOptions> jcc_options = Gyoji::owned_new<JCCOptions>();
+    
+    jcc_options->set_source_filename(positional_arguments.at(0));
+    jcc_options->set_compile_only(selected_options->get_boolean(JCC_OPTION_COMPILE_ONLY));
+    jcc_options->set_output_mir(selected_options->get_boolean(JCC_OPTION_OUTPUT_MIR));
+    jcc_options->set_output_llvm_ir(selected_options->get_boolean(JCC_OPTION_OUTPUT_LLVM_IR));
+
+    if (selected_options->get_boolean(JCC_OPTION_OPTIMIZATION_LEVEL)) {
+	const std::string & level = selected_options->get_string(JCC_OPTION_OPTIMIZATION_LEVEL);
+	if (!strcmp(level.c_str(), "0")) {
+	    fprintf(stderr, "O0\n");
+	    jcc_options->set_optimization_level(0);
+	}
+	else if (!strcmp(level.c_str(), "1")) {
+	    fprintf(stderr, "O1\n");
+	    jcc_options->set_optimization_level(1);
+	}
+	else if (!strcmp(level.c_str(), "2")) {
+	    fprintf(stderr, "O2\n");
+	    jcc_options->set_optimization_level(2);
+	}
+	else if (!strcmp(level.c_str(), "3")) {
+	    fprintf(stderr, "O3\n");
+	    jcc_options->set_optimization_level(3);
+	}
+	else {
+	    fprintf(stderr, "No such optimization level %s\n", level.c_str());
+	    get_options.print_help("jcc", stderr);
+	    return nullptr;
+	}
+    }
+    else {
+	jcc_options->set_optimization_level(2);
+    }
+    
+    if (selected_options->get_boolean(JCC_OPTION_OUTPUT_FILENAME)) {
+	jcc_options->set_output_filename(selected_options->get_string(JCC_OPTION_OUTPUT_FILENAME));
+	fprintf(stderr, "%s was set as output\n", jcc_options->get_output_filename().c_str());
+    }
+    else {
+	fprintf(stderr, "A.out was set as output\n");
+	jcc_options->set_output_filename("a.out");
+    }
+    
+    return jcc_options;
+}
 
 int main(int argc, char **argv)
 {
 
-    if (argc != 3) {
-	fprintf(stderr, "Invalid number of arguments %d\n", argc);
-	fprintf(stderr, "Usage: jcc source-file object-file\n");
-	exit(1);
+    Gyoji::owned<JCCOptions> options = JCCGetopt::getopt(argc, argv);
+    if (options == nullptr) {
+	return -1;
     }
+
+    const std::string & input_filename = options->get_source_filename();
+    const std::string & output_filename = options->get_output_filename();
     
-    int input = open(argv[1], O_RDONLY);
+    int input = open(input_filename.c_str(), O_RDONLY);
     if (input == -1) {
-	fprintf(stderr, "Cannot open file %s\n", argv[1]);
-	exit(1);
+	fprintf(stderr, "Cannot open file %s\n", input_filename.c_str());
+	return -1;
     }
-    std::string input_filename(argv[1]);
-    std::string output_filename(argv[2]);
     
     CompilerContext context(input_filename);
     Gyoji::misc::InputSourceFile input_source(input);
@@ -54,7 +288,7 @@ int main(int argc, char **argv)
     // for debugging/review purposes
     // before any analysis or code-generation
     // passes.
-    {
+    if (options->get_output_mir()) {
 	std::string mir_filename = output_filename + std::string(".mir");
 	FILE *mir_output = fopen(mir_filename.c_str(), "w");
 	mir->dump(mir_output);
@@ -79,7 +313,6 @@ int main(int argc, char **argv)
     analysis_passes.push_back(Gyoji::owned_new<AnalysisPassUseBeforeAssignment>(context));
     analysis_passes.push_back(Gyoji::owned_new<AnalysisPassBorrowChecker>(context));
 
-    
     for (const auto & analysis_pass : analysis_passes) {
 	fprintf(stderr, "============================\n");
 	fprintf(stderr, "Analysis pass %s\n", analysis_pass->get_name().c_str());
@@ -99,11 +332,22 @@ int main(int argc, char **argv)
     // stage is a bit problematic
     // because we're not really cleaning up the
     // LLVM stuff at the moment.
-    generate_code(context, *mir, output_filename);
+
+    CodeGeneratorLLVMOptions llvm_options;
+    llvm_options.set_output_llvm_ir(options->get_output_llvm_ir());
+    llvm_options.set_output_filename(output_filename);
+    llvm_options.set_optimization_level(options->get_optimization_level());
+    
+    generate_code(context, *mir, llvm_options);
     
     if (context.has_errors()) {
 	context.get_errors().print();
 	return -1;
     }
+
+    /**
+     * TODO: Invoke the linker.
+     */
+    
     return 0;
 }

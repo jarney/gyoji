@@ -19,6 +19,30 @@
 
 namespace Gyoji::codegen {
     class CodeGeneratorLLVMContext;
+
+    /**
+     * Options that we can send to the LLVM
+     * code generator.
+     */
+    class CodeGeneratorLLVMOptions {
+    public:
+	CodeGeneratorLLVMOptions();
+	~CodeGeneratorLLVMOptions();
+	
+	bool get_output_llvm_ir() const;
+	void set_output_llvm_ir(bool _output_llvm_ir);
+
+	const std::string & get_output_filename() const;
+	void set_output_filename(std::string _output_filename);
+
+	int get_optimization_level() const;
+	void set_optimization_level(int level);
+	
+    private:
+	bool output_llvm_ir;
+	std::string output_filename;
+	int optimization_level;
+    };
     
     /**
      * This is the public interface to the code generator.
@@ -31,7 +55,8 @@ namespace Gyoji::codegen {
     public:
 	CodeGeneratorLLVM(
 	    const Gyoji::context::CompilerContext & _compiler_context,
-	    const Gyoji::mir::MIR & _mir
+	    const Gyoji::mir::MIR & _mir,
+	    const CodeGeneratorLLVMOptions & _options
 	    );
 	~CodeGeneratorLLVM();
 	void initialize();
@@ -42,5 +67,5 @@ namespace Gyoji::codegen {
 	
     };
     
-    void generate_code(const Gyoji::context::CompilerContext & _context, const Gyoji::mir::MIR & _mir, const std::string & _filename);
+    void generate_code(const Gyoji::context::CompilerContext & _context, const Gyoji::mir::MIR & _mir, const CodeGeneratorLLVMOptions & _options);
 };
