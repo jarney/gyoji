@@ -57,7 +57,8 @@ namespace Gyoji::misc::cmdline {
     public:
 	OptionValues(
 	    const std::map<std::string, bool> & _bool_arguments,
-	    const std::vector<std::pair<std::string, std::string>> & _named_arguments,
+	    const std::map<std::string, std::string> & _str_arguments,
+	    const std::map<std::string, std::vector<std::string>> & _named_arguments,
 	    const std::vector<std::string> & _positional_arguments
 	    );
 	
@@ -69,6 +70,8 @@ namespace Gyoji::misc::cmdline {
 	 */
 	bool get_boolean(std::string boolean_option_id) const;
 
+	std::string get_string(std::string option_id) const;
+	    
 	/**
 	 * Return the list of 'string' arguments in the order they were specified.
 	 * This is used for things like -I or -l or -L where a number of string
@@ -76,7 +79,7 @@ namespace Gyoji::misc::cmdline {
 	 * include paths or link libraries.  If the '-I' option is named 'include-path'
 	 * then this would return -I <path1> would return 'std::pair("include-path", "<path1>");
 	 */
-	const std::vector<std::pair<std::string, std::string>> & get_named_arguments() const;
+	const std::map<std::string, std::vector<std::string>> & get_named_arguments() const;
 
 	/**
 	 * Return the list of positional arguments, for example,
@@ -88,7 +91,8 @@ namespace Gyoji::misc::cmdline {
 	
     private:
 	std::map<std::string, bool> bool_arguments;
-	std::vector<std::pair<std::string, std::string>> named_arguments;
+	std::map<std::string, std::string> str_arguments;
+	std::map<std::string, std::vector<std::string>> named_arguments;
 	std::vector<std::string> positional_arguments;
 	
     };
@@ -100,15 +104,14 @@ namespace Gyoji::misc::cmdline {
     public:
 	typedef enum {
 	    OPTION_BOOLEAN,
-	    OPTION_STRING,
-	    OPTION_POSITIONAL
+	    OPTION_SINGLE_STRING,
+	    OPTION_STRING_LIST
 	} OptionType;
 	Option(const Option & other);
 	virtual ~Option();
 
 	std::string get_id() const;
 	OptionType get_type() const;
-	size_t get_position() const;
 	std::string get_shortname() const;
 	std::string get_longname() const;
 
@@ -121,7 +124,6 @@ namespace Gyoji::misc::cmdline {
 	    std::string _option_id,
 	    std::string _shortname,
 	    std::string _longname,
-	    bool _default_bool,
 	    std::string _help_text
 	    );
 	
@@ -129,15 +131,13 @@ namespace Gyoji::misc::cmdline {
 	    std::string _option_id,
 	    std::string _shortname,
 	    std::string _longname,
-	    std::string _default_string,
-	    bool _default_bool,
 	    std::string _help_text
 	    );
-	
-	static Option create_positional(
+
+	static Option create_string_list(
 	    std::string _option_id,
-	    size_t position,
-	    std::string _default_string,
+	    std::string _shortname,
+	    std::string _longname,
 	    std::string _help_text
 	    );
 	
@@ -147,9 +147,6 @@ namespace Gyoji::misc::cmdline {
 	    OptionType _type,
 	    std::string _shortname,
 	    std::string _longname,
-	    size_t position,
-	    std::string _default_string,
-	    bool _default_bool,
 	    std::string _help_text
 	    );
     private:
@@ -157,18 +154,18 @@ namespace Gyoji::misc::cmdline {
 	OptionType type;
 	std::string shortname;
 	std::string longname;
-	size_t position;
-	std::string default_string;
-	bool default_bool;
 	std::string help_text;
     };
     
     class GetOptions {
     public:
-	GetOptions(std::vector<Option> _options);
+	GetOptions(
+	    std::vector<Option> _options,
+	    std::vector<std::pair<std::string, std::string>> _positional_options
+	    );
 	~GetOptions();
 	
-	void print_help(FILE *out);
+	void print_help(std::string command, FILE *out);
 
 	/**
 	 * This parses the command-line and returns all of the options
@@ -181,6 +178,7 @@ namespace Gyoji::misc::cmdline {
     private:
 	// This is the set of options the user might want to select.
 	std::vector<Option> options;
+	std::vector<std::pair<std::string, std::string>> positional_options;
     };
 };
 

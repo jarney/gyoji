@@ -1,5 +1,6 @@
 #include <gyoji-misc/getopt.hpp>
 #include <gyoji-misc/jstring.hpp>
+#include <cstring>
 
 using namespace Gyoji::misc::cmdline;
 
@@ -9,10 +10,12 @@ using namespace Gyoji::misc::cmdline;
 
 OptionValues::OptionValues(
     const std::map<std::string, bool> & _bool_arguments,
-    const std::vector<std::pair<std::string, std::string>> & _named_arguments,
+    const std::map<std::string, std::string> & _str_arguments,
+    const std::map<std::string, std::vector<std::string>> & _named_arguments,
     const std::vector<std::string> & _positional_arguments
     )
     : bool_arguments(_bool_arguments)
+    , str_arguments(_str_arguments)
     , named_arguments(_named_arguments)
     , positional_arguments(_positional_arguments)
 {}
@@ -29,7 +32,17 @@ OptionValues::get_boolean(std::string boolean_option_id) const
     return it->second;
 }
 
-const std::vector<std::pair<std::string, std::string>> &
+std::string
+OptionValues::get_string(std::string option_id) const
+{
+    const auto & it = str_arguments.find(option_id);
+    if (it == str_arguments.end()) {
+	return "";
+    }
+    return it->second;
+}
+
+const std::map<std::string, std::vector<std::string>> &
 OptionValues::get_named_arguments() const
 { return named_arguments; }
 
@@ -91,18 +104,12 @@ Option::Option(
     OptionType _type,
     std::string _shortname,
     std::string _longname,
-    size_t _position,
-    std::string _default_string,
-    bool _default_bool,
     std::string _help_text
     )
     : option_id(_option_id)
     , type(_type)
     , shortname(_shortname)
     , longname(_longname)
-    , position(_position)
-    , default_string(_default_string)
-    , default_bool(_default_bool)
     , help_text(_help_text)
 {}
 Option::Option(const Option & other)
@@ -110,9 +117,6 @@ Option::Option(const Option & other)
     , type(other.type)
     , shortname(other.shortname)
     , longname(other.longname)
-    , position(other.position)
-    , default_string(other.default_string)
-    , default_bool(other.default_bool)
     , help_text(other.help_text)
 {}
 
@@ -124,19 +128,30 @@ Option::create_string(
     std::string _option_id,
     std::string _shortname,
     std::string _longname,
-    std::string _default_string,
-    bool _default_bool,
     std::string _help_text
     )
 {
     return Option(
 	_option_id,
-	Option::OPTION_STRING,
+	Option::OPTION_SINGLE_STRING,
 	_shortname,
 	_longname,
-	0,
-	_default_string,
-	_default_bool,
+	_help_text
+	);
+}
+Option
+Option::create_string_list(
+    std::string _option_id,
+    std::string _shortname,
+    std::string _longname,
+    std::string _help_text
+    )
+{
+    return Option(
+	_option_id,
+	Option::OPTION_STRING_LIST,
+	_shortname,
+	_longname,
 	_help_text
 	);
 }
@@ -145,7 +160,6 @@ Option::create_boolean(
     std::string _option_id,
     std::string _shortname,
     std::string _longname,
-    bool _default_bool,
     std::string _help_text
     )
 {
@@ -154,28 +168,6 @@ Option::create_boolean(
 	Option::OPTION_BOOLEAN,
 	_shortname,
 	_longname,
-	0,
-	std::string(),
-	_default_bool,
-	_help_text
-	);
-}
-Option
-Option::create_positional(
-    std::string _option_id,
-    size_t _position,
-    std::string _default_string,
-    std::string _help_text
-    )
-{
-   return Option(
-	_option_id,
-	Option::OPTION_POSITIONAL,
-	std::string(),
-	std::string(),
-	_position,
-	_default_string,
-	false,
 	_help_text
 	);
 }
@@ -188,10 +180,6 @@ Option::OptionType
 Option::get_type() const
 { return type; }
 
-size_t
-Option::get_position() const
-{ return position; }
-
 std::string
 Option::get_shortname() const
 { return shortname; }
@@ -201,14 +189,6 @@ Option::get_longname() const
 { return longname; }
 
 std::string
-Option::get_default_string() const
-{ return default_string; }
-
-bool
-Option::get_default_bool() const
-{ return default_bool; }
-
-std::string
 Option::get_help_text() const
 { return help_text; }
 
@@ -216,17 +196,31 @@ Option::get_help_text() const
 // GetOptions
 //////////////////////////////////////////////
 GetOptions::GetOptions(
-    std::vector<Option> _options
+    std::vector<Option> _options,
+    std::vector<std::pair<std::string, std::string>> _positional_options
     )
     : options(_options)
+    , positional_options(_positional_options)
 {}
 GetOptions::~GetOptions()
 {}
 
 void
-GetOptions::print_help(FILE *out)
+GetOptions::print_help(std::string command, FILE *out)
 {
-    fprintf(out, "Usage:\n");
+    fprintf(out, "Usage: %s [options] ", command.c_str());
+    size_t i = 0;
+    for (const auto & posopt : positional_options) {
+	fprintf(out, " <%s>", posopt.first.c_str());
+    }
+    fprintf(out, "\n");
+    for (const auto & posopt : positional_options) {
+	fprintf(out, "    <%s>\n", posopt.first.c_str());
+	std::string help_wrapped = Gyoji::misc::wrap_text((size_t)70, posopt.second);
+	std::string help_indented = Gyoji::misc::indent_text(20, help_wrapped);
+	fprintf(out, "%s\n\n", help_indented.c_str());
+	i++;
+    }
     for (const auto & option : options) {
 	switch (option.get_type()) {
 	case Option::OPTION_BOOLEAN:
@@ -235,7 +229,8 @@ GetOptions::print_help(FILE *out)
 		    option.get_longname().c_str()
 		);
 	    break;
-	case Option::OPTION_STRING:
+	case Option::OPTION_STRING_LIST:
+	case Option::OPTION_SINGLE_STRING:
             fprintf(out, "    -%s <%s> | --%s <%s>\n",
 		    option.get_shortname().c_str(),
 		    option.get_id().c_str(),
@@ -243,15 +238,11 @@ GetOptions::print_help(FILE *out)
 		    option.get_id().c_str()
 		);
 	    break;
-	case Option::OPTION_POSITIONAL:
-	    fprintf(out, "    <%s>\n", option.get_id().c_str());
-	    break;
 	}
 	std::string help_wrapped = Gyoji::misc::wrap_text((size_t)70, option.get_help_text());
 	std::string help_indented = Gyoji::misc::indent_text(20, help_wrapped);
-	fprintf(out, "%s\n", help_indented.c_str());
+	fprintf(out, "%s\n\n", help_indented.c_str());
     }
-	    
 }
 
 Gyoji::owned<OptionValues>
@@ -261,7 +252,8 @@ GetOptions::getopt(int argc, char **argv)
     std::map<std::string, const Option*> options_by_longname;
 
     std::map<std::string, bool> bool_arguments;
-    std::vector<std::pair<std::string, std::string>> named_arguments;
+    std::map<std::string, std::string> single_str_arguments;
+    std::map<std::string, std::vector<std::string>> named_arguments;
     std::vector<std::string> positional_arguments;
     
     for (const auto & option : options) {
@@ -269,12 +261,13 @@ GetOptions::getopt(int argc, char **argv)
 	// of that option.
 	switch (option.get_type()) {
 	case Option::OPTION_BOOLEAN:
+	case Option::OPTION_STRING_LIST:
+	case Option::OPTION_SINGLE_STRING:
 	{
 	    bool_arguments.insert(
-		std::pair(option.get_id(), option.get_default_bool())
+		std::pair(option.get_id(), false)
 		);
 	}
-	break;
 	default:
 	    /* intentionally blank */
 	    break;
@@ -293,6 +286,7 @@ GetOptions::getopt(int argc, char **argv)
 	// Start parsing the options:
 	std::string arg(argv[pos]);
 	const Option *opt = nullptr;
+	std::string arg_value;
 	
 	if (startswith(arg, std::string("--"))) {
 	    std::string longname = arg.substr(2);
@@ -302,36 +296,57 @@ GetOptions::getopt(int argc, char **argv)
 		return nullptr;
 	    }
 	    opt = it->second;
+	    pos++;
 	}
 	else if (startswith(arg, std::string("-"))) {
-	    std::string shortname = arg.substr(1);
+	    // The argument might be directly attached to the single-string argument
+	    // as in -lm where the argument is 'm'.
+	    std::string shortname = arg.substr(1, 1);
 	    const auto & it = options_by_shortname.find(shortname);
 	    if (it == options_by_shortname.end()) {
 		fprintf(stderr, "No such short option %s\n", shortname.c_str());
 		return nullptr;
 	    }
 	    opt = it->second;
+	    if (opt->get_type() == Option::OPTION_SINGLE_STRING ||
+		opt->get_type() == Option::OPTION_STRING_LIST) {
+		if (arg.substr(2).size() > 0) {
+		    arg_value = arg.substr(2);
+		}
+		else if ((pos + 1) < len) {
+		    arg_value = argv[pos + 1];
+		    pos++;
+		}
+		else {
+		    fprintf(stderr, "String option %s requires a value\n", opt->get_id().c_str());
+		    return nullptr;
+		}
+	    }
+	    pos++;
 	}
 	if (opt == nullptr) {
-	    fprintf(stderr, "Handling positional argument %s\n", argv[pos]);
 	    positional_arguments.push_back(std::string(argv[pos]));
 	    pos++;
 	}
-	else if (opt->get_type() == Option::OPTION_STRING) {
-	    if (pos+1 >= len) {
-		fprintf(stderr, "String option %s requires a value\n", opt->get_id().c_str());
+	else if (opt->get_type() == Option::OPTION_STRING_LIST) {
+	    named_arguments[opt->get_id()].push_back(arg_value);
+	}
+	else if (opt->get_type() == Option::OPTION_SINGLE_STRING) {
+	    const auto & bool_arg_it = bool_arguments.find(opt->get_id());
+	    if (bool_arg_it == bool_arguments.end()) {
+		fprintf(stderr, "No such argument %s\n", opt->get_id().c_str());
 		return nullptr;
 	    }
-	    std::string avalue(argv[pos+1]);
-
-	    named_arguments.push_back(
-		std::pair(
-		    opt->get_id(),
-		    avalue
-		    )
-		);
-	    // Skip past the argument and its value.
-	    pos += 2;
+	    if (bool_arg_it->second && (strcmp(arg_value.c_str(), single_str_arguments[opt->get_id()].c_str()))) {
+		fprintf(stderr, "Conflicting argument %s : %s previously specified as %s\n",
+			opt->get_id().c_str(),
+			arg_value.c_str(),
+			single_str_arguments[opt->get_id()].c_str()
+		    );
+		return nullptr;
+	    }
+	    bool_arg_it->second = true;
+	    single_str_arguments.insert(std::pair(opt->get_id(), arg_value));
 	}
 	else if (opt->get_type() == Option::OPTION_BOOLEAN) {
 	    const auto & bool_arg_it = bool_arguments.find(opt->get_id());
@@ -340,15 +355,14 @@ GetOptions::getopt(int argc, char **argv)
 		return nullptr;
 	    }
 	    bool_arg_it->second = true;
-	    pos++;
 	}
 	else {
 	    break;
 	}
     }
-
     auto option_values = Gyoji::owned_new<OptionValues>(
 	bool_arguments,
+	single_str_arguments,
 	named_arguments,
 	positional_arguments
 	);

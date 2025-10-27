@@ -33,46 +33,64 @@ int main(int argc, char **argv)
 	    "do-compile-only",
 	    "c",
 	    "compile",
-	    false, // Default boolean value
 	    "Compile the source file to a .o object file"
 	    )
 	);
     options.push_back(
-	Option::create_string(
+	Option::create_string_list(
 	    "do-include-dirs",
 	    "I",
 	    "include-dir",
-	    "",
-	    false, // Default boolean value
+	    "Include an include directory"
+	    )
+	);
+    options.push_back(
+	Option::create_string_list(
+	    "do-link-libs",
+	    "l",
+	    "link",
 	    "Include an include directory"
 	    )
 	);
     options.push_back(
 	Option::create_string(
-	    "do-link-libs",
-	    "l",
-	    "link",
-	    "",
-	    false, // Default boolean value
-	    "Include an include directory"
+	    "architecture",
+	    "m",
+	    "architecture",
+	    "Machine architecture"
 	    )
 	);
-    GetOptions get_options(options);
+
+    std::vector<std::pair<std::string, std::string>> positional_options;
+    positional_options.push_back(std::pair(
+				     "filename", "Name of a source file to compile"
+				     )
+	);
+    
+    GetOptions get_options(
+	options,
+	positional_options
+	);
 
     auto selected_options = get_options.getopt(argc, argv);
     if (selected_options == nullptr) {
-	get_options.print_help(stderr);
+	get_options.print_help("jcc", stderr);
 	return 1;
     }
     
-    fprintf(stderr, "Compile only: %s\n",
+    fprintf(stderr, "Compile only flag: %s\n",
 	    (selected_options->get_boolean("do-compile-only") ? "true" : "false")
 	);
+    fprintf(stderr, "Architecture %s\n",
+	    (selected_options->get_boolean("architecture") ? selected_options->get_string("architecture").c_str() : "none"));
+
     for (const auto & namearg : selected_options->get_named_arguments()) {
-	fprintf(stderr, "Named argument %s = %s\n",
-		namearg.first.c_str(),
-		namearg.second.c_str()
-	    );
+	fprintf(stderr, "Named argument %s\n",
+		namearg.first.c_str());
+	const auto & args = namearg.second;
+	for (const auto & arg : args) {
+	    fprintf(stderr, "   - %s\n", arg.c_str());
+	}
     }
     for (const auto & arg : selected_options->get_positional_arguments()) {
 	fprintf(stderr, "Positional argument %s\n",
