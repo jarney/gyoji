@@ -19,8 +19,8 @@ for TEST_FILE in ${TEST_FILES} ; do
     
     # Build the code using jcc
     ${CMAKE_BINARY_DIR}/src/cmdline/jcc \
-		       ${TEST_JCC_DIR}/${TEST_FILE}.j \
-		       ${TEST_JCC_DIR}/${TEST_FILE}.j.o
+		       -c ${TEST_JCC_DIR}/${TEST_FILE}.j \
+		       -o ${TEST_JCC_DIR}/${TEST_FILE}.j.o
     if [ $? -ne 0 ] ; then
 	echo "${TEST_FILE} failed to compile with jcc"
 	echo "FAILED"

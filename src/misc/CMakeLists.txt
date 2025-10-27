@@ -19,12 +19,14 @@ set(MISC_PUBLIC_HEADERS
     gyoji-misc/jstring.hpp
     gyoji-misc/jstring.hpp
     gyoji-misc/getopt.hpp
+    gyoji-misc/subprocess.hpp
     gyoji-misc/test.hpp
     gyoji-misc/xml.hpp
 )
 set(MISC_SOURCES
     jstring.cpp
     getopt.cpp
+    subprocess.cpp
     input-source.cpp
     input-source-file.cpp
     xml.cpp

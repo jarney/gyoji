@@ -52,8 +52,8 @@ for TEST_FILE in ${TEST_FILES} ; do
     echo "Processing ${CMAKE_SOURCE_DIR}/tests/${TEST_FILE}.j"
     
     ${JCC} \
-	${CMAKE_SOURCE_DIR}/tests/${TEST_FILE}.j \
-	${TEST_CFG_DIR}/${TEST_FILE}.o
+	-c ${CMAKE_SOURCE_DIR}/tests/${TEST_FILE}.j \
+	-o ${TEST_CFG_DIR}/${TEST_FILE}.o
     if [ $? -ne 0 ] ; then
 	failed_message="Failure failed compiling object file ${TEST_CFG_DIR}/${TEST_FILE}.o"
         failed=1
