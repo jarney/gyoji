@@ -1568,61 +1568,76 @@ FunctionDefinitionLowering::create_incdec_operation(
     //
     
     const Type *operand_type = function->tmpvar_get(operand_tmpvar);
-    size_t constant_one_tmpvar;
-    if (!create_constant_integer_one(
-	    operand_type,
-	    constant_one_tmpvar,
-	    src_ref
-	    )) {
-	return false;
-    }
-    
-    
-    size_t addresult_tmpvar = function->tmpvar_duplicate(operand_tmpvar);
-    if (is_increment) {
-	function->add_operation(
-	    current_block, 
-	    Gyoji::owned_new<OperationBinary>(
-		Operation::OP_ADD,
-		src_ref,
-		addresult_tmpvar,
-		operand_tmpvar,
-		constant_one_tmpvar
-		)
-	    );
+    if (operand_type->is_pointer()) {
+	//if (scope_tracker.is_unsafe()) {
+	//    return true;
+	//}
+	//else {
+	      compiler_context
+		  .get_errors()
+		  .add_simple_error(
+		      src_ref,
+		      "Pointer arithmetic is not yet supported, even in unsafe mode.",
+		      "Pointer arithmetic is not yet supported, even in unsafe mode."
+		      );
+	      return false;
+	//}
     }
     else {
+	size_t constant_one_tmpvar;
+	if (!create_constant_integer_one(
+		operand_type,
+		constant_one_tmpvar,
+		src_ref
+		)) {
+	    return false;
+	}
+    
+	size_t addresult_tmpvar = function->tmpvar_duplicate(operand_tmpvar);
+	if (is_increment) {
+	    function->add_operation(
+		current_block, 
+		Gyoji::owned_new<OperationBinary>(
+		    Operation::OP_ADD,
+		    src_ref,
+		    addresult_tmpvar,
+		    operand_tmpvar,
+		    constant_one_tmpvar
+		    )
+		);
+	}
+	else {
+	    function->add_operation(
+		current_block,
+		Gyoji::owned_new<OperationBinary>(
+		    Operation::OP_SUBTRACT,
+		    src_ref,
+		    addresult_tmpvar,
+		    operand_tmpvar,
+		    constant_one_tmpvar
+		    )
+		);
+	}
+	
+	// We perform a 'store' to store
+	// the value back into the variable.
+	size_t ignore_tmpvar = function->tmpvar_duplicate(operand_tmpvar);
 	function->add_operation(
 	    current_block,
 	    Gyoji::owned_new<OperationBinary>(
-		Operation::OP_SUBTRACT,
+		Operation::OP_ASSIGN,
 		src_ref,
-		addresult_tmpvar,
+		ignore_tmpvar,
 		operand_tmpvar,
-		constant_one_tmpvar
+		addresult_tmpvar
 		)
 	    );
+	// This is a post-decrement, so we return
+	// the value as it was before we incremented
+	// it.
+	returned_tmpvar = is_postfix ? operand_tmpvar : addresult_tmpvar;
+	return true;
     }
-
-    // We perform a 'store' to store
-    // the value back into the variable.
-    size_t ignore_tmpvar = function->tmpvar_duplicate(operand_tmpvar);
-    function->add_operation(
-	current_block,
-	Gyoji::owned_new<OperationBinary>(
-	    Operation::OP_ASSIGN,
-	    src_ref,
-	    ignore_tmpvar,
-	    operand_tmpvar,
-	    addresult_tmpvar
-	    )
-	);
-    
-    // This is a post-decrement, so we return
-    // the value as it was before we incremented
-    // it.
-    returned_tmpvar = is_postfix ? operand_tmpvar : addresult_tmpvar;
-    return true;
 }
 
 bool
@@ -3306,6 +3321,15 @@ FunctionDefinitionLowering::extract_from_statement_while(
     
     if (!extract_from_expression(condition_tmpvar, statement.get_expression())) {
 	return false;
+    }
+    if (!function->tmpvar_get(condition_tmpvar)->is_bool()) {
+	compiler_context
+	    .get_errors()
+	    .add_simple_error(
+		statement.get_expression().get_source_ref(),
+		"Invalid condition in while statement.",
+		std::string("Type of condition expression should be 'bool' and was ") + function->tmpvar_get(condition_tmpvar)->get_name()
+		);
     }
 
     function->add_operation(
