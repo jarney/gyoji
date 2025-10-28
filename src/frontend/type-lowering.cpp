@@ -294,7 +294,7 @@ TypeLowering::extract_from_class_method_types(
 	fptr_arguments
 	);
 
-    fprintf(stderr, "Defining method %s\n", simple_name.c_str());
+    //fprintf(stderr, "Defining method %s\n", simple_name.c_str());
     methods.insert(std::pair(simple_name, method));
     
     bool is_unsafe = method_unsafe_modifier.is_unsafe();
@@ -311,7 +311,7 @@ TypeLowering::extract_from_class_method_types(
 	    source_ref
 	    );
     }
-    fprintf(stderr, "Defining symbol %s\n", fully_qualified_name.c_str());
+    //fprintf(stderr, "Defining symbol %s\n", fully_qualified_name.c_str());
     
     mir.get_symbols().define_symbol(
 	fully_qualified_name,
@@ -439,7 +439,7 @@ TypeLowering::extract_from_class_members(Type & class_type, const ClassDefinitio
 
 	    std::string simple_name = std::string("~") + class_type.get_simple_name();
 	    std::string fully_qualified_name = class_type.get_name() + std::string("::") + simple_name;
-	    fprintf(stderr, "Extracting destructor %s %s\n", simple_name.c_str(), fully_qualified_name.c_str());
+	    //fprintf(stderr, "Extracting destructor %s %s\n", simple_name.c_str(), fully_qualified_name.c_str());
 
 	    extract_from_class_method_types(
 		class_type,

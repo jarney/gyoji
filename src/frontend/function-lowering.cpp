@@ -2317,7 +2317,6 @@ FunctionDefinitionLowering::handle_binary_operation_assignment(
 	// Should we model anonymous structures as types for the purposes of assignment?
 	else if (atype->is_composite() && btype->is_anonymous()) {
 	    if (btype->get_members().size() != btype->get_members().size()) {
-		fprintf(stderr, "Anonymous assignment error\n");
 		compiler_context
 		    .get_errors()
 		    .add_simple_error(
@@ -2331,7 +2330,6 @@ FunctionDefinitionLowering::handle_binary_operation_assignment(
 	    // codegen layer deal with making the copy.
 	}
 	else {
-	    fprintf(stderr, "Class to class assignment error %s %s.\n", atype->get_name().c_str(), btype->get_name().c_str());
 	    compiler_context
 		.get_errors()
 		.add_simple_error(
@@ -3805,16 +3803,16 @@ FunctionDefinitionLowering::undeclare_local(
 	size_t n = 0;
 	if (class_type->is_composite()) {
 	    // Look to see if a destructor is declared.
-	    fprintf(stderr, "Looking for destructor for %s\n", class_type->get_name().c_str());
-	    for (const auto & method : class_type->get_methods()) {
-		fprintf(stderr, "    Method %s\n", method.first.c_str());
-	    }
+	    //fprintf(stderr, "Looking for destructor for %s\n", class_type->get_name().c_str());
+	    //for (const auto & method : class_type->get_methods()) {
+	    //	fprintf(stderr, "    Method %s\n", method.first.c_str());
+	    //}
 	    // Where to find the leaf-node "Foo" part of the class name????
 	    std::string fully_qualified_function_name(class_type->get_name() + std::string("::~") + class_type->get_simple_name());
 	    
 	    const Gyoji::mir::Symbol *symbol = mir.get_symbols().get_symbol(fully_qualified_function_name);
 	    if (symbol != nullptr) {
-		fprintf(stderr, "Found destructor\n");
+		//fprintf(stderr, "Found destructor\n");
 		const Type *destructor_fptr_type = symbol->get_mir_type();
 
 		// Destructors take no arguments except the

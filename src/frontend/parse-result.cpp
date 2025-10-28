@@ -171,11 +171,9 @@ ParseResult::identifier_get_or_create(
 	}
 	if (namespace_entity->get_type() == NS2Entity::ENTITY_TYPE_NAMESPACE ||
 	    namespace_entity->get_type() == NS2Entity::ENTITY_TYPE_CLASS) {
-	    fprintf(stderr, "Namespace was found and is a namespace or class\n");
 	    return namespace_entity->add_identifier(simple_name, _source_ref);
 	}
 	else {
-	    fprintf(stderr, "Namespace was found but was not suitable to hold our child\n");
 	    auto error = Gyoji::owned_new<Gyoji::context::Error>(std::string("Invalid identifier") + name + std::string("."));
 	    error->add_message(_source_ref, std::string("Identifier must ") + name + std::string(" must be placed inside a namespace or class."));
 	    error->add_message(namespace_entity->get_source_ref(), std::string("Namespace is ") + namespace_part + std::string(" is not a namespace or class"));

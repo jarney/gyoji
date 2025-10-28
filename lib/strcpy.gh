@@ -1,5 +1,18 @@
 
 namespace gyoji::std::string {
     void strcpy(u8 *dst, u8* src);
+
+    class Contained {
+	~Contained();
+        u32 x;
+    };
+
+    class Container {
+	~Container();
+
+	Contained & get_contained();
+	
+        Contained contained;
+    };
 };
 

@@ -14,3 +14,16 @@ gyoji::std::string::strcpy(u8 *dst, u8* src)
         }
     }
 }
+using namespace gyoji::std::string;
+
+Container::~Container()
+{}
+
+Contained &
+Container::get_contained()
+{
+    unsafe {
+        Contained& ret = &contained;
+        return ret;
+    }
+}
