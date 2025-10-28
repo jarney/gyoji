@@ -1,0 +1,13 @@
+#pragma once
+
+namespace gyoji::std::pointers {
+    class Owned {
+        public ~Owned();
+        public void * get();
+
+        // Factory
+        static Owned create(void *_pointer);
+	
+	private void *pointer;
+    };
+};

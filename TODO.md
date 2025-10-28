@@ -4,6 +4,37 @@ This is just a big random list of things that I'd still like
 to do with the language.
 
 ## Syntax processing
+* Our next push needs to be enough 'template' support
+  to start writing containers like vector, map
+  so that we can actually start writing some 'real'
+  useful code (i.e. the compiler itself).  Without those,
+  it's going to be diffucult to actually test the
+  semantics and ergonomics of the reference safety scheme
+  and borrow checker stuff.
+
+  I suggest to start this by actually writing code for them
+  first and then reverse-engineer what's missing from the
+  compiler to make them actually work correctly.
+
+  We'll start with a simple <vector> implementation
+  and then do a HashMap which accepts a hash function
+  to compute the hash and then puts each element
+  into a <vector> for each hash bucket.
+
+  In order to do this, we'll need some copy semantics
+  for objects.
+
+* Heap-allocated objects:
+  We should have some kind of 'new' syntax to support
+  heap-allocated objects.
+
+* Smart pointers:
+  We should have some kind of heap-allocated 'owned' pointers.
+
+* Error message IDs:  We need a unique ID for each error message
+  so that we can systemtatically cover all of the error conditions
+  with tests specifically crafted to provoke them.
+
 * Build more unit-tests to verify that the syntax is what we expect and
   the operator precedence rules work correctly.
 

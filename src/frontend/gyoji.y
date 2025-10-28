@@ -775,7 +775,6 @@ type_definition
         : opt_access_modifier TYPEDEF type_specifier IDENTIFIER SEMICOLON {
                 Gyoji::frontend::namespaces::NS2Entity *ns2_entity = return_data.type_get_or_create($4->get_value(), $4->get_source_ref());
                 $4->set_ns2_entity(ns2_entity);
-		fprintf(stderr, "Defined type %s\n", $4->get_fully_qualified_name().c_str());
                 $$ = Gyoji::owned_new<Gyoji::frontend::tree::TypeDefinition>(
                                                                                std::move($1),
                                                                                std::move($2),
@@ -1460,7 +1459,7 @@ expression_primary_identifier
         : IDENTIFIER {
                 NS2Entity *ns2_entity = return_data.identifier_get_or_create($1->get_value(), true, $1->get_source_ref());
 		$1->set_ns2_entity(ns2_entity);
-#if 0
+#if DEBUG_NONTERMINALS
 		// Useful for debugging identifer/scope stuff.
 		fprintf(stderr, "Identifier %s\n", ns2_entity->get_fully_qualified_name().c_str());
 		switch (ns2_entity->get_type()) {
@@ -2384,7 +2383,6 @@ class_member_declaration
 	        $5->set_identifier_type(Gyoji::frontend::tree::Terminal::IDENTIFIER_GLOBAL_SCOPE);
 		NS2Entity *entity = return_data.identifier_get_or_create($5->get_value(), false, $5->get_source_ref());
 		$5->set_ns2_entity(entity);
-		fprintf(stderr, "Defined entity %s\n", entity->get_fully_qualified_name().c_str());
 	        auto expr = Gyoji::owned_new<Gyoji::frontend::tree::ClassMemberDeclarationMethodStatic>(
                                                                                                      std::move($1),
                                                                                                      std::move($2),
@@ -2597,7 +2595,6 @@ void Gyoji::frontend::yacc::YaccParser::error(const std::string& msg) {
     // We want to consume more context from the next few
     // lines so we can produce a good syntax error with
     // following context.
-#if 0
     size_t error_context_lines = 5;
     while (true) {
 	Gyoji::frontend::yacc::YaccParser::semantic_type lvalue;
@@ -2610,7 +2607,7 @@ void Gyoji::frontend::yacc::YaccParser::error(const std::string& msg) {
 	    break;
 	}
     }
-#endif    
+
     auto error = Gyoji::owned_new<Gyoji::context::Error>("Syntax Error");
     error->add_message(src_ref, msg);
     return_data.compiler_context.get_errors().add_error(std::move(error));
