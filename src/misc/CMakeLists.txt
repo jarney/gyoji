@@ -63,3 +63,8 @@ add_executable(test_getopt test_getopt.cpp)
 target_include_directories(test_getopt PUBLIC ${PROJECT_SOURCE_DIR}/misc)
 target_link_libraries(test_getopt gyoji-misc)
 add_test(NAME test_getopt COMMAND test_getopt)
+
+add_executable(test_subprocess test_subprocess.cpp)
+target_include_directories(test_subprocess PUBLIC ${PROJECT_SOURCE_DIR}/misc)
+target_link_libraries(test_subprocess gyoji-misc)
+add_test(NAME test_subprocess COMMAND test_subprocess)

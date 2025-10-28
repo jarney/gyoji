@@ -14,7 +14,9 @@
  */
 #include <gyoji-misc/subprocess.hpp>
 #include <unistd.h>
+#include <string.h>
 #include <sys/select.h>
+#include <sys/wait.h>
 #include <ctime>
 
 using namespace Gyoji::misc::subprocess;
@@ -24,17 +26,150 @@ using namespace Gyoji::misc::subprocess;
 
 #define BUFFER_LENGTH (512)
 
+class Buffer {
+public:
+    Buffer(
+        SubProcessWriter & _writer
+	);
+    ~Buffer();
+
+    size_t read(char *data, size_t maxlen);
+    void consume(size_t bytes);
+    bool is_eof() const;
+private:
+    char buffer[BUFFER_LENGTH];
+    size_t position;
+    size_t length;
+    bool eof;
+    SubProcessWriter & writer;
+};
+
+Buffer::Buffer(
+        SubProcessWriter & _writer
+    )
+    : position(0)
+    , length(0)
+    , eof(false)
+    , writer(_writer)
+{}
+Buffer::~Buffer()
+{}
+
+bool
+Buffer::is_eof() const
+{ return eof; }
+
+size_t
+Buffer::read(char *data, size_t maxlen)
+{
+    // We've read to the end of
+    // the buffer, so we want to refill the buffer
+    if (position == length) {
+	// Refill buffer.
+	position = 0;
+	length = 0;
+
+	// Read until we get something.
+	// If we get nothing, check for EOF
+	// otherwise keep spinning.
+	while (true) {
+	    int bytes_read = writer.read(buffer, sizeof(buffer));
+	    if (bytes_read == 0 && writer.is_eof()) {
+		eof = true;
+		return 0;
+	    }
+	    length += bytes_read;
+	    if (length != 0) {
+		break;
+	    }
+	    else {
+		// Keep spinning on the read
+		usleep(100*1000);
+	    }
+	}
+	// At this point, length != 0, so we definitely
+	// have some data to handle.  If it was EOF,
+	// we would have returned already.
+    }
+    
+    size_t bytes = std::min(maxlen, length-position);
+    memcpy(data, &buffer[position], bytes);
+    return bytes;
+}
+
+void
+Buffer::consume(size_t bytes)
+{
+    position += bytes;
+}
+//////////////////////////////////////////////
+// SubProcessReader
+//////////////////////////////////////////////
+
 SubProcessReader::SubProcessReader()
 {}
 
 SubProcessReader::~SubProcessReader()
 {}
 
+//////////////////////////////////////////////
+// SubProcessReaderFile
+//////////////////////////////////////////////
+SubProcessReaderFile::SubProcessReaderFile(int _fd)
+    : SubProcessReader()
+    , fd(_fd)
+{}
+
+SubProcessReaderFile::~SubProcessReaderFile()
+{}
+
+int
+SubProcessReaderFile::write(char *buffer, size_t bytes)
+{
+    return ::write(fd, buffer, bytes);
+}
+
+
+//////////////////////////////////////////////
+// SubProcessWriter
+//////////////////////////////////////////////
+
 SubProcessWriter::SubProcessWriter()
 {}
 
 SubProcessWriter::~SubProcessWriter()
 {}
+
+
+
+//////////////////////////////////////////////
+// SubProcessWriterEmpty
+//////////////////////////////////////////////
+
+SubProcessWriterEmpty::SubProcessWriterEmpty()
+    : SubProcessWriter()
+{}
+
+SubProcessWriterEmpty::~SubProcessWriterEmpty()
+{}
+
+int
+SubProcessWriterEmpty::read(const char *buffer, size_t bytes)
+{
+    return 0;
+}
+
+bool
+SubProcessWriterEmpty::is_eof() const
+{
+    // Signal EOF immediately
+    // because we have nothing to read.
+    return true;
+}
+
+//////////////////////////////////////////////
+// SubProcess
+//////////////////////////////////////////////
 
 SubProcess::SubProcess(
     Gyoji::owned<SubProcessReader> _stdout_reader,
@@ -49,7 +184,6 @@ SubProcess::SubProcess(
 SubProcess::~SubProcess()
 {}
 
-
 int
 SubProcess::invoke(
     std::string command_name,
@@ -57,16 +191,18 @@ SubProcess::invoke(
     std::map<std::string, std::string> environment
     ) const
 {
+    Buffer reader(*stdin_writer);
+    
     int stdin_fds[2];
     int stdout_fds[2];
     int stderr_fds[2];
     
-    pipe(stdin_fds);
-    pipe(stdout_fds);
-    pipe(stderr_fds);
-    
+    ::pipe(stdin_fds);
+    ::pipe(stdout_fds);
+    ::pipe(stderr_fds);
+
     // fork the process
-    pid_t pid = fork();
+    pid_t pid = ::fork();
     if (pid == -1) {
 	// Fork failed, we're out of memory
 	// or the OS is in a bad state.
@@ -75,14 +211,19 @@ SubProcess::invoke(
     else if (pid != 0) { // Parent
 	// Close write ends of stdout and stderr for write
 	// Close read end of stdin
-	close(stdout_fds[WRITE_END]);
-	close(stderr_fds[WRITE_END]);
-	close(stdin_fds[READ_END]);
+	::close(stdout_fds[WRITE_END]);
+	::close(stderr_fds[WRITE_END]);
+	::close(stdin_fds[READ_END]);
 
 	// Parent now has access to child read/write pipes.
 	int child_stdin = stdin_fds[WRITE_END];
+	bool child_stdin_open = true;
+	
 	int child_stdout = stdout_fds[READ_END];
+	bool child_stdout_open = true;
+	
 	int child_stderr = stderr_fds[READ_END];
+	bool child_stderr_open = true;
 
 	// TODO: This should be a giant loop.  Probably move this
 	// into another method that specifically handles the child I/O.
@@ -100,83 +241,107 @@ SubProcess::invoke(
 	// Simultaneously, parent attempts to read
 	// from stdout, stderr, capturing any output
 	// from the child.
-	fd_set rd;
-	fd_set wr;
 
-	FD_ZERO(&wr);
-	FD_SET(child_stdin, &wr);
-
-	FD_ZERO(&rd);
-	FD_SET(child_stdout, &rd);
-	FD_SET(child_stderr, &rd);
-
-	int maxfd = child_stdin;
-	maxfd = child_stdout > maxfd ? child_stdout : maxfd;
-	maxfd = child_stderr > maxfd ? child_stderr : maxfd;
-
-	struct timeval timeout;
-	timeout.tv_sec = 0;
-	timeout.tv_usec = 100*1000;
+	while (child_stdin_open ||
+	       child_stdout_open ||
+	       child_stderr_open) {
 	
-	// See what's available to read and/or write.
-	int available = select(
-	    maxfd+1,
-	    &rd,
-	    &wr,
-	    nullptr,
-	    &timeout
-	    );
-	if (FD_ISSET(child_stdin, &wr)) {
-	    // This is a non-blocking pipe
-	    // according to POSIX.
-	    // https://pubs.opengroup.org/onlinepubs/9699919799/functions/pipe.html
-	    //
-	    // We will just keep writing chunks of data
-	    // until we've reached the end of the stream
-	    // and then we'll close the FD.
+	    fd_set rd;
+	    fd_set wr;
 
-	    // TODO: We need to only read from
-	    // the reader when the read buffer is empty.  Probably
-	    // should marshal this through an intermediary,
-	    // maybe the writer itself.
-	    char buffer[BUFFER_LENGTH];
-	    size_t got_from_writer = stdin_writer->write(buffer, BUFFER_LENGTH);
-	    size_t remaining_to_write = BUFFER_LENGTH;
+	    int max_fd = -1;
+	    FD_ZERO(&wr);
+	    if (child_stdin_open) {
+		max_fd = std::max(max_fd, child_stdin);
+		FD_SET(child_stdin, &wr);
+	    }
 	    
-	    size_t wrote_to_subprocess = write(child_stdin, &buffer[BUFFER_LENGTH - remaining_to_write], got_from_writer);
-	    
-	    // on EOF, close it.
-	    // Register a callback to do the write
-	    // or at least grab a chunk of data to write.
-	    close(child_stdin);
-	}
-	if (FD_ISSET(child_stdout, &rd)) {
-	    // Reads child's stdout and
-	    // put it somewhere.
-	    // Register a callback to receive it.
-	    char buffer[BUFFER_LENGTH];
-	    size_t read_from_stdout = read(child_stdout, buffer, BUFFER_LENGTH);
-	    stdout_reader->read(buffer, read_from_stdout);
-	}
-	if (FD_ISSET(child_stderr, &rd)) {
-	    // Read child's stderr and
-	    // put it somewhere.
-	    char buffer[BUFFER_LENGTH];
-	    size_t read_from_stderr = read(child_stderr, buffer, BUFFER_LENGTH);
-	    stderr_reader->read(buffer, read_from_stderr);
-	}
-	
-	// Keep looping like this
-	// and eventually reach EOF on all of the
-	// streams.
+	    FD_ZERO(&rd);
+	    if (child_stdout_open) {
+		max_fd = std::max(max_fd, child_stdout);
+		FD_SET(child_stdout, &rd);
+	    }
+	    if (child_stderr_open) {
+		max_fd = std::max(max_fd, child_stderr);
+		FD_SET(child_stderr, &rd);
+	    }
+	    // Max fd must be >-1 here because
+	    // otherwise, at least one of child_stdout,err,in
+	    // is true.
 
-	// Finally, once all of the data has been
-	// transmitted/received, we waitpid for the child process
-	// and we can return.
-	
-	// Note that if we reach EOF, we should
-	// close the corresponding fd and
-	// stop selecting on it.
+	    // Timeout in 100ms for read.
+	    struct timeval timeout;
+	    timeout.tv_sec = 0;
+	    timeout.tv_usec = 100*1000;
+	    
+	    // See what's available to read and/or write.
+	    int available = ::select(
+		max_fd+1,
+		&rd,
+		&wr,
+		nullptr,
+		&timeout
+		);
+	    if (FD_ISSET(child_stdin, &wr)) {
+		// This is a non-blocking pipe
+		// according to POSIX.
+		// https://pubs.opengroup.org/onlinepubs/9699919799/functions/pipe.html
+		//
+		// We will just keep writing chunks of data
+		// until we've reached the end of the stream
+		// and then we'll close the FD.
+		
+		// TODO: We need to only read from
+		// the reader when the read buffer is empty.  Probably
+		// should marshal this through an intermediary,
+		// maybe the writer itself.
+		char buffer[BUFFER_LENGTH];
+		int got_from_writer = reader.read(buffer, BUFFER_LENGTH);
+		if (got_from_writer == 0 && reader.is_eof()) {
+		    // on EOF, close it.
+		    // Register a callback to do the write
+		    // or at least grab a chunk of data to write.
+		    close(child_stdin);
+		    child_stdin_open = false;
+		}
+		else {
+		    size_t wrote_to_subprocess = write(child_stdin, buffer, got_from_writer);
+		    // We successfully wrote to the subprocess,
+		    // so we can safely mark that portion of the input as
+		    // consumed.
+		    reader.consume(wrote_to_subprocess);
+		}
+	    }
+	    if (FD_ISSET(child_stdout, &rd)) {
+		// Reads child's stdout and
+		// put it somewhere.
+		// Register a callback to receive it.
+		char buffer[BUFFER_LENGTH];
+		errno = 0;
+		int read_from_stdout = ::read(child_stdout, buffer, BUFFER_LENGTH);
+		if (read_from_stdout == 0 && errno != EAGAIN) {
+		    ::close(child_stdout);
+		    child_stdout_open = false;
+		}
+		stdout_reader->write(buffer, read_from_stdout);
+	    }
+	    if (FD_ISSET(child_stderr, &rd)) {
+		// Read child's stderr and
+		// put it somewhere.
+		char buffer[BUFFER_LENGTH];
+		errno = 0;
+		int read_from_stderr = ::read(child_stderr, buffer, BUFFER_LENGTH);
+		if (read_from_stderr == 0 && errno != EAGAIN) {
+		    ::close(child_stderr);
+		    child_stderr_open = false;
+		}
+		stderr_reader->write(buffer, read_from_stderr);
+	    }
+	}
+	int exit_status;
+	::waitpid(pid, &exit_status, 0);
+
+	return WEXITSTATUS(exit_status);
     }
     else { // Child, pid == 0
 	// Close read ends of stdout and stderr

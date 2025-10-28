@@ -24,14 +24,38 @@ namespace Gyoji::misc::subprocess {
     class SubProcessReader {
     public:
 	SubProcessReader();
-	~SubProcessReader();
-	virtual size_t read(char *buffer, size_t bytes) = 0;
+	virtual ~SubProcessReader();
+	virtual int write(char *buffer, size_t bytes) = 0;
     };
     class SubProcessWriter {
     public:
 	SubProcessWriter();
-	~SubProcessWriter();
-	virtual size_t write(char *buffer, size_t bytes) = 0;
+	virtual ~SubProcessWriter();
+
+	/**
+	 * Used by the parent process to write data into a buffer
+	 * so that the subprocess has it available for read.
+	 */
+	virtual int read(const char *buffer, size_t bytes) = 0;
+	virtual bool is_eof() const = 0;
+    };
+
+    class SubProcessReaderFile : public SubProcessReader {
+    public:
+	SubProcessReaderFile(int _fd);
+	virtual ~SubProcessReaderFile();
+	int write(char *buffer, size_t bytes);
+    private:
+	int fd;
+    };
+
+    class SubProcessWriterEmpty : public SubProcessWriter {
+    public:
+	SubProcessWriterEmpty();
+	virtual ~SubProcessWriterEmpty();
+	int read(const char *buffer, size_t bytes);
+	bool is_eof() const;
+    private:
     };
     
     class SubProcess {
