@@ -64,7 +64,8 @@ parse_to_mir(std::string & path, CompilerContext & context, std::string base_fil
     auto mir =
 	Parser::parse_to_mir(
 	    context,
-	    input_source
+	    input_source,
+	    true
 	    );
     close(input);
     return mir;

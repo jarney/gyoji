@@ -14,7 +14,7 @@ int main(int argc, char **argv)
     std::vector<std::string> arguments;
     std::map<std::string, std::string> environment;
 //    int rc = lsproc.invoke("/home/jona/NetBeansProjects/jos/compiler/jlang2/test-shell.sh",
-    lsproc.invoke("ls",
+    int rc = lsproc.invoke("ls",
 		  arguments,
 		  environment
 	);

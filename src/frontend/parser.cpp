@@ -57,7 +57,8 @@ Parser::parse(
 Gyoji::owned<MIR>
 Parser::parse_to_mir(
     Gyoji::context::CompilerContext & _compiler_context,
-    Gyoji::misc::InputSource & _input_source
+    Gyoji::misc::InputSource & _input_source,
+    bool verbose
     )
 {
     
@@ -77,9 +78,11 @@ Parser::parse_to_mir(
 
     Gyoji::mir::operation_static_init();
 
-    fprintf(stderr, "============================\n");
-    fprintf(stderr, "Type and symbol table resolution pass\n");
-    fprintf(stderr, "============================\n");
+    if (verbose) {
+	fprintf(stderr, "============================\n");
+	fprintf(stderr, "Type and symbol table resolution pass\n");
+	fprintf(stderr, "============================\n");
+    }
     // First, resolve all of the type definitions.
     // Also at this stage, we resolve the function declarations.
     TypeLowering type_lowering(_compiler_context,
@@ -87,9 +90,11 @@ Parser::parse_to_mir(
 			       *mir);
     type_lowering.lower();
 
-    fprintf(stderr, "============================\n");
-    fprintf(stderr, "Function resolution pass\n");
-    fprintf(stderr, "============================\n");
+    if (verbose) {
+	fprintf(stderr, "============================\n");
+	fprintf(stderr, "Function resolution pass\n");
+	fprintf(stderr, "============================\n");
+    }
     FunctionLowering function_lowering(_compiler_context,
 				       *parse_result,
 				       *mir,

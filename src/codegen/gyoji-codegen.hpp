@@ -37,11 +37,15 @@ namespace Gyoji::codegen {
 
 	int get_optimization_level() const;
 	void set_optimization_level(int level);
+
+	bool get_verbose() const;
+	void set_verbose(bool _verbose);
 	
     private:
 	bool output_llvm_ir;
 	std::string output_filename;
 	int optimization_level;
+	bool verbose;
     };
     
     /**

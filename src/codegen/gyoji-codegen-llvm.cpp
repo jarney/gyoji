@@ -373,7 +373,9 @@ CodeGeneratorLLVMContext::generate()
     
     const Functions & functions = mir.get_functions();
     for (auto const & function : functions.get_functions()) {
-	fprintf(stderr, " - Generating function %s\n", function->get_name().c_str());
+	if (options.get_verbose()) {
+	    fprintf(stderr, " - Generating function %s\n", function->get_name().c_str());
+	}
 	generate_function(*function);
     }
 }
@@ -1828,8 +1830,10 @@ CodeGeneratorLLVMContext::output(const std::string & filename)
     
     pass.run(*TheModule);
     dest.flush();
-    
-    outs() << "Wrote " << filename << "\n";
+
+    if (options.get_verbose()) {
+	outs() << "Wrote " << filename << "\n";
+    }
     
     return 0;
 }

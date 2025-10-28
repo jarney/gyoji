@@ -61,3 +61,11 @@ CodeGeneratorLLVMOptions::set_optimization_level(int level)
 int
 CodeGeneratorLLVMOptions::get_optimization_level() const
 { return optimization_level; }
+
+bool
+CodeGeneratorLLVMOptions::get_verbose() const
+{ return verbose; }
+
+void
+CodeGeneratorLLVMOptions::set_verbose(bool _verbose)
+{ verbose = _verbose; }

@@ -1,0 +1,4 @@
+
+namespace gyoji::std::string {
+	  void strcpy(u8 *dst, u8* src, u32 len);
+};

@@ -359,9 +359,11 @@ SubProcess::invoke(
 	
 	// Exec the process we want to run.
 	const char *cmd = command_name.c_str();
-	const char * args[arguments.size()+1];
+	const char * args[arguments.size()+2];
 
-	size_t ai = 0;
+	args[0] = cmd;
+	
+	size_t ai = 1;
 	for (const auto & arg : arguments) {
 	    args[ai++] = arg.c_str();
 	}

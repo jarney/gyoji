@@ -15,6 +15,7 @@
 #include <gyoji-frontend.hpp>
 #include <gyoji-misc/input-source-file.hpp>
 #include <gyoji-misc/getopt.hpp>
+#include <gyoji-misc/subprocess.hpp>
 #include <gyoji-analysis.hpp>
 #include <gyoji-codegen.hpp>
 #include <cstring>
@@ -25,6 +26,7 @@ using namespace Gyoji::frontend;
 using namespace Gyoji::mir;
 using namespace Gyoji::analysis;
 using namespace Gyoji::misc::cmdline;
+using namespace Gyoji::misc::subprocess;
 
 class JCCOptions {
 public:
@@ -53,6 +55,9 @@ public:
     bool get_output_mir() const;
     void set_output_mir(bool _output_mir);
 
+    bool get_verbose() const;
+    void set_verbose(bool _verbose);
+    
     /**
      * Whether to dump the LLVM IR representation.
      */
@@ -61,14 +66,19 @@ public:
 
     int get_optimization_level() const;
     void set_optimization_level(int level);
+
+    const std::vector<std::string> & get_include_directories() const;
+    void set_include_directories(std::vector<std::string> _include_directories);
     
 private:
     std::string source_filename;
     std::string output_filename;
     bool compile_only;
     bool output_mir;
+    bool verbose;
     bool output_llvm_ir;
     int optimization_level; // 0,1,2,3
+    std::vector<std::string> include_directories;
 };
 
 class JCCGetopt {
@@ -78,6 +88,8 @@ public:
     static const std::string JCC_OPTION_OUTPUT_LLVM_IR;
     static const std::string JCC_OPTION_OPTIMIZATION_LEVEL;
     static const std::string JCC_OPTION_OUTPUT_FILENAME;
+    static const std::string JCC_OPTION_INCLUDE_DIRECTORY;
+    static const std::string JCC_OPTION_VERBOSE;
 
     static Gyoji::owned<JCCOptions> getopt(int argc, char **argv);
 };
@@ -87,6 +99,8 @@ const std::string JCCGetopt::JCC_OPTION_OUTPUT_MIR = "output-mir";
 const std::string JCCGetopt::JCC_OPTION_OUTPUT_LLVM_IR = "output-llvm-ir";
 const std::string JCCGetopt::JCC_OPTION_OPTIMIZATION_LEVEL = "optimization-level";
 const std::string JCCGetopt::JCC_OPTION_OUTPUT_FILENAME = "output-filename";
+const std::string JCCGetopt::JCC_OPTION_INCLUDE_DIRECTORY = "include-directory";
+const std::string JCCGetopt::JCC_OPTION_VERBOSE = "verbose";
 
 JCCOptions::JCCOptions()
 {}
@@ -127,6 +141,14 @@ JCCOptions::get_output_mir() const
 { return output_mir; }
 
 bool
+JCCOptions::get_verbose() const
+{ return verbose; }
+
+void
+JCCOptions::set_verbose(bool _verbose)
+{ verbose = _verbose; }
+
+bool
 JCCOptions::get_output_llvm_ir() const
 { return output_llvm_ir; }
 
@@ -141,6 +163,14 @@ JCCOptions::get_optimization_level() const
 void
 JCCOptions::set_optimization_level(int level)
 { optimization_level = level; }
+
+const std::vector<std::string> &
+JCCOptions::get_include_directories() const
+{ return include_directories; }
+
+void
+JCCOptions::set_include_directories(std::vector<std::string> _include_directories)
+{ include_directories = _include_directories; }
 
 Gyoji::owned<JCCOptions>
 JCCGetopt::getopt(int argc, char **argv)
@@ -171,6 +201,14 @@ JCCGetopt::getopt(int argc, char **argv)
 	    )
 	);
     options.push_back(
+	Option::create_boolean(
+	    JCC_OPTION_VERBOSE,
+	    "v",
+	    "verbose",
+	    "Verbose output for debugging compiler"
+	    )
+	);
+    options.push_back(
 	Option::create_string(
 	    JCC_OPTION_OPTIMIZATION_LEVEL,
 	    "O",
@@ -184,6 +222,14 @@ JCCGetopt::getopt(int argc, char **argv)
 	    "o",
 	    "output",
 	    "Name of the output file to produce"
+	    )
+	);
+    options.push_back(
+	Option::create_string_list(
+	    JCC_OPTION_INCLUDE_DIRECTORY,
+	    "I",
+	    "include",
+	    "Include directory"
 	    )
 	);
     std::vector<std::pair<std::string, std::string>> positional_options;
@@ -212,9 +258,12 @@ JCCGetopt::getopt(int argc, char **argv)
     
     Gyoji::owned<JCCOptions> jcc_options = Gyoji::owned_new<JCCOptions>();
     
+    const auto & named_arguments = selected_options->get_named_arguments();
+    
     jcc_options->set_source_filename(positional_arguments.at(0));
     jcc_options->set_compile_only(selected_options->get_boolean(JCC_OPTION_COMPILE_ONLY));
     jcc_options->set_output_mir(selected_options->get_boolean(JCC_OPTION_OUTPUT_MIR));
+    jcc_options->set_verbose(selected_options->get_boolean(JCC_OPTION_VERBOSE));
     jcc_options->set_output_llvm_ir(selected_options->get_boolean(JCC_OPTION_OUTPUT_LLVM_IR));
 
     if (selected_options->get_boolean(JCC_OPTION_OPTIMIZATION_LEVEL)) {
@@ -247,11 +296,14 @@ JCCGetopt::getopt(int argc, char **argv)
     
     if (selected_options->get_boolean(JCC_OPTION_OUTPUT_FILENAME)) {
 	jcc_options->set_output_filename(selected_options->get_string(JCC_OPTION_OUTPUT_FILENAME));
-	fprintf(stderr, "%s was set as output\n", jcc_options->get_output_filename().c_str());
     }
     else {
-	fprintf(stderr, "A.out was set as output\n");
 	jcc_options->set_output_filename("a.out");
+    }
+
+    const auto & include_it = named_arguments.find(JCC_OPTION_INCLUDE_DIRECTORY);
+    if (include_it != named_arguments.end()) {
+        jcc_options->set_include_directories(include_it->second);
     }
     
     return jcc_options;
@@ -267,8 +319,51 @@ int main(int argc, char **argv)
 
     const std::string & input_filename = options->get_source_filename();
     const std::string & output_filename = options->get_output_filename();
+
+    std::string preprocessed_filename = input_filename + std::string(".preproc");
+    int preprocessed_fd = ::open(preprocessed_filename.c_str(), O_CREAT | O_WRONLY, 0777);
     
-    int input = open(input_filename.c_str(), O_RDONLY);
+    // Call the preprocessor
+    SubProcess preprocessor(
+	std::move(Gyoji::owned_new<SubProcessReaderFile>(preprocessed_fd)),
+	std::move(Gyoji::owned_new<SubProcessReaderFile>(STDERR_FILENO)),
+	std::move(Gyoji::owned_new<SubProcessWriterEmpty>())
+	);
+
+    std::vector<std::string> arguments;
+    std::map<std::string, std::string> environment;
+
+    // Treat input as 'c'
+    // otherwise the .g suffix
+    // will imply that it's something for the linker.
+    arguments.push_back("--language");
+    arguments.push_back("c");
+
+    // Tell it we want to preprocess the file.
+    arguments.push_back("-E");
+
+    // TODO: wire this up to our command-line so
+    // we can specify include dirs directly.
+    for (const auto & include_dir : options->get_include_directories()) {
+	arguments.push_back("-I");
+	arguments.push_back(include_dir);
+    }
+
+    arguments.push_back(input_filename);
+    
+    int rc = preprocessor.invoke(
+	"clang",
+	arguments,
+	environment
+	);
+    if (rc != 0) {
+	fprintf(stderr, "Preprocessor failed\n");
+	return rc;
+    }
+	
+    
+//    int input = open(input_filename.c_str(), O_RDONLY);
+    int input = open(preprocessed_filename.c_str(), O_RDONLY);
     if (input == -1) {
 	fprintf(stderr, "Cannot open file %s\n", input_filename.c_str());
 	return -1;
@@ -280,9 +375,13 @@ int main(int argc, char **argv)
     Gyoji::owned<MIR> mir =
 	Parser::parse_to_mir(
 	    context,
-	    input_source
+	    input_source,
+	    options->get_verbose()
 	    );
     close(input);
+
+    // Remove the preprocessor temporary file.
+    unlink(preprocessed_filename.c_str());
 
     // Dump our MIR
     // for debugging/review purposes
@@ -314,9 +413,11 @@ int main(int argc, char **argv)
     analysis_passes.push_back(Gyoji::owned_new<AnalysisPassBorrowChecker>(context));
 
     for (const auto & analysis_pass : analysis_passes) {
-	fprintf(stderr, "============================\n");
-	fprintf(stderr, "Analysis pass %s\n", analysis_pass->get_name().c_str());
-	fprintf(stderr, "============================\n");
+	if (options->get_verbose()) {
+	    fprintf(stderr, "============================\n");
+	    fprintf(stderr, "Analysis pass %s\n", analysis_pass->get_name().c_str());
+	    fprintf(stderr, "============================\n");
+	}
 	analysis_pass->check(*mir);
     }
 
@@ -325,9 +426,11 @@ int main(int argc, char **argv)
 	return -1;
     }
 
-    fprintf(stderr, "============================\n");
-    fprintf(stderr, "Code Generation Pass\n");
-    fprintf(stderr, "============================\n");
+    if (options->get_verbose()) {
+	fprintf(stderr, "============================\n");
+	fprintf(stderr, "Code Generation Pass\n");
+	fprintf(stderr, "============================\n");
+    }
     // This leaks memory. The code-generation
     // stage is a bit problematic
     // because we're not really cleaning up the
@@ -337,6 +440,7 @@ int main(int argc, char **argv)
     llvm_options.set_output_llvm_ir(options->get_output_llvm_ir());
     llvm_options.set_output_filename(output_filename);
     llvm_options.set_optimization_level(options->get_optimization_level());
+    llvm_options.set_verbose(options->get_verbose());
     
     generate_code(context, *mir, llvm_options);
     

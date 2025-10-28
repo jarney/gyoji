@@ -70,7 +70,8 @@ namespace Gyoji::frontend {
 	 */
 	static Gyoji::owned<Gyoji::mir::MIR> parse_to_mir(
 	    Gyoji::context::CompilerContext & _compiler_context,
-	    Gyoji::misc::InputSource & _input_source
+	    Gyoji::misc::InputSource & _input_source,
+	    bool verbose
 	    );
     };
     
