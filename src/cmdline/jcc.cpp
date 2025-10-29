@@ -409,7 +409,7 @@ int main(int argc, char **argv)
     analysis_passes.push_back(Gyoji::owned_new<AnalysisPassTypeResolution>(context));
     analysis_passes.push_back(Gyoji::owned_new<AnalysisPassUnreachable>(context));
     analysis_passes.push_back(Gyoji::owned_new<AnalysisPassReturnValues>(context));
-    analysis_passes.push_back(Gyoji::owned_new<AnalysisPassUseBeforeAssignment>(context));
+//    analysis_passes.push_back(Gyoji::owned_new<AnalysisPassUseBeforeAssignment>(context));
     analysis_passes.push_back(Gyoji::owned_new<AnalysisPassBorrowChecker>(context));
 
     for (const auto & analysis_pass : analysis_passes) {

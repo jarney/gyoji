@@ -852,20 +852,28 @@ CodeGeneratorLLVMContext::generate_operation_add(
     size_t b = operation.get_b();
     const Gyoji::mir::Type *atype = mir_function.tmpvar_get(a);
     const Gyoji::mir::Type *btype = mir_function.tmpvar_get(b);
-    if (!atype->is_numeric() || !btype->is_numeric()) {
+    if (  (!atype->is_numeric() && !atype->is_pointer() )
+	|| !btype->is_numeric()) {
 	compiler_context
 	    .get_errors()
 	    .add_simple_error(
 		operation.get_source_ref(),
 		"Compiler bug! Invalid operand for add operator.",
-		std::string("Invalid operands for add operation.  Operand must be a numeric type, but were ") + atype->get_name() + std::string(" and ") + btype->get_name()
+		std::string("Invalid operands for add operation.  Operand must be two numerics or a pointer and a numeric type, but were ") + atype->get_name() + std::string(" and ") + btype->get_name()
 		);
 	return;
     }
     llvm::Value *value_a = tmp_values[a];
     llvm::Value *value_b = tmp_values[b];
 
-    if (atype->is_integer() && btype->is_integer()) {
+    if (atype->is_pointer() && btype->is_integer()) {
+	llvm::Type *llvm_array_element_type = types[atype->get_pointer_target()->get_name()];
+	std::vector<llvm::Value *> indices;
+	indices.push_back(value_b);
+	llvm::Value *addressofelement = Builder->CreateInBoundsGEP(llvm_array_element_type, value_a, indices);
+	tmp_values.insert(std::pair(operation.get_result(), addressofelement));
+    }
+    else if (atype->is_integer() && btype->is_integer()) {
 	llvm::Value *sum = Builder->CreateAdd(value_a, value_b);
 	tmp_values.insert(std::pair(operation.get_result(), sum));
     }
@@ -908,6 +916,14 @@ CodeGeneratorLLVMContext::generate_operation_subtract(
     llvm::Value *value_a = tmp_values[a];
     llvm::Value *value_b = tmp_values[b];
 
+    if (atype->is_pointer() && btype->is_integer()) {
+	llvm::Type *llvm_array_element_type = types[atype->get_pointer_target()->get_name()];
+	std::vector<llvm::Value *> indices;
+	llvm::Value * negative_index = Builder->CreateNeg(value_b);
+	indices.push_back(negative_index);
+	llvm::Value *addressofelement = Builder->CreateInBoundsGEP(llvm_array_element_type, value_a, indices);
+	tmp_values.insert(std::pair(operation.get_result(), addressofelement));
+    }
     if (atype->is_integer() && btype->is_integer()) {
 	llvm::Value *sum = Builder->CreateSub(value_a, value_b);
 	tmp_values.insert(std::pair(operation.get_result(), sum));

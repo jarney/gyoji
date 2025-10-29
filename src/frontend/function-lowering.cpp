@@ -224,7 +224,7 @@ FunctionDefinitionLowering::lower()
     // in order to limit the damage the programmer can potentially do in
     // leaking the 'this' pointer elsewhere, particularly in a destructor.
     if (is_method() && !is_static) {
-	class_pointer_type = mir.get_types().get_pointer_to(class_type, function_definition.get_source_ref());
+	class_pointer_type = mir.get_types().get_reference_to(class_type, function_definition.get_source_ref());
 	std::string this_arg_name("<this>");
 	FunctionArgument arg(this_arg_name, class_pointer_type,
 			     function_definition.get_source_ref(),
@@ -1300,7 +1300,7 @@ FunctionDefinitionLowering::extract_from_expression_postfix_function_call(
 		    )
 		);
 	    
-	    const Type *this_pointer_type = mir.get_types().get_pointer_to(class_type, expression.get_source_ref());
+	    const Type *this_pointer_type = mir.get_types().get_reference_to(class_type, expression.get_source_ref());
 	    size_t this_pointer_tmpvar = function->tmpvar_define(this_pointer_type);
 	    function->add_operation(
 		current_block,
@@ -1407,7 +1407,7 @@ FunctionDefinitionLowering::extract_from_expression_postfix_dot(
 	    return false;
 	}
 	
-	const Type * class_pointer_type = mir.get_types().get_pointer_to(class_type, expression.get_source_ref());
+	const Type * class_pointer_type = mir.get_types().get_reference_to(class_type, expression.get_source_ref());
 
 	size_t class_pointer_tmpvar = function->tmpvar_define(class_pointer_type);
 	function->add_operation(
@@ -1568,23 +1568,19 @@ FunctionDefinitionLowering::create_incdec_operation(
     //
     
     const Type *operand_type = function->tmpvar_get(operand_tmpvar);
+    size_t constant_one_tmpvar;
+    
     if (operand_type->is_pointer()) {
-	//if (scope_tracker.is_unsafe()) {
-	//    return true;
-	//}
-	//else {
-	      compiler_context
-		  .get_errors()
-		  .add_simple_error(
-		      src_ref,
-		      "Pointer arithmetic is not yet supported, even in unsafe mode.",
-		      "Pointer arithmetic is not yet supported, even in unsafe mode."
-		      );
-	      return false;
-	//}
+	const Type *index_type = mir.get_types().get_type("u32");
+	if (!create_constant_integer_one(
+		index_type,
+		constant_one_tmpvar,
+		src_ref
+		)) {
+	    return false;
+	}
     }
     else {
-	size_t constant_one_tmpvar;
 	if (!create_constant_integer_one(
 		operand_type,
 		constant_one_tmpvar,
@@ -1592,52 +1588,52 @@ FunctionDefinitionLowering::create_incdec_operation(
 		)) {
 	    return false;
 	}
-    
-	size_t addresult_tmpvar = function->tmpvar_duplicate(operand_tmpvar);
-	if (is_increment) {
-	    function->add_operation(
-		current_block, 
-		Gyoji::owned_new<OperationBinary>(
-		    Operation::OP_ADD,
-		    src_ref,
-		    addresult_tmpvar,
-		    operand_tmpvar,
-		    constant_one_tmpvar
-		    )
-		);
-	}
-	else {
-	    function->add_operation(
-		current_block,
-		Gyoji::owned_new<OperationBinary>(
+    }
+    size_t addresult_tmpvar = function->tmpvar_define(operand_type);
+    if (is_increment) {
+	function->add_operation(
+	    current_block, 
+	    Gyoji::owned_new<OperationBinary>(
+		Operation::OP_ADD,
+		src_ref,
+		addresult_tmpvar,
+		operand_tmpvar,
+		constant_one_tmpvar
+		)
+	    );
+    }
+    else {
+	function->add_operation(
+	    current_block,
+	    Gyoji::owned_new<OperationBinary>(
 		    Operation::OP_SUBTRACT,
 		    src_ref,
 		    addresult_tmpvar,
 		    operand_tmpvar,
 		    constant_one_tmpvar
-		    )
-		);
-	}
-	
-	// We perform a 'store' to store
-	// the value back into the variable.
-	size_t ignore_tmpvar = function->tmpvar_duplicate(operand_tmpvar);
-	function->add_operation(
-	    current_block,
-	    Gyoji::owned_new<OperationBinary>(
-		Operation::OP_ASSIGN,
-		src_ref,
-		ignore_tmpvar,
-		operand_tmpvar,
-		addresult_tmpvar
 		)
 	    );
-	// This is a post-decrement, so we return
-	// the value as it was before we incremented
-	// it.
-	returned_tmpvar = is_postfix ? operand_tmpvar : addresult_tmpvar;
-	return true;
     }
+    
+    // We perform a 'store' to store
+    // the value back into the variable.
+    size_t ignore_tmpvar = function->tmpvar_duplicate(operand_tmpvar);
+    function->add_operation(
+	current_block,
+	Gyoji::owned_new<OperationBinary>(
+	    Operation::OP_ASSIGN,
+	    src_ref,
+	    ignore_tmpvar,
+	    operand_tmpvar,
+	    addresult_tmpvar
+	    )
+	);
+    // This is a post-decrement, so we return
+    // the value as it was before we incremented
+    // it.
+    returned_tmpvar = is_postfix ? operand_tmpvar : addresult_tmpvar;
+    return true;
+    
 }
 
 bool
@@ -1695,7 +1691,7 @@ FunctionDefinitionLowering::extract_from_expression_unary_prefix(
         break;
     case ExpressionUnaryPrefix::ADDRESSOF:
         {
-	const Type * pointer_to_operand_type = mir.get_types().get_pointer_to(operand_type, expression.get_source_ref());
+	const Type * pointer_to_operand_type = mir.get_types().get_reference_to(operand_type, expression.get_source_ref());
 	returned_tmpvar = function->tmpvar_define(pointer_to_operand_type);
 	function->add_operation(
 	    current_block,
@@ -2292,23 +2288,6 @@ FunctionDefinitionLowering::handle_binary_operation_assignment(
 			);
 		return false;
 	    }
-	}
-	// If we're assigning a reference to anything else,
-	// we're 'borrowing' from that thing.
-	// Only thing is, we have to do the 'addressof' here.
-	else if (atype->is_reference()) {
-	    const Type *variable_pointer_type = mir.get_types().get_pointer_to(btype, _src_ref);
-	    size_t variable_pointer_tmpvar = function->tmpvar_define(variable_pointer_type);
-	    function->add_operation(
-		current_block,
-		Gyoji::owned_new<OperationUnary>(
-		    Operation::OP_ADDRESSOF,
-		    _src_ref,
-		    variable_pointer_tmpvar,
-		    b_tmpvar
-		    )
-		);
-	    b_tmpvar = variable_pointer_tmpvar;
 	}
 	else if (atype->is_pointer() && btype->is_reference()) {
 	    // Nothing to do.  This is a valid assignment
@@ -3833,7 +3812,7 @@ FunctionDefinitionLowering::undeclare_local(
 		location++;
 		n++;
 		
-		const Type *variable_pointer_type = mir.get_types().get_pointer_to(class_type, src_ref);
+		const Type *variable_pointer_type = mir.get_types().get_reference_to(class_type, src_ref);
 		size_t variable_pointer_tmpvar = function->tmpvar_define(variable_pointer_type);
 		function->insert_operation(
 		    basic_block_id,

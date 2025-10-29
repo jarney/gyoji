@@ -1,0 +1,227 @@
+Types:
+    <anonymous_structure>{void*} : anonymous structure {
+        pointer : void*
+    }
+    bool : primitive
+    f32 : primitive
+    f64 : primitive
+    gyoji::std::pointers::Owned : class {
+        pointer : void*
+        create : gyoji::std::pointers::Owned
+            ret gyoji::std::pointers::Owned
+            arg void*
+        do_create : gyoji::std::pointers::Owned
+            ret gyoji::std::pointers::Owned
+        get : gyoji::std::pointers::Owned
+            ret void*
+            arg gyoji::std::pointers::Owned&
+        ~Owned : gyoji::std::pointers::Owned
+            ret void
+            arg gyoji::std::pointers::Owned&
+    }
+    gyoji::std::pointers::Owned& : reference to gyoji::std::pointers::Owned
+    gyoji::std::pointers::Owned(*)() : function-pointer gyoji::std::pointers::Owned(*)()
+    gyoji::std::pointers::Owned(*)(gyoji::std::pointers::Owned*) : function-pointer gyoji::std::pointers::Owned(*)(gyoji::std::pointers::Owned*)
+    gyoji::std::pointers::Owned(*)(gyoji::std::pointers::Owned*,void*) : function-pointer gyoji::std::pointers::Owned(*)(gyoji::std::pointers::Owned*,void*)
+    gyoji::std::pointers::Owned(*)(void*) : function-pointer gyoji::std::pointers::Owned(*)(void*)
+    gyoji::std::pointers::Owned* : pointer to gyoji::std::pointers::Owned
+    i16 : primitive
+    i32 : primitive
+    i64 : primitive
+    i8 : primitive
+    u16 : primitive
+    u32 : primitive
+    u32(*)(u32,u8**) : function-pointer u32(*)(u32,u8**)
+    u32(*)(u8*) : function-pointer u32(*)(u8*)
+    u64 : primitive
+    u8 : primitive
+    u8* : pointer to u8
+    u8** : pointer to u8*
+    void : primitive
+    void(*)(gyoji::std::pointers::Owned&) : function-pointer void(*)(gyoji::std::pointers::Owned&)
+    void(*)(gyoji::std::pointers::Owned*) : function-pointer void(*)(gyoji::std::pointers::Owned*)
+    void(*)(u32,u8*,u32) : function-pointer void(*)(u32,u8*,u32)
+    void(*)(u8*) : function-pointer void(*)(u8*)
+    void(*)(void*) : function-pointer void(*)(void*)
+    void* : pointer to void
+    void*(*)(gyoji::std::pointers::Owned&) : function-pointer void*(*)(gyoji::std::pointers::Owned&)
+    void*(*)(gyoji::std::pointers::Owned*) : function-pointer void*(*)(gyoji::std::pointers::Owned*)
+    void*(*)(u64) : function-pointer void*(*)(u64)
+Symbol Table:
+    do_write : static function void(*)(u8*)
+    free : static function void(*)(void*)
+    gyoji::std::pointers::Owned::create : static function gyoji::std::pointers::Owned(*)(void*)
+    gyoji::std::pointers::Owned::do_create : static function gyoji::std::pointers::Owned(*)()
+    gyoji::std::pointers::Owned::get : member method void*(*)(gyoji::std::pointers::Owned&)
+    gyoji::std::pointers::Owned::~Owned : member destructor void(*)(gyoji::std::pointers::Owned&)
+    main : static function u32(*)(u32,u8**)
+    malloc : static function void*(*)(u64)
+    strlen : static function u32(*)(u8*)
+    write : static function void(*)(u32,u8*,u32)
+Function Definitions
+    do_write
+        return-value : void
+        arg buf : u8*
+    temporary variables
+        _0 : void(*)(u32,u8*,u32)
+        _1 : u32
+        _2 : u8*
+        _3 : u32(*)(u8*)
+        _4 : u8*
+        _5 : u32
+        _6 : void
+    {
+        BB0:
+            _0 = symbol ( write  )
+            _1 = literal-int ( 0u32 )
+            _2 = load ( buf u8* )
+            _3 = symbol ( strlen  )
+            _4 = load ( buf u8* )
+            _5 = function-call ( _3 _4 )
+            _6 = function-call ( _0 _1 _2 _5 )
+            undeclare ( buf )
+            return-void
+    }
+    gyoji::std::pointers::Owned::~Owned
+        return-value : void
+        arg <this> : gyoji::std::pointers::Owned&
+    temporary variables
+        _0 : void(*)(void*)
+        _1 : gyoji::std::pointers::Owned&
+        _2 : gyoji::std::pointers::Owned
+        _3 : void*
+        _4 : void
+        _5 : void(*)(u8*)
+        _6 : u8*
+        _7 : void
+    {
+        BB0:
+            _0 = symbol ( free  )
+            _1 = load ( <this> gyoji::std::pointers::Owned& )
+            _2 = dereference ( _1 )
+            _3 = dot ( _2 pointer )
+            _4 = function-call ( _0 _3 )
+            _5 = symbol ( do_write  )
+            _6 = literal-string ( "Freeing pointer\n ")
+            _7 = function-call ( _5 _6 )
+            return-void
+    }
+    gyoji::std::pointers::Owned::create
+        return-value : gyoji::std::pointers::Owned
+        arg p : void*
+    temporary variables
+        _0 : gyoji::std::pointers::Owned
+        _1 : void*
+        _2 : <anonymous_structure>{void*}
+        _3 : gyoji::std::pointers::Owned
+        _4 : gyoji::std::pointers::Owned
+        _5 : gyoji::std::pointers::Owned
+        _6 : gyoji::std::pointers::Owned&
+        _7 : void(*)(gyoji::std::pointers::Owned&)
+        _8 : void
+    {
+        BB0:
+            declare ( pointer gyoji::std::pointers::Owned )
+            _0 = load ( pointer gyoji::std::pointers::Owned )
+            _1 = load ( p void* )
+            _2 = anonymous-structure (pointer: _1 )
+            _3 = store ( _0 _2 )
+            _4 = load ( pointer gyoji::std::pointers::Owned )
+            _5 = load ( pointer gyoji::std::pointers::Owned )
+            _6 = addressof ( _5 )
+            _7 = symbol ( gyoji::std::pointers::Owned::~Owned  )
+            _8 = destructor ( _7 _6 )
+            undeclare ( pointer )
+            undeclare ( p )
+            return ( _4 )
+    }
+    gyoji::std::pointers::Owned::do_create
+        return-value : gyoji::std::pointers::Owned
+    temporary variables
+        _0 : gyoji::std::pointers::Owned(*)(void*)
+        _1 : void*(*)(u64)
+        _2 : u64
+        _3 : void*
+        _4 : gyoji::std::pointers::Owned
+    {
+        BB0:
+            _0 = symbol ( gyoji::std::pointers::Owned::create  )
+            _1 = symbol ( malloc  )
+            _2 = literal-int ( 32u64 )
+            _3 = function-call ( _1 _2 )
+            _4 = function-call ( _0 _3 )
+            return ( _4 )
+    }
+    gyoji::std::pointers::Owned::get
+        return-value : void*
+        arg <this> : gyoji::std::pointers::Owned&
+    temporary variables
+        _0 : gyoji::std::pointers::Owned&
+        _1 : gyoji::std::pointers::Owned
+        _2 : void*
+    {
+        BB0:
+            _0 = load ( <this> gyoji::std::pointers::Owned& )
+            _1 = dereference ( _0 )
+            _2 = dot ( _1 pointer )
+            return ( _2 )
+    }
+    main
+        return-value : u32
+        arg argc : u32
+        arg argv : u8**
+    temporary variables
+        _0 : void(*)(u8*)
+        _1 : u8*
+        _2 : void
+        _3 : gyoji::std::pointers::Owned
+        _4 : void*(*)(u64)
+        _5 : u64
+        _6 : void*
+        _7 : <anonymous_structure>{void*}
+        _8 : gyoji::std::pointers::Owned
+        _9 : gyoji::std::pointers::Owned&
+        _10 : gyoji::std::pointers::Owned
+        _11 : gyoji::std::pointers::Owned&
+        _12 : gyoji::std::pointers::Owned&
+        _13 : gyoji::std::pointers::Owned&
+        _14 : gyoji::std::pointers::Owned&
+        _15 : gyoji::std::pointers::Owned&
+        _16 : u32
+        _17 : gyoji::std::pointers::Owned
+        _18 : gyoji::std::pointers::Owned&
+        _19 : void(*)(gyoji::std::pointers::Owned&)
+        _20 : void
+    {
+        BB0:
+            _0 = symbol ( do_write  )
+            _1 = literal-string ( "Allocating pointer\n ")
+            _2 = function-call ( _0 _1 )
+            declare ( ptr gyoji::std::pointers::Owned )
+            _3 = load ( ptr gyoji::std::pointers::Owned )
+            _4 = symbol ( malloc  )
+            _5 = literal-int ( 32u64 )
+            _6 = function-call ( _4 _5 )
+            _7 = anonymous-structure (pointer: _6 )
+            _8 = store ( _3 _7 )
+            declare ( pref gyoji::std::pointers::Owned& )
+            _9 = load ( pref gyoji::std::pointers::Owned& )
+            _10 = load ( ptr gyoji::std::pointers::Owned )
+            _11 = addressof ( _10 )
+            _12 = store ( _9 _11 )
+            declare ( another gyoji::std::pointers::Owned& )
+            _13 = load ( another gyoji::std::pointers::Owned& )
+            _14 = load ( pref gyoji::std::pointers::Owned& )
+            _15 = store ( _13 _14 )
+            _16 = literal-int ( 0u32 )
+            undeclare ( another )
+            undeclare ( pref )
+            _17 = load ( ptr gyoji::std::pointers::Owned )
+            _18 = addressof ( _17 )
+            _19 = symbol ( gyoji::std::pointers::Owned::~Owned  )
+            _20 = destructor ( _19 _18 )
+            undeclare ( ptr )
+            undeclare ( argv )
+            undeclare ( argc )
+            return ( _16 )
+    }

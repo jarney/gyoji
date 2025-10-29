@@ -1,0 +1,204 @@
+Types:
+    bool : primitive
+    f32 : primitive
+    f64 : primitive
+    i16 : primitive
+    i32 : primitive
+    i64 : primitive
+    i8 : primitive
+    u16 : primitive
+    u32 : primitive
+    u32(*)(u32,u8**) : function-pointer u32(*)(u32,u8**)
+    u32(*)(u32,u8*,u32) : function-pointer u32(*)(u32,u8*,u32)
+    u32(*)(u8*) : function-pointer u32(*)(u8*)
+    u64 : primitive
+    u8 : primitive
+    u8* : pointer to u8
+    u8*(*)(u32) : function-pointer u8*(*)(u32)
+    u8** : pointer to u8*
+    void : primitive
+    void(*)(u8*) : function-pointer void(*)(u8*)
+    void(*)(u8*,u8*) : function-pointer void(*)(u8*,u8*)
+Symbol Table:
+    free : static function void(*)(u8*)
+    gyoji::std::string::strcpy : static function void(*)(u8*,u8*)
+    gyoji::std::string::strlen : static function u32(*)(u8*)
+    main : static function u32(*)(u32,u8**)
+    malloc : static function u8*(*)(u32)
+    write : static function u32(*)(u32,u8*,u32)
+Function Definitions
+    gyoji::std::string::strcpy
+        return-value : void
+        arg dst : u8*
+        arg src : u8*
+    temporary variables
+        _0 : u8*
+        _1 : u8
+        _2 : u8
+        _3 : bool
+        _4 : u8*
+        _5 : u8
+        _6 : u8*
+        _7 : u8
+        _8 : u8
+        _9 : u8*
+        _10 : u32
+        _11 : u8*
+        _12 : u8*
+        _13 : u8*
+        _14 : u32
+        _15 : u8*
+        _16 : u8*
+    {
+        BB0:
+            jump ( BB1 )
+        BB1:
+            _0 = load ( src u8* )
+            _1 = dereference ( _0 )
+            _2 = literal-int ( 0u8 )
+            _3 = compare-not-equal ( _1 _2 )
+            jump-conditional ( _3 BB2 BB3 )
+        BB2:
+            _4 = load ( dst u8* )
+            _5 = dereference ( _4 )
+            _6 = load ( src u8* )
+            _7 = dereference ( _6 )
+            _8 = store ( _5 _7 )
+            _9 = load ( dst u8* )
+            _10 = literal-int ( 1u32 )
+            _11 = add ( _9 _10 )
+            _12 = store ( _9 _11 )
+            _13 = load ( src u8* )
+            _14 = literal-int ( 1u32 )
+            _15 = add ( _13 _14 )
+            _16 = store ( _13 _15 )
+            jump ( BB1 )
+        BB3:
+            undeclare ( src )
+            undeclare ( dst )
+            return-void
+    }
+    gyoji::std::string::strlen
+        return-value : u32
+        arg str : u8*
+    temporary variables
+        _0 : u32
+        _1 : u32
+        _2 : u32
+        _3 : u8*
+        _4 : u8
+        _5 : u8
+        _6 : bool
+        _7 : u8*
+        _8 : u32
+        _9 : u8*
+        _10 : u8*
+        _11 : u32
+        _12 : u32
+        _13 : u32
+        _14 : u32
+        _15 : u32
+    {
+        BB0:
+            declare ( len u32 )
+            _0 = load ( len u32 )
+            _1 = literal-int ( 0u32 )
+            _2 = store ( _0 _1 )
+            jump ( BB1 )
+        BB1:
+            _3 = load ( str u8* )
+            _4 = dereference ( _3 )
+            _5 = literal-int ( 0u8 )
+            _6 = compare-not-equal ( _4 _5 )
+            jump-conditional ( _6 BB2 BB3 )
+        BB2:
+            _7 = load ( str u8* )
+            _8 = literal-int ( 1u32 )
+            _9 = add ( _7 _8 )
+            _10 = store ( _7 _9 )
+            _11 = load ( len u32 )
+            _12 = literal-int ( 1u32 )
+            _13 = add ( _11 _12 )
+            _14 = store ( _11 _13 )
+            jump ( BB1 )
+        BB3:
+            _15 = load ( len u32 )
+            undeclare ( len )
+            undeclare ( str )
+            return ( _15 )
+    }
+    main
+        return-value : u32
+        arg argc : u32
+        arg argv : u8**
+    temporary variables
+        _0 : u8*
+        _1 : u8*
+        _2 : u8*
+        _3 : u8*
+        _4 : u8*(*)(u32)
+        _5 : u32
+        _6 : u8*
+        _7 : u8*
+        _8 : void(*)(u8*,u8*)
+        _9 : u8*
+        _10 : u8*
+        _11 : void
+        _12 : u32(*)(u32,u8*,u32)
+        _13 : u32
+        _14 : u8*
+        _15 : u32(*)(u8*)
+        _16 : u8*
+        _17 : u32
+        _18 : u32
+        _19 : u32(*)(u32,u8*,u32)
+        _20 : u32
+        _21 : u8*
+        _22 : u32(*)(u8*)
+        _23 : u8*
+        _24 : u32
+        _25 : u32
+        _26 : void(*)(u8*)
+        _27 : u8*
+        _28 : void
+        _29 : u32
+    {
+        BB0:
+            declare ( source u8* )
+            _0 = load ( source u8* )
+            _1 = literal-string ( "abc\n ")
+            _2 = store ( _0 _1 )
+            declare ( dest u8* )
+            _3 = load ( dest u8* )
+            _4 = symbol ( malloc  )
+            _5 = literal-int ( 5u32 )
+            _6 = function-call ( _4 _5 )
+            _7 = store ( _3 _6 )
+            _8 = symbol ( gyoji::std::string::strcpy  )
+            _9 = load ( dest u8* )
+            _10 = load ( source u8* )
+            _11 = function-call ( _8 _9 _10 )
+            _12 = symbol ( write  )
+            _13 = literal-int ( 1u32 )
+            _14 = load ( source u8* )
+            _15 = symbol ( gyoji::std::string::strlen  )
+            _16 = load ( source u8* )
+            _17 = function-call ( _15 _16 )
+            _18 = function-call ( _12 _13 _14 _17 )
+            _19 = symbol ( write  )
+            _20 = literal-int ( 1u32 )
+            _21 = load ( dest u8* )
+            _22 = symbol ( gyoji::std::string::strlen  )
+            _23 = load ( dest u8* )
+            _24 = function-call ( _22 _23 )
+            _25 = function-call ( _19 _20 _21 _24 )
+            _26 = symbol ( free  )
+            _27 = load ( dest u8* )
+            _28 = function-call ( _26 _27 )
+            _29 = literal-int ( 0u32 )
+            undeclare ( dest )
+            undeclare ( source )
+            undeclare ( argv )
+            undeclare ( argc )
+            return ( _29 )
+    }

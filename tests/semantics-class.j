@@ -50,7 +50,7 @@ Foo::set_something(u32 _a, u32 _b, u32 _c)
 // A more exciting construct is to resolve
 // the method and use it as a function pointer.
 
-       void (*)(Foo*, u32, u32, u32) fptr_set_something = set_something;
+       void (*)(Foo&, u32, u32, u32) fptr_set_something = set_something;
        print_value(999999999);
 
 // Method calls even work with function pointers
@@ -81,7 +81,7 @@ u32 main(u32 argc, u8**argv)
 
 // We can also assign function pointer types to functions
 // and call them.
-	void (*)(Foo*, u32, u32, u32) fptr;
+	void (*)(Foo&, u32, u32, u32) fptr;
 	fptr = Foo::set_something;
 
 // Indirect calls through function pointers work now also.
@@ -100,7 +100,10 @@ u32 main(u32 argc, u8**argv)
 //	cl = Foo::construct();
 
 	foo_function();
-	
+
+	Foo & clref = &cl;
+	Foo *clptr = clref;
+
 	cl.set_something(10u32, 42u32, 99u32);
 	return 0u32;
 }

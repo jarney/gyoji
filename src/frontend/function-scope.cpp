@@ -635,9 +635,12 @@ ScopeTracker::check(
 	}
 	    
 	goto_fixups.push_back(std::pair(goto_operation, unwind_variables));
+#if 0
+	// Just for debugging.
 	for (const auto & s : unwind_variables) {
 	    fprintf(stderr, "Unwind %s\n", s->get_variable_name().c_str());
 	}
+#endif
     }
     return ok;
 }

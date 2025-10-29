@@ -1,29 +1,50 @@
 #include <strcpy.gh>
 
+// C stdlib functions/system calls.
+u8* malloc(u32 n);
+void free(u8 * ptr);
+u32 write(u32 fd, u8* buf, u32 size);
+
+
 void
 gyoji::std::string::strcpy(u8 *dst, u8* src)
 {
     unsafe {
-        while (*dst != 0u8) {
+        while (*src != 0u8) {
             *dst = *src;
-            // We still need pointer math
-            // to make this work, otherwise
-            // it won't advance the pointer.
-            //dst++;
-            //src++;
+            dst++;
+            src++;
         }
     }
 }
+
+u32
+gyoji::std::string::strlen(u8 *str)
+{
+    u32 len = 0;
+    unsafe {
+        while (*str != 0u8) {
+            str++;
+            len++;
+        }
+    }
+    return len;
+}
+
+
+        
 using namespace gyoji::std::string;
 
-Container::~Container()
-{}
-
-Contained &
-Container::get_contained()
+u32 main(u32 argc, u8 **argv)
 {
-    unsafe {
-        Contained& ret = &contained;
-        return ret;
-    }
+            u8 *source = "abc\n";
+            u8 *dest = malloc(5u32);
+            strcpy(dest, source);
+            
+            write(1, source, strlen(source));
+            write(1, dest, strlen(dest));
+
+            free(dest);
+            return 0;
 }
+           

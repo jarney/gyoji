@@ -7,6 +7,7 @@ namespace gyoji::std::pointers {
 
         // Factory
         static Owned create(void *_pointer);
+        static Owned do_create();
 	
 	private void *pointer;
     };

@@ -270,7 +270,7 @@ TypeLowering::extract_from_class_method_types(
     // to the function.
     if (type == Gyoji::mir::Symbol::SYMBOL_MEMBER_METHOD ||
         type == Gyoji::mir::Symbol::SYMBOL_MEMBER_DESTRUCTOR) {
-	const Type * this_type = mir.get_types().get_pointer_to(&class_type, class_type.get_defined_source_ref());
+	const Type * this_type = mir.get_types().get_reference_to(&class_type, class_type.get_defined_source_ref());
 	Argument arg_this(this_type, source_ref);
     
 	fptr_arguments.push_back(arg_this);
