@@ -40,6 +40,12 @@ u32 main(u32 argc, u8 **argv)
             u8 *source = "abc\n";
             u8 *dest = malloc(5u32);
             strcpy(dest, source);
+
+            unsafe {
+                dest = dest + 2;
+                *dest = 'k';
+                dest = dest - 2;
+            }
             
             write(1, source, strlen(source));
             write(1, dest, strlen(dest));

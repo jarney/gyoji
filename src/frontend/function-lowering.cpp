@@ -1965,58 +1965,97 @@ FunctionDefinitionLowering::handle_binary_operation_arithmetic(
 {
     const Type *atype = function->tmpvar_get(a_tmpvar);
     const Type *btype = function->tmpvar_get(b_tmpvar);
-    // Check that both operands are numeric.
-    if (!atype->is_numeric() ||	!btype->is_numeric()) {
-	compiler_context
-	    .get_errors()
-	    .add_simple_error(
-		_src_ref,
-		"Type mismatch in binary operation",
-		std::string("The type of operands should be numeric, but were: a=") + atype->get_name() + std::string(" b=") + btype->get_name()
-		);
-	return false;
-    }
-    // Special-case for modulo because it doesn't support floating-point types.
-    if (type == Operation::OP_MODULO) {
-	if (atype->is_float() || btype->is_float()) {
+    
+    // Pointer arithmetic is special
+    // and has some rules about its use.
+    if (atype->is_pointer()) {
+	if (!scope_tracker.is_unsafe()) {
+	    compiler_context
+		.get_errors()
+		.add_simple_error(
+		    _src_ref,
+		    "Pointer arithmetic should be inside an unsafe block",
+		    std::string("Attempting to do arithmetic on a pointer type from outside an unsafe block a=") + atype->get_name() + std::string(" b=") + btype->get_name()
+		    );
+	    return false;
+	}
+	if (type != Operation::OP_ADD && type != Operation::OP_SUBTRACT) {
+	    compiler_context
+		.get_errors()
+		.add_simple_error(
+		    _src_ref,
+		    "Pointer arithmetic must only be addition and subtraction of numeric values",
+		    std::string("Pointer arithmetic, only add(+) and subtract(-) are allowed on a pointer type a=") + atype->get_name() + std::string(" b=") + btype->get_name()
+		    );
+	    return false;
+	}
+	
+	if (!btype->is_numeric()) {
 	    compiler_context
 		.get_errors()
 		.add_simple_error(
 		    _src_ref,
 		    "Type mismatch in binary operation",
-		    std::string("The type of operands should be integer, but were a=") + atype->get_name() + std::string(" b=") + btype->get_name()
+		    std::string("Attempting to add a non-numeric value to a pointer a=") + atype->get_name() + std::string(" b=") + btype->get_name()
 		    );
 	    return false;
 	}
+	// Pointer arithmetic returns the pointer type.
+	returned_tmpvar = function->tmpvar_define(atype);
     }
-    
-    // The arguments must be either both integer
-    // or both float.
-    if 	(!(
+    // Check that both operands are numeric.
+    else {
+	if (!atype->is_numeric() || !btype->is_numeric()) {
+	    compiler_context
+		.get_errors()
+		.add_simple_error(
+		    _src_ref,
+		    "Type mismatch in binary operation",
+		    std::string("The type of operands should be numeric, but were: a=") + atype->get_name() + std::string(" b=") + btype->get_name()
+		    );
+	    return false;
+	}
+	// Special-case for modulo because it doesn't support floating-point types.
+	if (type == Operation::OP_MODULO) {
+	    if (atype->is_float() || btype->is_float()) {
+		compiler_context
+		    .get_errors()
+		    .add_simple_error(
+			_src_ref,
+			"Type mismatch in binary operation",
+			std::string("The type of operands should be integer, but were a=") + atype->get_name() + std::string(" b=") + btype->get_name()
+			);
+		return false;
+	    }
+	}
+
+	// The arguments must be either both integer
+	// or both float.
+	if (!(
 	     (atype->is_integer() && btype->is_integer()) ||
 	     (atype->is_float() && btype->is_float())
-        )) {
-	compiler_context
-	    .get_errors()
-	    .add_simple_error(
-		_src_ref,
-		"Type mismatch in binary operation",
-		std::string("The type of operands both integer or floating-point types.  Automatic cast from int to float is not supported. a=") +
-		atype->get_name() + std::string(" b=") + btype->get_name()
-		);
-	return false;
+	     )) {
+	    compiler_context
+		.get_errors()
+		.add_simple_error(
+		    _src_ref,
+		    "Type mismatch in binary operation",
+		    std::string("The type of operands both integer or floating-point types.  Automatic cast from int to float is not supported. a=") +
+		    atype->get_name() + std::string(" b=") + btype->get_name()
+		    );
+	    return false;
+	}
+	
+	// Now, both of them are either int or float, so we need to handle each separately
+	// so that we can choose the appropriate cast type.
+	const Type *widened = nullptr;
+	if (!numeric_widen_binary_operation(_src_ref, a_tmpvar, b_tmpvar, atype, btype, &widened)) {
+	    return false;
+	}
+	// The return type is whatever
+	// we widened the add to be.
+	returned_tmpvar = function->tmpvar_define(widened);
     }
-
-    // Now, both of them are either int or float, so we need to handle each separately
-    // so that we can choose the appropriate cast type.
-    const Type *widened = nullptr;
-    if (!numeric_widen_binary_operation(_src_ref, a_tmpvar, b_tmpvar, atype, btype, &widened)) {
-	return false;
-    }
-
-    // The return type is whatever
-    // we widened the add to be.
-    returned_tmpvar = function->tmpvar_define(widened);
     
     // We emit the appropriate operation as either an integer or
     // floating-point add depending on which one it was.

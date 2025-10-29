@@ -903,7 +903,8 @@ CodeGeneratorLLVMContext::generate_operation_subtract(
     size_t b = operation.get_b();
     const Gyoji::mir::Type *atype = mir_function.tmpvar_get(a);
     const Gyoji::mir::Type *btype = mir_function.tmpvar_get(b);
-    if (!atype->is_numeric() || !btype->is_numeric()) {
+    if (  (!atype->is_numeric() && !atype->is_pointer() )
+	|| !btype->is_numeric()) {
 	compiler_context
 	    .get_errors()
 	    .add_simple_error(
@@ -924,7 +925,7 @@ CodeGeneratorLLVMContext::generate_operation_subtract(
 	llvm::Value *addressofelement = Builder->CreateInBoundsGEP(llvm_array_element_type, value_a, indices);
 	tmp_values.insert(std::pair(operation.get_result(), addressofelement));
     }
-    if (atype->is_integer() && btype->is_integer()) {
+    else if (atype->is_integer() && btype->is_integer()) {
 	llvm::Value *sum = Builder->CreateSub(value_a, value_b);
 	tmp_values.insert(std::pair(operation.get_result(), sum));
     }

@@ -91,16 +91,27 @@ BB0:                                              ; preds = %entry
   %3 = load ptr, ptr %dest, align 8
   %4 = load ptr, ptr %source, align 8
   call void @"gyoji::std::string::strcpy"(ptr %3, ptr %4)
-  %5 = load ptr, ptr %source, align 8
-  %6 = load ptr, ptr %source, align 8
-  %7 = call i32 @"gyoji::std::string::strlen"(ptr %6)
-  %8 = call i32 @write(i32 1, ptr %5, i32 %7)
-  %9 = load ptr, ptr %dest, align 8
+  %5 = load ptr, ptr %dest, align 8
+  %6 = load ptr, ptr %dest, align 8
+  %7 = getelementptr inbounds i8, ptr %6, i32 2
+  store ptr %7, ptr %dest, align 8
+  %8 = load ptr, ptr %dest, align 8
+  %9 = load i8, ptr %8, align 1
+  store i8 107, ptr %8, align 1
   %10 = load ptr, ptr %dest, align 8
-  %11 = call i32 @"gyoji::std::string::strlen"(ptr %10)
-  %12 = call i32 @write(i32 1, ptr %9, i32 %11)
-  %13 = load ptr, ptr %dest, align 8
-  call void @free(ptr %13)
+  %11 = load ptr, ptr %dest, align 8
+  %12 = getelementptr inbounds i8, ptr %11, i32 -2
+  store ptr %12, ptr %dest, align 8
+  %13 = load ptr, ptr %source, align 8
+  %14 = load ptr, ptr %source, align 8
+  %15 = call i32 @"gyoji::std::string::strlen"(ptr %14)
+  %16 = call i32 @write(i32 1, ptr %13, i32 %15)
+  %17 = load ptr, ptr %dest, align 8
+  %18 = load ptr, ptr %dest, align 8
+  %19 = call i32 @"gyoji::std::string::strlen"(ptr %18)
+  %20 = call i32 @write(i32 1, ptr %17, i32 %19)
+  %21 = load ptr, ptr %dest, align 8
+  call void @free(ptr %21)
   ret i32 0
 }
 
